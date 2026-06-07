@@ -24,7 +24,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Run ESLint
-        run: ./node_modules/.bin/next lint
+        run: yarn check-lint
 
       - name: Check Prettier formatting
         run: yarn format:check
