@@ -24,7 +24,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Run ESLint
-        run: yarn lint
+        run: npx next lint
 
       - name: Check Prettier formatting
         run: yarn format:check
