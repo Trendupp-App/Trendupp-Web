@@ -14,11 +14,17 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-  ],
+  projects: process.env.CI
+    ? [
+        // In CI only Chromium is installed — keep the pipeline lean.
+        { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+      ]
+    : [
+        // Full cross-browser suite when running locally.
+        { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+        { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+        { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+      ],
 
   webServer: {
     command: process.env.CI ? 'yarn build && yarn start' : 'yarn dev',
