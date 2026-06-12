@@ -44,16 +44,16 @@ export default function CreatorSignupPage() {
 
   return (
     <AuthLayout
-      imageSrc="/auth/onb3.svg"
+      imageSrc="/images/auth/onb4.svg"
       imageAlt="Creator"
       headlineTop="Discover"
       headlineBottom="Paid Campaigns"
       tagline="Find brand campaigns that match your niche and grow your creator career with real money."
       slideIndex={1}
     >
-      <div className="w-full items-center flex flex-col">
+      <div className="w-full flex flex-col items-start">
         <BackButton />
-        <div className="max-w-[500px] w-full flex flex-col">
+        <div className="max-w-[500px] w-full flex flex-col mx-auto">
           <h1 className="text-xl font-extralight text-[#1a1a2e] text-center mb-1">Sign up</h1>
           <p className="text-sm font-light text-[#7a7a9a] text-center mb-4">
             Get started with an account on{' '}

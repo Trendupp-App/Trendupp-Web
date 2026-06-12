@@ -25,16 +25,16 @@ export default function VerifyPage() {
 
   return (
     <AuthLayout
-      imageSrc="/auth/onb3.svg"
+      imageSrc="/images/auth/onb3.svg"
       imageAlt="Creator"
       headlineTop="Discover"
       headlineBottom="Paid Campaigns"
       tagline="Find brand campaigns that match your niche and grow your creator career with real money."
       slideIndex={1}
     >
-      <div className="w-full items-center flex flex-col">
+      <div className="w-full flex flex-col items-start">
         <BackButton />
-        <div className="w-full max-w-[500px] flex flex-col items-center">
+        <div className="w-full max-w-[500px] flex flex-col items-center mx-auto">
           <h1 className="text-2xl font-extralight text-[#1a1a2e] text-center mb-2">
             Enter verification code
           </h1>

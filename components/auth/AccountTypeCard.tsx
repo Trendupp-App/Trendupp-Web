@@ -24,22 +24,21 @@ export default function AccountTypeCard({
     <div
       onClick={() => onSelect(value)}
       className={cn(
-        'flex items-start shadow-lg gap-4 p-4 rounded-xl border-[1.5px] text-left transition-all cursor-pointer',
+        'flex items-center gap-5 p-5 rounded-2xl border-[1.5px] text-left transition-all cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.02)]',
         selected
           ? 'border-brand-pink bg-[#fff5f9]'
-          : 'border-[#e8e6f0] bg-white hover:border-brand-pink/30',
+          : 'border-[#f0eef6] bg-white hover:border-brand-pink/30',
       )}
     >
-      <span
+      <div
         className={cn(
-          'flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-colors',
-          selected ? 'bg-brand-pink-light text-primary' : 'bg-brand-pink-light text-primary',
+          'flex items-center justify-center w-14 h-14 rounded-xl shrink-0 transition-colors bg-brand-pink-light text-brand-pink',
         )}
       >
-        <Icon size={18} />
-      </span>
-      <div>
-        <p className="text-[15px] font-extralight text-[#1a1a2e] mb-1">{title}</p>
+        <Icon size={22} strokeWidth={1.5} />
+      </div>
+      <div className="flex-1">
+        <p className="text-[16px] font-semibold text-[#1a1a2e] mb-0.5">{title}</p>
         <p className="text-[13px] font-light text-[#7a7a9a] leading-snug">{description}</p>
       </div>
     </div>
