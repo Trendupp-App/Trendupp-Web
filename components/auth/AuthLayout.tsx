@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { SLIDE_DATA } from '@/constants/slide';
+import Stars from './Stars';
 
 interface AuthLayoutProps {
   imageSrc: string;
@@ -36,30 +37,32 @@ export default function AuthLayout({
   return (
     <div className="flex overflow-hidden h-screen bg-background">
       {/* ── Left panel ── */}
-      <aside className="hidden md:flex w-100 shrink-0 flex-col overflow-hidden relative px-7 py-6">
+      <aside className="hidden md:flex w-[500px] shrink-0 flex-col overflow-hidden relative px-7 py-6">
         {/* Logo */}
         <Link href="/" className="z-10 ml-8">
           <Image src="/logo.svg" alt="Trendupp logo" width={100} height={32} />
         </Link>
 
         {/* Hero image — crossfades between slides */}
-        <div className="relative -ml-6 h-[60vh] w-full">
+        <div className="relative -ml-6 h-[60vh] mt-4 w-full">
           {SLIDE_DATA.map((slide, i) => (
             <Image
               key={slide.src}
               src={slide.src}
               alt={slide.alt}
               fill
-              className={`object-contain object-bottom transition-opacity duration-700 ${
-                i === activeSlide ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={cn(
+                'object-contain object-bottom transition-opacity duration-700',
+                i === activeSlide ? 'opacity-100' : 'opacity-0',
+                slide.imageClassName,
+              )}
               priority={i === 0}
             />
           ))}
         </div>
 
         {/* Bottom copy — fades between slides */}
-        <div className="z-10 ml-8">
+        <div className="z-10 mt-8 ml-8">
           <div className="relative h-24 overflow-hidden">
             {SLIDE_DATA.map((slide, i) => (
               <div
@@ -96,6 +99,7 @@ export default function AuthLayout({
       </aside>
 
       <main className="flex-1 relative auth-scrollbar overflow-y-auto bg-white m-4 rounded-xl px-6 py-5">
+        <Stars />
         <div className="min-h-full items-center justify-center flex flex-col">{children}</div>
       </main>
     </div>
