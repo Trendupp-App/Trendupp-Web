@@ -7,20 +7,28 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
 import { BackButton } from '@/shared/BackButton';
 
-export default function VerifyPage() {
+export default function ResetVerifyPage() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get('email') ?? 'your email';
-  const type = params.get('type') ?? 'creator';
 
   async function handleSubmit() {
     if (otp.length < 6) return;
     setLoading(true);
-    // TODO: call verify API
+    // TODO: call verify-reset-code API
     await new Promise((r) => setTimeout(r, 800));
-    router.push(`/features/welcome?type=${type}`);
+    setLoading(false);
+    router.push(`/features/reset-password/new?email=${encodeURIComponent(email)}&code=${otp}`);
+  }
+
+  async function handleResend() {
+    setResending(true);
+    // TODO: call resend-code API
+    await new Promise((r) => setTimeout(r, 800));
+    setResending(false);
   }
 
   return (
@@ -51,14 +59,21 @@ export default function VerifyPage() {
           <Button
             onClick={handleSubmit}
             disabled={otp.length < 6 || loading}
-            className="w-full mt-8 shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-semibold text-white disabled:bg-brand-pink-light"
+            className="w-full  shadow mt-8 bg-brand-pink rounded-md h-12 text-[15px] font-semibold text-white disabled:bg-brand-pink-light"
           >
             {loading ? 'Verifying…' : 'Submit'}
           </Button>
 
           <p className="text-sm text-text-secondary text-center mt-5">
             Didn&apos;t get the code?{' '}
-            <button className="text-brand-pink font-semibold hover:underline">Resend</button>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="text-brand-pink font-semibold hover:underline disabled:opacity-60"
+            >
+              {resending ? 'Resending…' : 'Resend'}
+            </button>
           </p>
         </div>
       </div>

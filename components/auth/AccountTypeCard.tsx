@@ -22,7 +22,13 @@ export default function AccountTypeCard({
 }: AccountTypeCardProps) {
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
       onClick={() => onSelect(value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onSelect(value);
+      }}
       className={cn(
         'flex items-start shadow-lg gap-4 p-4 rounded-xl border-[1.5px] text-left transition-all cursor-pointer',
         selected

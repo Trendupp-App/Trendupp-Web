@@ -36,7 +36,6 @@ export default function AdvertiserSignupPage() {
   });
 
   async function onSubmit(values: AdvertiserSignupValues) {
-    console.log('Advertiser signup values:', values);
     // TODO: call signup API
     router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}&type=advertiser`);
   }
@@ -55,10 +54,10 @@ export default function AdvertiserSignupPage() {
       slideIndex={0}
     >
       <div className="w-full items-center flex flex-col">
-        <BackButton />
+        <BackButton className="absolute top-4" />
         <div className="max-w-[500px] w-full flex flex-col">
           <h1 className="text-xl font-extralight text-[#1a1a2e] text-center mb-1">Sign up</h1>
-          <p className="text-sm font-light text-[#7a7a9a] text-center mb-4">
+          <p className="text-sm font-light text-text-secondary text-center mb-4">
             Get started with an account on{' '}
             <span className="text-brand-pink font-medium">Trendupp</span>
           </p>
@@ -78,7 +77,7 @@ export default function AdvertiserSignupPage() {
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-[#e8e6f0]" />
-            <span className="text-xs text-[#7a7a9a]">Or</span>
+            <span className="text-xs text-text-secondary">Or</span>
             <div className="flex-1 h-px bg-[#e8e6f0]" />
           </div>
 
@@ -123,7 +122,7 @@ export default function AdvertiserSignupPage() {
                 <Building2 size={15} className={iconCls} />
                 <Input
                   {...register('brandName')}
-                  placeholder="Enter username"
+                  placeholder="Enter your brand name"
                   className={`pl-9 ${inputCls}`}
                 />
               </div>
@@ -208,8 +207,8 @@ export default function AdvertiserSignupPage() {
                     render={({ field }) => (
                       <Checkbox
                         id="terms"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
+                        checked={!!field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
                         className="mt-0.5 border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
                       />
                     )}
@@ -219,7 +218,7 @@ export default function AdvertiserSignupPage() {
                     className="text-[11px] text-[#7a7a9a] leading-relaxed cursor-pointer"
                   >
                     By registering you agree with our{' '}
-                    <a href="/terms" className="text-brand-pink hover:underline">
+                    <a href="#" className="text-brand-pink hover:underline">
                       Terms & Conditions
                     </a>
                   </label>
@@ -254,7 +253,7 @@ export default function AdvertiserSignupPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink-light"
+              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink-light"
             >
               {isSubmitting ? 'Creating account…' : 'Sign up'}
             </Button>
