@@ -27,7 +27,11 @@ export default function AccountTypeCard({
       aria-pressed={selected}
       onClick={() => onSelect(value)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') onSelect(value);
+        if (e.key === 'Enter') onSelect(value);
+        if (e.key === ' ') {
+          e.preventDefault();
+          onSelect(value);
+        }
       }}
       className={cn(
         'flex items-start shadow-lg gap-4 p-4 rounded-xl border-[1.5px] text-left transition-all cursor-pointer',

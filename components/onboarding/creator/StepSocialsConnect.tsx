@@ -128,7 +128,7 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
         <div>
           <p className="text-sm text-[#1a1a2e] mb-3">
             Before you proceed, please confirm your account meet {activePlatform.name}&apos;s
-            connection requirement
+            connection requirements
           </p>
           <ul className="flex flex-col gap-2">
             {activePlatform.requirements.map((req) => (

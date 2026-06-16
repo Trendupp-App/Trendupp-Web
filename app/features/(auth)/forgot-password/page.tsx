@@ -27,7 +27,6 @@ export default function ForgotPasswordPage() {
   const email = watch('email');
 
   async function onSubmit(values: ForgotPasswordValues) {
-    console.log('Forgot password values:', values);
     // TODO: call send-code API
     router.push(`/features/reset-password/verify?email=${encodeURIComponent(values.email)}`);
   }

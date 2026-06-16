@@ -29,7 +29,6 @@ export default function NewPasswordPage() {
   });
 
   async function onSubmit(values: NewPasswordValues) {
-    console.log('New password values:', { email, code, ...values });
     // TODO: call reset-password API
     router.push('/features/signin');
   }
