@@ -54,7 +54,7 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
                 active
                   ? 'bg-brand-pink/10 border-brand-pink text-brand-pink'
                   : 'bg-white border-[#e8e6f0] text-[#1a1a2e] hover:border-brand-pink/40'
-              } ${!active && selected.length >= 3 ? 'opacity-40 cursor-not-allowed' : ''}`}
+              }`}
             >
               {industry}
             </button>
@@ -62,15 +62,15 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
         })}
       </div>
 
-      {selected.length > 0 && selected.length < 3 && (
+      {selected.length < 3 && (
         <p className="text-[11px] text-[#9a99b0] text-center">
-          Select {3 - selected.length} more industr{3 - selected.length > 1 ? 'ies' : 'y'}
+          Please select at least {3 - selected.length} more{' '}
+          {3 - selected.length === 1 ? 'industry' : 'industries'}.
         </p>
       )}
-
       <Button
         type="button"
-        disabled={selected.length === 0}
+        disabled={selected.length < 3}
         onClick={() => onNext({ industries: selected })}
         className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink-light"
       >
@@ -80,7 +80,7 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
       <button
         type="button"
         onClick={onSkip}
-        disabled={selected.length < 3}
+        // disabled={selected.length < 3}
         className="text-sm text-[#7a7a9a] underline underline-offset-2 hover:text-[#1a1a2e] text-center transition-colors"
       >
         I&apos;ll do that later

@@ -75,11 +75,11 @@ const ADVERTISER_STEP_META: Record<AdvertiserStepId, { title: string; subtitle: 
   },
   industry: {
     title: 'Industry',
-    subtitle: 'Choose at most 3 industries for your brand',
+    subtitle: 'Choose at least 3 industries for your brand',
   },
   niche: {
     title: 'Niche',
-    subtitle: 'Choose at most 3 niche for your brand',
+    subtitle: 'Choose at least 3 niche for your brand',
   },
   representative: {
     title: 'Brand representative',

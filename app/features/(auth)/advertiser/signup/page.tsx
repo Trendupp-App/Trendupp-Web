@@ -115,22 +115,6 @@ export default function AdvertiserSignupPage() {
               </div>
             </div>
 
-            {/* Brand name */}
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-light text-[#1a1a2e]">Brand name</Label>
-              <div className="relative">
-                <Building2 size={15} className={iconCls} />
-                <Input
-                  {...register('brandName')}
-                  placeholder="Enter your brand name"
-                  className={`pl-9 ${inputCls}`}
-                />
-              </div>
-              {errors.brandName && (
-                <p className="text-[11px] text-red-400">{errors.brandName.message}</p>
-              )}
-            </div>
-
             {/* Email */}
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-light text-[#1a1a2e]">Email address</Label>
