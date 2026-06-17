@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
+import StepIndustry from '@/components/onboarding/advertiser/StepIndustry';
 
 // Creator steps
 import StepProfileCreator from '@/components/onboarding/creator/StepProfile';
@@ -20,7 +21,14 @@ import StepPayout from '@/components/onboarding/creator/StepPayout';
 import type { CreatorOnboardingData, AdvertiserOnboardingData } from '@/types/Onboarding';
 
 type CreatorStepId = 'profile' | 'niche' | 'socials' | 'payout' | 'complete';
-type AdvertiserStepId = 'profile' | 'niche' | 'representative' | 'socials' | 'payout' | 'complete';
+type AdvertiserStepId =
+  | 'profile'
+  | 'industry'
+  | 'niche'
+  | 'representative'
+  | 'socials'
+  | 'payout'
+  | 'complete';
 type StepId = CreatorStepId | AdvertiserStepId;
 
 type OnboardingData = CreatorOnboardingData & AdvertiserOnboardingData;
@@ -28,6 +36,7 @@ type OnboardingData = CreatorOnboardingData & AdvertiserOnboardingData;
 const CREATOR_STEPS: CreatorStepId[] = ['profile', 'niche', 'socials', 'payout', 'complete'];
 const ADVERTISER_STEPS: AdvertiserStepId[] = [
   'profile',
+  'industry',
   'niche',
   'representative',
   'socials',
@@ -42,7 +51,7 @@ const CREATOR_STEP_META: Record<CreatorStepId, { title: string; subtitle: string
   },
   niche: {
     title: 'Niche',
-    subtitle: 'Choose at least 3 niche. Your tier will be set automatically.',
+    subtitle: 'Choose at least 3 niches. Your tier will be set automatically.',
   },
   socials: {
     title: 'Connect your socials',
@@ -64,10 +73,13 @@ const ADVERTISER_STEP_META: Record<AdvertiserStepId, { title: string; subtitle: 
     title: "Let's build your profile",
     subtitle: 'This is what creators will see when they view your brand page',
   },
-
+  industry: {
+    title: 'Industry',
+    subtitle: 'Choose at least 3 industries for your brand',
+  },
   niche: {
     title: 'Niche',
-    subtitle: 'Choose at most 3 niche for your brand',
+    subtitle: 'Choose at least 3 niche for your brand',
   },
   representative: {
     title: 'Brand representative',
@@ -227,6 +239,14 @@ export default function OnboardingPage() {
               website: data.website,
               monthlyBudget: data.monthlyBudget,
             }}
+          />
+        )}
+
+        {isAdvertiser && currentStepId === 'industry' && (
+          <StepIndustry
+            onNext={advance}
+            onSkip={skip}
+            defaultValues={{ industries: data.industries }}
           />
         )}
 

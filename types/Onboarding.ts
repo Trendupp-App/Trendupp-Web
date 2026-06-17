@@ -31,6 +31,8 @@ export interface AdvertiserOnboardingData {
   city?: string;
   website?: string;
   monthlyBudget?: string;
+  industries?: string[];
+
   // StepRepresentative
   firstName?: string;
   lastName?: string;

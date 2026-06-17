@@ -3,28 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-const ALL_NICHES = [
-  'Sports',
-  'Fitness',
-  'Comedy',
-  'Travel',
-  'Beauty',
-  'Parenting',
-  'Finance',
-  'Technology',
-  'Fashion',
-  'Lifestyle',
-  'Education',
-  'Food & Drink',
-  'Activism',
-  'Social Good',
-  'Wellness',
-  'Music',
-  'Gaming',
-  'Hospitality',
-  'Others',
-];
+import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 
 interface Props {
   onNext: (data: { niches: string[] }) => void;
@@ -54,7 +33,7 @@ export default function StepNiche({ onNext, onSkip, defaultValues }: Props) {
     <div className="flex flex-col gap-4 w-full">
       {/* Pills */}
       <div className="flex flex-wrap gap-2 justify-center">
-        {ALL_NICHES.map((niche) => {
+        {ALL_NICHES_INDUSTRIES.map((niche) => {
           const active = selected.includes(niche);
           return (
             <button
