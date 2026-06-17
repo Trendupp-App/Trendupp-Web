@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
 import { BackButton } from '@/shared/BackButton';
+import { useResendOtp, useVerifyOtp } from '@/hooks/useAuthMutations';
 
 export default function VerifyPage() {
   const [otp, setOtp] = useState('');
@@ -14,13 +15,16 @@ export default function VerifyPage() {
   const params = useSearchParams();
   const email = params.get('email') ?? 'your email';
   const type = params.get('type') ?? 'creator';
+  const verifyOtp = useVerifyOtp();
+  const resendOtp = useResendOtp();
 
   async function handleSubmit() {
     if (otp.length < 6) return;
     setLoading(true);
-    // TODO: call verify API
-    await new Promise((r) => setTimeout(r, 800));
-    router.push(`/features/welcome?type=${type}`);
+    await verifyOtp.mutateAsync({ email, code: otp });
+    setTimeout(() => {
+      router.push(`/features/welcome?type=${type}`);
+    }, 1500);
   }
 
   return (
@@ -58,7 +62,12 @@ export default function VerifyPage() {
 
           <p className="text-sm text-text-secondary text-center mt-5">
             Didn&apos;t get the code?{' '}
-            <button className="text-brand-pink font-semibold hover:underline">Resend</button>
+            <button
+              onClick={() => resendOtp.mutate(email)}
+              className="text-brand-pink font-semibold hover:underline"
+            >
+              Resend
+            </button>
           </p>
         </div>
       </div>

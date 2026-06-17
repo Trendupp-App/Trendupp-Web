@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
+import QueryProvider from '@/lib/providers/QueryProvider';
 
 const slussen = localFont({
   src: [
@@ -39,8 +40,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
       <body className="min-h-full overflow-hidden flex flex-col">
-        {children}
-        <Toaster />
+        <QueryProvider>
+          {children}
+          <Toaster />
+        </QueryProvider>
       </body>
     </html>
   );

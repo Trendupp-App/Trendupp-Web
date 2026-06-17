@@ -13,10 +13,12 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { signinSchema, SigninValues } from '@/lib/validations/loginSchema';
 import { BackButton } from '@/shared/BackButton';
+import { useLogin } from '@/hooks/useAuthMutations';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const login = useLogin();
 
   const {
     register,
@@ -27,8 +29,12 @@ export default function SigninPage() {
   });
 
   async function onSubmit(values: SigninValues) {
-    // TODO: call signin API
-    router.push('/creator/dashboard');
+    const { data } = await login.mutateAsync(values);
+    const dest =
+      data.user.role === 'creator' ? '/features/creator/dashboard' : '/features/brand/dashboard';
+    setTimeout(() => {
+      router.push(dest);
+    }, 1500);
   }
 
   const inputCls =
@@ -141,7 +147,7 @@ export default function SigninPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink-light"
+              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
               {isSubmitting ? 'Signing in…' : 'Sign in'}
             </Button>

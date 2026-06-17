@@ -1,18 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, BriefcaseBusiness } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AccountTypeCard from '@/components/auth/AccountTypeCard';
+import { useAuthStore } from '@/store/authStore';
 
 type AccountType = 'creator' | 'advertiser' | null;
 
 export default function AccountTypePage() {
   const [selected, setSelected] = useState<AccountType>(null);
   const router = useRouter();
+  const { user, accessToken } = useAuthStore();
+
+  useEffect(() => {
+    if (accessToken && user) {
+      router.replace(
+        user.role === 'creator' ? '/features/creator/dashboard' : '/features/brand/dashboard',
+      );
+    }
+  }, [accessToken, user, router]);
 
   function handleContinue() {
     if (!selected) return;
