@@ -2,28 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-
-const ALL_INDUSTRIES = [
-  'Sports',
-  'Fitness',
-  'Comedy',
-  'Travel',
-  'Beauty',
-  'Parenting',
-  'Finance',
-  'Technology',
-  'Fashion',
-  'Lifestyle',
-  'Education',
-  'Food & Drink',
-  'Activism',
-  'Social Good',
-  'Wellness',
-  'Music',
-  'Gaming',
-  'Hospitality',
-  'Others',
-];
+import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 
 interface Props {
   onNext: (data: { industries: string[] }) => void;
@@ -43,12 +22,13 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
   return (
     <div className="flex flex-col gap-4 w-full">
       <div className="flex flex-wrap gap-2 justify-center">
-        {ALL_INDUSTRIES.map((industry) => {
+        {ALL_NICHES_INDUSTRIES.map((industry) => {
           const active = selected.includes(industry);
           return (
             <button
               key={industry}
               type="button"
+              aria-pressed={active}
               onClick={() => toggle(industry)}
               className={`px-4 py-2 rounded-full text-sm font-light border transition-all duration-150 ${
                 active
@@ -80,7 +60,6 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
       <button
         type="button"
         onClick={onSkip}
-        // disabled={selected.length < 3}
         className="text-sm text-[#7a7a9a] underline underline-offset-2 hover:text-[#1a1a2e] text-center transition-colors"
       >
         I&apos;ll do that later

@@ -51,7 +51,7 @@ const CREATOR_STEP_META: Record<CreatorStepId, { title: string; subtitle: string
   },
   niche: {
     title: 'Niche',
-    subtitle: 'Choose at least 3 niche. Your tier will be set automatically.',
+    subtitle: 'Choose at least 3 niches. Your tier will be set automatically.',
   },
   socials: {
     title: 'Connect your socials',
