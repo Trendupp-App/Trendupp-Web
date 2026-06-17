@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/ui/sonner';
 
 const slussen = localFont({
   src: [
@@ -37,7 +38,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
-      <body className="min-h-full overflow-hidden flex flex-col">{children}</body>
+      <body className="min-h-full overflow-hidden flex flex-col">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }
