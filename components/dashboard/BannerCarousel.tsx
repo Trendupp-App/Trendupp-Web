@@ -1,54 +1,60 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
-interface BannerCarouselProps {
-  onBrowseClick?: () => void;
-}
-
-export default function BannerCarousel({ onBrowseClick }: BannerCarouselProps) {
+export default function BannerCarousel() {
   const [activeSlide, setActiveSlide] = useState(0);
 
+  // Auto scroll logic
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % 3);
+    }, 4500); // Scroll every 4.5 seconds
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <div className="bg-gradient-to-br from-[#d7176f] via-[#c20d5f] to-[#990a4d] rounded-[24px] p-6 text-white flex flex-col justify-between h-[200px] relative overflow-hidden hover:shadow-[0_8px_30px_rgba(215,23,111,0.12)] transition-all duration-300">
-      {/* Decorative overlapping background circles to give premium glassmorphic/abstract look */}
-      <div className="absolute right-[-20px] top-[-20px] w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
-      <div className="absolute right-[40px] bottom-[-45px] w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
-      <div className="absolute right-[-10px] bottom-[-20px] w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
-
-      <div className="z-10 flex flex-col gap-1.5">
-        {/* Category tag */}
-        <span className="text-[11px] font-semibold tracking-widest text-[#ffd3e6] uppercase">
-          Brand Campaigns
-        </span>
-        {/* Title */}
-        <h3 className="text-[22px] sm:text-[24px] font-bold leading-[1.25] max-w-[420px]">
-          Find brands campaigns that match your niche
-        </h3>
+    <div className="flex flex-col w-full select-none">
+      {/* Slide Viewport Card */}
+      <div className="w-full h-[256px] rounded-[24px] overflow-hidden relative shadow-sm hover:shadow-md transition-shadow duration-300">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              'absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out',
+              activeSlide === i ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none',
+            )}
+          >
+            <Image
+              src="/dashboard/competed img.png"
+              alt={`Creator Fashion Banner - Slide ${i + 1}`}
+              fill
+              priority={i === 0}
+              className="object-cover"
+              sizes="(max-w-1024px) 100vw, 500px"
+            />
+          </div>
+        ))}
       </div>
 
-      <div className="z-10 mt-4 flex items-center justify-between">
-        {/* Browse Button */}
-        <Button
-          onClick={onBrowseClick}
-          className="bg-white hover:bg-white/95 text-[#bf125d] font-semibold text-sm py-2.5 px-6 rounded-xl h-11 shadow-none border-none active:scale-[0.98] transition-transform"
-        >
-          Browse campaigns
-        </Button>
-      </div>
-
-      {/* Carousel indicators - absolute centered at the bottom */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+      {/* Slide Indicators - OUTSIDE/UNDERNEATH the card for all slides */}
+      <div className="flex justify-center items-center gap-2 mt-4">
         {[0, 1, 2].map((i) => (
           <button
             key={i}
             onClick={() => setActiveSlide(i)}
-            className={`transition-all duration-300 rounded-full ${
-              i === activeSlide ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/40'
-            }`}
+            className={cn(
+              'rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center',
+              i === activeSlide
+                ? 'w-3.5 h-3.5 border border-[#7c3aed] bg-transparent'
+                : 'w-2 h-2 bg-[#d1d1d6]',
+            )}
             aria-label={`Go to slide ${i + 1}`}
-          />
+          >
+            {i === activeSlide && <span className="w-1.5 h-1.5 bg-[#7c3aed] rounded-full" />}
+          </button>
         ))}
       </div>
     </div>

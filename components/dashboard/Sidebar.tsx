@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Compass, Briefcase, Wallet, User, LogOut } from 'lucide-react';
+import { LayoutGrid, Compass, Briefcase, Wallet, User, LogOut, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -15,15 +15,16 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/features/creator/dashboard', icon: LayoutGrid },
+  { label: 'Home', href: '/features/creator/dashboard', icon: LayoutGrid },
   { label: 'Explore', href: '/features/creator/explore', icon: Compass },
+  { label: 'News', href: '/features/creator/news', icon: TrendingUp },
   { label: 'My work', href: '/features/creator/my-work', icon: Briefcase },
   { label: 'Payout', href: '/features/creator/payout', icon: Wallet },
   { label: 'My profile', href: '/features/creator/profile', icon: User },
 ];
 
 export default function Sidebar({
-  user = { name: 'John Doe', role: 'Creator', avatar: '' },
+  user = { name: 'Alex Okafor', role: 'Creator', avatar: '' },
 }: SidebarProps) {
   const pathname = usePathname();
 
