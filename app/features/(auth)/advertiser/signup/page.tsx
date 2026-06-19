@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, Building2, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { socials } from '@/constants/socials';
@@ -16,17 +16,21 @@ import {
   AdvertiserSignupValues,
 } from '@/lib/validations/advertiserSignupSchema';
 import { BackButton } from '@/shared/BackButton';
+import { toast } from 'sonner';
+import { useRoles, useSignup } from '@/hooks/useAuthMutations';
 
 export default function AdvertiserSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
+  const { data: roles } = useRoles();
+  const signup = useSignup();
 
   const {
     register,
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<AdvertiserSignupValues>({
     resolver: zodResolver(advertiserSignupSchema),
     defaultValues: {
@@ -36,9 +40,21 @@ export default function AdvertiserSignupPage() {
   });
 
   async function onSubmit(values: AdvertiserSignupValues) {
-    console.log('Advertiser signup values:', values);
-    // TODO: call signup API
-    router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}&type=advertiser`);
+    const creatorRole = roles?.find((r) => r.name === 'brand');
+    if (!creatorRole) return toast.error('Could not load roles');
+
+    await signup.mutateAsync({
+      email: values.email,
+      password: values.password,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      role: creatorRole.id,
+      acceptedTerms: values.terms,
+    });
+
+    setTimeout(() => {
+      router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}&type=brand`);
+    }, 1500);
   }
 
   const inputCls =
@@ -55,10 +71,10 @@ export default function AdvertiserSignupPage() {
       slideIndex={0}
     >
       <div className="w-full items-center flex flex-col">
-        <BackButton />
+        <BackButton className="absolute top-4" />
         <div className="max-w-[500px] w-full flex flex-col">
           <h1 className="text-xl font-extralight text-[#1a1a2e] text-center mb-1">Sign up</h1>
-          <p className="text-sm font-light text-[#7a7a9a] text-center mb-4">
+          <p className="text-sm font-light text-text-secondary text-center mb-4">
             Get started with an account on{' '}
             <span className="text-brand-pink font-medium">Trendupp</span>
           </p>
@@ -78,7 +94,7 @@ export default function AdvertiserSignupPage() {
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-[#e8e6f0]" />
-            <span className="text-xs text-[#7a7a9a]">Or</span>
+            <span className="text-xs text-text-secondary">Or</span>
             <div className="flex-1 h-px bg-[#e8e6f0]" />
           </div>
 
@@ -114,22 +130,6 @@ export default function AdvertiserSignupPage() {
                   <p className="text-[11px] text-red-400">{errors.lastName.message}</p>
                 )}
               </div>
-            </div>
-
-            {/* Brand name */}
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-light text-[#1a1a2e]">Brand name</Label>
-              <div className="relative">
-                <Building2 size={15} className={iconCls} />
-                <Input
-                  {...register('brandName')}
-                  placeholder="Enter username"
-                  className={`pl-9 ${inputCls}`}
-                />
-              </div>
-              {errors.brandName && (
-                <p className="text-[11px] text-red-400">{errors.brandName.message}</p>
-              )}
             </div>
 
             {/* Email */}
@@ -208,8 +208,8 @@ export default function AdvertiserSignupPage() {
                     render={({ field }) => (
                       <Checkbox
                         id="terms"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
+                        checked={!!field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
                         className="mt-0.5 border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
                       />
                     )}
@@ -219,7 +219,7 @@ export default function AdvertiserSignupPage() {
                     className="text-[11px] text-[#7a7a9a] leading-relaxed cursor-pointer"
                   >
                     By registering you agree with our{' '}
-                    <a href="/terms" className="text-brand-pink hover:underline">
+                    <a href="#" className="text-brand-pink hover:underline">
                       Terms & Conditions
                     </a>
                   </label>
@@ -253,10 +253,10 @@ export default function AdvertiserSignupPage() {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink-light"
+              disabled={signup.isPending}
+              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
-              {isSubmitting ? 'Creating account…' : 'Sign up'}
+              {signup.isPending ? 'Creating account…' : 'Sign up'}
             </Button>
           </form>
         </div>

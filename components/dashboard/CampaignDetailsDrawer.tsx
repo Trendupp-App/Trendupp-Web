@@ -82,9 +82,10 @@ export default function CampaignDetailsDrawer({
       {/* Slide-out Drawer Panel */}
       <div
         className={cn(
-          'w-full max-w-[560px] h-full bg-white relative z-10 flex flex-col shadow-2xl transition-transform duration-300 ease-out overflow-y-auto auth-scrollbar pb-6',
+          'w-full max-w-[560px] h-full bg-white relative z-10 flex flex-col shadow-2xl transition-transform duration-300 ease-out overflow-y-auto auth-scrollbar pb-6 border-0 border-none',
           isOpen ? 'translate-x-0' : 'translate-x-full',
         )}
+        style={{ border: 'none' }}
       >
         {drawerMode === 'details' && (
           <>
@@ -109,7 +110,7 @@ export default function CampaignDetailsDrawer({
                     <span>•</span>
                     <span className="flex items-center gap-1">
                       <Clock size={12} className="text-white/85" />
-                      1d 14h left
+                      {campaign.daysLeft} left
                     </span>
                   </p>
                 </div>
@@ -141,7 +142,9 @@ export default function CampaignDetailsDrawer({
                 </div>
                 <div className="flex flex-col gap-1 pl-2">
                   <span>Applied</span>
-                  <span className="font-bold text-[#1a1a2e] leading-normal">42</span>
+                  <span className="font-bold text-[#1a1a2e] leading-normal">
+                    {campaign.appliedCount}
+                  </span>
                 </div>
               </div>
 
@@ -449,7 +452,7 @@ export default function CampaignDetailsDrawer({
                 <div className="absolute right-4.5 top-4.5 flex flex-col items-end gap-2 text-right">
                   <span className="flex items-center gap-1 text-[10px] text-[#7a7a9a] font-light">
                     <Clock size={11} className="text-[#9a99b0]" />
-                    1d 14h left
+                    {campaign.daysLeft} left
                   </span>
                   <span className="text-[10px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-2.5 py-1 rounded-md">
                     {campaign.tier}

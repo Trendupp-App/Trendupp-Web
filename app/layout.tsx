@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/ui/sonner';
+import QueryProvider from '@/lib/providers/QueryProvider';
 
 const slussen = localFont({
   src: [
@@ -26,19 +27,12 @@ const slussen = localFont({
   display: 'swap',
 });
 
-// const geistSans = Geist({
-//   variable: '--font-geist-sans',
-//   subsets: ['latin'],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: '--font-geist-mono',
-//   subsets: ['latin'],
-// });
-
 export const metadata: Metadata = {
   title: 'Trendupp',
   description: 'Trendupp — The creator marketing platform',
+  icons: {
+    icon: '/Option.png',
+  },
 };
 
 export default function RootLayout({
@@ -47,18 +41,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={cn(
-        'h-full',
-        'antialiased',
-        slussen.variable,
-        // geistSans.variable,
-        // geistMono.variable,
-        'font-sans',
-      )}
-    >
-      <body className="min-h-full overflow-hidden flex flex-col">{children}</body>
+    <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
+      <body className="min-h-full overflow-hidden flex flex-col">
+        <QueryProvider>
+          {children}
+          <Toaster richColors />
+        </QueryProvider>
+      </body>
     </html>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, User, AtSign } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { socials } from '@/constants/socials';
@@ -13,17 +13,21 @@ import { Checkbox } from '@/components/ui/checkbox';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { creatorSignupSchema, CreatorSignupValues } from '@/lib/validations/creatorSignupSchema';
 import { BackButton } from '@/shared/BackButton';
+import { useRoles, useSignup } from '@/hooks/useAuthMutations';
+import { toast } from 'sonner';
 
 export default function CreatorSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
+  const { data: roles } = useRoles();
+  const signup = useSignup();
 
   const {
     register,
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreatorSignupValues>({
     resolver: zodResolver(creatorSignupSchema),
     defaultValues: {
@@ -33,9 +37,28 @@ export default function CreatorSignupPage() {
   });
 
   async function onSubmit(values: CreatorSignupValues) {
-    console.log('Creator signup values:', values);
-    // TODO: call signup API
-    router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}&type=creator`);
+    const creatorRole = roles?.find((r) => r.name === 'creator');
+
+    if (!creatorRole) {
+      toast.error('Could not load roles. Please refresh and try again.');
+      return;
+    }
+
+    try {
+      await signup.mutateAsync({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        role: creatorRole.id,
+        acceptedTerms: values.terms,
+      });
+      setTimeout(() => {
+        router.push(
+          `/features/verify-email?email=${encodeURIComponent(values.email)}&type=creator`,
+        );
+      }, 1500);
+    } catch {}
   }
 
   const inputCls =
@@ -52,10 +75,10 @@ export default function CreatorSignupPage() {
       slideIndex={1}
     >
       <div className="w-full items-center flex flex-col">
-        <BackButton />
+        <BackButton className="absolute top-4" />
         <div className="max-w-[500px] w-full flex flex-col">
           <h1 className="text-xl font-extralight text-[#1a1a2e] text-center mb-1">Sign up</h1>
-          <p className="text-sm font-light text-[#7a7a9a] text-center mb-4">
+          <p className="text-sm font-light text-text-secondary text-center mb-4">
             Get started with an account on{' '}
             <span className="text-brand-pink font-medium">Trendupp</span>
           </p>
@@ -75,7 +98,7 @@ export default function CreatorSignupPage() {
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-[#e8e6f0]" />
-            <span className="text-xs text-[#7a7a9a]">Or</span>
+            <span className="text-xs text-text-secondary">Or</span>
             <div className="flex-1 h-px bg-[#e8e6f0]" />
           </div>
 
@@ -126,22 +149,6 @@ export default function CreatorSignupPage() {
                 />
               </div>
               {errors.email && <p className="text-[11px] text-red-400">{errors.email.message}</p>}
-            </div>
-
-            {/* Username */}
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-light text-[#1a1a2e]">Username</Label>
-              <div className="relative">
-                <AtSign size={15} className={iconCls} />
-                <Input
-                  {...register('username')}
-                  placeholder="Enter username"
-                  className={`pl-9 ${inputCls}`}
-                />
-              </div>
-              {errors.username && (
-                <p className="text-[11px] text-red-400">{errors.username.message}</p>
-              )}
             </div>
 
             {/* Password */}
@@ -204,8 +211,8 @@ export default function CreatorSignupPage() {
                     render={({ field }) => (
                       <Checkbox
                         id="terms"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
+                        checked={!!field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
                         className="mt-0.5 border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
                       />
                     )}
@@ -215,7 +222,7 @@ export default function CreatorSignupPage() {
                     className="text-[11px] text-[#7a7a9a] leading-relaxed cursor-pointer"
                   >
                     By registering you agree with our{' '}
-                    <a href="/terms" className="text-brand-pink hover:underline">
+                    <a href="#" className="text-brand-pink hover:underline">
                       Terms & Conditions
                     </a>
                   </label>
@@ -239,7 +246,7 @@ export default function CreatorSignupPage() {
                 />
                 <label
                   htmlFor="promo"
-                  className="text-[11px] text-[#7a7a9a] leading-relaxed cursor-pointer"
+                  className="text-[11px] text-text-secondary leading-relaxed cursor-pointer"
                 >
                   I agree to receive promotional emails, updates, product announcements, and
                   campaign opportunities from Trendupp
@@ -249,10 +256,10 @@ export default function CreatorSignupPage() {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink-light"
+              disabled={signup.isPending}
+              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
-              {isSubmitting ? 'Creating account…' : 'Sign up'}
+              {signup.isPending ? 'Creating account…' : 'Sign up'}
             </Button>
           </form>
         </div>
