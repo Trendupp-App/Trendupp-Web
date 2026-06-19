@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, Building2, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, Phone } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { socials } from '@/constants/socials';
@@ -16,11 +16,15 @@ import {
   AdvertiserSignupValues,
 } from '@/lib/validations/advertiserSignupSchema';
 import { BackButton } from '@/shared/BackButton';
+import { toast } from 'sonner';
+import { useRoles, useSignup } from '@/hooks/useAuthMutations';
 
 export default function AdvertiserSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
+  const { data: roles } = useRoles();
+  const signup = useSignup();
 
   const {
     register,
@@ -36,8 +40,22 @@ export default function AdvertiserSignupPage() {
   });
 
   async function onSubmit(values: AdvertiserSignupValues) {
-    // TODO: call signup API
-    router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}&type=advertiser`);
+    const creatorRole = roles?.find((r) => r.name === 'brand');
+    if (!creatorRole) return toast.error('Could not load roles');
+
+    await signup.mutateAsync({
+      email: values.email,
+      password: values.password,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      phoneNumber: values.phoneNumber,
+      role: creatorRole.id,
+      acceptedTerms: values.terms,
+    });
+
+    setTimeout(() => {
+      router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}&type=brand`);
+    }, 1500);
   }
 
   const inputCls =
@@ -128,6 +146,22 @@ export default function AdvertiserSignupPage() {
                 />
               </div>
               {errors.email && <p className="text-[11px] text-red-400">{errors.email.message}</p>}
+            </div>
+            {/* Phone Number */}
+            <div className="flex flex-col gap-1">
+              <Label className="text-sm font-light text-[#1a1a2e]">Phone number</Label>
+              <div className="relative">
+                <Phone size={15} className={iconCls} />
+                <Input
+                  {...register('phoneNumber')}
+                  type="tel"
+                  placeholder="Enter phone number"
+                  className={`pl-9 ${inputCls}`}
+                />
+              </div>
+              {errors.phoneNumber && (
+                <p className="text-[11px] text-red-400">{errors.phoneNumber.message}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -237,7 +271,7 @@ export default function AdvertiserSignupPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink-light"
+              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
               {isSubmitting ? 'Creating account…' : 'Sign up'}
             </Button>

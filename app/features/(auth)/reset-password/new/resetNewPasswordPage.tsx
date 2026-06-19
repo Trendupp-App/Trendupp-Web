@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { BackButton } from '@/shared/BackButton';
 import { newPasswordSchema, NewPasswordValues } from '@/lib/validations/newPasswordSchema';
+import { useResetPassword } from '@/hooks/useAuthMutations';
 
 export default function NewPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,7 @@ export default function NewPasswordPage() {
   const params = useSearchParams();
   const email = params.get('email') ?? '';
   const code = params.get('code') ?? '';
+  const resetPassword = useResetPassword();
 
   const {
     register,
@@ -29,7 +31,7 @@ export default function NewPasswordPage() {
   });
 
   async function onSubmit(values: NewPasswordValues) {
-    // TODO: call reset-password API
+    await resetPassword.mutateAsync({ email, code, newPassword: values.password });
     router.push('/features/signin');
   }
 
@@ -108,7 +110,7 @@ export default function NewPasswordPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-4 disabled:bg-brand-pink-light"
+              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-4 disabled:bg-brand-pink/40"
             >
               {isSubmitting ? 'Updating…' : 'Update password'}
             </Button>

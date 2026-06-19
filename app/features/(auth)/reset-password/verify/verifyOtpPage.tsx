@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
 import { BackButton } from '@/shared/BackButton';
+import { useForgotPassword } from '@/hooks/useAuthMutations';
 
 export default function ResetVerifyPage() {
   const [otp, setOtp] = useState('');
@@ -14,20 +15,19 @@ export default function ResetVerifyPage() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get('email') ?? 'your email';
+  const forgotPassword = useForgotPassword();
 
   async function handleSubmit() {
     if (otp.length < 6) return;
     setLoading(true);
-    // TODO: call verify-reset-code API
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 400));
     setLoading(false);
     router.push(`/features/reset-password/new?email=${encodeURIComponent(email)}&code=${otp}`);
   }
 
   async function handleResend() {
     setResending(true);
-    // TODO: call resend-code API
-    await new Promise((r) => setTimeout(r, 800));
+    await forgotPassword.mutateAsync(email);
     setResending(false);
   }
 
@@ -59,7 +59,7 @@ export default function ResetVerifyPage() {
           <Button
             onClick={handleSubmit}
             disabled={otp.length < 6 || loading}
-            className="w-full  shadow mt-8 bg-brand-pink rounded-md h-12 text-[15px] font-semibold text-white disabled:bg-brand-pink-light"
+            className="w-full  shadow mt-8 bg-brand-pink rounded-md h-12 text-[15px] font-semibold text-white disabled:bg-brand-pink-light/40"
           >
             {loading ? 'Verifying…' : 'Submit'}
           </Button>

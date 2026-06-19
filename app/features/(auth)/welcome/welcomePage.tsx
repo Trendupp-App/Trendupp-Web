@@ -5,13 +5,30 @@ import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { BackButton } from '@/shared/BackButton';
+import { useAuthStore } from '@/store/authStore';
 
 export default function WelcomePage() {
   const router = useRouter();
   const params = useSearchParams();
   const type = params.get('type') ?? 'creator';
-
+  const user = useAuthStore((state) => state.user);
   const destination = type === 'advertiser' ? '/brand/dashboard' : '/creator/dashboard';
+
+  const progress = user?.onboardingPercentage ?? 0;
+
+  const steps = user?.onboardingStepsCompleted;
+
+  let message = 'Complete your profile to get noticed by brands';
+
+  if (steps && !steps.profile) {
+    message = 'Add your username, bio and profile details.';
+  } else if (steps && !steps.niches) {
+    message = 'Choose your creator niches.';
+  } else if (steps && !steps.socials) {
+    message = 'Connect your social media accounts.';
+  } else if (steps && !steps.payout) {
+    message = 'Set up your payout information.';
+  }
 
   const handleOnboard = () => {
     router.push(`/features/onboard?type=${type}`);
@@ -44,15 +61,15 @@ export default function WelcomePage() {
           {/* Profile completion card */}
           <div className="w-full shadow-lg border border-[#e8e6f0] rounded-xl p-4 mb-8">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-[#1a1a2e]">Your profile is 20% complete</p>
-              <span className="text-sm font-semibold text-brand-pink">20%</span>
+              <p className="text-sm font-semibold text-[#1a1a2e]">
+                Your profile is {progress}% complete
+              </p>
+              <span className="text-sm font-semibold text-brand-pink">{progress}%</span>
             </div>
             <div className="w-full bg-[#f5f3fb] rounded-full h-1.5 mb-3">
-              <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '20%' }} />
+              <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${progress}%` }} />
             </div>
-            <p className="text-xs text-text-secondary">
-              Add your username, bio and niche to get noticed by brands
-            </p>
+            <p className="text-xs text-text-secondary">{message}</p>
           </div>
 
           <Button

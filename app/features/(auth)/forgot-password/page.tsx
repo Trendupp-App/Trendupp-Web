@@ -10,24 +10,23 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { BackButton } from '@/shared/BackButton';
 import { forgotPasswordSchema, ForgotPasswordValues } from '@/lib/validations/forgotPasswordSchema';
+import { useForgotPassword } from '@/hooks/useAuthMutations';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const forgotPassword = useForgotPassword();
 
   const {
     register,
     handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: '' },
   });
 
-  const email = watch('email');
-
   async function onSubmit(values: ForgotPasswordValues) {
-    // TODO: call send-code API
+    await forgotPassword.mutateAsync(values.email);
     router.push(`/features/reset-password/verify?email=${encodeURIComponent(values.email)}`);
   }
 
@@ -68,8 +67,8 @@ export default function ForgotPasswordPage() {
 
             <Button
               type="submit"
-              disabled={!email || isSubmitting}
-              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-6 disabled:bg-brand-pink-light"
+              disabled={isValid || isSubmitting}
+              className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-6 disabled:bg-brand-pink/40"
             >
               {isSubmitting ? 'Sending…' : 'Send code'}
             </Button>
