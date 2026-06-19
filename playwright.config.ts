@@ -27,7 +27,7 @@ export default defineConfig({
       ],
 
   webServer: {
-    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
+    command: process.env.CI ? 'npm run build && npx next start -p 3001' : 'npx next dev -p 3001',
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
