@@ -155,6 +155,7 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
 
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowFullBio(false);
       setVisibleCampaigns(4);
     }

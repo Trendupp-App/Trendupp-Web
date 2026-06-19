@@ -175,6 +175,7 @@ export default function CreatorProfileDrawer({
 
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab('portfolio');
       setShowFullBio(false);
       setVisiblePortfolio(6);
