@@ -75,7 +75,7 @@ export default function AccountTypePage() {
 
         <p className="text-sm text-[#7a7a9a] text-center mt-5">
           Already have an account?{' '}
-          <a href="/auth/login" className="text-[#d91a6b] font-semibold hover:underline">
+          <a href="/features/signin" className="text-[#d91a6b] font-semibold hover:underline">
             Sign in
           </a>
         </p>

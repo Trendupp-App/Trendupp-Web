@@ -21,10 +21,12 @@ export default function AccountTypeCard({
   onSelect,
 }: AccountTypeCardProps) {
   return (
-    <div
+    <button
+      type="button"
       onClick={() => onSelect(value)}
+      aria-pressed={selected}
       className={cn(
-        'flex items-center gap-5 p-5 rounded-2xl border-[1.5px] text-left transition-all cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.02)]',
+        'flex items-center gap-5 p-5 rounded-2xl border-[1.5px] text-left transition-all cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.02)] w-full',
         selected
           ? 'border-brand-pink bg-[#fff5f9]'
           : 'border-[#f0eef6] bg-white hover:border-brand-pink/30',
@@ -41,6 +43,6 @@ export default function AccountTypeCard({
         <p className="text-[16px] font-semibold text-[#1a1a2e] mb-0.5">{title}</p>
         <p className="text-[13px] font-light text-[#7a7a9a] leading-snug">{description}</p>
       </div>
-    </div>
+    </button>
   );
 }
