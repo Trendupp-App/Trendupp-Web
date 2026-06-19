@@ -20,7 +20,7 @@ export default function VerifyPage() {
     setLoading(true);
     // TODO: call verify API
     await new Promise((r) => setTimeout(r, 800));
-    router.push(`/auth/welcome?type=${type}`);
+    router.push(`/features/welcome?type=${type}`);
   }
 
   return (
