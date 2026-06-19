@@ -142,7 +142,9 @@ export default function CampaignDetailsDrawer({
                 </div>
                 <div className="flex flex-col gap-1 pl-2">
                   <span>Applied</span>
-                  <span className="font-bold text-[#1a1a2e] leading-normal">42</span>
+                  <span className="font-bold text-[#1a1a2e] leading-normal">
+                    {campaign.appliedCount}
+                  </span>
                 </div>
               </div>
 
