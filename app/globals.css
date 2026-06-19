@@ -6,6 +6,12 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-pink-light: var(--brand-pink-light);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-brand-deep-blue: var(--brand-deep-blue);
+
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
@@ -49,13 +55,19 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --background: #f3f2fe;
+  --brand-pink: #d7176f;
+  --brand-pink-light: #fcecf3;
+  --text-primary: #040039;
+  --text-secondary: #5e5e5e;
+  --brand-deep-blue: #0a0094;
+
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: #040039;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -121,10 +133,33 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  }
   body {
     @apply bg-background text-foreground;
   }
-  html {
-    @apply font-sans;
-  }
+}
+
+/* Custom scrollbar for auth pages */
+.auth-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #d7176f transparent;
+}
+
+.auth-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.auth-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.auth-scrollbar::-webkit-scrollbar-thumb {
+  background: #d7176f;
+  border-radius: 9999px;
+}
+
+.auth-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d7176f;
 }
