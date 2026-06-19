@@ -52,6 +52,8 @@ export default function OtpInput({ length = 6, onChange }: OtpInputProps) {
           ref={(el) => {
             refs.current[i] = el;
           }}
+          aria-label={`Digit ${i + 1} of ${length}`}
+          autoComplete={i === 0 ? 'one-time-code' : 'off'}
           type="text"
           inputMode="numeric"
           maxLength={1}

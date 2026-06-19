@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/ui/sonner';
+import QueryProvider from '@/lib/providers/QueryProvider';
 
 const slussen = localFont({
   src: [
@@ -28,6 +30,9 @@ const slussen = localFont({
 export const metadata: Metadata = {
   title: 'Trendupp',
   description: 'Trendupp — The creator marketing platform',
+  icons: {
+    icon: '/Option.png',
+  },
 };
 
 export default function RootLayout({
@@ -37,7 +42,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
-      <body className="min-h-full overflow-hidden flex flex-col">{children}</body>
+      <body className="min-h-full overflow-hidden flex flex-col">
+        <QueryProvider>
+          {children}
+          <Toaster richColors />
+        </QueryProvider>
+      </body>
     </html>
   );
 }

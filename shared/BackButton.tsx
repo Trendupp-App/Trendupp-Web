@@ -14,10 +14,11 @@ export function BackButton({ label = 'Back', className = '' }: BackButtonProps) 
 
   return (
     <Button
+      type="button"
       onClick={() => router.back()}
-      className={`self-start bg-transparent flex items-center gap-1.5 text-sm text-[#7a7a9a] hover:bg-brand-pink hover:text-white rounded-lg px-3 py-1.5 mb-0 transition-all ${className}`}
+      className={`self-start hover:bg-transparent bg-transparent flex items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-brand-pink cursor-pointer mb-0 transition-colors ${className}`}
     >
-      <ChevronLeft className="size-4" />
+      <ChevronLeft className="size-5" />
       <span>{label}</span>
     </Button>
   );
