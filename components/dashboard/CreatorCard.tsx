@@ -76,7 +76,10 @@ export default function CreatorCard({
 
       {/* Right: Profile button */}
       <button
-        onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.();
+        }}
         className="bg-[#fff0f5] text-brand-pink font-semibold text-xs px-4 py-2 rounded-xl hover:bg-[#ffe4ee] transition-colors focus:outline-none shrink-0 ml-3 whitespace-nowrap"
       >
         View profile

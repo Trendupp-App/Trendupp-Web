@@ -135,7 +135,7 @@ const DEFAULT_REVIEWS: CreatorReview[] = [
     logoBg: 'bg-[#00c288]',
     date: 'May 2025',
     rating: 5,
-    text: 'Alex delivered outstanding content that exceeded expectations. Professional, creative, and on time. Would work with again.'
+    text: 'Alex delivered outstanding content that exceeded expectations. Professional, creative, and on time. Would work with again.',
   },
   {
     id: 2,
@@ -144,7 +144,7 @@ const DEFAULT_REVIEWS: CreatorReview[] = [
     logoBg: 'bg-[#7c3aed]',
     date: 'Apr 2025',
     rating: 5,
-    text: 'Excellent content quality with great audience engagement. Would definitely collaborate again.'
+    text: 'Excellent content quality with great audience engagement. Would definitely collaborate again.',
   },
   {
     id: 3,
@@ -153,8 +153,8 @@ const DEFAULT_REVIEWS: CreatorReview[] = [
     logoBg: 'bg-[#f59e0b]',
     date: 'Mar 2025',
     rating: 4,
-    text: 'Good content creation. Minor revisions needed but the final result was great quality.'
-  }
+    text: 'Good content creation. Minor revisions needed but the final result was great quality.',
+  },
 ];
 
 export default function CreatorProfileDrawer({
@@ -202,10 +202,7 @@ export default function CreatorProfileDrawer({
       )}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
 
       {/* Drawer panel */}
       <div
@@ -226,7 +223,15 @@ export default function CreatorProfileDrawer({
           className="absolute top-4 right-6 text-white/75 hover:text-white transition-colors focus:outline-none z-20 cursor-pointer p-1.5"
           aria-label="Close creator drawer"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-4 h-4"
+          >
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -234,7 +239,6 @@ export default function CreatorProfileDrawer({
 
         {/* ── DARK NAVY HERO HEADER ── */}
         <div className="relative bg-[#040039] pt-12 pb-8 px-5 flex flex-col items-center text-center">
-
           {/* Circular profile image with pink ring */}
           <div className="w-[100px] h-[100px] rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-300 shadow-xl mb-4 mt-2">
             <Image
@@ -468,7 +472,11 @@ export default function CreatorProfileDrawer({
                   </span>
                   {/* Rating Stars row */}
                   <div className="flex items-center gap-0.5 mb-2 text-[#f59e0b] text-[13px] leading-none">
-                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
                   </div>
                   <span className="text-[12px] text-[#9a99b0] font-light leading-none">
                     17 reviews
@@ -484,7 +492,10 @@ export default function CreatorProfileDrawer({
                     { star: 2, pct: 0 },
                     { star: 1, pct: 0 },
                   ].map((row) => (
-                    <div key={row.star} className="flex items-center gap-2.5 text-[11px] text-[#9a99b0] font-light w-full">
+                    <div
+                      key={row.star}
+                      className="flex items-center gap-2.5 text-[11px] text-[#9a99b0] font-light w-full"
+                    >
                       <span className="w-2 text-right leading-none shrink-0">{row.star}</span>
                       <div className="flex-1 h-[5px] rounded-full bg-[#eceaf4] overflow-hidden relative">
                         {row.pct > 0 && (
@@ -502,7 +513,10 @@ export default function CreatorProfileDrawer({
               {/* Individual reviews feed */}
               <div className="flex flex-col gap-7 mt-2">
                 {(() => {
-                  const reviewsToRender = (creator.reviews && creator.reviews.length > 0) ? creator.reviews : DEFAULT_REVIEWS;
+                  const reviewsToRender =
+                    creator.reviews && creator.reviews.length > 0
+                      ? creator.reviews
+                      : DEFAULT_REVIEWS;
                   return reviewsToRender.map((review) => {
                     const isCard = review.brandName === 'Nestlé Nigeria';
 

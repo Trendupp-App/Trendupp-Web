@@ -43,7 +43,15 @@ interface BrandProfileDrawerProps {
 function InstagramIconOutline() {
   return (
     <div className="w-9 h-9 rounded-full border border-[#e8e6f0]/80 bg-[#f8f8fa] flex items-center justify-center shrink-0 text-[#1a1a2e]">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-4.5 h-4.5"
+      >
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
         <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
@@ -55,7 +63,15 @@ function InstagramIconOutline() {
 function TikTokIconOutline() {
   return (
     <div className="w-9 h-9 rounded-full border border-[#e8e6f0]/80 bg-[#f8f8fa] flex items-center justify-center shrink-0 text-[#1a1a2e]">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-4 h-4"
+      >
         <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
       </svg>
     </div>
@@ -65,7 +81,15 @@ function TikTokIconOutline() {
 function YouTubeIconOutline() {
   return (
     <div className="w-9 h-9 rounded-full border border-[#e8e6f0]/80 bg-[#f8f8fa] flex items-center justify-center shrink-0 text-[#1a1a2e]">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-4.5 h-4.5"
+      >
         <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
         <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
       </svg>
@@ -76,7 +100,15 @@ function YouTubeIconOutline() {
 function TwitterIconOutline() {
   return (
     <div className="w-9 h-9 rounded-full border border-[#e8e6f0]/80 bg-[#f8f8fa] flex items-center justify-center shrink-0 text-[#1a1a2e]">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-4 h-4"
+      >
         <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
       </svg>
     </div>
@@ -94,7 +126,15 @@ function PlatformIcon({ icon }: { icon: Platform['icon'] }) {
 function AwardIcon() {
   return (
     <div className="w-10 h-10 rounded-full bg-[#fff0f5] flex items-center justify-center shrink-0">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#d7176f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#d7176f"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-5 h-5"
+      >
         <circle cx="12" cy="8" r="6" />
         <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
       </svg>
@@ -108,7 +148,9 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -160,7 +202,15 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
           className="absolute top-4 right-6 text-[#1a1a2e] hover:text-[#d7176f] transition-colors focus:outline-none z-20 cursor-pointer p-1.5"
           aria-label="Close brand drawer"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-4 h-4"
+          >
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -170,23 +220,23 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
         <div className="relative bg-[#02003c] rounded-[24px] p-6 flex items-center gap-5 text-left shadow-md select-none w-full shrink-0">
           {/* Brand logo with white border */}
           <div className="w-20 h-20 rounded-full border-2 border-white overflow-hidden bg-white shrink-0 shadow-sm relative">
-            <Image
-              src={brand.image}
-              alt={brand.name}
-              fill
-              className="object-cover"
-              sizes="80px"
-            />
+            <Image src={brand.image} alt={brand.name} fill className="object-cover" sizes="80px" />
           </div>
 
           {/* Brand Info */}
           <div className="flex flex-col min-w-0">
-            <h2 className="text-white text-[20px] font-bold leading-tight truncate">{brand.name}</h2>
+            <h2 className="text-white text-[20px] font-bold leading-tight truncate">
+              {brand.name}
+            </h2>
             {brand.website && (
-              <p className="text-white/60 text-[12px] font-light mt-1.5 leading-none">{brand.website}</p>
+              <p className="text-white/60 text-[12px] font-light mt-1.5 leading-none">
+                {brand.website}
+              </p>
             )}
             {brand.location && (
-              <p className="text-white/60 text-[12px] font-light mt-1.5 leading-none">{brand.location}</p>
+              <p className="text-white/60 text-[12px] font-light mt-1.5 leading-none">
+                {brand.location}
+              </p>
             )}
           </div>
         </div>
@@ -217,7 +267,15 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
           <div className="bg-white border border-[#e8e6f0]/60 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm w-full">
             {/* Pink award ribbon icon */}
             <div className="w-10 h-10 rounded-xl bg-[#fff0f5] flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#d7176f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#d7176f"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-5 h-5"
+              >
                 <circle cx="12" cy="8" r="6" />
                 <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
               </svg>
@@ -299,7 +357,15 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
                     </span>
                     {/* White circular arrow link icon */}
                     <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#02003c" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="w-2 h-2">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#02003c"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-2 h-2"
+                      >
                         <line x1="7" y1="17" x2="17" y2="7" />
                         <polyline points="7 7 17 7 17 17" />
                       </svg>
@@ -321,9 +387,7 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
 
             {/* Show Load More even when all campaigns are shown if there are >= 4 (matches screenshot) */}
             {visibleCampaigns >= completedCampaigns.length && completedCampaigns.length >= 1 && (
-              <button
-                className="w-full mt-2 py-3.5 text-[13px] font-semibold text-[#7a7a9a] bg-[#eceaf4] rounded-2xl focus:outline-none cursor-default"
-              >
+              <button className="w-full mt-2 py-3.5 text-[13px] font-semibold text-[#7a7a9a] bg-[#eceaf4] rounded-2xl focus:outline-none cursor-default">
                 Load More
               </button>
             )}

@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: [['html', { outputFolder: 'playwright-report' }]],
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -27,8 +27,8 @@ export default defineConfig({
       ],
 
   webServer: {
-    command: process.env.CI ? 'yarn build && yarn start' : 'yarn dev',
-    url: 'http://localhost:3000',
+    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
+    url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

@@ -39,15 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={cn(
-        'h-full',
-        'antialiased',
-        slussen.variable,
-        'font-sans',
-      )}
-    >
+    <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
       <body className="min-h-full overflow-hidden flex flex-col">{children}</body>
     </html>
   );

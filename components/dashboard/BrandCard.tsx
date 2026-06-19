@@ -46,7 +46,9 @@ export default function BrandCard({
         {/* Text */}
         <div className="flex flex-col min-w-0">
           <h4 className="text-sm font-bold text-[#1a1a2e] leading-tight truncate">{name}</h4>
-          <span className="text-[11px] text-[#9a99b0] font-light mt-0.5 leading-none">{category}</span>
+          <span className="text-[11px] text-[#9a99b0] font-light mt-0.5 leading-none">
+            {category}
+          </span>
           <span className="text-[11px] text-[#7a7a9a] font-light mt-1.5 whitespace-nowrap leading-none">
             {campaignCount} campaigns &nbsp;&middot;&nbsp; {followerCount} followers
           </span>
@@ -55,7 +57,10 @@ export default function BrandCard({
 
       {/* Right: View button */}
       <button
-        onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.();
+        }}
         className="bg-[#fff0f5] text-brand-pink font-semibold text-xs px-4 py-2 rounded-xl hover:bg-[#ffe4ee] transition-colors focus:outline-none shrink-0 ml-3"
       >
         View
