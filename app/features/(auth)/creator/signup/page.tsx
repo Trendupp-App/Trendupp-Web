@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, User, Phone } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { socials } from '@/constants/socials';
@@ -20,7 +20,7 @@ export default function CreatorSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
-  const { data: roles, isLoading: rolesLoading } = useRoles();
+  const { data: roles } = useRoles();
   const signup = useSignup();
 
   const {
@@ -50,7 +50,6 @@ export default function CreatorSignupPage() {
         password: values.password,
         firstName: values.firstName,
         lastName: values.lastName,
-        phoneNumber: values.phoneNumber,
         role: creatorRole.id,
         acceptedTerms: values.terms,
       });
@@ -150,23 +149,6 @@ export default function CreatorSignupPage() {
                 />
               </div>
               {errors.email && <p className="text-[11px] text-red-400">{errors.email.message}</p>}
-            </div>
-
-            {/* Phone Number */}
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-light text-[#1a1a2e]">Phone number</Label>
-              <div className="relative">
-                <Phone size={15} className={iconCls} />
-                <Input
-                  {...register('phoneNumber')}
-                  type="tel"
-                  placeholder="Enter phone number"
-                  className={`pl-9 ${inputCls}`}
-                />
-              </div>
-              {errors.phoneNumber && (
-                <p className="text-[11px] text-red-400">{errors.phoneNumber.message}</p>
-              )}
             </div>
 
             {/* Password */}
@@ -274,7 +256,7 @@ export default function CreatorSignupPage() {
 
             <Button
               type="submit"
-              disabled={signup.isPending || rolesLoading}
+              disabled={signup.isPending}
               className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
               {signup.isPending ? 'Creating account…' : 'Sign up'}

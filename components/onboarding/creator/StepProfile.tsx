@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Camera, User } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { CreatorOnboardingData } from '@/types/Onboarding';
 import { Button } from '@/components/ui/button';
@@ -16,48 +16,54 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { schema, Values } from '@/lib/validations/profileSchema';
+import { useNationalities, useCountries, useStates } from '@/hooks/useOnboardingQueries';
+import { useAuthStore } from '@/store/authStore';
+import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
+import { toast } from 'sonner';
+import { ComboBox } from '@/shared/ComboBox';
+import Image from 'next/image';
 
 interface Props {
   onNext: (data: Partial<CreatorOnboardingData>) => void;
   defaultValues?: Partial<Values>;
 }
 
-const NATIONALITIES = [
-  'Nigerian',
-  'Ghanaian',
-  'Kenyan',
-  'South African',
-  'British',
-  'American',
-  'Canadian',
-  'Other',
-];
-const COUNTRIES = [
-  'Nigeria',
-  'Ghana',
-  'Kenya',
-  'South Africa',
-  'United Kingdom',
-  'United States',
-  'Canada',
-  'Other',
-];
-const STATES = ['Lagos', 'Abuja', 'Kano', 'Rivers', 'Oyo', 'Kaduna', 'Other'];
-
 export default function StepProfile({ onNext, defaultValues }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>();
+  const { data: nationalities = [], isLoading: loadingNationalities } = useNationalities();
+  const { data: countries = [], isLoading: loadingCountries } = useCountries();
+
+  const selectedCountryId =
+    userSelectedCountryId ?? countries.find((c) => c.name === defaultValues?.country)?.id;
+  const { data: states = [] } = useStates(selectedCountryId);
+
+  const user = useAuthStore((s) => s.user);
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
+
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
-    formState: { errors, isSubmitting },
+    control,
+    formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues ?? {},
+    defaultValues: {
+      ...defaultValues,
+      username: defaultValues?.username ?? user?.username ?? '',
+    },
   });
 
-  const photo = watch('photo');
+  const photo = useWatch({ control, name: 'photo' });
+  const nationality = useWatch({ control, name: 'nationality' });
+  const country = useWatch({ control, name: 'country' });
+  useEffect(() => {
+    if (!defaultValues?.username && user?.username) {
+      setValue('username', user.username);
+    }
+  }, [user?.username, defaultValues?.username, setValue]);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -67,14 +73,43 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
     reader.readAsDataURL(file);
   }
 
+  function handleCountryChange(countryName: string) {
+    setValue('country', countryName, { shouldValidate: true });
+    setValue('state', '', { shouldValidate: true });
+    const match = countries.find((c) => c.name === countryName);
+    setUserSelectedCountryId(match?.id);
+  }
+
+  function onSubmit(values: Values) {
+    const nationalityId = nationalities.find((n) => n.name === values.nationality)?.id;
+    const countryId = countries.find((c) => c.name === values.country)?.id;
+    const stateId = states.find((s) => s.name === values.state)?.id;
+
+    if (!nationalityId || !countryId || !stateId) {
+      toast.error('Please select a valid nationality, country, and state');
+      return;
+    }
+
+    updateProfile(
+      {
+        username: values.username,
+        nationalityId,
+        countryId,
+        stateId,
+        bio: values.bio,
+      },
+      { onSuccess: () => onNext(values) },
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit(onNext)} className="flex flex-col gap-4 w-full">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
       {/* Photo upload */}
       <div className="flex flex-col items-center mb-2">
         <div className="relative w-20 h-20 mb-2">
           <div className="w-20 border-dashed border-brand-deep-blue h-20 rounded-full bg-[#f0eef8] flex items-center justify-center overflow-hidden border">
             {photo ? (
-              <img src={photo} alt="Profile" className="w-full h-full object-cover" />
+              <Image src={photo} alt="Brand logo" fill className="object-cover rounded-full" />
             ) : (
               <User size={32} className="text-[#9a99b0]" />
             )}
@@ -103,24 +138,27 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
         </button>
       </div>
 
+      <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">Username</Label>
+        <Input
+          {...register('username')}
+          placeholder="Choose a username"
+          className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+        />
+        {errors.username && <p className="text-[11px] text-red-400">{errors.username.message}</p>}
+      </div>
+
       {/* Nationality */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Nationality</Label>
-        <Select
-          onValueChange={(v) => setValue('nationality', v)}
-          defaultValue={defaultValues?.nationality}
-        >
-          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
-            <SelectValue placeholder="Select Nationality" />
-          </SelectTrigger>
-          <SelectContent>
-            {NATIONALITIES.map((n) => (
-              <SelectItem key={n} value={n}>
-                {n}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ComboBox
+          options={nationalities.map((n) => ({ value: n.name, label: n.name }))}
+          value={nationality}
+          onValueChange={(v) => setValue('nationality', v, { shouldValidate: true })}
+          placeholder="Select Nationality"
+          searchPlaceholder="Search nationality..."
+          loading={loadingNationalities}
+        />
         {errors.nationality && (
           <p className="text-[11px] text-red-400">{errors.nationality.message}</p>
         )}
@@ -129,32 +167,31 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
       {/* Country */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Country</Label>
-        <Select onValueChange={(v) => setValue('country', v)} defaultValue={defaultValues?.country}>
-          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
-            <SelectValue placeholder="Select Country" />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ComboBox
+          options={countries.map((c) => ({ value: c.name, label: c.name }))}
+          value={country}
+          onValueChange={handleCountryChange}
+          placeholder="Select Country"
+          searchPlaceholder="Search country..."
+          loading={loadingCountries}
+        />
         {errors.country && <p className="text-[11px] text-red-400">{errors.country.message}</p>}
       </div>
 
       {/* State */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">State</Label>
-        <Select onValueChange={(v) => setValue('state', v)} defaultValue={defaultValues?.state}>
+        <Select
+          onValueChange={(v) => setValue('state', v, { shouldValidate: true })}
+          defaultValue={defaultValues?.state}
+        >
           <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
             <SelectValue placeholder="Select State" />
           </SelectTrigger>
-          <SelectContent>
-            {STATES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
+          <SelectContent className="w-64">
+            {states?.map((s) => (
+              <SelectItem key={s?.id} value={s?.name}>
+                {s?.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -177,10 +214,10 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
 
       <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink-light"
+        disabled={isPending}
+        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
-        Continue
+        {isPending ? 'Saving...' : 'Continue'}
       </Button>
     </form>
   );

@@ -18,7 +18,20 @@ export interface AuthUser {
     socials: boolean;
     payout: boolean;
   };
+  socialsConnected: {
+    instagram: boolean;
+    tiktok: boolean;
+    youtube: boolean;
+    twitter: boolean;
+  };
   username: string | null;
+  niches: Array<{ id: string; name: string; order: number }>;
+  assignedTier: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
 }
 
 interface AuthState {

@@ -6,7 +6,7 @@ import { AxiosError } from 'axios';
 export function useRoles() {
   return useQuery({
     queryKey: ['roles'],
-    queryFn: () => authApi.getRoles().then((r) => r.data),
+    queryFn: () => authApi.getRoles().then((r) => r?.data),
     staleTime: Infinity,
   });
 }
@@ -38,6 +38,7 @@ export function useVerifyOtp() {
 }
 
 export function useLogin() {
+  const clearSession = useAuthStore((s) => s.clearSession);
   const setSession = useAuthStore((s) => s.setSession);
   return useMutation({
     mutationFn: authApi.login,
@@ -46,6 +47,7 @@ export function useLogin() {
       toast.success(`Welcome back!`);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
+      clearSession();
       toast.error(err?.response?.data?.message ?? 'Login failed');
     },
   });
