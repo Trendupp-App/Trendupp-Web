@@ -65,13 +65,6 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
     }
   }, [user?.username, defaultValues?.username, setValue]);
 
-  // useEffect(() => {
-  //   if (!selectedCountryId && defaultValues?.country && countries.length > 0) {
-  //     const match = countries.find((c) => c.name === defaultValues.country);
-  //     if (match) setSelectedCountryId(match.id);
-  //   }
-  // }, [countries, defaultValues?.country, selectedCountryId]);
-
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -81,8 +74,8 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
   }
 
   function handleCountryChange(countryName: string) {
-    setValue('country', countryName);
-    setValue('state', '');
+    setValue('country', countryName, { shouldValidate: true });
+    setValue('state', '', { shouldValidate: true });
     const match = countries.find((c) => c.name === countryName);
     setUserSelectedCountryId(match?.id);
   }
@@ -156,29 +149,6 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
       </div>
 
       {/* Nationality */}
-      {/* <div className="flex flex-col gap-1">
-        <Label className="text-sm font-light text-[#1a1a2e]">Nationality</Label>
-        <Select
-          onValueChange={(v) => setValue('nationality', v)}
-          defaultValue={defaultValues?.nationality}
-        >
-          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
-            <SelectValue placeholder={loadingNationalities ? 'Loading...' : 'Select Nationality'} />
-          </SelectTrigger>
-          <SelectContent className="w-64">
-            {nationalities?.map((n) => (
-              <SelectItem key={n?.id} value={n?.name}>
-                {n?.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.nationality && (
-          <p className="text-[11px] text-red-400">{errors.nationality.message}</p>
-        )}
-      </div> */}
-
-      {/* Nationality */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Nationality</Label>
         <ComboBox
@@ -193,24 +163,6 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
           <p className="text-[11px] text-red-400">{errors.nationality.message}</p>
         )}
       </div>
-
-      {/* Country */}
-      {/* <div className="flex flex-col gap-1">
-        <Label className="text-sm font-light text-[#1a1a2e]">Country</Label>
-        <Select onValueChange={handleCountryChange} defaultValue={defaultValues?.country}>
-          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
-            <SelectValue placeholder="Select Country" />
-          </SelectTrigger>
-          <SelectContent className="w-64">
-            {countries?.map((c) => (
-              <SelectItem key={c?.id} value={c?.name}>
-                {c?.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.country && <p className="text-[11px] text-red-400">{errors.country.message}</p>}
-      </div> */}
 
       {/* Country */}
       <div className="flex flex-col gap-1">
@@ -229,7 +181,10 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
       {/* State */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">State</Label>
-        <Select onValueChange={(v) => setValue('state', v)} defaultValue={defaultValues?.state}>
+        <Select
+          onValueChange={(v) => setValue('state', v, { shouldValidate: true })}
+          defaultValue={defaultValues?.state}
+        >
           <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
             <SelectValue placeholder="Select State" />
           </SelectTrigger>

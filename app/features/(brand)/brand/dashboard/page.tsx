@@ -1,7 +1,7 @@
-import React from 'react';
+'use client';
 
-const page = () => {
+const BrandDashboardPage = () => {
   return <div>Brand Dashboard</div>;
 };
 
-export default page;
+export default BrandDashboardPage;

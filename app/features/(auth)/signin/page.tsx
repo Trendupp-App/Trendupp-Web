@@ -41,7 +41,6 @@ export default function SigninPage() {
       const message: string =
         (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? '';
       if (message.toLowerCase().includes('email is not verified')) {
-        console.log('redirecting to verify-email');
         router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}`);
       }
     }

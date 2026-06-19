@@ -54,7 +54,7 @@ export function BankCombobox({ value, onChange, error }: BankComboboxProps) {
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[--radix-popover-trigger-width] p-1 border"
+          className="w-(--radix-popover-trigger-width) p-1 border"
           align="start"
           sideOffset={10}
         >
@@ -66,7 +66,7 @@ export function BankCombobox({ value, onChange, error }: BankComboboxProps) {
                 setSearch(value);
                 listRef.current?.scrollTo({
                   top: 0,
-                  behavior: 'instant',
+                  behavior: 'smooth',
                 });
               }}
             />
