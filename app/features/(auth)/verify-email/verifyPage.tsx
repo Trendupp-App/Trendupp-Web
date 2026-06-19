@@ -21,10 +21,16 @@ export default function VerifyPage() {
   async function handleSubmit() {
     if (otp.length < 6) return;
     setLoading(true);
-    await verifyOtp.mutateAsync({ email, code: otp });
-    setTimeout(() => {
-      router.push(`/features/welcome?type=${type}`);
-    }, 1500);
+    try {
+      await verifyOtp.mutateAsync({ email, code: otp });
+      setTimeout(() => {
+        router.push(`/features/welcome?type=${type}`);
+      }, 1500);
+    } catch {
+      // error toast already handled by useVerifyOtp's onError
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

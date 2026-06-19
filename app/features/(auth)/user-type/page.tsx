@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AccountTypeCard from '@/components/auth/AccountTypeCard';
 import { useAuthStore } from '@/store/authStore';
+import { authApi } from '@/services/authApi';
+import { useQueryClient } from '@tanstack/react-query';
 
 type AccountType = 'creator' | 'advertiser' | null;
 
@@ -15,6 +17,15 @@ export default function AccountTypePage() {
   const [selected, setSelected] = useState<AccountType>(null);
   const router = useRouter();
   const { user, accessToken } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    queryClient.prefetchQuery({
+      queryKey: ['roles'],
+      queryFn: () => authApi.getRoles().then((r) => r?.data),
+      staleTime: Infinity,
+    });
+  }, [queryClient]);
 
   useEffect(() => {
     if (accessToken && user) {

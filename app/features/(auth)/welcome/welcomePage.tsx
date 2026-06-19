@@ -28,6 +28,8 @@ export default function WelcomePage() {
     message = 'Connect your social media accounts.';
   } else if (steps && !steps.payout) {
     message = 'Set up your payout information.';
+  } else if (steps && steps.payout && steps.niches && steps.profile && steps.socials) {
+    message = 'Congratulation your profile is set.';
   }
 
   const handleOnboard = () => {

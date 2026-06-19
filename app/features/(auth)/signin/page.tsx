@@ -14,6 +14,7 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import { signinSchema, SigninValues } from '@/lib/validations/loginSchema';
 import { BackButton } from '@/shared/BackButton';
 import { useLogin } from '@/hooks/useAuthMutations';
+import { AxiosError } from 'axios';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -29,12 +30,21 @@ export default function SigninPage() {
   });
 
   async function onSubmit(values: SigninValues) {
-    const { data } = await login.mutateAsync(values);
-    const dest =
-      data.user.role === 'creator' ? '/features/creator/dashboard' : '/features/brand/dashboard';
-    setTimeout(() => {
-      router.push(dest);
-    }, 1500);
+    try {
+      const { data } = await login.mutateAsync(values);
+      const dest =
+        data.user.role === 'creator' ? '/features/creator/dashboard' : '/features/brand/dashboard';
+      setTimeout(() => {
+        router.push(dest);
+      }, 1500);
+    } catch (err) {
+      const message: string =
+        (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? '';
+      if (message.toLowerCase().includes('email is not verified')) {
+        console.log('redirecting to verify-email');
+        router.push(`/features/verify-email?email=${encodeURIComponent(values.email)}`);
+      }
+    }
   }
 
   const inputCls =

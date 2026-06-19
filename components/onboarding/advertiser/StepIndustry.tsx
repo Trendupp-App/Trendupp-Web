@@ -52,7 +52,7 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
         type="button"
         disabled={selected.length < 3}
         onClick={() => onNext({ industries: selected })}
-        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink-light"
+        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
         Continue
       </Button>

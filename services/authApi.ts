@@ -8,7 +8,7 @@ export interface SignupPayload {
   password: string;
   firstName: string;
   lastName: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   role: string;
   acceptedTerms: boolean;
 }
@@ -49,7 +49,7 @@ export const authApi = {
 
   login: (data: LoginPayload) => apiClient.post<AuthResponse>('/auth/login', data),
 
-  resendOtp: (email: string) => apiClient.post('/auth/otp/resend', { email }),
+  resendOtp: (email: string) => apiClient.post('/auth/otp/send', { email }),
   forgotPassword: (email: string) =>
     apiClient.post<MessageResponse>('/auth/password/forgot', { email }),
 
