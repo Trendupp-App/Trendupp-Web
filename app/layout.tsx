@@ -42,16 +42,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
-<<<<<<< HEAD
       <body className="min-h-full overflow-hidden flex flex-col">
         <QueryProvider>
           {children}
           <Toaster richColors />
         </QueryProvider>
       </body>
-=======
-      <body className="min-h-full overflow-hidden flex flex-col">{children}</body>
->>>>>>> feature/creator-dashboard
     </html>
   );
 }
