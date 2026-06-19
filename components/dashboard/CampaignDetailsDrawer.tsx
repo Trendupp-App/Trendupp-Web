@@ -82,9 +82,10 @@ export default function CampaignDetailsDrawer({
       {/* Slide-out Drawer Panel */}
       <div
         className={cn(
-          'w-full max-w-[560px] h-full bg-white relative z-10 flex flex-col shadow-2xl transition-transform duration-300 ease-out overflow-y-auto auth-scrollbar pb-6',
+          'w-full max-w-[560px] h-full bg-white relative z-10 flex flex-col shadow-2xl transition-transform duration-300 ease-out overflow-y-auto auth-scrollbar pb-6 border-0 border-none',
           isOpen ? 'translate-x-0' : 'translate-x-full',
         )}
+        style={{ border: 'none' }}
       >
         {drawerMode === 'details' && (
           <>

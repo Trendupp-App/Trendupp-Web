@@ -324,7 +324,7 @@ export default function CreatorDashboardPage() {
                 </div>
               ) : (
                 /* Vertical stack list for "Live" or "Past" active tabs */
-                <div className="flex flex-col gap-6 w-full pb-4">
+                <div className="flex flex-col gap-4 w-full pb-4">
                   {filteredCampaigns.map((campaign) => (
                     <div key={campaign.id} className="w-full">
                       <CampaignCard
@@ -343,7 +343,7 @@ export default function CreatorDashboardPage() {
             </div>
 
             {/* Desktop View: Grid for all tabs */}
-            <div className="hidden lg:grid lg:grid-cols-3 gap-6 w-full pb-4 select-none">
+            <div className="hidden lg:grid lg:grid-cols-3 gap-x-6 gap-y-4 w-full pb-4 select-none">
               {filteredCampaigns.map((campaign) => (
                 <div key={campaign.id} className="w-full">
                   <CampaignCard
@@ -414,7 +414,6 @@ export default function CreatorDashboardPage() {
                       <span className="text-[9px] font-bold text-[#2563eb] bg-[#eff6ff] px-2 py-0.5 rounded-full w-fit">
                         {news.category}
                       </span>
-                      micro-animations for enhanced hover effects
                       <h5 className="text-xs font-bold text-[#1a1a2e] leading-snug line-clamp-2 mt-1.5 group-hover/item:text-brand-pink transition-colors">
                         {news.title}
                       </h5>
@@ -431,7 +430,7 @@ export default function CreatorDashboardPage() {
             </div>
 
             {/* Desktop View: Grid */}
-            <div className="hidden lg:grid lg:grid-cols-3 gap-6 w-full pb-4 select-none">
+            <div className="hidden lg:grid lg:grid-cols-3 gap-x-6 gap-y-4 w-full pb-4 select-none">
               {MOCK_NEWS.map((news) => (
                 <div
                   key={news.id}

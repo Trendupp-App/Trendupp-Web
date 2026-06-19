@@ -82,9 +82,10 @@ export default function AnalyticsDrawer({ isOpen, onClose }: AnalyticsDrawerProp
       {/* Slide-out Panel */}
       <div
         className={cn(
-          'w-full max-w-[550px] h-full bg-white relative z-10 flex flex-col p-6 shadow-2xl transition-transform duration-300 ease-out',
+          'w-full max-w-[550px] h-full bg-white relative z-10 flex flex-col p-6 shadow-2xl transition-transform duration-300 ease-out border-0 border-none',
           isOpen ? 'translate-x-0' : 'translate-x-full',
         )}
+        style={{ border: 'none' }}
       >
         {/* Drawer Header */}
         <div className="flex items-center justify-between border-b border-[#e8e6f0]/40 pb-4 shrink-0">
