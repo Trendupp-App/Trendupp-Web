@@ -30,6 +30,9 @@ const slussen = localFont({
 export const metadata: Metadata = {
   title: 'Trendupp',
   description: 'Trendupp — The creator marketing platform',
+  icons: {
+    icon: '/Option.png',
+  },
 };
 
 export default function RootLayout({
