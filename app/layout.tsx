@@ -28,10 +28,22 @@ const slussen = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Trendupp',
-  description: 'Trendupp — The creator marketing platform',
+  title: {
+    default: 'Trendupp',
+    template: '%s | Trendupp',
+  },
+  description:
+    'Trendupp connects creators with brands for paid campaigns. Discover opportunities, apply, and earn — all in one place.',
   icons: {
     icon: '/Option.png',
+  },
+  openGraph: {
+    title: 'Trendupp — The Creator Marketing Platform',
+    description:
+      'Trendupp connects creators with brands for paid campaigns. Discover opportunities, apply, and earn — all in one place.',
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'Trendupp',
   },
 };
 
