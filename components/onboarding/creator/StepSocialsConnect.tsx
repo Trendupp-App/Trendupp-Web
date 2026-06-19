@@ -3,12 +3,21 @@
 import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useUpdateSocials } from '@/hooks/useOnboardingMutations';
+import type {
+  SocialFollowersKey,
+  SocialUsernameKey,
+  UpdateSocialsPayload,
+} from '@/types/Onboarding';
+import { Input } from '@/components/ui/input';
 
 type Platform = {
   id: string;
   name: string;
   icon: React.ReactNode;
   requirements: string[];
+  usernameKey: SocialUsernameKey;
+  followersKey: SocialFollowersKey;
 };
 
 const PLATFORMS: Platform[] = [
@@ -32,6 +41,8 @@ const PLATFORMS: Platform[] = [
       'My Instagram account is linked to a Facebook page',
       'I have a business or creator Instagram account',
     ],
+    usernameKey: 'instagramUsername',
+    followersKey: 'instagramFollowers',
   },
   {
     id: 'youtube',
@@ -43,6 +54,8 @@ const PLATFORMS: Platform[] = [
       </svg>
     ),
     requirements: ['My YouTube channel is public', 'My channel has at least 100 subscribers'],
+    usernameKey: 'youtubeUsername',
+    followersKey: 'youtubeFollowers',
   },
   {
     id: 'x',
@@ -56,6 +69,8 @@ const PLATFORMS: Platform[] = [
       'My X/Twitter account is public',
       'I have an active account with at least 500 followers',
     ],
+    usernameKey: 'twitterUsername',
+    followersKey: 'twitterFollowers',
   },
   {
     id: 'tiktok',
@@ -66,6 +81,8 @@ const PLATFORMS: Platform[] = [
       </svg>
     ),
     requirements: ['My TikTok account is public', 'I have a creator or business TikTok account'],
+    usernameKey: 'tiktokUsername',
+    followersKey: 'tiktokFollowers',
   },
 ];
 
@@ -84,6 +101,10 @@ interface Props {
 export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
   const [connected, setConnected] = useState<ConnectedAccount[]>(defaultValues?.connected ?? []);
   const [activePlatform, setActivePlatform] = useState<Platform | null>(null);
+  const [usernameInput, setUsernameInput] = useState('');
+  const [followersInput, setFollowersInput] = useState('');
+
+  const { mutate: updateSocials, isPending } = useUpdateSocials();
 
   function isConnected(id: string) {
     return connected.some((c) => c.platformId === id);
@@ -93,14 +114,43 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
     return connected.find((c) => c.platformId === id);
   }
 
+  function openPlatform(platform: Platform) {
+    const existing = getAccount(platform.id);
+    setUsernameInput(existing?.username.replace(/^@/, '') ?? '');
+    setFollowersInput(existing ? existing.followers.replace(/[^\d]/g, '') : '');
+    setActivePlatform(platform);
+  }
+
+  const followersValue = Number(followersInput);
+  const canSubmit =
+    usernameInput.trim().length > 0 &&
+    followersInput.trim().length > 0 &&
+    !Number.isNaN(followersValue) &&
+    followersValue >= 0;
+
   function handleConnect() {
-    if (!activePlatform) return;
-    // Simulate OAuth connection returning mock data
-    setConnected((prev) => [
-      ...prev.filter((c) => c.platformId !== activePlatform.id),
-      { platformId: activePlatform.id, username: '@username', followers: '12.4k followers' },
-    ]);
-    setActivePlatform(null);
+    if (!activePlatform || !canSubmit) return;
+
+    const username = usernameInput.trim();
+    const payload: UpdateSocialsPayload = {};
+    payload[activePlatform.usernameKey] = username;
+    payload[activePlatform.followersKey] = followersValue;
+
+    updateSocials(payload, {
+      onSuccess: () => {
+        setConnected((prev) => [
+          ...prev.filter((c) => c.platformId !== activePlatform.id),
+          {
+            platformId: activePlatform.id,
+            username: `@${username}`,
+            followers: `${followersValue.toLocaleString()} followers`,
+          },
+        ]);
+        setActivePlatform(null);
+        setUsernameInput('');
+        setFollowersInput('');
+      },
+    });
   }
 
   function handleDisconnect(platformId: string) {
@@ -111,7 +161,6 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
   if (activePlatform) {
     return (
       <div className="flex flex-col gap-4 w-full">
-        {/* Platform card */}
         <div className="border border-[#e8e6f0] rounded-xl p-4 flex items-center gap-3 bg-white">
           <div className="w-10 h-10 rounded-full bg-[#f5f3fb] flex items-center justify-center text-[#1a1a2e]">
             {activePlatform.icon}
@@ -119,15 +168,14 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
           <div>
             <p className="text-sm font-medium text-[#1a1a2e]">{activePlatform.name}</p>
             <p className="text-xs text-[#9a99b0]">
-              Connect your {activePlatform.name.toLowerCase()} accounts
+              Connect your {activePlatform.name.toLowerCase()} account
             </p>
           </div>
         </div>
 
-        {/* Requirements */}
         <div>
           <p className="text-sm text-[#1a1a2e] mb-3">
-            Before you proceed, please confirm your account meet {activePlatform.name}&apos;s
+            Before you proceed, please confirm your account meets {activePlatform.name}&apos;s
             connection requirements
           </p>
           <ul className="flex flex-col gap-2">
@@ -140,13 +188,38 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
           </ul>
         </div>
 
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-xs text-[#7a7a9a] mb-1 block">Username</label>
+            <Input
+              type="text"
+              value={usernameInput}
+              onChange={(e) => setUsernameInput(e.target.value)}
+              placeholder={`Your ${activePlatform.name} username`}
+              className="w-full border border-[#e8e6f0] rounded-lg h-10 px-3 text-sm font-light text-[#1a1a2e] placeholder:text-[#9a99b0] focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/30"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[#7a7a9a] mb-1 block">Follower count</label>
+            <Input
+              type="number"
+              min={0}
+              value={followersInput}
+              onChange={(e) => setFollowersInput(e.target.value)}
+              placeholder="e.g. 12000"
+              className="w-full border border-[#e8e6f0] rounded-lg h-10 px-3 text-sm font-light text-[#1a1a2e] placeholder:text-[#9a99b0] focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/30"
+            />
+          </div>
+        </div>
+
         <Button
           type="button"
+          disabled={!canSubmit || isPending}
           onClick={handleConnect}
-          className="w-full bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 flex items-center justify-center gap-2"
+          className="w-full bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 flex items-center justify-center gap-2 disabled:bg-brand-pink/40"
         >
           <ExternalLink size={16} />
-          Continue
+          {isPending ? 'Connecting...' : 'Continue'}
         </Button>
 
         <button
@@ -160,7 +233,6 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
     );
   }
 
-  // Main socials list view
   return (
     <div className="flex flex-col gap-3 w-full">
       {PLATFORMS.map((platform) => {
@@ -190,14 +262,14 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
             </div>
 
             {connected_ ? (
-              <div className="flex flex-col items-end gap-0.5">
-                <span className="text-xs font-medium text-green-500 bg-green-50 px-2.5 py-0.5 rounded-full">
+              <div className="flex  items-end gap-2">
+                <span className="text-xs shadow font-medium text-green-500 bg-green-50 px-2.5 py-0.5 rounded-full">
                   Connected
                 </span>
                 <button
                   type="button"
                   onClick={() => handleDisconnect(platform.id)}
-                  className="text-xs text-brand-pink hover:underline"
+                  className="text-xs shadow text-brand-pink hover:border-brand-pink border cursor-pointer px-2.5 py-0.5 rounded-full"
                 >
                   Disconnect
                 </button>
@@ -205,7 +277,7 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
             ) : (
               <button
                 type="button"
-                onClick={() => setActivePlatform(platform)}
+                onClick={() => openPlatform(platform)}
                 className="flex items-center gap-1"
               >
                 <span className="text-sm font-light text-brand-pink border border-brand-pink/30 rounded-full px-4 py-1 hover:bg-brand-pink/5 transition-colors">
@@ -221,7 +293,7 @@ export default function StepSocials({ onNext, onSkip, defaultValues }: Props) {
         type="button"
         disabled={connected.length === 0}
         onClick={() => onNext({ connected })}
-        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink-light"
+        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
         Continue
       </Button>

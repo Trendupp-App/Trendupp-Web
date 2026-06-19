@@ -42,7 +42,7 @@ export default function RootLayout({
       <body className="min-h-full overflow-hidden flex flex-col">
         <QueryProvider>
           {children}
-          <Toaster />
+          <Toaster richColors />
         </QueryProvider>
       </body>
     </html>

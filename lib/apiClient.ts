@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '@/store/authStore';
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -10,7 +11,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('accessToken');
+    const token = useAuthStore.getState().accessToken;
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -19,9 +20,9 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
+    const isAuthEndpoint = error.config?.url?.startsWith('/auth/');
+    if (error.response?.status === 401 && !isAuthEndpoint && typeof window !== 'undefined') {
+      useAuthStore.getState().clearSession();
       window.location.href = '/features/signin';
     }
     return Promise.reject(error);

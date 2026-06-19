@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { Camera, Building2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { schema, Values } from '@/lib/validations/advertiserProfileSchema';
 import { AdvertiserOnboardingData } from '@/types/Onboarding';
+import Image from 'next/image';
 
 interface Props {
   onNext: (data: Partial<AdvertiserOnboardingData>) => void;
@@ -41,14 +42,14 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues ?? {},
   });
 
-  const logo = watch('logo');
+  const logo = useWatch({ control, name: 'logo' });
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -65,7 +66,7 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
         <div className="relative w-20 h-20 mb-2">
           <div className="w-20 h-20 border-dashed border-brand-deep-blue rounded-full bg-[#f0eef8] flex items-center justify-center overflow-hidden border">
             {logo ? (
-              <img src={logo} alt="Brand logo" className="w-full h-full object-cover" />
+              <Image src={logo} alt="Brand logo" fill className="object-cover rounded-full" />
             ) : (
               <Building2 size={32} className="text-[#9a99b0]" />
             )}
@@ -191,7 +192,7 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink-light"
+        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
         Continue
       </Button>

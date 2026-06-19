@@ -87,7 +87,7 @@ export default function StepRepresentative({ onNext, defaultValues }: Props) {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink-light"
+        className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
         Continue
       </Button>

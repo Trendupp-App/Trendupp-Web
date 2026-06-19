@@ -160,7 +160,7 @@ export default function OnboardingPage() {
   }
 
   function goToDashboard() {
-    router.push(isAdvertiser ? '/brand/dashboard' : '/creator/dashboard');
+    router.push(isAdvertiser ? '/features/brand/dashboard' : '/features/creator/dashboard');
   }
 
   const layoutProps = isAdvertiser
@@ -212,6 +212,7 @@ export default function OnboardingPage() {
           <StepProfileCreator
             onNext={advance}
             defaultValues={{
+              username: data.username,
               nationality: data.nationality,
               country: data.country,
               state: data.state,
@@ -281,7 +282,9 @@ export default function OnboardingPage() {
             onSkip={skip}
             defaultValues={{
               bankName: data.bankName,
+              bankId: data.bankId,
               accountNumber: data.accountNumber,
+              bankAccountName: data.bankAccountName,
             }}
           />
         )}
