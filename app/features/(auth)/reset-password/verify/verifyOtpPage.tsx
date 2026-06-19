@@ -6,25 +6,29 @@ import { Button } from '@/components/ui/button';
 import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
 import { BackButton } from '@/shared/BackButton';
-import { useResendOtp, useVerifyOtp } from '@/hooks/useAuthMutations';
+import { useForgotPassword } from '@/hooks/useAuthMutations';
 
-export default function VerifyPage() {
+export default function ResetVerifyPage() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get('email') ?? 'your email';
-  const type = params.get('type') ?? 'creator';
-  const verifyOtp = useVerifyOtp();
-  const resendOtp = useResendOtp();
+  const forgotPassword = useForgotPassword();
 
   async function handleSubmit() {
     if (otp.length < 6) return;
     setLoading(true);
-    await verifyOtp.mutateAsync({ email, code: otp });
-    setTimeout(() => {
-      router.push(`/features/welcome?type=${type}`);
-    }, 1500);
+    await new Promise((r) => setTimeout(r, 400));
+    setLoading(false);
+    router.push(`/features/reset-password/new?email=${encodeURIComponent(email)}&code=${otp}`);
+  }
+
+  async function handleResend() {
+    setResending(true);
+    await forgotPassword.mutateAsync(email);
+    setResending(false);
   }
 
   return (
@@ -55,7 +59,7 @@ export default function VerifyPage() {
           <Button
             onClick={handleSubmit}
             disabled={otp.length < 6 || loading}
-            className="w-full mt-8 shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-semibold text-white disabled:bg-brand-pink-light"
+            className="w-full  shadow mt-8 bg-brand-pink rounded-md h-12 text-[15px] font-semibold text-white disabled:bg-brand-pink-light/40"
           >
             {loading ? 'Verifying…' : 'Submit'}
           </Button>
@@ -63,10 +67,12 @@ export default function VerifyPage() {
           <p className="text-sm text-text-secondary text-center mt-5">
             Didn&apos;t get the code?{' '}
             <button
-              onClick={() => resendOtp.mutate(email)}
-              className="text-brand-pink font-semibold hover:underline"
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="text-brand-pink font-semibold hover:underline disabled:opacity-60"
             >
-              Resend
+              {resending ? 'Resending…' : 'Resend'}
             </button>
           </p>
         </div>

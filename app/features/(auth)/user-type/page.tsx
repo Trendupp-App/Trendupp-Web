@@ -1,18 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, BriefcaseBusiness } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AccountTypeCard from '@/components/auth/AccountTypeCard';
+import { useAuthStore } from '@/store/authStore';
 
 type AccountType = 'creator' | 'advertiser' | null;
 
 export default function AccountTypePage() {
   const [selected, setSelected] = useState<AccountType>(null);
   const router = useRouter();
+  const { user, accessToken } = useAuthStore();
+
+  useEffect(() => {
+    if (accessToken && user) {
+      router.replace(
+        user.role === 'creator' ? '/features/creator/dashboard' : '/features/brand/dashboard',
+      );
+    }
+  }, [accessToken, user, router]);
 
   function handleContinue() {
     if (!selected) return;
@@ -36,7 +46,7 @@ export default function AccountTypePage() {
         <h1 className="text-2xl font-extralight text-[#1a1a2e] text-center mb-2">
           What brings you to Trendupp?
         </h1>
-        <p className="text-sm font-light text-[#7a7a9a] text-center mb-8">
+        <p className="text-sm font-light text-text-secondary text-center mb-8">
           Choose your account type to get started
         </p>
 
@@ -68,9 +78,9 @@ export default function AccountTypePage() {
           <p className={cn('font-medium', selected ? 'text-white' : 'text-brand-pink')}>Continue</p>
         </Button>
 
-        <p className="text-sm text-[#7a7a9a] text-center mt-5">
+        <p className="text-sm text-text-secondary text-center mt-5">
           Already have an account?{' '}
-          <a href="/auth/login" className="text-[#d91a6b] font-semibold hover:underline">
+          <a href="/features/signin" className="text-[#d91a6b] font-semibold hover:underline">
             Sign in
           </a>
         </p>
