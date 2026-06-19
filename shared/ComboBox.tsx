@@ -75,12 +75,10 @@ export function ComboBox({
             </span>
           </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-          {/* <span className="truncate">{loading ? 'Loading...' : selectedLabel || placeholder}</span>
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" /> */}
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className={cn('w-[--radix-popover-trigger-width] p-1 border', contentClassName)}
+        className={cn('w-(--radix-popover-trigger-width) p-1 border', contentClassName)}
         align="start"
         sideOffset={sideOffset}
       >
@@ -92,7 +90,7 @@ export function ComboBox({
               setSearch(value);
               listRef.current?.scrollTo({
                 top: 0,
-                behavior: 'instant',
+                behavior: 'smooth',
               });
             }}
           />
