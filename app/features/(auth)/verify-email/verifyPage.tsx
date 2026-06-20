@@ -25,7 +25,7 @@ export default function VerifyPage() {
       await verifyOtp.mutateAsync({ email, code: otp });
       setTimeout(() => {
         router.push(`/features/welcome?type=${type}`);
-      }, 1500);
+      }, 500);
     } catch {
       // error toast already handled by useVerifyOtp's onError
     } finally {

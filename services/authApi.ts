@@ -6,11 +6,13 @@ import { MessageResponse } from '@/types/auth';
 export interface SignupPayload {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  brandName?: string;
   phoneNumber?: string;
   role: string;
   acceptedTerms: boolean;
+  acceptedPromotions?: boolean;
 }
 
 export interface SignupResponse {

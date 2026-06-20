@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Camera, Building2 } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,51 +16,82 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { schema, Values } from '@/lib/validations/advertiserProfileSchema';
-import { AdvertiserOnboardingData } from '@/types/Onboarding';
+import { AdvertiserOnboardingData, BrandProfilePayload } from '@/types/Onboarding';
 import Image from 'next/image';
-
+import { useCountries, useStates } from '@/hooks/useOnboardingQueries';
+import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
+import { toast } from 'sonner';
+import { ComboBox } from '@/shared/ComboBox';
 interface Props {
   onNext: (data: Partial<AdvertiserOnboardingData>) => void;
   defaultValues?: Partial<Values>;
 }
 
-const COUNTRIES = [
-  'Nigeria',
-  'Ghana',
-  'Kenya',
-  'South Africa',
-  'United Kingdom',
-  'United States',
-  'Canada',
-  'Other',
-];
-const STATES = ['Lagos', 'Abuja', 'Kano', 'Rivers', 'Oyo', 'Kaduna', 'Other'];
-
-export default function StepProfile({ onNext, defaultValues }: Props) {
+export default function StepBrandProfile({ onNext, defaultValues }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>();
+
+  const { data: countries = [], isLoading: loadingCountries } = useCountries();
+  const selectedCountryId =
+    userSelectedCountryId ?? countries.find((c) => c.name === defaultValues?.country)?.id;
+  const { data: states = [] } = useStates(selectedCountryId);
+
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
+
   const {
     register,
     handleSubmit,
     setValue,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues ?? {},
   });
 
   const logo = useWatch({ control, name: 'logo' });
+  const country = useWatch({ control, name: 'country' });
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setLogoFile(file);
     const reader = new FileReader();
     reader.onload = () => setValue('logo', reader.result as string);
     reader.readAsDataURL(file);
   }
 
+  function handleCountryChange(countryName: string) {
+    setValue('country', countryName, { shouldValidate: true });
+    setValue('state', '', { shouldValidate: true });
+    setUserSelectedCountryId(countries.find((c) => c.name === countryName)?.id);
+  }
+
+  function onSubmit(values: Values) {
+    const countryId = countries.find((c) => c.name === values.country)?.id;
+    const stateId = states.find((s) => s.name === values.state)?.id;
+
+    if (!countryId || !stateId) {
+      toast.error('Please select a valid country and state');
+      return;
+    }
+
+    const payload: BrandProfilePayload = {
+      countryId,
+      stateId,
+      ...(values.city && { city: values.city }),
+      ...(values.bio && { bio: values.bio }),
+      ...(values.website && { websiteUrl: values.website }),
+      ...(values.monthlyBudget && { monthlyBudget: values.monthlyBudget }),
+      ...(logoFile && { avatar: logoFile }),
+    };
+
+    updateProfile(payload, { onSuccess: () => onNext(values) });
+  }
+
   return (
-    <form onSubmit={handleSubmit(onNext)} className="flex flex-col gap-4 w-full">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
       {/* Logo upload */}
       <div className="flex flex-col items-center mb-2">
         <div className="relative w-20 h-20 mb-2">
@@ -74,7 +105,7 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand-deep-blue flex items-center justify-center hover:bg-brand-pink transition-colors"
+            className="absolute bottom-0 cursor-pointer right-0 w-7 h-7 rounded-full bg-brand-deep-blue flex items-center justify-center hover:bg-brand-pink transition-colors"
           >
             <Camera size={14} className="text-white" />
           </button>
@@ -95,15 +126,38 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
         </button>
       </div>
 
-      {/* Brand name */}
+      {/* Country */}
       <div className="flex flex-col gap-1">
-        <Label className="text-sm font-light text-[#1a1a2e]">Brand name</Label>
-        <Input
-          {...register('brandName')}
-          placeholder="Enter brand name"
-          className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+        <Label className="text-sm font-light text-[#1a1a2e]">Country</Label>
+        <ComboBox
+          options={countries.map((c) => ({ value: c.name, label: c.name }))}
+          value={country}
+          onValueChange={handleCountryChange}
+          placeholder="Select Country"
+          searchPlaceholder="Search country..."
+          loading={loadingCountries}
         />
-        {errors.brandName && <p className="text-[11px] text-red-400">{errors.brandName.message}</p>}
+        {errors.country && <p className="text-[11px] text-red-400">{errors.country.message}</p>}
+      </div>
+
+      {/* State*/}
+      <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">State/Region (Optional)</Label>
+        <Select
+          onValueChange={(v) => setValue('state', v, { shouldValidate: true })}
+          defaultValue={defaultValues?.state}
+        >
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
+            <SelectValue placeholder="Select State/region" />
+          </SelectTrigger>
+          <SelectContent>
+            {states.map((s) => (
+              <SelectItem key={s.id} value={s.name}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Bio */}
@@ -117,41 +171,6 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
         <p className="text-[11px] text-[#9a99b0]">
           Write about your brand e.g previous campaign, project etc
         </p>
-      </div>
-
-      {/* Country */}
-      <div className="flex flex-col gap-1">
-        <Label className="text-sm font-light text-[#1a1a2e]">Country</Label>
-        <Select onValueChange={(v) => setValue('country', v)} defaultValue={defaultValues?.country}>
-          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
-            <SelectValue placeholder="Select Country" />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.country && <p className="text-[11px] text-red-400">{errors.country.message}</p>}
-      </div>
-
-      {/* State/Region (Optional) */}
-      <div className="flex flex-col gap-1">
-        <Label className="text-sm font-light text-[#1a1a2e]">State/Region (Optional)</Label>
-        <Select onValueChange={(v) => setValue('state', v)} defaultValue={defaultValues?.state}>
-          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
-            <SelectValue placeholder="Select State/region" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* City (Optional) */}
@@ -191,10 +210,10 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
 
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isPending}
         className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
-        Continue
+        {isPending ? 'Saving...' : 'Continue'}
       </Button>
     </form>
   );

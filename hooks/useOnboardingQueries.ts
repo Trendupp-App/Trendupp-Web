@@ -41,6 +41,14 @@ export function useNiches() {
     queryKey: ['niches'],
     queryFn: () =>
       onboardingApi.getNiches().then((r) => [...r.data].sort((a, b) => a.order - b.order)),
-    staleTime: 1000 * 60 * 60,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useIndustries() {
+  return useQuery({
+    queryKey: ['industries'],
+    queryFn: () => onboardingApi.getIndustries().then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
   });
 }

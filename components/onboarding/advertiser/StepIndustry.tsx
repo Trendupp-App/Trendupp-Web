@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
+import { useIndustries } from '@/hooks/useOnboardingQueries';
+import { useUpdateIndustries } from '@/hooks/useOnboardingMutations';
+import StepNicheSkeleton from '@/components/skeletons/StepNicheSkeleton';
 
 interface Props {
   onNext: (data: { industries: string[] }) => void;
@@ -11,50 +13,70 @@ interface Props {
 }
 
 export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
-  const [selected, setSelected] = useState<string[]>(defaultValues?.industries ?? []);
+  const [selectedIds, setSelectedIds] = useState<string[]>(defaultValues?.industries ?? []);
+  const { data: industries, isLoading, isError } = useIndustries();
+  const { mutate: updateIndustries, isPending } = useUpdateIndustries();
 
-  function toggle(industry: string) {
-    setSelected((prev) =>
-      prev.includes(industry) ? prev.filter((n) => n !== industry) : [...prev, industry],
+  if (isLoading) return <StepNicheSkeleton />;
+
+  if (isError || !industries) {
+    return (
+      <div className="text-center text-sm text-[#7a7a9a]">
+        Couldn&apos;t load industries. Please try again.
+      </div>
+    );
+  }
+
+  function toggle(id: string) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]));
+  }
+
+  function handleNext() {
+    if (selectedIds.length < 3) return;
+
+    updateIndustries(
+      { industryIds: selectedIds },
+      { onSuccess: () => onNext({ industries: selectedIds }) },
     );
   }
 
   return (
     <div className="flex flex-col gap-4 w-full">
       <div className="flex flex-wrap gap-2 justify-center">
-        {ALL_NICHES_INDUSTRIES.map((industry) => {
-          const active = selected.includes(industry);
+        {industries.map((industry) => {
+          const active = selectedIds.includes(industry.id);
           return (
             <button
-              key={industry}
+              key={industry.id}
               type="button"
               aria-pressed={active}
-              onClick={() => toggle(industry)}
-              className={`px-4 py-2 rounded-full text-sm font-light border transition-all duration-150 ${
+              onClick={() => toggle(industry.id)}
+              className={`px-4 py-2 cursor-pointer rounded-full text-sm font-light border transition-all duration-150 ${
                 active
                   ? 'bg-brand-pink/10 border-brand-pink text-brand-pink'
                   : 'bg-white border-[#e8e6f0] text-[#1a1a2e] hover:border-brand-pink/40'
               }`}
             >
-              {industry}
+              {industry.name}
             </button>
           );
         })}
       </div>
 
-      {selected.length < 3 && (
+      {selectedIds.length > 0 && selectedIds.length < 3 && (
         <p className="text-[11px] text-[#9a99b0] text-center">
-          Please select at least {3 - selected.length} more{' '}
-          {3 - selected.length === 1 ? 'industry' : 'industries'}.
+          Select {3 - selectedIds.length} more{' '}
+          {3 - selectedIds.length === 1 ? 'industry' : 'industries'}
         </p>
       )}
+
       <Button
         type="button"
-        disabled={selected.length < 3}
-        onClick={() => onNext({ industries: selected })}
+        disabled={selectedIds.length < 3 || isPending}
+        onClick={handleNext}
         className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
-        Continue
+        {isPending ? 'Saving...' : 'Continue'}
       </Button>
 
       <button

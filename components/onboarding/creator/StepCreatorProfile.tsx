@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Camera, User } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreatorOnboardingData } from '@/types/Onboarding';
+import type { CreatorOnboardingData, CreatorProfilePayload } from '@/types/Onboarding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,12 +28,13 @@ interface Props {
   defaultValues?: Partial<Values>;
 }
 
-export default function StepProfile({ onNext, defaultValues }: Props) {
+export default function StepCreatorProfile({ onNext, defaultValues }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>();
   const { data: nationalities = [], isLoading: loadingNationalities } = useNationalities();
   const { data: countries = [], isLoading: loadingCountries } = useCountries();
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   const selectedCountryId =
     userSelectedCountryId ?? countries.find((c) => c.name === defaultValues?.country)?.id;
@@ -68,6 +69,7 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPhotoFile(file);
     const reader = new FileReader();
     reader.onload = () => setValue('photo', reader.result as string);
     reader.readAsDataURL(file);
@@ -85,21 +87,21 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
     const countryId = countries.find((c) => c.name === values.country)?.id;
     const stateId = states.find((s) => s.name === values.state)?.id;
 
-    if (!nationalityId || !countryId || !stateId) {
+    if (!countryId || !stateId) {
       toast.error('Please select a valid nationality, country, and state');
       return;
     }
 
-    updateProfile(
-      {
-        username: values.username,
-        nationalityId,
-        countryId,
-        stateId,
-        bio: values.bio,
-      },
-      { onSuccess: () => onNext(values) },
-    );
+    const payload: CreatorProfilePayload = {
+      username: values.username,
+      countryId,
+      stateId,
+      ...(nationalityId && { nationalityId }),
+      ...(values.bio && { bio: values.bio }),
+      ...(photoFile && { avatar: photoFile }),
+    };
+
+    updateProfile(payload, { onSuccess: () => onNext(values) });
   }
 
   return (
@@ -117,7 +119,7 @@ export default function StepProfile({ onNext, defaultValues }: Props) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand-deep-blue flex items-center justify-center hover:bg-brand-pink transition-colors"
+            className="absolute cursor-pointer bottom-0 right-0 w-7 h-7 rounded-full bg-brand-deep-blue flex items-center justify-center hover:bg-brand-pink transition-colors"
           >
             <Camera size={14} className="text-white" />
           </button>
