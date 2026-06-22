@@ -1,30 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import StepIndustry from '@/components/onboarding/advertiser/StepIndustry';
 
 // Creator steps
-import StepProfileCreator from '@/components/onboarding/creator/StepProfile';
+import StepProfileCreator from '@/components/onboarding/creator/StepCreatorProfile';
 import StepNiche from '@/components/onboarding/creator/StepNiche';
 import StepComplete from '@/components/onboarding/creator/StepComplete';
 
 // Advertiser steps
-import StepProfileAdvertiser from '@/components/onboarding/advertiser/StepProfile';
 import StepRepresentative from '@/components/onboarding/advertiser/StepRepresentativeForm';
 
 import StepSocials from '@/components/onboarding/creator/StepSocialsConnect';
 import StepPayout from '@/components/onboarding/creator/StepPayout';
 
 import type { CreatorOnboardingData, AdvertiserOnboardingData } from '@/types/Onboarding';
+import StepBrandProfile from '@/components/onboarding/advertiser/StepBrandProfile';
+import { useAuthStore } from '@/store/authStore';
+import { getResumeStepIndex } from '@/lib/resume';
+import {
+  useOnboardingDraft,
+  readOnboardingDraft,
+  clearOnboardingDraft,
+} from '@/hooks/useOnboardingDraft';
 
 type CreatorStepId = 'profile' | 'niche' | 'socials' | 'payout' | 'complete';
 type AdvertiserStepId =
   | 'profile'
   | 'industry'
-  | 'niche'
   | 'representative'
   | 'socials'
   | 'payout'
@@ -37,7 +43,6 @@ const CREATOR_STEPS: CreatorStepId[] = ['profile', 'niche', 'socials', 'payout',
 const ADVERTISER_STEPS: AdvertiserStepId[] = [
   'profile',
   'industry',
-  'niche',
   'representative',
   'socials',
   'payout',
@@ -76,10 +81,6 @@ const ADVERTISER_STEP_META: Record<AdvertiserStepId, { title: string; subtitle: 
   industry: {
     title: 'Industry',
     subtitle: 'Choose at least 3 industries for your brand',
-  },
-  niche: {
-    title: 'Niche',
-    subtitle: 'Choose at least 3 niche for your brand',
   },
   representative: {
     title: 'Brand representative',
@@ -122,18 +123,44 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 export default function OnboardingPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const userType = (params.get('type') ?? 'creator') as 'creator' | 'advertiser';
+  const userType = (params.get('type') ?? 'creator') as 'creator' | 'brand';
   const userName = params.get('name') ?? undefined;
 
-  const isAdvertiser = userType === 'advertiser';
+  const isAdvertiser = userType === 'brand';
   const steps: StepId[] = isAdvertiser ? ADVERTISER_STEPS : CREATOR_STEPS;
   const stepMeta = isAdvertiser ? ADVERTISER_STEP_META : CREATOR_STEP_META;
 
-  const [stepIndex, setStepIndex] = useState(0);
-  const [data, setData] = useState<OnboardingData>({});
+  // const [stepIndex, setStepIndex] = useState(0);
+  // const [data, setData] = useState<OnboardingData>({});
+  const user = useAuthStore((s) => s.user);
+
+  const draft = readOnboardingDraft<OnboardingData>(user?.id);
+  const serverResumeIndex = getResumeStepIndex(steps, user?.onboardingStepsCompleted, isAdvertiser);
+
+  const [stepIndex, setStepIndex] = useState(() =>
+    Math.max(draft?.stepIndex ?? 0, serverResumeIndex),
+  );
+
+  const [data, setData] = useState<OnboardingData>(() => ({
+    username: user?.username ?? undefined,
+    bio: user?.bio ?? undefined,
+    photo: user?.avatarUrl ?? undefined,
+    niches: user?.niches?.map((n) => n.id),
+    industries: user?.industries?.map((i) => i.id),
+    bankName: user?.bankName ?? undefined,
+    bankAccountNumber: user?.bankAccountNumber ?? undefined,
+    bankAccountName: user?.bankAccountName ?? undefined,
+    ...draft?.data, // unsaved keystrokes win over the server snapshot
+  }));
+
+  useOnboardingDraft(user?.id, { stepIndex, data });
 
   const currentStepId = steps[stepIndex];
   const isComplete = currentStepId === 'complete';
+
+  useEffect(() => {
+    if (currentStepId === 'complete') clearOnboardingDraft(user?.id);
+  }, [currentStepId, user?.id]);
   // Don't count 'complete' as a numbered step
   const numberedSteps = steps.filter((s): s is Exclude<StepId, 'complete'> => s !== 'complete');
   // const numberedSteps = steps.filter((s) => s !== 'complete');
@@ -228,11 +255,11 @@ export default function OnboardingPage() {
 
         {/* ── Advertiser flow ── */}
         {isAdvertiser && currentStepId === 'profile' && (
-          <StepProfileAdvertiser
+          <StepBrandProfile
             onNext={advance}
             defaultValues={{
               logo: data.logo,
-              brandName: data.brandName,
+              // brandName: data.brandName,
               bio: data.bio,
               country: data.country,
               state: data.state,
@@ -249,10 +276,6 @@ export default function OnboardingPage() {
             onSkip={skip}
             defaultValues={{ industries: data.industries }}
           />
-        )}
-
-        {isAdvertiser && currentStepId === 'niche' && (
-          <StepNiche onNext={advance} onSkip={skip} defaultValues={{ niches: data.niches }} />
         )}
 
         {isAdvertiser && currentStepId === 'representative' && (

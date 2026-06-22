@@ -1,9 +1,10 @@
 import { Suspense } from 'react';
 import VerifyOtpPage from './verifyOtpPage';
+import PageLoader from '@/components/skeletons/PageLoader';
 
 export default function Page() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<PageLoader />}>
       <VerifyOtpPage />
     </Suspense>
   );

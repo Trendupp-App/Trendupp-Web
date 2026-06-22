@@ -78,31 +78,58 @@ export interface State extends BaseEntity {
   nationalityId: string;
 }
 
-export interface UpdateProfilePayload {
+export interface CreatorProfilePayload {
   username: string;
-  nationalityId: string;
   countryId: string;
   stateId: string;
+  nationalityId?: string;
   bio?: string;
+  avatar?: File;
 }
 
-export interface OnboardingStepsCompleted {
+export interface BrandProfilePayload {
+  countryId: string;
+  stateId: string;
+  city?: string;
+  bio?: string;
+  websiteUrl?: string;
+  monthlyBudget?: string;
+  avatar?: File;
+}
+
+export type UpdateProfilePayload = CreatorProfilePayload | BrandProfilePayload;
+
+export interface CreatorOnboardingStepsCompleted {
   profile: boolean;
   niches: boolean;
   socials: boolean;
   payout: boolean;
 }
 
+export interface AdvertiserOnboardingStepsCompleted {
+  profile: boolean;
+  industries: boolean;
+  representative: boolean;
+  socials: boolean;
+  payout?: boolean;
+}
+
+export type OnboardingStepsCompleted =
+  | CreatorOnboardingStepsCompleted
+  | AdvertiserOnboardingStepsCompleted;
+
 export interface UpdateProfileResponse {
   message: string;
   user: {
-    username: string;
+    username: string | null;
     onboardingPercentage: number;
     onboardingStepsCompleted: OnboardingStepsCompleted;
     socialsConnected: SocialsConnected;
     bio: string | null;
     avatarUrl: string | null;
-    // [key: string]: unknown;
+    city?: string | null;
+    websiteUrl?: string | null;
+    monthlyBudget?: string | null;
   };
 }
 
@@ -184,5 +211,46 @@ export interface UpdatePayoutResponse {
     onboardingStepsCompleted: OnboardingStepsCompleted;
     socialsConnected: SocialsConnected;
     // [key: string]: unknown;
+  };
+}
+export interface Industry extends BaseEntity {
+  name: string;
+}
+
+export interface UpdateIndustriesPayload {
+  industryIds: string[];
+}
+
+export interface UpdateIndustriesResponse {
+  message: string;
+  user: {
+    industries: Industry[];
+    onboardingPercentage: number;
+    onboardingStepsCompleted: OnboardingStepsCompleted;
+    socialsConnected: SocialsConnected;
+  };
+}
+
+export interface UpdateRepresentativePayload {
+  repFirstName: string;
+  repLastName: string;
+  repEmail: string;
+  repPhone: string;
+}
+
+export interface BrandRepresentative {
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+}
+
+export interface UpdateRepresentativeResponse {
+  message: string;
+  user: {
+    brandRepresentative: BrandRepresentative;
+    onboardingPercentage: number;
+    onboardingStepsCompleted: OnboardingStepsCompleted;
+    socialsConnected: SocialsConnected;
   };
 }

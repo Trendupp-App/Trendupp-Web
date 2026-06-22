@@ -39,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
-      <body className="min-h-full overflow-hidden flex flex-col">
+      <body className="min-h-full flex flex-col">
         <QueryProvider>
           {children}
           <Toaster richColors />

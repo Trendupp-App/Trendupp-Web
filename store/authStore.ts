@@ -1,4 +1,5 @@
 // lib/auth/authStore.ts
+import { OnboardingStepsCompleted } from '@/types/Onboarding';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -12,12 +13,7 @@ export interface AuthUser {
   role: UserRole;
   isEmailVerified: boolean;
   onboardingPercentage: number;
-  onboardingStepsCompleted: {
-    profile: boolean;
-    niches: boolean;
-    socials: boolean;
-    payout: boolean;
-  };
+  onboardingStepsCompleted: OnboardingStepsCompleted;
   socialsConnected: {
     instagram: boolean;
     tiktok: boolean;
@@ -26,12 +22,19 @@ export interface AuthUser {
   };
   username: string | null;
   niches: Array<{ id: string; name: string; order: number }>;
+  industries: Array<{ id: string; name: string }>;
   assignedTier: string | null;
   bio: string | null;
   avatarUrl: string | null;
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
+  brandRepresentative: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
 }
 
 interface AuthState {

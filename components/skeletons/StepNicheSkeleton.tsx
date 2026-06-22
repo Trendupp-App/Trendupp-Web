@@ -5,11 +5,11 @@ export default function StepNicheSkeleton() {
     <div className="flex flex-col gap-4 w-full animate-pulse">
       <div className="flex flex-wrap gap-2 justify-center">
         {widths.map((w, i) => (
-          <div key={i} className="h-9 rounded-full bg-[#f0eef7]" style={{ width: `${w}px` }} />
+          <div key={i} className="h-9 rounded-full bg-[#c4c2cb]" style={{ width: `${w}px` }} />
         ))}
       </div>
-      <div className="h-12 w-full rounded-md bg-[#f0eef7] mt-2" />
-      <div className="h-4 w-36 mx-auto rounded bg-[#f0eef7] mt-1" />
+      <div className="h-12 w-full rounded-md bg-[#c6c4ce] mt-2" />
+      <div className="h-4 w-36 mx-auto rounded bg-[#bbb9c2] mt-1" />
     </div>
   );
 }

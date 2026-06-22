@@ -36,7 +36,7 @@ export default function SigninPage() {
         data.user.role === 'creator' ? '/features/creator/dashboard' : '/features/brand/dashboard';
       setTimeout(() => {
         router.push(dest);
-      }, 1500);
+      }, 500);
     } catch (err) {
       const message: string =
         (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? '';
