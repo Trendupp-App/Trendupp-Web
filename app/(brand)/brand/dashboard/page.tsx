@@ -1,10 +1,6 @@
 'use client';
-import { useAuthStore } from '@/store/authStore';
-import Image from 'next/image';
 
 const BrandDashboardPage = () => {
-  const user = useAuthStore((s) => s.user);
-  console.log(user);
   return (
     <div>
       <div className="h-screen">

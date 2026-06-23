@@ -5,9 +5,6 @@ import { generateCodeVerifier, generateCodeChallenge } from '@/lib/pkce';
 const TIKTOK_PENDING_KEY = 'tiktok_auth_pending';
 const TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY!;
 
-const REDIRECT_URI =
-  typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback/tiktok` : '';
-
 interface Props {
   role: string;
   acceptedTerms: boolean;
