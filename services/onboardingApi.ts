@@ -37,9 +37,7 @@ export const onboardingApi = {
       if (value === undefined || value === null || value === '') return;
       formData.append(key, value as string | Blob);
     });
-    return apiClient.patch<UpdateProfileResponse>('/users/onboarding/profile', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    return apiClient.patch<UpdateProfileResponse>('/users/onboarding/profile', formData);
   },
 
   getNiches: () => apiClient.get<Niche[]>('/users/onboarding/niches'),

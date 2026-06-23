@@ -22,24 +22,16 @@ export function TermsDialog({ open, onOpenChange }: TermsDialogProps) {
           maxHeight: '80vh',
         }}
       >
-        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b border-[#f0eef8]">
+        <DialogHeader className="px-6 py-5 shrink-0 border-b border-[#f0eef8]">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-base font-semibold text-[#1a1a2e]"></DialogTitle>
+            <DialogTitle className="sr-only">Terms & Conditions and Privacy Policy</DialogTitle>{' '}
             <DialogPrimitive.Close className="rounded-sm border border-brand-pink text-brand-pink cursor-pointer  opacity-70 mt-4 transition-opacity">
               <X size={18} />
             </DialogPrimitive.Close>
           </div>
         </DialogHeader>
-        {/* <DialogHeader className="px-6 pt-6 my-6 pb-4 shrink-0 border-b border-[#f0eef8]">
-          <DialogTitle className="text-base font-semibold text-[#1a1a2e]">
-            Terms & Conditions and Privacy Policy
-          </DialogTitle>
-        </DialogHeader> */}
-
         <div className="px-6 py-5 overflow-y-auto flex-1 text-sm text-[#5a5a7a] leading-relaxed space-y-4">
           <div>
-            <h1 className="text-xl text-slate-950 mb-2"> Terms & Conditions and Privacy Policy</h1>
-            {/* <p className="font-medium text-[#1a1a2e] mb-1">Terms and Conditions for Trendupp:</p> */}
             <p>
               <span className="font-bold text-brand-pink">Acceptance:</span> By using Trendupp, you
               agree to follow all terms and conditions outlined here.
@@ -106,6 +98,9 @@ export function TermsDialog({ open, onOpenChange }: TermsDialogProps) {
               <li>Creators submit proof of posting for verification.</li>
             </ol>
           </div>
+          <p className="mt-4 text-red-500">
+            PLEASE ENSURE TO TICK THE TERMS AND CONDITIONS BEFORE SIGN UP
+          </p>
         </div>
       </DialogContent>
     </Dialog>
