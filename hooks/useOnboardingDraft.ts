@@ -1,5 +1,4 @@
-// hooks/useOnboardingDraft.ts
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 export function useOnboardingDraft<T>(
   userId: string | undefined,
@@ -15,7 +14,7 @@ export function useOnboardingDraft<T>(
       } catch {
         // storage full / disabled — fail silently, not worth surfacing
       }
-    }, 400); // debounce so every keystroke doesn't hit storage
+    }, 400);
     return () => clearTimeout(t);
   }, [key, state]);
 }
