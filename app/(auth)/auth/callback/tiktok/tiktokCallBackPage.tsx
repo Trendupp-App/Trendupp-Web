@@ -25,6 +25,15 @@ export default function TiktokCallbackPage() {
   useEffect(() => {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
+    const state = searchParams.get('state');
+
+    const isMobileApp = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobileApp && code && state) {
+      // Hand off to the native deep link — the OS will open the app
+      window.location.href = `trendupp://auth/tiktok/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+      return;
+    }
 
     if (error) {
       toast.error('TikTok sign-in was cancelled');
