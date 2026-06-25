@@ -1290,6 +1290,14 @@ export default function CreatorProfilePage() {
               </label>
 
               <div
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    document.getElementById('portfolio-file-input')?.click();
+                  }
+                }}
                 onClick={() => document.getElementById('portfolio-file-input')?.click()}
                 role="button"
                 tabIndex={0}
