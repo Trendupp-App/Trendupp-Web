@@ -21,7 +21,7 @@ export function InstagramSignInButton({
       return;
     }
 
-    const redirectUri = `${window.location.origin}/instagram/callback`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback/instagram`;
 
     sessionStorage.setItem(
       INSTAGRAM_PENDING_KEY,
