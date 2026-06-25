@@ -1299,14 +1299,6 @@ export default function CreatorProfilePage() {
                   }
                 }}
                 onClick={() => document.getElementById('portfolio-file-input')?.click()}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    document.getElementById('portfolio-file-input')?.click();
-                  }
-                }}
                 className="w-full border-2 md:border border-dashed border-[#d7176f] md:border-brand-pink/50 bg-white hover:bg-[#fff9fb] rounded-2xl md:rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <input
