@@ -23,7 +23,7 @@ apiClient.interceptors.response.use(
     const isAuthEndpoint = error.config?.url?.startsWith('/auth/');
     if (error.response?.status === 401 && !isAuthEndpoint && typeof window !== 'undefined') {
       useAuthStore.getState().clearSession();
-      window.location.href = '/features/signin';
+      window.location.href = '/signin';
     }
     return Promise.reject(error);
   },
