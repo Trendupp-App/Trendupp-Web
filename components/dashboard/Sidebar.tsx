@@ -15,12 +15,12 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/features/creator/dashboard', icon: LayoutGrid },
-  { label: 'Explore', href: '/features/creator/explore', icon: Compass },
-  { label: 'News', href: '/features/creator/news', icon: TrendingUp },
-  { label: 'My work', href: '/features/creator/my-work', icon: Briefcase },
-  { label: 'Payout', href: '/features/creator/payout', icon: Wallet },
-  { label: 'My profile', href: '/features/creator/profile', icon: User },
+  { label: 'Home', href: '/creator/dashboard', icon: LayoutGrid },
+  { label: 'Explore', href: '/creator/explore', icon: Compass },
+  { label: 'News', href: '/creator/news', icon: TrendingUp },
+  { label: 'My work', href: '/creator/my-work', icon: Briefcase },
+  { label: 'Payout', href: '/creator/payout', icon: Wallet },
+  { label: 'My profile', href: '/creator/profile', icon: User },
 ];
 
 export default function Sidebar({
