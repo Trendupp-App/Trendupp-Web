@@ -457,7 +457,13 @@ export default function CreatorProfilePage() {
 
   // Action: Delete Portfolio Item
   const handleDeletePortfolioItem = (id: number) => {
-    setPortfolio(portfolio.filter((item) => item.id !== id));
+    setPortfolio((prev) => {
+      const item = prev.find((p) => p.id === id);
+      if (item?.image.startsWith('blob:')) {
+        URL.revokeObjectURL(item.image);
+      }
+      return prev.filter((p) => p.id !== id);
+    });
   };
 
   const filteredBrands = MOCK_BRANDS.filter(
@@ -1285,6 +1291,14 @@ export default function CreatorProfilePage() {
 
               <div
                 onClick={() => document.getElementById('portfolio-file-input')?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    document.getElementById('portfolio-file-input')?.click();
+                  }
+                }}
                 className="w-full border-2 md:border border-dashed border-[#d7176f] md:border-brand-pink/50 bg-white hover:bg-[#fff9fb] rounded-2xl md:rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <input
@@ -1310,7 +1324,7 @@ export default function CreatorProfilePage() {
                   <>
                     <span className="text-xs font-bold text-[#1a1a2e]">Tap to upload files</span>
                     <span className="text-[9px] text-[#9a99b0] font-light">
-                      PNG, JPG, PDF up to 10MB
+                      PNG, JPG up to 10MB
                     </span>
                   </>
                 )}
