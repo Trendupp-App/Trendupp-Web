@@ -7,6 +7,7 @@ import BrandProfileDrawer from '@/components/dashboard/BrandProfileDrawer';
 import CreatorCard from '@/components/dashboard/CreatorCard';
 import CreatorProfileDrawer from '@/components/dashboard/CreatorProfileDrawer';
 import CampaignDetailsDrawer from '@/components/dashboard/CampaignDetailsDrawer';
+import CampaignFilterModal, { FilterState } from '@/components/dashboard/CampaignFilterModal';
 import { cn } from '@/lib/utils';
 
 type MainTab = 'campaigns' | 'brands' | 'creators' | 'news';
@@ -17,12 +18,19 @@ interface Campaign {
   title: string;
   brand: string;
   budget: string;
+  budgetMin?: number; // for sorting
+  budgetMax?: number; // for sorting
   daysLeft: string;
+  daysLeftNumber?: number; // for sorting (hours)
   tier: string;
   appliedCount: number;
   status: 'live' | 'past';
   isSocialImpact: boolean;
   image: string;
+  platforms?: string[];
+  niches?: string[];
+  goal?: 'Content Creation' | 'Amplification';
+  createdAt?: string; // ISO date string for sorting
 }
 
 const MOCK_CAMPAIGNS: Campaign[] = [
@@ -31,104 +39,160 @@ const MOCK_CAMPAIGNS: Campaign[] = [
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budget: '₦150,000 - ₦300,000',
+    budgetMin: 150000,
+    budgetMax: 300000,
     daysLeft: '1d 14h left',
+    daysLeftNumber: 38,
     tier: 'Micro',
     appliedCount: 47,
     status: 'live',
     isSocialImpact: false,
     image:
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    platforms: ['Instagram', 'TikTok'],
+    niches: ['Fashion', 'Lifestyle'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-24T12:00:00Z',
   },
   {
     id: 2,
     title: 'TECNO SPARK 20 Launch',
     brand: 'Tecno Mobile',
     budget: '₦200,000 - ₦500,000',
+    budgetMin: 200000,
+    budgetMax: 500000,
     daysLeft: '3d 0h left',
+    daysLeftNumber: 72,
     tier: 'Macro',
     appliedCount: 89,
     status: 'live',
     isSocialImpact: false,
     image:
       'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80',
+    platforms: ['Instagram', 'YouTube'],
+    niches: ['Tech'],
+    goal: 'Amplification',
+    createdAt: '2026-06-23T10:00:00Z',
   },
   {
     id: 3,
     title: 'Healthy Living Challenge',
     brand: 'Nestlé Nigeria',
     budget: '₦80,000 - ₦180,000',
+    budgetMin: 80000,
+    budgetMax: 180000,
     daysLeft: '8h left',
+    daysLeftNumber: 8,
     tier: 'Nano',
     appliedCount: 23,
     status: 'live',
     isSocialImpact: false,
     image:
       'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80',
+    platforms: ['TikTok'],
+    niches: ['Food', 'Lifestyle'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-22T08:00:00Z',
   },
   {
     id: 4,
     title: 'Music Streaming Campaign',
     brand: 'Audiomack Africa',
     budget: '₦250,000 - ₦600,000',
+    budgetMin: 250000,
+    budgetMax: 600000,
     daysLeft: '4d 0h left',
+    daysLeftNumber: 96,
     tier: 'Macro',
     appliedCount: 134,
     status: 'live',
     isSocialImpact: false,
     image:
       'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=800&q=80',
+    platforms: ['YouTube', 'X (Twitter)'],
+    niches: ['Music', 'Lifestyle'],
+    goal: 'Amplification',
+    createdAt: '2026-06-21T09:00:00Z',
   },
   {
     id: 5,
     title: 'Beauty Routine Takeover',
     brand: 'House of Tara',
     budget: '₦120,000 - ₦280,000',
+    budgetMin: 120000,
+    budgetMax: 280000,
     daysLeft: '1d 20h left',
+    daysLeftNumber: 44,
     tier: 'Micro',
     appliedCount: 58,
     status: 'live',
     isSocialImpact: true,
     image:
       'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=800&q=80',
+    platforms: ['Instagram', 'TikTok'],
+    niches: ['Beauty', 'Fashion'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-20T14:00:00Z',
   },
   {
     id: 6,
     title: 'Sports Energy Drive',
     brand: 'Monster Energy NG',
     budget: '₦300,000 - ₦700,000',
+    budgetMin: 300000,
+    budgetMax: 700000,
     daysLeft: 'Closed',
+    daysLeftNumber: 999999,
     tier: 'Macro',
     appliedCount: 71,
     status: 'past',
     isSocialImpact: false,
     image:
       'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80',
+    platforms: ['Instagram', 'TikTok', 'YouTube'],
+    niches: ['Sport', 'Lifestyle'],
+    goal: 'Amplification',
+    createdAt: '2026-06-15T11:00:00Z',
   },
   {
     id: 7,
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budget: '₦150,000 - ₦300,000',
+    budgetMin: 150000,
+    budgetMax: 300000,
     daysLeft: 'Closed',
+    daysLeftNumber: 999999,
     tier: 'Micro',
     appliedCount: 47,
     status: 'past',
     isSocialImpact: false,
     image:
       'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
+    platforms: ['Instagram'],
+    niches: ['Fashion'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-14T09:00:00Z',
   },
   {
     id: 8,
     title: 'TECNO SPARK 20 Launch',
     brand: 'Tecno Mobile',
     budget: '₦200,000 - ₦500,000',
+    budgetMin: 200000,
+    budgetMax: 500000,
     daysLeft: 'Closed',
+    daysLeftNumber: 999999,
     tier: 'Macro',
     appliedCount: 89,
     status: 'past',
     isSocialImpact: false,
     image:
       'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80',
+    platforms: ['YouTube'],
+    niches: ['Tech'],
+    goal: 'Amplification',
+    createdAt: '2026-06-13T10:00:00Z',
   },
 ];
 
@@ -779,6 +843,16 @@ export default function ExplorePage() {
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
 
+  // Filter modal visibility & settings
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filterModalKey, setFilterModalKey] = useState(0);
+  const [campaignFilters, setCampaignFilters] = useState<FilterState>({
+    sortBy: 'Newest',
+    platforms: [],
+    niches: [],
+    campaignGoal: null,
+  });
+
   // Filter campaigns
   const filteredCampaigns = MOCK_CAMPAIGNS.filter((campaign) => {
     const matchesSearch =
@@ -786,11 +860,50 @@ export default function ExplorePage() {
       campaign.brand.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
 
-    if (activeCampaignFilter === 'all') return true;
-    if (activeCampaignFilter === 'live') return campaign.status === 'live';
-    if (activeCampaignFilter === 'past') return campaign.status === 'past';
-    if (activeCampaignFilter === 'social impact') return campaign.isSocialImpact;
+    if (activeCampaignFilter === 'live' && campaign.status !== 'live') return false;
+    if (activeCampaignFilter === 'past' && campaign.status !== 'past') return false;
+    if (activeCampaignFilter === 'social impact' && !campaign.isSocialImpact) return false;
+
+    // Platform filter
+    if (campaignFilters.platforms.length > 0) {
+      const hasMatchingPlatform = campaign.platforms?.some((p) =>
+        campaignFilters.platforms.includes(p),
+      );
+      if (!hasMatchingPlatform) return false;
+    }
+
+    // Niche filter
+    if (campaignFilters.niches.length > 0) {
+      const hasMatchingNiche = campaign.niches?.some((n) => campaignFilters.niches.includes(n));
+      if (!hasMatchingNiche) return false;
+    }
+
+    // Campaign Goal filter
+    if (campaignFilters.campaignGoal) {
+      if (campaign.goal !== campaignFilters.campaignGoal) return false;
+    }
+
     return true;
+  });
+
+  // Sort campaigns
+  const sortedCampaigns = [...filteredCampaigns].sort((a, b) => {
+    if (campaignFilters.sortBy === 'Newest') {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    }
+    if (campaignFilters.sortBy === 'Closing Soon') {
+      const daysA = a.daysLeftNumber ?? 999999;
+      const daysB = b.daysLeftNumber ?? 999999;
+      return daysA - daysB;
+    }
+    if (campaignFilters.sortBy === 'Highest Budget') {
+      const budgetA = a.budgetMax ?? 0;
+      const budgetB = b.budgetMax ?? 0;
+      return budgetB - budgetA;
+    }
+    return 0;
   });
 
   // Filter brands
@@ -825,7 +938,7 @@ export default function ExplorePage() {
   // Count label
   const countLabel =
     activeTab === 'campaigns'
-      ? `${filteredCampaigns.length} campaign${filteredCampaigns.length !== 1 ? 's' : ''}`
+      ? `${sortedCampaigns.length} campaign${sortedCampaigns.length !== 1 ? 's' : ''}`
       : activeTab === 'brands'
         ? `${filteredBrands.length} brand${filteredBrands.length !== 1 ? 's' : ''}`
         : activeTab === 'creators'
@@ -863,7 +976,13 @@ export default function ExplorePage() {
             className="w-full h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl pl-11 pr-4 text-xs font-light text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 placeholder-[#9a99b0] shadow-sm"
           />
         </div>
-        <button className="h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl px-5 flex items-center gap-2 text-xs font-semibold text-[#1a1a2e] hover:bg-[#fcfbfd] transition-colors shadow-sm focus:outline-none">
+        <button
+          onClick={() => {
+            setFilterModalKey((prev) => prev + 1);
+            setIsFilterModalOpen(true);
+          }}
+          className="h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl px-5 flex items-center gap-2 text-xs font-semibold text-[#1a1a2e] hover:bg-[#fcfbfd] transition-colors shadow-sm focus:outline-none cursor-pointer"
+        >
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -965,8 +1084,8 @@ export default function ExplorePage() {
       {/* ── Campaigns Grid ── */}
       {activeTab === 'campaigns' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-          {filteredCampaigns.length > 0 ? (
-            filteredCampaigns.map((campaign) => (
+          {sortedCampaigns.length > 0 ? (
+            sortedCampaigns.map((campaign) => (
               <div
                 key={campaign.id}
                 onClick={() => setSelectedCampaign(campaign)}
@@ -1109,6 +1228,23 @@ export default function ExplorePage() {
         isOpen={!!selectedCreator}
         onClose={() => setSelectedCreator(null)}
         creator={selectedCreator}
+      />
+
+      {/* ── Campaign Filter & Sort Modal ── */}
+      <CampaignFilterModal
+        key={filterModalKey}
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        currentFilters={campaignFilters}
+        onApply={(filters) => setCampaignFilters(filters)}
+        onReset={() =>
+          setCampaignFilters({
+            sortBy: 'Newest',
+            platforms: [],
+            niches: [],
+            campaignGoal: null,
+          })
+        }
       />
     </div>
   );
