@@ -214,7 +214,9 @@ export default function CreatorProfileDrawer({
           'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
           'transition-transform duration-300 ease-out',
           'border-0 border-none',
-          isOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-x-full',
+          isOpen
+            ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
+            : 'translate-y-full md:translate-x-full md:translate-y-0',
         )}
         style={{ border: 'none' }}
       >
