@@ -36,7 +36,7 @@ const MOCK_CAMPAIGNS: WorkCampaign[] = [
     guidelines:
       'This is a content creation campaign. You will produce original content following the brief guidelines and submit it for brand approval before posting.',
     image:
-      'https://images.unsplash.com/photo-1540206276907-fbd77a942aa9?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 3,
@@ -128,7 +128,7 @@ const MOCK_CAMPAIGNS: WorkCampaign[] = [
     guidelines:
       'This is a content creation campaign. You will produce original content following the brief guidelines and submit it for brand approval before posting.',
     image:
-      'https://images.unsplash.com/photo-1540206276907-fbd77a942aa9?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 9,
@@ -220,7 +220,7 @@ const MOCK_CAMPAIGNS: WorkCampaign[] = [
     guidelines:
       'This is a content creation campaign. You will produce original content following the brief guidelines and submit it for brand approval before posting.',
     image:
-      'https://images.unsplash.com/photo-1540206276907-fbd77a942aa9?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 15,
