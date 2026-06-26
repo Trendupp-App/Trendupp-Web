@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CompletedCampaign {
@@ -122,26 +121,6 @@ function PlatformIcon({ icon }: { icon: Platform['icon'] }) {
   return <TwitterIconOutline />;
 }
 
-// ── Award/Industry badge SVG icon ──────────────────────
-function AwardIcon() {
-  return (
-    <div className="w-10 h-10 rounded-full bg-[#fff0f5] flex items-center justify-center shrink-0">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#d7176f"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="w-5 h-5"
-      >
-        <circle cx="12" cy="8" r="6" />
-        <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-      </svg>
-    </div>
-  );
-}
-
 export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProfileDrawerProps) {
   const [showFullBio, setShowFullBio] = useState(false);
   const [visibleCampaigns, setVisibleCampaigns] = useState(4);
@@ -193,7 +172,9 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
           'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
           'transition-transform duration-300 ease-out',
           'px-6 pt-12 pb-8 flex flex-col gap-6 border-0 border-none',
-          isOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-x-full',
+          isOpen
+            ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
+            : 'translate-y-full md:translate-x-full md:translate-y-0',
         )}
         style={{ border: 'none' }}
       >
