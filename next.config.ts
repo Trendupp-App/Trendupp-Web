@@ -11,8 +11,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-
   devIndicators: false,
+  allowedDevOrigins: ['petronila-caryophyllaceous-taintlessly.ngrok-free.dev'],
 };
 
 export default nextConfig;

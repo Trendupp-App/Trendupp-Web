@@ -6,11 +6,13 @@ import { MessageResponse } from '@/types/auth';
 export interface SignupPayload {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  brandName?: string;
   phoneNumber?: string;
   role: string;
   acceptedTerms: boolean;
+  acceptedPromotions?: boolean;
 }
 
 export interface SignupResponse {
@@ -39,6 +41,30 @@ export interface Role {
   displayName: string;
 }
 
+export interface GoogleAuthPayload {
+  idToken: string;
+  role: string;
+  acceptedTerms: boolean;
+  acceptedPromotions: boolean;
+}
+
+export interface TiktokAuthPayload {
+  code: string;
+  redirectUri: string;
+  role: string;
+  codeVerifier: string;
+  acceptedTerms: boolean;
+  acceptedPromotions: boolean;
+}
+
+export interface InstagramAuthPayload {
+  code: string;
+  redirectUri: string;
+  role: string;
+  acceptedTerms: boolean;
+  acceptedPromotions: boolean;
+}
+
 export const authApi = {
   getRoles: () =>
     apiClient.get<Role[]>('/users/onboarding/roles', { params: { publicOnly: true } }),
@@ -55,4 +81,9 @@ export const authApi = {
 
   resetPassword: (data: { email: string; code: string; newPassword: string }) =>
     apiClient.post<MessageResponse>('/auth/password/reset', data),
+
+  googleAuth: (data: GoogleAuthPayload) => apiClient.post<AuthResponse>('/auth/google', data),
+  tiktokAuth: (data: TiktokAuthPayload) => apiClient.post<AuthResponse>('/auth/tiktok', data),
+  instagramAuth: (data: InstagramAuthPayload) =>
+    apiClient.post<AuthResponse>('/auth/instagram', data),
 };

@@ -19,11 +19,11 @@ interface AuthLayoutProps {
 const SLIDES = 3;
 
 export default function AuthLayout({
-  imageSrc,
-  imageAlt,
-  headlineTop,
-  headlineBottom,
-  tagline,
+  // imageSrc,
+  // imageAlt,
+  // headlineTop,
+  // headlineBottom,
+  // tagline,
   slideIndex = 0,
   children,
 }: AuthLayoutProps) {
@@ -36,7 +36,7 @@ export default function AuthLayout({
     return () => clearInterval(interval);
   }, []);
   return (
-    <div className="flex overflow-hidden h-screen bg-background">
+    <div className="flex  h-screen bg-background">
       {/* ── Left panel ── */}
       <aside className="hidden md:flex w-[500px] shrink-0 flex-col overflow-hidden relative px-7 py-6">
         {/* Logo */}
@@ -98,7 +98,6 @@ export default function AuthLayout({
           </div>
         </div>
       </aside>
-
       <main className="flex-1 relative auth-scrollbar overflow-y-auto bg-white m-4 rounded-xl px-6 py-5">
         <Stars />
         <div className="min-h-full items-center justify-center flex flex-col">{children}</div>
