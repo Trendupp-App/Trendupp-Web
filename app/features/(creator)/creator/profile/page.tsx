@@ -2,7 +2,21 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { MapPin, Star, Plus, Trash2, Edit2, LogOut, Check, ArrowRight, Award } from 'lucide-react';
+import {
+  MapPin,
+  Star,
+  Plus,
+  Trash2,
+  Edit2,
+  LogOut,
+  Check,
+  ArrowRight,
+  Award,
+  Search,
+  ChevronLeft,
+  Info,
+  Wallet,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -135,13 +149,13 @@ const INITIAL_PROFILE: CreatorProfile = {
   handle: 'teniolu',
   tier: 'Micro Creator',
   rating: 4.9,
-  campaignCount: 19,
+  campaignCount: 14,
   image:
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
   location: 'Lagos, Nigeria',
-  reach: '128K',
-  earned: '₦1.2M',
-  bio: 'Fashion & lifestyle creator based in Lagos ☀️ | Helping brands tell authentic stories through style.',
+  reach: '72.4K',
+  earned: '₦847K',
+  bio: 'Fashion & lifestyle creator based in Lagos 🌟 | Helping brands tell authentic stories through style.',
   niches: ['Fashion', 'Lifestyle', 'Beauty'],
   badge: 'Impact Advocate',
   platforms: [
@@ -245,11 +259,85 @@ const MOCK_REVIEWS: CreatorReview[] = [
   },
 ];
 
+interface ReviewBrand {
+  id: number;
+  name: string;
+  industry: string;
+  campaigns: number;
+  followers: string;
+  logo: string;
+}
+
+const MOCK_BRANDS: ReviewBrand[] = [
+  {
+    id: 1,
+    name: 'Zara Africa',
+    industry: 'Fashion',
+    campaigns: 5,
+    followers: '2.1M',
+    logo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
+  },
+  {
+    id: 2,
+    name: 'Tecno Mobile',
+    industry: 'Tech',
+    campaigns: 12,
+    followers: '890K',
+    logo: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=150&q=80',
+  },
+  {
+    id: 3,
+    name: 'Nestlé Nigeria',
+    industry: 'Food',
+    campaigns: 8,
+    followers: '540K',
+    logo: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=150&q=80',
+  },
+  {
+    id: 4,
+    name: 'Audiomack Africa',
+    industry: 'Music',
+    campaigns: 3,
+    followers: '1.5M',
+    logo: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=150&q=80',
+  },
+  {
+    id: 5,
+    name: 'Monster Energy NG',
+    industry: 'Sports',
+    campaigns: 4,
+    followers: '280K',
+    logo: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=150&q=80',
+  },
+  {
+    id: 6,
+    name: 'GTBank',
+    industry: 'Finance',
+    campaigns: 9,
+    followers: '3.2M',
+    logo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
+  },
+];
+
 export default function CreatorProfilePage() {
   // States
   const [profile, setProfile] = useState<CreatorProfile>(INITIAL_PROFILE);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
+
+  // Request Review Modal States
+  const [isRequestReviewOpen, setIsRequestReviewOpen] = useState(false);
+  const [requestStep, setRequestStep] = useState<'select' | 'message'>('select');
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  const [personalMessage, setPersonalMessage] = useState('');
+  const [brandSearchQuery, setBrandSearchQuery] = useState('');
+
+  const selectedBrand = MOCK_BRANDS.find((brand) => brand.id === selectedBrandId);
+  const filteredBrands = MOCK_BRANDS.filter(
+    (brand) =>
+      brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
+      brand.industry.toLowerCase().includes(brandSearchQuery.toLowerCase()),
+  );
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -452,33 +540,33 @@ export default function CreatorProfilePage() {
         {/* Mobile View Stats & Action Buttons */}
         <div className="flex flex-col gap-4 mt-6 md:hidden w-full z-10" id="mobile-banner-actions">
           {/* Stats Card inside Banner */}
-          <div className="grid grid-cols-3 bg-white/5 border border-white/5 rounded-2xl p-4 text-center divide-x divide-white/10">
+          <div className="grid grid-cols-3 bg-[#14132a] border border-[#232142] rounded-2xl p-4 text-center divide-x divide-[#232142] shadow-inner">
             <div className="flex flex-col gap-0.5">
               <span className="text-white text-base font-bold">{profile.reach}</span>
-              <span className="text-white/40 text-[9px] font-semibold uppercase tracking-wider">
+              <span className="text-[#7a7a9a] text-[9px] font-semibold uppercase tracking-wider">
                 Followers
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-white text-base font-bold">{profile.campaignCount}</span>
-              <span className="text-white/40 text-[9px] font-semibold uppercase tracking-wider">
+              <span className="text-[#7a7a9a] text-[9px] font-semibold uppercase tracking-wider">
                 Campaigns
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-white text-base font-bold">{profile.earned}</span>
-              <span className="text-white/40 text-[9px] font-semibold uppercase tracking-wider">
+              <span className="text-[#7a7a9a] text-[9px] font-semibold uppercase tracking-wider">
                 Earnings
               </span>
             </div>
           </div>
 
-          {/* Mobile Buttons */}
-          <div className="grid grid-cols-2 gap-3 w-full">
+          {/* Mobile Buttons - Stacked vertically */}
+          <div className="flex flex-col gap-3 w-full">
             <button
               id="btn-edit-profile-mobile"
               onClick={() => setActiveTab('settings')}
-              className="py-3 bg-white/10 hover:bg-white/15 border border-white/15 text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+              className="w-full py-3 bg-[#1a1936]/40 hover:bg-[#1a1936] border border-[#2f2c5c] text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
             >
               <Edit2 size={13} />
               Edit Profile
@@ -486,10 +574,10 @@ export default function CreatorProfilePage() {
             <button
               id="btn-manage-payout-mobile"
               onClick={() => alert('Redirecting to payout...')}
-              className="py-3 bg-brand-pink-light hover:bg-[#ffd1e2] text-brand-pink rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+              className="w-full py-3 bg-[#fff0f5] hover:bg-[#ffe3ec] border border-brand-pink/30 text-brand-pink rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
             >
-              <span className="font-semibold text-brand-pink">Manage Payout</span>
-              <ArrowRight size={13} />
+              <Wallet size={13} className="text-brand-pink" />
+              <span className="font-bold text-brand-pink">Manage Payout</span>
             </button>
           </div>
         </div>
@@ -583,23 +671,21 @@ export default function CreatorProfilePage() {
           </p>
         </div>
 
-        {/* Niche Card (only visible on mobile layout in this spot, on desktop we render it below tabs to match both mockups) */}
+        {/* Niche Card (only visible on mobile layout in this spot) */}
         <div
           className="md:hidden bg-white border border-[#e8e6f0]/60 rounded-3xl p-5 shadow-xs flex items-center gap-4"
           id="niche-card-mobile"
         >
-          <div className="w-10 h-10 rounded-full bg-brand-pink-light flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-pink-light flex items-center justify-center shrink-0">
             <Award size={20} className="text-brand-pink" />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-              Creator Niche
-            </span>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] text-[#7a7a9a] font-medium">Creator Niche</span>
             <div className="flex flex-wrap gap-1.5">
               {profile.niches.map((niche) => (
                 <span
                   key={niche}
-                  className="bg-[#ebf0ff] text-brand-blue font-semibold text-[10px] px-2.5 py-0.5 rounded-full"
+                  className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[10px] px-3 py-1 rounded-full border border-[#7c3aed]/10"
                 >
                   {niche}
                 </span>
@@ -611,7 +697,7 @@ export default function CreatorProfilePage() {
 
       {/* ── TAB NAVIGATION BAR ── */}
       <div
-        className="bg-[#e8e6f0]/40 p-1 md:p-1.5 rounded-[20px] flex items-center gap-1"
+        className="flex items-center gap-1 border-b border-[#e8e6f0] md:border-b-0 md:bg-[#e8e6f0]/40 md:p-1.5 md:rounded-[20px] w-full"
         id="tab-nav-bar"
       >
         {(['portfolio', 'reviews', 'settings'] as const).map((tab) => (
@@ -630,10 +716,10 @@ export default function CreatorProfilePage() {
               }
             }}
             className={cn(
-              'flex-1 py-3 px-4 rounded-[16px] text-xs font-semibold capitalize transition-all cursor-pointer text-center',
+              'flex-1 py-3 px-4 text-xs font-semibold capitalize transition-all cursor-pointer text-center',
               activeTab === tab
-                ? 'bg-white text-[#1a1a2e] shadow-sm font-bold'
-                : 'text-[#7a7a9a] hover:bg-white/40',
+                ? 'text-brand-pink border-b-2 border-brand-pink font-bold md:border-b-0 md:bg-white md:shadow-xs md:rounded-[16px]'
+                : 'text-[#7a7a9a] border-b-2 border-transparent pb-3 md:pb-3 md:hover:bg-white/40 md:rounded-[16px]',
             )}
           >
             {tab}
@@ -665,7 +751,7 @@ export default function CreatorProfilePage() {
                   {profile.niches.map((niche) => (
                     <span
                       key={niche}
-                      className="bg-brand-pink-light text-brand-pink font-semibold text-[11px] px-3 py-1 rounded-full border border-brand-pink/15"
+                      className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[11px] px-3 py-1 rounded-full border border-[#7c3aed]/10"
                     >
                       {niche}
                     </span>
@@ -779,13 +865,67 @@ export default function CreatorProfilePage() {
 
         {/* ── 2. REVIEWS TAB ── */}
         {activeTab === 'reviews' && (
-          <div className="flex flex-col gap-5" id="reviews-tab-content">
-            <h4 className="text-sm font-bold text-[#1a1a2e]">Brand Reviews</h4>
+          <div className="flex flex-col gap-6" id="reviews-tab-content">
+            {/* Rating Overview Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center border-b border-[#e8e6f0]/60 pb-6">
+              {/* Score Column */}
+              <div className="flex items-center gap-6 justify-between md:justify-start md:col-span-2">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[44px] font-black text-[#1a1a2e] leading-none">4.9</span>
+                  <div className="flex items-center gap-0.5 mt-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={14} className="fill-[#f59e0b] text-[#f59e0b]" />
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-[#7a7a9a] font-medium mt-1">17 reviews</span>
+                </div>
+
+                {/* Rating Progress Bars */}
+                <div className="flex flex-col gap-1.5 flex-1 max-w-[240px]">
+                  {[
+                    { stars: 5, pct: '85%' },
+                    { stars: 4, pct: '15%' },
+                    { stars: 3, pct: '5%' },
+                    { stars: 2, pct: '0%' },
+                    { stars: 1, pct: '0%' },
+                  ].map((row) => (
+                    <div key={row.stars} className="flex items-center gap-2">
+                      <span className="text-[10px] text-[#7a7a9a] font-bold w-2">{row.stars}</span>
+                      <div className="flex-1 h-1.5 bg-[#e8e6f0] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#f59e0b] rounded-full"
+                          style={{ width: row.pct }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Request Review Button Column */}
+              <div className="flex justify-end w-full md:w-auto">
+                <button
+                  id="btn-request-review-trigger"
+                  onClick={() => {
+                    setIsRequestReviewOpen(true);
+                    setRequestStep('select');
+                    setSelectedBrandId(null);
+                    setPersonalMessage('');
+                  }}
+                  className="w-full md:w-auto px-5 py-3 border border-brand-pink bg-[#fff5f7] hover:bg-[#ffeef2] text-xs font-bold text-brand-pink rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <Wallet size={13} className="text-brand-pink shrink-0" />
+                  Request review
+                </button>
+              </div>
+            </div>
+
+            {/* Reviews List */}
             <div className="flex flex-col gap-4">
               {MOCK_REVIEWS.map((rev) => (
                 <div
                   key={rev.id}
-                  className="border border-[#e8e6f0]/60 bg-[#faf9fc]/40 rounded-2xl p-5 flex flex-col gap-3.5 shadow-2xs"
+                  className="border border-[#e8e6f0] bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-xs"
                   id={`review-card-${rev.id}`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -800,7 +940,7 @@ export default function CreatorProfilePage() {
                       </div>
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-[#1a1a2e]">{rev.brandName}</span>
-                        <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
+                        <span className="text-[10px] text-[#7a7a9a] font-medium mt-0.5">
                           {rev.date}
                         </span>
                       </div>
@@ -812,15 +952,13 @@ export default function CreatorProfilePage() {
                           key={i}
                           size={12}
                           className={cn(
-                            i < rev.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-200',
+                            i < rev.rating ? 'fill-[#f59e0b] text-[#f59e0b]' : 'text-zinc-200',
                           )}
                         />
                       ))}
                     </div>
                   </div>
-                  <p className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                    &quot;{rev.text}&quot;
-                  </p>
+                  <p className="text-xs leading-relaxed text-[#5a5a7a]">{rev.text}</p>
                 </div>
               ))}
             </div>
@@ -1122,6 +1260,369 @@ export default function CreatorProfilePage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── 5. REQUEST REVIEW DIALOG MODAL (DESKTOP) ── */}
+      <Dialog
+        open={isRequestReviewOpen}
+        onOpenChange={(open) => !open && setIsRequestReviewOpen(false)}
+      >
+        <DialogContent className="hidden md:flex sm:max-w-[480px] rounded-[24px] bg-white border border-[#e8e6f0] p-6 flex-col gap-5 shadow-xl">
+          {requestStep === 'select' ? (
+            <>
+              <DialogHeader className="border-b border-[#e8e6f0]/40 pb-2 relative">
+                <DialogTitle className="text-base font-bold text-[#1a1a2e] tracking-tight">
+                  Request review
+                </DialogTitle>
+              </DialogHeader>
+
+              {/* Search Bar */}
+              <div className="relative">
+                <Search size={14} className="absolute left-3.5 top-3.5 text-[#7a7a9a]" />
+                <input
+                  type="text"
+                  placeholder="Search brands e.g. Zara Africa..."
+                  value={brandSearchQuery}
+                  onChange={(e) => setBrandSearchQuery(e.target.value)}
+                  className="w-full h-10 pl-10 pr-4 border border-[#e8e6f0] rounded-xl text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#7a7a9a]"
+                />
+              </div>
+
+              <span className="text-[9px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                Select at least One brand to submit a request
+              </span>
+
+              {/* Brands Scroll Area */}
+              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+                {filteredBrands.length > 0 ? (
+                  filteredBrands.map((brand) => (
+                    <div
+                      key={brand.id}
+                      onClick={() => {
+                        setSelectedBrandId(brand.id);
+                        setRequestStep('message');
+                      }}
+                      className="border border-[#e8e6f0] hover:border-brand-pink/40 bg-white hover:bg-[#fff9fb] rounded-xl p-3 flex items-center justify-between transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-zinc-100">
+                          <Image src={brand.logo} alt={brand.name} fill className="object-cover" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-[#1a1a2e]">{brand.name}</span>
+                          <span className="text-[10px] text-[#7a7a9a] mt-0.5">
+                            {brand.industry}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#9a99b0] font-light">
+                          {brand.campaigns} campaigns
+                        </span>
+                        <button
+                          type="button"
+                          className="px-3 py-1 bg-brand-pink-light hover:bg-[#ffe3ec] text-brand-pink font-bold text-[10px] rounded-full transition-colors"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-[#9a99b0] text-center py-4">No brands found</span>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Back Header */}
+              <div className="flex items-center justify-between border-b border-[#e8e6f0]/40 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setRequestStep('select')}
+                  className="text-xs font-bold text-brand-pink flex items-center gap-1 hover:text-brand-pink-dark transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={14} />
+                  Back
+                </button>
+                <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                  Selected brand
+                </span>
+              </div>
+
+              {/* Selected Brand Display */}
+              {selectedBrand && (
+                <div className="border border-brand-pink/40 bg-[#fff9fb] rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-zinc-100">
+                      <Image
+                        src={selectedBrand.logo}
+                        alt={selectedBrand.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-[#1a1a2e]">{selectedBrand.name}</span>
+                      <span className="text-[10px] text-[#7a7a9a] mt-0.5">
+                        {selectedBrand.industry}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[#7a7a9a] font-medium">
+                      {selectedBrand.campaigns} campaigns
+                    </span>
+                    <span className="text-[9px] text-[#9a99b0] font-light">•</span>
+                    <span className="text-[10px] text-[#7a7a9a] font-medium">
+                      {selectedBrand.followers} followers
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Warning Box */}
+              <div className="flex items-start gap-2.5 p-3.5 bg-[#fffbeb] border border-[#fef3c7] rounded-xl text-[#d97706]">
+                <Info size={14} className="shrink-0 mt-0.5" />
+                <span className="text-[11px] leading-relaxed font-medium">
+                  Please keep your review requests professional and clear. Responses will be visible
+                  on your public campaign profile.
+                </span>
+              </div>
+
+              {/* Message Input */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-[#1a1a2e] tracking-tight">
+                  Personal Message
+                </label>
+                <textarea
+                  placeholder="Add a personal note to your request (optional)..."
+                  value={personalMessage}
+                  onChange={(e) => setPersonalMessage(e.target.value.slice(0, 160))}
+                  maxLength={160}
+                  className="w-full h-24 border border-[#e8e6f0] rounded-xl p-3 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-light resize-none leading-relaxed"
+                />
+                <span className="text-[10px] text-[#9a99b0] font-medium text-right mt-1">
+                  {personalMessage.length}/160
+                </span>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  alert(`Review request successfully sent to ${selectedBrand?.name}!`);
+                  setIsRequestReviewOpen(false);
+                }}
+                className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs"
+              >
+                Submit
+              </button>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── 6. REQUEST REVIEW MOBILE FULL-SCREEN OVERLAY ── */}
+      {isRequestReviewOpen && (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col md:hidden animate-in slide-in-from-bottom duration-250">
+          {requestStep === 'select' ? (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-[#e8e6f0]">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsRequestReviewOpen(false)}
+                    className="p-1 text-[#1a1a2e] hover:bg-zinc-50 rounded-full"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <h3 className="text-sm font-bold text-[#1a1a2e]">Request Review</h3>
+                </div>
+              </div>
+
+              {/* Search */}
+              <div className="p-4 border-b border-[#e8e6f0]/40">
+                <div className="relative">
+                  <Search size={14} className="absolute left-3.5 top-3.5 text-[#7a7a9a]" />
+                  <input
+                    type="text"
+                    placeholder="Search brands..."
+                    value={brandSearchQuery}
+                    onChange={(e) => setBrandSearchQuery(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 border border-[#e8e6f0] rounded-xl text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#7a7a9a]"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 pb-1">
+                <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                  Select at least One brand to submit a request
+                </span>
+              </div>
+
+              {/* Brands List */}
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pt-2">
+                {filteredBrands.length > 0 ? (
+                  filteredBrands.map((brand) => {
+                    const isSelected = selectedBrandId === brand.id;
+                    return (
+                      <div
+                        key={brand.id}
+                        onClick={() => setSelectedBrandId(brand.id)}
+                        className={cn(
+                          'border rounded-2xl p-3.5 flex items-center justify-between transition-all bg-white',
+                          isSelected
+                            ? 'border-brand-pink border-2 bg-[#fff9fb]'
+                            : 'border-[#e8e6f0]',
+                        )}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-zinc-100">
+                            <Image
+                              src={brand.logo}
+                              alt={brand.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-[#1a1a2e]">{brand.name}</span>
+                            <span className="text-[10px] text-[#7a7a9a] mt-0.5">
+                              {brand.industry}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] text-[#9a99b0] font-light">
+                            {brand.campaigns} campaigns
+                          </span>
+                          <button
+                            type="button"
+                            className="px-3.5 py-1.5 bg-brand-pink-light text-brand-pink font-bold text-[10px] rounded-full"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <span className="text-xs text-[#9a99b0] text-center py-6">No brands found</span>
+                )}
+              </div>
+
+              {/* Sticky bottom select button */}
+              <div className="p-4 border-t border-[#e8e6f0] bg-white">
+                <button
+                  type="button"
+                  onClick={() => selectedBrandId && setRequestStep('message')}
+                  disabled={!selectedBrandId}
+                  className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 active:scale-98 transition-all"
+                >
+                  Select
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-[#e8e6f0]">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRequestStep('select')}
+                    className="p-1 text-[#1a1a2e] hover:bg-zinc-50 rounded-full"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <h3 className="text-sm font-bold text-[#1a1a2e]">Request Review</h3>
+                </div>
+              </div>
+
+              {/* Scrollable message content */}
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+                <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                  Selected brand
+                </span>
+
+                {/* Selected Brand */}
+                {selectedBrand && (
+                  <div className="border border-brand-pink/40 bg-[#fff9fb] rounded-2xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3.5">
+                      <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-zinc-100">
+                        <Image
+                          src={selectedBrand.logo}
+                          alt={selectedBrand.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-[#1a1a2e]">
+                          {selectedBrand.name}
+                        </span>
+                        <span className="text-[10px] text-[#7a7a9a] mt-0.5">
+                          {selectedBrand.industry}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="text-[10px] text-[#7a7a9a] font-semibold">
+                        {selectedBrand.campaigns} campaigns
+                      </span>
+                      <span className="text-[9px] text-[#9a99b0]">
+                        {selectedBrand.followers} followers
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Warning Callout */}
+                <div className="flex items-start gap-2.5 p-4 bg-[#fffbeb] border border-[#fef3c7] rounded-2xl text-[#d97706]">
+                  <Info size={15} className="shrink-0 mt-0.5" />
+                  <span className="text-[11px] leading-relaxed font-medium">
+                    Please keep your review requests professional and clear. Responses will be
+                    visible on your public campaign profile.
+                  </span>
+                </div>
+
+                {/* Message Input */}
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <label className="text-xs font-bold text-[#1a1a2e] tracking-tight">
+                    Personal Message
+                  </label>
+                  <textarea
+                    placeholder="Add a personal note to your request (optional)..."
+                    value={personalMessage}
+                    onChange={(e) => setPersonalMessage(e.target.value.slice(0, 160))}
+                    maxLength={160}
+                    className="w-full h-28 border border-[#e8e6f0] rounded-2xl p-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-light resize-none leading-relaxed"
+                  />
+                  <span className="text-[10px] text-[#9a99b0] font-medium text-right mt-1">
+                    {personalMessage.length}/160
+                  </span>
+                </div>
+              </div>
+
+              {/* Sticky bottom submit button */}
+              <div className="p-4 border-t border-[#e8e6f0] bg-white">
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert(`Review request successfully sent to ${selectedBrand?.name}!`);
+                    setIsRequestReviewOpen(false);
+                  }}
+                  className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs"
+                >
+                  Submit
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
