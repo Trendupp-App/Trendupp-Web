@@ -597,6 +597,8 @@ export default function CreatorProfilePage() {
   const [newBrandName, setNewBrandName] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [selectedPresetIndex, setSelectedPresetIndex] = useState<number | null>(null);
+  const [socialMediaLink, setSocialMediaLink] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   // Settings Edit State (Temporary Form Buffer)
   const [editFirstName, setEditFirstName] = useState('');
@@ -698,12 +700,15 @@ export default function CreatorProfilePage() {
     e.preventDefault();
     if (!newBrandName.trim()) return;
 
-    let finalImageUrl = newImageUrl.trim();
-    if (selectedPresetIndex !== null) {
-      finalImageUrl = PORTFOLIO_PRESETS[selectedPresetIndex].url;
-    }
+    let finalImageUrl = '';
 
-    if (!finalImageUrl) {
+    if (uploadedFile) {
+      finalImageUrl = URL.createObjectURL(uploadedFile);
+    } else if (socialMediaLink.trim()) {
+      // Use a random preset image so a beautiful preview is displayed
+      const randomPreset = PORTFOLIO_PRESETS[Math.floor(Math.random() * PORTFOLIO_PRESETS.length)];
+      finalImageUrl = randomPreset.url;
+    } else {
       finalImageUrl =
         'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80'; // fallback
     }
@@ -716,8 +721,8 @@ export default function CreatorProfilePage() {
 
     setPortfolio([newItem, ...portfolio]);
     setNewBrandName('');
-    setNewImageUrl('');
-    setSelectedPresetIndex(null);
+    setUploadedFile(null);
+    setSocialMediaLink('');
     setIsAddModalOpen(false);
   };
 
@@ -1393,64 +1398,71 @@ export default function CreatorProfilePage() {
               />
             </div>
 
-            {/* Presets Selection */}
+            {/* Upload Image Option */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                Choose a Preset Image
+              <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1">
+                Upload Image
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {PORTFOLIO_PRESETS.map((preset, idx) => {
-                  const isSelected = selectedPresetIndex === idx;
-                  return (
-                    <button
-                      key={preset.name}
-                      type="button"
-                      onClick={() => {
-                        setSelectedPresetIndex(idx);
-                        setNewImageUrl('');
-                      }}
-                      className={cn(
-                        'relative aspect-video rounded-lg overflow-hidden border-2 transition-all cursor-pointer',
-                        isSelected
-                          ? 'border-brand-pink scale-95 shadow-md'
-                          : 'border-[#e8e6f0] hover:border-brand-pink/30',
-                      )}
-                    >
-                      <Image src={preset.url} alt={preset.name} fill className="object-cover" />
-                      <div className="absolute inset-0 bg-black/45 flex items-center justify-center p-1">
-                        <span className="text-[9px] font-bold text-white text-center leading-tight truncate w-full">
-                          {preset.name}
-                        </span>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute top-1 right-1 w-4.5 h-4.5 rounded-full bg-brand-pink flex items-center justify-center">
-                          <Check size={9} className="stroke-white stroke-[3.5]" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+              <div
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    document.getElementById('portfolio-file-input')?.click();
+                  }
+                }}
+                onClick={() => document.getElementById('portfolio-file-input')?.click()}
+                className="w-full border-2 border-dashed border-brand-pink/30 hover:border-brand-pink/60 bg-white hover:bg-rose-50/10 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                <input
+                  type="file"
+                  id="portfolio-file-input"
+                  accept="image/png, image/jpeg"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setUploadedFile(file);
+                    }
+                  }}
+                />
+                <UploadCloud size={24} className="text-brand-pink" />
+                {uploadedFile ? (
+                  <span className="text-xs font-bold text-[#1a1a2e] truncate max-w-full px-2">
+                    {uploadedFile.name}
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-xs font-bold text-[#1a1a2e]">Tap to upload files</span>
+                    <span className="text-[9px] text-[#9a99b0] font-light">
+                      PNG, JPG up to 10MB
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Custom Image URL Option */}
-            <div className="flex flex-col gap-1.5">
-              <label
-                className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider"
-                htmlFor="input-modal-url"
-              >
-                Or Custom Image URL
+            {/* Separator */}
+            <div className="flex items-center gap-3">
+              <hr className="flex-1 border-[#e8e6f0]" />
+              <span className="text-[10px] font-bold text-[#9a99b0] uppercase tracking-wider select-none">
+                or
+              </span>
+              <hr className="flex-1 border-[#e8e6f0]" />
+            </div>
+
+            {/* Social Media Link Input */}
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1">
+                Social media link
               </label>
               <input
-                id="input-modal-url"
                 type="text"
-                placeholder="https://images.unsplash.com/..."
-                value={newImageUrl}
-                onChange={(e) => {
-                  setNewImageUrl(e.target.value);
-                  setSelectedPresetIndex(null);
-                }}
-                className="w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30"
+                placeholder="https://drive.google.com/..."
+                value={socialMediaLink}
+                onChange={(e) => setSocialMediaLink(e.target.value)}
+                className="w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
               />
             </div>
 
@@ -1469,8 +1481,8 @@ export default function CreatorProfilePage() {
                 onClick={() => {
                   setIsAddModalOpen(false);
                   setNewBrandName('');
-                  setNewImageUrl('');
-                  setSelectedPresetIndex(null);
+                  setUploadedFile(null);
+                  setSocialMediaLink('');
                 }}
                 className="flex-1 py-3 bg-[#f4f3f6] hover:bg-[#e8e6f0] text-[#7a7a9a] rounded-xl text-xs font-bold cursor-pointer active:scale-98 transition-all"
               >
