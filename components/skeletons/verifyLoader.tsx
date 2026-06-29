@@ -29,7 +29,7 @@ export default function VerifyLoader({ header, subheader }: LoaderProps) {
           <circle cx="40" cy="40" r="34" stroke="#fce9df" strokeWidth="3" />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-3 h-3 rounded-full bg-brand-p animate-pulse" />
+          <div className="w-3 h-3 rounded-full bg-brand-pink animate-pulse" />
         </div>
       </div>
       <div className="flex flex-col items-center gap-1">
