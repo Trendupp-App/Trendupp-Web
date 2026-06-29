@@ -52,6 +52,7 @@ import {
   useUpdateSecuritySettings,
   useChangePassword,
   useDeactivateAccount,
+  useSupportTicketCategories,
 } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
@@ -645,6 +646,8 @@ export default function CreatorProfilePage() {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
+  const { data: serverCategories } = useSupportTicketCategories(isHelpOpen);
   // Action: Handle ticket attachments file selector change (store File objects)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -3760,13 +3763,16 @@ export default function CreatorProfilePage() {
 
                       {isCategoryDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#e8e6f0] rounded-xl shadow-lg z-50 overflow-hidden">
-                          {[
-                            'Campaign Dispute',
-                            'Payment & Wallet',
-                            'Account Verification',
-                            'Technical Issue',
-                            'Other',
-                          ].map((cat) => (
+                          {(serverCategories
+                            ? serverCategories.map((c) => (typeof c === 'string' ? c : c.name))
+                            : [
+                                'Campaign Dispute',
+                                'Payment & Wallet',
+                                'Account Verification',
+                                'Technical Issue',
+                                'Other',
+                              ]
+                          ).map((cat) => (
                             <button
                               key={cat}
                               type="button"

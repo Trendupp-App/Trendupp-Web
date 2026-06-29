@@ -187,3 +187,12 @@ export function useDeactivateAccount() {
     },
   });
 }
+
+export function useSupportTicketCategories(enabled: boolean) {
+  return useQuery({
+    queryKey: ['supportTicketCategories'],
+    queryFn: () => profileApi.getSupportTicketCategories().then((r) => r.data.categories),
+    enabled,
+    staleTime: 1000 * 60 * 30,
+  });
+}

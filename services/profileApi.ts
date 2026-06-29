@@ -64,7 +64,15 @@ export const profileApi = {
 
   deactivateAccount: (payload: DeactivateAccountPayload) =>
     apiClient.post<{ message: string }>('/api/v1/profile/deactivate', payload),
+
+  getSupportTicketCategories: () =>
+    apiClient.get<GetSupportTicketCategoriesResponse>('/api/v1/profile/support-ticket/categories'),
 };
+
+export interface GetSupportTicketCategoriesResponse {
+  message: string;
+  categories: Array<string | { id: string; name: string }>;
+}
 
 export interface DeactivateAccountPayload {
   password?: string;
