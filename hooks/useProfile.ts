@@ -9,7 +9,10 @@ import {
   SecuritySettings,
   ChangePasswordPayload,
   DeactivateAccountPayload,
+  SupportTicket,
 } from '@/services/profileApi';
+
+export type { SupportTicket };
 import { useAuthStore } from '@/store/authStore';
 
 export function useUpdatePersonalInfo() {
@@ -194,5 +197,17 @@ export function useSupportTicketCategories(enabled: boolean) {
     queryFn: () => profileApi.getSupportTicketCategories().then((r) => r.data.categories),
     enabled,
     staleTime: 1000 * 60 * 30,
+  });
+}
+
+export function useSupportTickets(enabled: boolean) {
+  return useQuery<SupportTicket[]>({
+    queryKey: ['supportTickets'],
+    queryFn: async () => {
+      const { data } = await profileApi.getSupportTickets();
+      return data.tickets ?? [];
+    },
+    enabled,
+    staleTime: 1000 * 60 * 2, // refresh every 2 min
   });
 }

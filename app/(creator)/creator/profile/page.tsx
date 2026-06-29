@@ -35,6 +35,7 @@ import {
   Phone,
   FileText,
   UploadCloud,
+  Inbox,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -53,6 +54,8 @@ import {
   useChangePassword,
   useDeactivateAccount,
   useSupportTicketCategories,
+  useSupportTickets,
+  type SupportTicket,
 } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
@@ -639,7 +642,7 @@ export default function CreatorProfilePage() {
   const [helpSearchQuery, setHelpSearchQuery] = useState('');
   const [expandedFaqIdx, setExpandedFaqIdx] = useState<number | null>(null);
   const [userRating, setUserRating] = useState(0);
-  const [helpStep, setHelpStep] = useState<'main' | 'ticket'>('main');
+  const [helpStep, setHelpStep] = useState<'main' | 'ticket' | 'my-tickets'>('main');
   const [ticketCategory, setTicketCategory] = useState('Select a category');
   const [ticketSubject, setTicketSubject] = useState('');
   const [ticketDescription, setTicketDescription] = useState('');
@@ -648,6 +651,9 @@ export default function CreatorProfilePage() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const { data: serverCategories } = useSupportTicketCategories(isHelpOpen);
+  const { data: myTickets, isLoading: ticketsLoading } = useSupportTickets(
+    isHelpOpen && helpStep === 'my-tickets',
+  );
   // Action: Handle ticket attachments file selector change (store File objects)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -3517,7 +3523,7 @@ export default function CreatorProfilePage() {
             <button
               type="button"
               onClick={() => {
-                if (helpStep === 'ticket') {
+                if (helpStep === 'ticket' || helpStep === 'my-tickets') {
                   setHelpStep('main');
                 } else {
                   setIsHelpOpen(false);
@@ -3528,13 +3534,17 @@ export default function CreatorProfilePage() {
               <ChevronLeft size={18} />
             </button>
             <h3 className="text-base font-bold text-[#1a1a2e]">
-              {helpStep === 'ticket' ? 'Submit a Ticket' : 'Help & Support'}
+              {helpStep === 'ticket'
+                ? 'Submit a Ticket'
+                : helpStep === 'my-tickets'
+                  ? 'My Tickets'
+                  : 'Help & Support'}
             </h3>
           </div>
 
           {/* Desktop Header */}
           <div className="hidden md:flex items-center justify-between p-6 border-b border-[#e8e6f0]/40 bg-white shrink-0">
-            {helpStep === 'ticket' ? (
+            {helpStep === 'ticket' || helpStep === 'my-tickets' ? (
               <button
                 type="button"
                 onClick={() => setHelpStep('main')}
@@ -3544,11 +3554,13 @@ export default function CreatorProfilePage() {
                 <span>Back</span>
               </button>
             ) : (
-              <h3 className="text-base font-bold text-[#1a1a2e]">Help & Support</h3>
+              <h3 className="text-base font-bold text-[#1a1a2e]">Help &amp; Support</h3>
             )}
 
-            {helpStep === 'ticket' && (
-              <h3 className="text-sm font-extrabold text-[#1a1a2e]">Submit a ticket</h3>
+            {(helpStep === 'ticket' || helpStep === 'my-tickets') && (
+              <h3 className="text-sm font-extrabold text-[#1a1a2e]">
+                {helpStep === 'ticket' ? 'Submit a ticket' : 'My Tickets'}
+              </h3>
             )}
 
             <button
@@ -3594,7 +3606,7 @@ export default function CreatorProfilePage() {
                   <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1 block">
                     Contact Us
                   </span>
-                  <div className="grid grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                     {/* Email Card */}
                     <div
                       onClick={() => window.open('mailto:trendupp@gmail.com')}
@@ -3634,6 +3646,20 @@ export default function CreatorProfilePage() {
                       <span className="text-[10px] font-bold text-[#1a1a2e]">Submit a Ticket</span>
                       <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
                         Response within 24 hrs
+                      </span>
+                    </div>
+
+                    {/* My Tickets Card */}
+                    <div
+                      onClick={() => setHelpStep('my-tickets')}
+                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
+                        <Inbox size={16} />
+                      </div>
+                      <span className="text-[10px] font-bold text-[#1a1a2e]">My Tickets</span>
+                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
+                        Track submissions
                       </span>
                     </div>
                   </div>
@@ -3723,6 +3749,89 @@ export default function CreatorProfilePage() {
                   </button>
                 </div>
               </>
+            ) : helpStep === 'my-tickets' ? (
+              // My Tickets History View
+              <div className="flex flex-col gap-4">
+                <span className="text-xs text-[#7a7a9a] leading-normal pl-1 block">
+                  All support tickets you have submitted.
+                </span>
+
+                {ticketsLoading ? (
+                  <div className="flex flex-col gap-2.5">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col gap-2 animate-pulse"
+                      >
+                        <div className="h-3 bg-[#f4f3f6] rounded w-2/3" />
+                        <div className="h-2.5 bg-[#f4f3f6] rounded w-1/2" />
+                        <div className="h-2 bg-[#f4f3f6] rounded w-1/4 mt-1" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !myTickets || myTickets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[#f4f3f6] flex items-center justify-center">
+                      <Inbox size={22} className="text-[#9a99b0]" />
+                    </div>
+                    <p className="text-xs font-semibold text-[#7a7a9a]">
+                      You have no submitted tickets yet.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setHelpStep('ticket')}
+                      className="text-[10px] font-bold text-brand-pink hover:underline cursor-pointer"
+                    >
+                      Submit your first ticket →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    {(myTickets as SupportTicket[]).map((t) => {
+                      const statusMeta: Record<
+                        string,
+                        { label: string; bg: string; text: string }
+                      > = {
+                        open: { label: 'Open', bg: '#eff6ff', text: '#2563eb' },
+                        in_progress: { label: 'In Progress', bg: '#fff7ed', text: '#ea580c' },
+                        resolved: { label: 'Resolved', bg: '#f0fdf4', text: '#16a34a' },
+                        closed: { label: 'Closed', bg: '#f4f3f6', text: '#7a7a9a' },
+                      };
+                      const s = statusMeta[t.status] ?? {
+                        label: t.status,
+                        bg: '#f4f3f6',
+                        text: '#7a7a9a',
+                      };
+                      return (
+                        <div
+                          key={t.id}
+                          className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col gap-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[11px] font-bold text-[#1a1a2e] leading-snug flex-1">
+                              {t.subject}
+                            </span>
+                            <span
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                              style={{ backgroundColor: s.bg, color: s.text }}
+                            >
+                              {s.label}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-[#7a7a9a]">{t.category}</span>
+                          <span className="text-[9px] text-[#9a99b0] mt-0.5">
+                            {new Date(t.createdAt).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             ) : (
               // Submit a Ticket Form View
               <div className="flex flex-col gap-5">

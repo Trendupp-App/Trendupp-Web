@@ -67,7 +67,28 @@ export const profileApi = {
 
   getSupportTicketCategories: () =>
     apiClient.get<GetSupportTicketCategoriesResponse>('/api/v1/profile/support-ticket/categories'),
+
+  getSupportTickets: (id?: string) =>
+    apiClient.get<GetSupportTicketsResponse>('/api/v1/profile/support-ticket', {
+      params: id ? { id } : undefined,
+    }),
 };
+
+export interface SupportTicket {
+  id: string;
+  category: string;
+  subject: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed' | string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface GetSupportTicketsResponse {
+  message: string;
+  tickets?: SupportTicket[];
+  ticket?: SupportTicket;
+}
 
 export interface GetSupportTicketCategoriesResponse {
   message: string;
