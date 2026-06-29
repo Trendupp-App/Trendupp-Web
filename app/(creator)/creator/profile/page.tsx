@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   MapPin,
@@ -39,6 +39,9 @@ import {
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
+import { useAuthStore } from '@/store/authStore';
+import { useCountries, useNationalities, useStates } from '@/hooks/useOnboardingQueries';
+import { useUpdatePersonalInfo } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -483,8 +486,50 @@ const MOCK_FAQS = [
 ];
 
 export default function CreatorProfilePage() {
+  // Queries & Mutations
+  const { user } = useAuthStore();
+  const { data: countries } = useCountries();
+  const { data: nationalities } = useNationalities();
+
   // States
-  const [profile, setProfile] = useState<CreatorProfile>(INITIAL_PROFILE);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profile, setProfile] = useState<CreatorProfile>(() => {
+    if (user) {
+      return {
+        ...INITIAL_PROFILE,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        handle: user.username || '',
+        email: user.email,
+        bio: user.bio || '',
+        image: user.avatarUrl || INITIAL_PROFILE.image,
+        niches:
+          user.niches && user.niches.length > 0
+            ? user.niches.map((n) => n.name)
+            : INITIAL_PROFILE.niches,
+        // Match connected platforms from user.socialsConnected
+        platforms: INITIAL_PROFILE.platforms.map((plat) => {
+          const key = plat.name.toLowerCase() as keyof typeof user.socialsConnected;
+          const isConnected = user.socialsConnected ? !!user.socialsConnected[key] : false;
+          return {
+            ...plat,
+            connected: isConnected,
+            handle: isConnected ? user.username || '' : '',
+          };
+        }),
+      };
+    }
+    return INITIAL_PROFILE;
+  });
+
+  // Find country ID by name to load state list
+  const currentCountryObj = countries?.find(
+    (c) => c.name.toLowerCase() === profile.location.split(',')[1]?.trim().toLowerCase(),
+  );
+  const currentCountryId = currentCountryObj?.id;
+
+  const { data: states } = useStates(currentCountryId);
+  const updatePersonalInfoMutation = useUpdatePersonalInfo();
+
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
   type Drawer = 'edit' | 'notifications' | 'privacy' | 'analytics' | 'help' | null;
@@ -609,6 +654,8 @@ export default function CreatorProfilePage() {
   const [editLastName, setEditLastName] = useState('');
   const [editHandle, setEditHandle] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
+  const [editAvatarPreview, setEditAvatarPreview] = useState<string>('');
   const [editCountry, setEditCountry] = useState('Nigeria');
   const [editState, setEditState] = useState('Lagos');
   const [editNationality, setEditNationality] = useState('Nigeria');
@@ -674,24 +721,57 @@ export default function CreatorProfilePage() {
     setEditPlatforms(profile.platforms);
     setEditTab('personal');
     setConfirmingPlatform(null);
+    setEditAvatarFile(null);
+    setEditAvatarPreview(profile.image);
     setIsEditProfileOpen(true);
   };
 
   // Action: Save Profile Settings
   const handleSaveSettings = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setProfile({
-      ...profile,
-      name: `${editFirstName.trim()} ${editLastName.trim()}`.trim(),
-      handle: editHandle.trim(),
-      email: editEmail.trim(),
-      location: `${editState.trim()}, ${editCountry.trim()}`,
-      nationality: editNationality.trim(),
-      bio: editBio,
-      niches: editNiches,
-      platforms: editPlatforms,
+
+    // Look up country, nationality and state IDs by name
+    const countryObj = countries?.find(
+      (c) => c.name.toLowerCase() === editCountry.trim().toLowerCase(),
+    );
+    const countryId = countryObj?.id || '';
+
+    const nationalityObj = nationalities?.find(
+      (n) => n.name.toLowerCase() === editNationality.trim().toLowerCase(),
+    );
+    const nationalityId = nationalityObj?.id || '';
+
+    const stateObj = states?.find((s) => s.name.toLowerCase() === editState.trim().toLowerCase());
+    const stateId = stateObj?.id || '';
+
+    const formData = new FormData();
+    formData.append('firstName', editFirstName.trim());
+    formData.append('lastName', editLastName.trim());
+    formData.append('username', editHandle.trim());
+    formData.append('email', editEmail.trim());
+    formData.append('bio', editBio);
+    if (nationalityId) formData.append('nationalityId', nationalityId);
+    if (countryId) formData.append('countryId', countryId);
+    if (stateId) formData.append('stateId', stateId);
+
+    if (editAvatarFile) {
+      formData.append('avatar', editAvatarFile);
+    }
+
+    updatePersonalInfoMutation.mutate(formData, {
+      onSuccess: ({ data }) => {
+        const u = data?.user;
+        setProfile((prev) => ({
+          ...prev,
+          name: `${u.firstName} ${u.lastName}`.trim(),
+          handle: u.username || '',
+          email: u.email,
+          bio: u.bio || '',
+          image: u.avatarUrl || prev.image,
+        }));
+        setIsEditProfileOpen(false);
+      },
     });
-    setIsEditProfileOpen(false);
   };
 
   // Action: Reset Settings Form / Close
@@ -1906,6 +1986,7 @@ export default function CreatorProfilePage() {
             <h3 className="text-sm font-bold text-[#1a1a2e]">Edit Profile</h3>
             <button
               type="button"
+              disabled={updatePersonalInfoMutation.isPending}
               onClick={() => {
                 if (editTab === 'social' && confirmingPlatform) {
                   // Connect and Save
@@ -1942,9 +2023,9 @@ export default function CreatorProfilePage() {
                   handleSaveSettings();
                 }
               }}
-              className="text-xs font-bold text-brand-pink hover:underline"
+              className="text-xs font-bold text-brand-pink hover:underline disabled:opacity-50"
             >
-              Save
+              {updatePersonalInfoMutation.isPending ? 'Saving...' : 'Save'}
             </button>
           </div>
 
@@ -1993,7 +2074,7 @@ export default function CreatorProfilePage() {
                 <div className="flex flex-col items-center py-2 select-none">
                   <div className="relative w-22 h-22 rounded-full border-[3px] border-brand-pink bg-zinc-700 shadow-md">
                     <Image
-                      src={profile.image}
+                      src={editAvatarPreview || profile.image}
                       alt="Profile Avatar"
                       fill
                       className="object-cover rounded-full"
@@ -2002,10 +2083,23 @@ export default function CreatorProfilePage() {
                     <button
                       type="button"
                       className="absolute bottom-0.5 right-0.5 w-6.5 h-6.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center border-2 border-white shadow-sm cursor-pointer transition-transform active:scale-90"
-                      onClick={() => alert('Profile picture upload clicked')}
+                      onClick={() => fileInputRef.current?.click()}
                     >
                       <Camera size={12} className="stroke-white stroke-[2.5]" />
                     </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setEditAvatarFile(file);
+                          setEditAvatarPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
                   </div>
                   <span className="text-[10px] text-[#7a7a9a] font-medium mt-2 text-center block">
                     Add a profile picture to stand out
@@ -2371,10 +2465,18 @@ export default function CreatorProfilePage() {
             ) : (
               <button
                 type="button"
+                disabled={updatePersonalInfoMutation.isPending}
                 onClick={() => handleSaveSettings()}
-                className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center"
+                className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Save
+                {updatePersonalInfoMutation.isPending ? (
+                  <>
+                    <RotateCw className="animate-spin" size={14} />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
               </button>
             )}
           </div>
