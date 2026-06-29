@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import { profileApi, UpdateProfileSocialsPayload } from '@/services/profileApi';
+import {
+  profileApi,
+  UpdateProfileSocialsPayload,
+  UpdateProfilePayoutPayload,
+} from '@/services/profileApi';
 import { useAuthStore } from '@/store/authStore';
 
 export function useUpdatePersonalInfo() {
@@ -72,6 +76,30 @@ export function useUpdateProfileSocials() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update social connections');
+    },
+  });
+}
+
+export function useUpdateProfilePayout() {
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: UpdateProfilePayoutPayload) => profileApi.updatePayout(payload),
+    onSuccess: ({ data }) => {
+      const u = data?.user;
+      // Sync global auth store
+      updateUser({
+        bankName: u.bankName,
+        bankAccountNumber: u.bankAccountNumber,
+        bankAccountName: u.bankAccountName,
+      });
+      // Invalidate queries to refresh view
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success(data.message ?? 'Payout details saved successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not save payout details');
     },
   });
 }

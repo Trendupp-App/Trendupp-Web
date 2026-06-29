@@ -44,7 +44,27 @@ export const profileApi = {
 
   updateSocials: (payload: UpdateProfileSocialsPayload) =>
     apiClient.patch<UpdateProfileSocialsResponse>('/api/v1/profile/socials', payload),
+
+  updatePayout: (payload: UpdateProfilePayoutPayload) =>
+    apiClient.patch<UpdateProfilePayoutResponse>('/api/v1/profile/payout', payload),
 };
+
+export interface UpdateProfilePayoutPayload {
+  bankId: string;
+  bankAccountNumber: string;
+  bankAccountName: string;
+}
+
+export interface UpdateProfilePayoutResponse {
+  message: string;
+  user: {
+    id: string;
+    bankName: string | null;
+    bankAccountNumber: string | null;
+    bankAccountName: string | null;
+    onboardingPercentage: number;
+  };
+}
 
 export interface UpdateProfileSocialsPayload {
   instagramUsername?: string | null;
