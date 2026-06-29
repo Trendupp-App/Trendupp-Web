@@ -51,6 +51,7 @@ import {
   useSecuritySettings,
   useUpdateSecuritySettings,
   useChangePassword,
+  useDeactivateAccount,
 } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
@@ -604,6 +605,7 @@ export default function CreatorProfilePage() {
   const { data: serverSecuritySettings } = useSecuritySettings(isPrivacyOpen);
   const updateSecuritySettingsMutation = useUpdateSecuritySettings();
   const changePasswordMutation = useChangePassword();
+  const deactivateMutation = useDeactivateAccount();
 
   // Load security settings from the server
   useEffect(() => {
@@ -3109,14 +3111,29 @@ export default function CreatorProfilePage() {
               </p>
               <button
                 type="button"
+                disabled={deactivateMutation.isPending}
                 onClick={() => {
-                  if (confirm('Are you sure you want to deactivate your account?')) {
-                    alert('Account deactivated');
+                  const password = window.prompt(
+                    'Are you sure you want to deactivate your account? This action is irreversible.\n\nTo confirm, please enter your password:',
+                  );
+                  if (password !== null) {
+                    if (!password.trim()) {
+                      toast.error('Password is required to deactivate your account');
+                      return;
+                    }
+                    deactivateMutation.mutate({ password });
                   }
                 }}
-                className="w-full md:w-auto md:self-start py-2.5 bg-white border border-[#fca5a5] hover:bg-rose-50 text-[#ef4444] rounded-xl text-xs font-bold active:scale-98 transition-all text-center px-6 cursor-pointer select-none"
+                className="w-full md:w-auto md:self-start py-2.5 bg-white border border-[#fca5a5] hover:bg-rose-50 text-[#ef4444] rounded-xl text-xs font-bold active:scale-98 transition-all text-center px-6 cursor-pointer select-none disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Deactivate account
+                {deactivateMutation.isPending ? (
+                  <>
+                    <RotateCw className="animate-spin" size={12} />
+                    Deactivating...
+                  </>
+                ) : (
+                  'Deactivate account'
+                )}
               </button>
             </div>
           </div>

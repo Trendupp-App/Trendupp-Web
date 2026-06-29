@@ -61,7 +61,14 @@ export const profileApi = {
 
   changePassword: (payload: ChangePasswordPayload) =>
     apiClient.patch<ChangePasswordResponse>('/api/v1/profile/password', payload),
+
+  deactivateAccount: (payload: DeactivateAccountPayload) =>
+    apiClient.post<{ message: string }>('/api/v1/profile/deactivate', payload),
 };
+
+export interface DeactivateAccountPayload {
+  password?: string;
+}
 
 export interface ChangePasswordPayload {
   currentPassword?: string;

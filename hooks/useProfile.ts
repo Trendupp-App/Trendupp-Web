@@ -8,6 +8,7 @@ import {
   NotificationSettings,
   SecuritySettings,
   ChangePasswordPayload,
+  DeactivateAccountPayload,
 } from '@/services/profileApi';
 import { useAuthStore } from '@/store/authStore';
 
@@ -164,6 +165,25 @@ export function useChangePassword() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not change password');
+    },
+  });
+}
+
+export function useDeactivateAccount() {
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: DeactivateAccountPayload) => profileApi.deactivateAccount(payload),
+    onSuccess: ({ data }) => {
+      // Clear active session
+      clearSession();
+      // Invalidate queries
+      queryClient.clear();
+      toast.success(data.message ?? 'Account deactivated successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not deactivate account');
     },
   });
 }
