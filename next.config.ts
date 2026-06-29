@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'trendupp-assets.s3.amazonaws.com',
+        pathname: '/**',
+      },
     ],
   },
   devIndicators: false,

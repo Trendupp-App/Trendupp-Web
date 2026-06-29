@@ -1,4 +1,3 @@
-// lib/auth/authStore.ts
 import { OnboardingStepsCompleted } from '@/types/Onboarding';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -51,7 +50,12 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       user: null,
       setSession: (accessToken, user) => set({ accessToken, user }),
-      clearSession: () => set({ accessToken: null, user: null }),
+      clearSession: () => {
+        set({ accessToken: null, user: null });
+        if (typeof window !== 'undefined') {
+          window.location.href = '/signin';
+        }
+      },
       updateUser: (patch) => set((s) => ({ user: s.user ? { ...s.user, ...patch } : null })),
     }),
     {

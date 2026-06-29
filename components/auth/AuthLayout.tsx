@@ -32,7 +32,7 @@ export default function AuthLayout({
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % SLIDE_DATA.length);
-    }, 2000);
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
   return (

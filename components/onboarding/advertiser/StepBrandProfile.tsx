@@ -80,6 +80,7 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
     const payload: BrandProfilePayload = {
       countryId,
       stateId,
+      ...(values.brandName && { brandName: values.brandName }),
       ...(values.city && { city: values.city }),
       ...(values.bio && { bio: values.bio }),
       ...(values.website && { websiteUrl: values.website }),
@@ -124,6 +125,16 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
         >
           Upload logo
         </button>
+      </div>
+
+      {/* BrandName */}
+      <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">Brand Name</Label>
+        <Input
+          {...register('brandName')}
+          placeholder="Enter Brand Name"
+          className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+        />
       </div>
 
       {/* Country */}

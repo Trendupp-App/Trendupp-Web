@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import WorkCampaignCard, { WorkCampaign } from '@/components/dashboard/WorkCampaignCard';
-import WorkDetailsDrawer from '@/components/dashboard/WorkDetailsDrawer';
+import WorkCampaignCard, { WorkCampaign } from '@/components/creator-dashboard/WorkCampaignCard';
+import WorkDetailsDrawer from '@/components/creator-dashboard/WorkDetailsDrawer';
 
 const MOCK_CAMPAIGNS: WorkCampaign[] = [
   // --- ACTIVE CAMPAIGNS (6 items) ---

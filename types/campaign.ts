@@ -1,0 +1,141 @@
+interface BaseEntity {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+//Reference data
+
+export interface CampaignPlatform extends BaseEntity {
+  name: string;
+}
+
+export interface CreatorCategory extends BaseEntity {
+  name: string;
+  minFollowers: number;
+  maxFollowers: number | null;
+}
+
+//Enums (validated by API)
+
+export const CAMPAIGN_GOALS = ['Create Content', 'Amplify Content'] as const;
+export type CampaignGoal = (typeof CAMPAIGN_GOALS)[number];
+
+export const CONTENT_TYPES = ['Video', 'Carousel', 'Reel', 'Tweet', 'Image'] as const;
+export type ContentType = (typeof CONTENT_TYPES)[number];
+
+//Campaign
+
+export type CampaignStatus = 'draft' | 'submitted' | 'live';
+
+export interface Campaign extends BaseEntity {
+  title: string;
+  goal: CampaignGoal;
+  totalBudget: number;
+  paymentPerCreator: string;
+  contentType: ContentType;
+  duration: number;
+  creatorCategoryId: string;
+  preferredPlatformIds: string[];
+  currentStep: number;
+  status: CampaignStatus;
+  // Step 2
+  deliverables?: string[];
+  contentDirection?: string[];
+  contentGuidelines?: { dos: string[]; donts: string[] };
+  // Step 3
+  usageRights?: string;
+  successLooksLike?: string;
+}
+
+//Payloads
+
+export interface CreateCampaignPayload {
+  title: string;
+  goal: CampaignGoal;
+  totalBudget: number;
+  paymentPerCreator: string;
+  contentType: ContentType;
+  duration: number;
+  creatorCategoryId: string;
+  preferredPlatformIds: string[];
+  coverImage?: File;
+}
+
+export interface PatchCampaignStep2Payload {
+  currentStep: 2;
+  brief: string;
+  deliverables: string[];
+  contentDirection: string[];
+  contentGuidelines: {
+    dos: string[];
+    donts: string[];
+  };
+}
+
+export interface PatchCampaignStep3Payload {
+  currentStep: 3;
+  usageRights: string;
+  successLooksLike: string;
+}
+
+export interface PatchCampaignStep4Payload {
+  currentStep: 4;
+  [key: string]: unknown;
+}
+
+export type PatchCampaignPayload =
+  | PatchCampaignStep2Payload
+  | PatchCampaignStep3Payload
+  | PatchCampaignStep4Payload;
+
+//Responses
+
+export interface CreateCampaignResponse {
+  message: string;
+  campaign: Campaign;
+}
+
+export interface PatchCampaignResponse {
+  message: string;
+  campaign: Campaign;
+}
+
+export interface SubmitCampaignResponse {
+  message: string;
+  campaign: {
+    id: string;
+    status: 'submitted';
+    currentStep: 5;
+    paymentBreakdown: {
+      campaignBudget: number;
+      trenduppFee: number;
+      vat: number;
+      totalToPay: number;
+    };
+  };
+  payment: {
+    campaignId: string;
+    amount: number;
+    paymentStatus: 'unpaid';
+  };
+}
+
+export interface PayCampaignPayload {
+  paymentReference: string;
+}
+
+export interface PayCampaignResponse {
+  campaign: {
+    id: string;
+    status: 'live';
+    paymentStatus: 'paid';
+    title?: string;
+  };
+  payment: {
+    id: string;
+    paymentReference: string;
+    paymentStatus: 'paid';
+  };
+}
