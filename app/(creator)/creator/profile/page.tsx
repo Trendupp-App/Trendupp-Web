@@ -540,18 +540,22 @@ export default function CreatorProfilePage() {
       const filesArray = Array.from(e.target.files);
       // Enforce a max of 5 files and 10MB per file
       const filtered = filesArray.filter((file) => file.size <= 10 * 1024 * 1024);
-      const combined = [...uploadedFiles, ...filtered];
-      const unique = combined.reduce<File[]>((acc, cur) => {
-        if (!acc.find((f) => f.name === cur.name && f.size === cur.size)) acc.push(cur);
-        return acc;
-      }, []);
-      setUploadedFiles(unique.slice(0, 5)); // limit to 5 files
+      setUploadedFiles((prev) => {
+        const combined = [...prev, ...filtered];
+        const unique = combined.reduce<File[]>((acc, cur) => {
+          if (!acc.find((f) => f.name === cur.name && f.size === cur.size)) acc.push(cur);
+          return acc;
+        }, []);
+        return unique.slice(0, 5); // limit to 5 files
+      });
     }
   };
 
   // Prevent background scrolling when Edit Profile, Notifications, Privacy, Analytics, or Help drawer is open
   useEffect(() => {
-    if (activeDrawer) {
+    const isAnyOpen =
+      activeDrawer || isEditProfileOpen || isPrivacyOpen || isAnalyticsOpen || isHelpOpen;
+    if (isAnyOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -559,7 +563,7 @@ export default function CreatorProfilePage() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [activeDrawer]);
+  }, [activeDrawer, isEditProfileOpen, isPrivacyOpen, isAnalyticsOpen, isHelpOpen]);
 
   // Micro-animation trigger for Earnings Trend chart
   useEffect(() => {
@@ -1874,7 +1878,7 @@ export default function CreatorProfilePage() {
           className={cn(
             'absolute bottom-0 left-0 right-0 bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-out',
             'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-full md:max-w-[480px] md:border-l md:border-[#e8e6f0] rounded-t-3xl md:rounded-none h-[92vh] md:h-full overflow-hidden',
-            activeDrawer === 'edit'
+            isEditProfileOpen
               ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
               : 'translate-y-full md:translate-x-full md:translate-y-0',
           )}
@@ -3195,7 +3199,7 @@ export default function CreatorProfilePage() {
                   <div className="grid grid-cols-3 gap-2.5">
                     {/* Email Card */}
                     <div
-                      onClick={() => window.open('mailto:trendupp.@gmail.com')}
+                      onClick={() => window.open('mailto:trendupp@gmail.com')}
                       className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
                     >
                       <div className="w-9 h-9 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
@@ -3203,7 +3207,7 @@ export default function CreatorProfilePage() {
                       </div>
                       <span className="text-[10px] font-bold text-[#1a1a2e]">Email</span>
                       <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
-                        trendupp.@gmail.com
+                        trendupp@gmail.com
                       </span>
                     </div>
 
