@@ -7,6 +7,7 @@ import {
   UpdateProfilePayoutPayload,
   NotificationSettings,
   SecuritySettings,
+  ChangePasswordPayload,
 } from '@/services/profileApi';
 import { useAuthStore } from '@/store/authStore';
 
@@ -151,6 +152,18 @@ export function useUpdateSecuritySettings() {
     },
     onError: () => {
       toast.error('Could not update security settings');
+    },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (payload: ChangePasswordPayload) => profileApi.changePassword(payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Password changed successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not change password');
     },
   });
 }

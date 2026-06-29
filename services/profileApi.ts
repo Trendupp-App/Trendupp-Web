@@ -58,7 +58,19 @@ export const profileApi = {
 
   updateSecuritySettings: (payload: Partial<SecuritySettings>) =>
     apiClient.patch('/api/v1/profile/security', payload),
+
+  changePassword: (payload: ChangePasswordPayload) =>
+    apiClient.patch<ChangePasswordResponse>('/api/v1/profile/password', payload),
 };
+
+export interface ChangePasswordPayload {
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
+}
 
 export interface SecuritySettings {
   twoFactorEnabled: boolean;

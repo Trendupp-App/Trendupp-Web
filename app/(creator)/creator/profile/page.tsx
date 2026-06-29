@@ -36,6 +36,7 @@ import {
   FileText,
   UploadCloud,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
@@ -49,6 +50,7 @@ import {
   useUpdateNotificationSettings,
   useSecuritySettings,
   useUpdateSecuritySettings,
+  useChangePassword,
 } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
@@ -601,6 +603,7 @@ export default function CreatorProfilePage() {
 
   const { data: serverSecuritySettings } = useSecuritySettings(isPrivacyOpen);
   const updateSecuritySettingsMutation = useUpdateSecuritySettings();
+  const changePasswordMutation = useChangePassword();
 
   // Load security settings from the server
   useEffect(() => {
@@ -3056,16 +3059,40 @@ export default function CreatorProfilePage() {
                 {/* Update button */}
                 <button
                   type="button"
+                  disabled={changePasswordMutation.isPending}
                   onClick={() => {
-                    alert('Password updated successfully');
-                    setCurrentPassword('');
-                    setNewPassword('');
-                    setConfirmPassword('');
+                    if (!currentPassword.trim() || !newPassword.trim()) {
+                      toast.error('Please fill in all password fields');
+                      return;
+                    }
+                    if (newPassword !== confirmPassword) {
+                      toast.error('New passwords do not match');
+                      return;
+                    }
+                    changePasswordMutation.mutate(
+                      { currentPassword, newPassword },
+                      {
+                        onSuccess: () => {
+                          setCurrentPassword('');
+                          setNewPassword('');
+                          setConfirmPassword('');
+                        },
+                      },
+                    );
                   }}
-                  className="w-full md:w-auto md:self-end mt-2 px-8 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center"
+                  className="w-full md:w-auto md:self-end mt-2 px-8 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  <span className="block md:hidden">Update Password</span>
-                  <span className="hidden md:block">Update password</span>
+                  {changePasswordMutation.isPending ? (
+                    <>
+                      <RotateCw className="animate-spin" size={12} />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <span className="block md:hidden">Update Password</span>
+                      <span className="hidden md:block">Update password</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
