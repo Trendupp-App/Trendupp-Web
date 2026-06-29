@@ -95,20 +95,20 @@ export default function CreatorSignupPage() {
               <GoogleSignInButton
                 role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
                 acceptedTerms={!!termsAccepted}
-                acceptedPromotions={false}
+                acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
                 onRequireTerms={() => setTermsOpen(true)}
               />
 
               <TiktokSignInButton
                 role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
                 acceptedTerms={!!termsAccepted}
-                acceptedPromotions={false}
+                acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
                 onRequireTerms={() => setTermsOpen(true)}
               />
               <InstagramSignInButton
                 role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
                 acceptedTerms={!!termsAccepted}
-                acceptedPromotions={false}
+                acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
                 onRequireTerms={() => setTermsOpen(true)}
               />
             </div>
