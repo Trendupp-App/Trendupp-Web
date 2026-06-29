@@ -1,10 +1,11 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import {
   profileApi,
   UpdateProfileSocialsPayload,
   UpdateProfilePayoutPayload,
+  NotificationSettings,
 } from '@/services/profileApi';
 import { useAuthStore } from '@/store/authStore';
 
@@ -100,6 +101,31 @@ export function useUpdateProfilePayout() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not save payout details');
+    },
+  });
+}
+
+export function useNotificationSettings(enabled: boolean) {
+  return useQuery({
+    queryKey: ['notificationSettings'],
+    queryFn: () => profileApi.getNotificationSettings().then((r) => r.data.settings),
+    enabled,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useUpdateNotificationSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: Partial<NotificationSettings>) =>
+      profileApi.updateNotificationSettings(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notificationSettings'] });
+      toast.success('Notification preferences updated');
+    },
+    onError: () => {
+      toast.error('Could not update notification preferences');
     },
   });
 }

@@ -47,7 +47,29 @@ export const profileApi = {
 
   updatePayout: (payload: UpdateProfilePayoutPayload) =>
     apiClient.patch<UpdateProfilePayoutResponse>('/api/v1/profile/payout', payload),
+
+  getNotificationSettings: () =>
+    apiClient.get<GetNotificationSettingsResponse>('/api/v1/profile/notifications'),
+
+  updateNotificationSettings: (payload: Partial<NotificationSettings>) =>
+    apiClient.patch('/api/v1/profile/notifications', payload),
 };
+
+export interface NotificationSettings {
+  newCampaigns: boolean;
+  appUpdates: boolean;
+  paymentAlerts: boolean;
+  brandMessages: boolean;
+  push: boolean;
+  email: boolean;
+  weeklySummary: boolean;
+  marketingOffers: boolean;
+}
+
+export interface GetNotificationSettingsResponse {
+  message: string;
+  settings: NotificationSettings;
+}
 
 export interface UpdateProfilePayoutPayload {
   bankId: string;

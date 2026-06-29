@@ -45,6 +45,8 @@ import {
   useUpdatePersonalInfo,
   useUpdateProfileNiches,
   useUpdateProfileSocials,
+  useNotificationSettings,
+  useUpdateNotificationSettings,
 } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
@@ -569,6 +571,25 @@ export default function CreatorProfilePage() {
   const [notiEmail, setNotiEmail] = useState(true);
   const [notiWeeklySummary, setNotiWeeklySummary] = useState(false);
   const [notiMarketingOffers, setNotiMarketingOffers] = useState(false);
+
+  const { data: serverNotiSettings } = useNotificationSettings(activeDrawer === 'notifications');
+  const updateNotiSettingsMutation = useUpdateNotificationSettings();
+
+  // Load notification settings from the server
+  useEffect(() => {
+    if (serverNotiSettings) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setNotiNewCampaigns(!!serverNotiSettings.newCampaigns);
+      setNotiAppUpdates(!!serverNotiSettings.appUpdates);
+      setNotiPaymentAlerts(!!serverNotiSettings.paymentAlerts);
+      setNotiBrandMessages(!!serverNotiSettings.brandMessages);
+      setNotiPush(!!serverNotiSettings.push);
+      setNotiEmail(!!serverNotiSettings.email);
+      setNotiWeeklySummary(!!serverNotiSettings.weeklySummary);
+      setNotiMarketingOffers(!!serverNotiSettings.marketingOffers);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [serverNotiSettings]);
 
   // Privacy & Security States
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false); // will be derived from activeDrawer
@@ -2688,7 +2709,13 @@ export default function CreatorProfilePage() {
                       Get alerted when matching campaigns go live
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiNewCampaigns} onChange={setNotiNewCampaigns} />
+                  <ToggleSwitch
+                    checked={notiNewCampaigns}
+                    onChange={(checked) => {
+                      setNotiNewCampaigns(checked);
+                      updateNotiSettingsMutation.mutate({ newCampaigns: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2698,7 +2725,13 @@ export default function CreatorProfilePage() {
                       Status changes on your applications
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiAppUpdates} onChange={setNotiAppUpdates} />
+                  <ToggleSwitch
+                    checked={notiAppUpdates}
+                    onChange={(checked) => {
+                      setNotiAppUpdates(checked);
+                      updateNotiSettingsMutation.mutate({ appUpdates: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 3 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2708,7 +2741,13 @@ export default function CreatorProfilePage() {
                       Deposits, withdrawals and escrow releases
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiPaymentAlerts} onChange={setNotiPaymentAlerts} />
+                  <ToggleSwitch
+                    checked={notiPaymentAlerts}
+                    onChange={(checked) => {
+                      setNotiPaymentAlerts(checked);
+                      updateNotiSettingsMutation.mutate({ paymentAlerts: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 4 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2718,7 +2757,13 @@ export default function CreatorProfilePage() {
                       Campaign Chat Notifications
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiBrandMessages} onChange={setNotiBrandMessages} />
+                  <ToggleSwitch
+                    checked={notiBrandMessages}
+                    onChange={(checked) => {
+                      setNotiBrandMessages(checked);
+                      updateNotiSettingsMutation.mutate({ brandMessages: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -2734,14 +2779,26 @@ export default function CreatorProfilePage() {
                   <div className="flex flex-col pr-4">
                     <span className="text-xs font-bold text-[#1a1a2e]">Push Notifications</span>
                   </div>
-                  <ToggleSwitch checked={notiPush} onChange={setNotiPush} />
+                  <ToggleSwitch
+                    checked={notiPush}
+                    onChange={(checked) => {
+                      setNotiPush(checked);
+                      updateNotiSettingsMutation.mutate({ push: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
                   <div className="flex flex-col pr-4">
                     <span className="text-xs font-bold text-[#1a1a2e]">Email Notifications</span>
                   </div>
-                  <ToggleSwitch checked={notiEmail} onChange={setNotiEmail} />
+                  <ToggleSwitch
+                    checked={notiEmail}
+                    onChange={(checked) => {
+                      setNotiEmail(checked);
+                      updateNotiSettingsMutation.mutate({ email: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -2760,7 +2817,13 @@ export default function CreatorProfilePage() {
                       Highlights every Monday morning
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiWeeklySummary} onChange={setNotiWeeklySummary} />
+                  <ToggleSwitch
+                    checked={notiWeeklySummary}
+                    onChange={(checked) => {
+                      setNotiWeeklySummary(checked);
+                      updateNotiSettingsMutation.mutate({ weeklySummary: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2770,7 +2833,13 @@ export default function CreatorProfilePage() {
                       Promotions and platform news
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiMarketingOffers} onChange={setNotiMarketingOffers} />
+                  <ToggleSwitch
+                    checked={notiMarketingOffers}
+                    onChange={(checked) => {
+                      setNotiMarketingOffers(checked);
+                      updateNotiSettingsMutation.mutate({ marketingOffers: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>
