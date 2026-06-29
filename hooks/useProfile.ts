@@ -30,3 +30,25 @@ export function useUpdatePersonalInfo() {
     },
   });
 }
+
+export function useUpdateProfileNiches() {
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { nicheIds: string[] }) => profileApi.updateNiches(payload),
+    onSuccess: ({ data }) => {
+      const u = data?.user;
+      // Sync global auth store
+      updateUser({
+        niches: u.niches,
+      });
+      // Invalidate queries to refresh view
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success(data.message ?? 'Niches updated successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not update niches');
+    },
+  });
+}

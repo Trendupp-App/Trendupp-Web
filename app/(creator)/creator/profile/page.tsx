@@ -40,8 +40,8 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import { useAuthStore } from '@/store/authStore';
-import { useCountries, useNationalities, useStates } from '@/hooks/useOnboardingQueries';
-import { useUpdatePersonalInfo } from '@/hooks/useProfile';
+import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
+import { useUpdatePersonalInfo, useUpdateProfileNiches } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -528,7 +528,9 @@ export default function CreatorProfilePage() {
   const currentCountryId = currentCountryObj?.id;
 
   const { data: states } = useStates(currentCountryId);
+  const { data: allNiches } = useNiches();
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
+  const updateNichesMutation = useUpdateProfileNiches();
 
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
@@ -729,6 +731,27 @@ export default function CreatorProfilePage() {
   // Action: Save Profile Settings
   const handleSaveSettings = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
+    if (editTab === 'niche') {
+      const nicheIds = editNiches
+        .map((name) => allNiches?.find((n) => n.name.toLowerCase() === name.toLowerCase())?.id)
+        .filter(Boolean) as string[];
+
+      updateNichesMutation.mutate(
+        { nicheIds },
+        {
+          onSuccess: ({ data }) => {
+            const u = data?.user;
+            setProfile((prev) => ({
+              ...prev,
+              niches: u.niches.map((n) => n.name),
+            }));
+            setIsEditProfileOpen(false);
+          },
+        },
+      );
+      return;
+    }
 
     // Look up country, nationality and state IDs by name
     const countryObj = countries?.find(
@@ -1986,7 +2009,7 @@ export default function CreatorProfilePage() {
             <h3 className="text-sm font-bold text-[#1a1a2e]">Edit Profile</h3>
             <button
               type="button"
-              disabled={updatePersonalInfoMutation.isPending}
+              disabled={updatePersonalInfoMutation.isPending || updateNichesMutation.isPending}
               onClick={() => {
                 if (editTab === 'social' && confirmingPlatform) {
                   // Connect and Save
@@ -2025,7 +2048,9 @@ export default function CreatorProfilePage() {
               }}
               className="text-xs font-bold text-brand-pink hover:underline disabled:opacity-50"
             >
-              {updatePersonalInfoMutation.isPending ? 'Saving...' : 'Save'}
+              {updatePersonalInfoMutation.isPending || updateNichesMutation.isPending
+                ? 'Saving...'
+                : 'Save'}
             </button>
           </div>
 
@@ -2465,11 +2490,11 @@ export default function CreatorProfilePage() {
             ) : (
               <button
                 type="button"
-                disabled={updatePersonalInfoMutation.isPending}
+                disabled={updatePersonalInfoMutation.isPending || updateNichesMutation.isPending}
                 onClick={() => handleSaveSettings()}
                 className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {updatePersonalInfoMutation.isPending ? (
+                {updatePersonalInfoMutation.isPending || updateNichesMutation.isPending ? (
                   <>
                     <RotateCw className="animate-spin" size={14} />
                     Saving...

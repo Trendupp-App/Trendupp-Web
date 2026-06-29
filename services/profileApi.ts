@@ -18,6 +18,19 @@ export interface UpdatePersonalInfoResponse {
   };
 }
 
+export interface UpdateProfileNichesPayload {
+  nicheIds: string[];
+}
+
+export interface UpdateProfileNichesResponse {
+  message: string;
+  user: {
+    id: string;
+    niches: Array<{ id: string; name: string; order: number }>;
+    onboardingPercentage: number;
+  };
+}
+
 export const profileApi = {
   updatePersonalInfo: (payload: FormData) =>
     apiClient.patch<UpdatePersonalInfoResponse>('/api/v1/profile/personal-info', payload, {
@@ -25,4 +38,7 @@ export const profileApi = {
         'Content-Type': 'multipart/form-data',
       },
     }),
+
+  updateNiches: (payload: UpdateProfileNichesPayload) =>
+    apiClient.put<UpdateProfileNichesResponse>('/api/v1/profile/niches', payload),
 };
