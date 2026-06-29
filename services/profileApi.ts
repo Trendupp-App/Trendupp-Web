@@ -41,4 +41,40 @@ export const profileApi = {
 
   updateNiches: (payload: UpdateProfileNichesPayload) =>
     apiClient.put<UpdateProfileNichesResponse>('/api/v1/profile/niches', payload),
+
+  updateSocials: (payload: UpdateProfileSocialsPayload) =>
+    apiClient.patch<UpdateProfileSocialsResponse>('/api/v1/profile/socials', payload),
 };
+
+export interface UpdateProfileSocialsPayload {
+  instagramUsername?: string | null;
+  instagramFollowers?: number | null;
+  tiktokUsername?: string | null;
+  tiktokFollowers?: number | null;
+  youtubeUsername?: string | null;
+  youtubeFollowers?: number | null;
+  twitterUsername?: string | null;
+  twitterFollowers?: number | null;
+}
+
+export interface UpdateProfileSocialsResponse {
+  message: string;
+  user: {
+    id: string;
+    instagramUsername: string | null;
+    tiktokUsername: string | null;
+    youtubeUsername: string | null;
+    twitterUsername: string | null;
+    instagramFollowers: number;
+    tiktokFollowers: number;
+    youtubeFollowers: number;
+    twitterFollowers: number;
+    socialsConnected: {
+      instagram: boolean;
+      tiktok: boolean;
+      youtube: boolean;
+      twitter: boolean;
+    };
+    assignedTier: string | null;
+  };
+}

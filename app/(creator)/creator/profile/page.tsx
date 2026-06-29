@@ -41,7 +41,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import { useAuthStore } from '@/store/authStore';
 import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
-import { useUpdatePersonalInfo, useUpdateProfileNiches } from '@/hooks/useProfile';
+import {
+  useUpdatePersonalInfo,
+  useUpdateProfileNiches,
+  useUpdateProfileSocials,
+} from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -485,6 +489,23 @@ const MOCK_FAQS = [
   },
 ];
 
+function parseFollowersCount(val: string | number): number {
+  if (typeof val === 'number') return val;
+  if (!val || val === 'Not connected') return 0;
+  const numStr = val.toUpperCase().replace('N/A', '').trim();
+  let multiplier = 1;
+  let parsed = numStr;
+  if (numStr.endsWith('K')) {
+    multiplier = 1000;
+    parsed = numStr.slice(0, -1);
+  } else if (numStr.endsWith('M')) {
+    multiplier = 1000000;
+    parsed = numStr.slice(0, -1);
+  }
+  const num = parseFloat(parsed);
+  return isNaN(num) ? 0 : Math.round(num * multiplier);
+}
+
 export default function CreatorProfilePage() {
   // Queries & Mutations
   const { user } = useAuthStore();
@@ -531,6 +552,7 @@ export default function CreatorProfilePage() {
   const { data: allNiches } = useNiches();
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updateNichesMutation = useUpdateProfileNiches();
+  const updateSocialsMutation = useUpdateProfileSocials();
 
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
@@ -750,6 +772,89 @@ export default function CreatorProfilePage() {
           },
         },
       );
+      return;
+    }
+
+    if (editTab === 'social') {
+      const instagramPlat = editPlatforms.find((p) => p.name === 'Instagram');
+      const tiktokPlat = editPlatforms.find((p) => p.name === 'TikTok');
+      const youtubePlat = editPlatforms.find((p) => p.name === 'YouTube');
+      const twitterPlat = editPlatforms.find((p) => p.name === 'X (Twitter)');
+
+      const payload = {
+        instagramUsername: instagramPlat?.connected
+          ? instagramPlat.handle === 'Not connected'
+            ? editHandle
+            : instagramPlat.handle
+          : null,
+        instagramFollowers: instagramPlat?.connected
+          ? parseFollowersCount(instagramPlat.followers)
+          : 0,
+        tiktokUsername: tiktokPlat?.connected
+          ? tiktokPlat.handle === 'Not connected'
+            ? editHandle
+            : tiktokPlat.handle
+          : null,
+        tiktokFollowers: tiktokPlat?.connected ? parseFollowersCount(tiktokPlat.followers) : 0,
+        youtubeUsername: youtubePlat?.connected
+          ? youtubePlat.handle === 'Not connected'
+            ? editHandle
+            : youtubePlat.handle
+          : null,
+        youtubeFollowers: youtubePlat?.connected ? parseFollowersCount(youtubePlat.followers) : 0,
+        twitterUsername: twitterPlat?.connected
+          ? twitterPlat.handle === 'Not connected'
+            ? editHandle
+            : twitterPlat.handle
+          : null,
+        twitterFollowers: twitterPlat?.connected ? parseFollowersCount(twitterPlat.followers) : 0,
+      };
+
+      updateSocialsMutation.mutate(payload, {
+        onSuccess: ({ data }) => {
+          const u = data?.user;
+          setProfile((prev) => ({
+            ...prev,
+            platforms: prev.platforms.map((plat) => {
+              const name = plat.name;
+              if (name === 'Instagram') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.instagram,
+                  handle: u.instagramUsername || 'Not connected',
+                  followers: u.instagramFollowers ? `${u.instagramFollowers}` : 'Not connected',
+                };
+              }
+              if (name === 'TikTok') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.tiktok,
+                  handle: u.tiktokUsername || 'Not connected',
+                  followers: u.tiktokFollowers ? `${u.tiktokFollowers}` : 'Not connected',
+                };
+              }
+              if (name === 'YouTube') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.youtube,
+                  handle: u.youtubeUsername || 'Not connected',
+                  followers: u.youtubeFollowers ? `${u.youtubeFollowers}` : 'Not connected',
+                };
+              }
+              if (name === 'X (Twitter)') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.twitter,
+                  handle: u.twitterUsername || 'Not connected',
+                  followers: u.twitterFollowers ? `${u.twitterFollowers}` : 'Not connected',
+                };
+              }
+              return plat;
+            }),
+          }));
+          setIsEditProfileOpen(false);
+        },
+      });
       return;
     }
 
@@ -2009,7 +2114,11 @@ export default function CreatorProfilePage() {
             <h3 className="text-sm font-bold text-[#1a1a2e]">Edit Profile</h3>
             <button
               type="button"
-              disabled={updatePersonalInfoMutation.isPending || updateNichesMutation.isPending}
+              disabled={
+                updatePersonalInfoMutation.isPending ||
+                updateNichesMutation.isPending ||
+                updateSocialsMutation.isPending
+              }
               onClick={() => {
                 if (editTab === 'social' && confirmingPlatform) {
                   // Connect and Save
@@ -2048,7 +2157,9 @@ export default function CreatorProfilePage() {
               }}
               className="text-xs font-bold text-brand-pink hover:underline disabled:opacity-50"
             >
-              {updatePersonalInfoMutation.isPending || updateNichesMutation.isPending
+              {updatePersonalInfoMutation.isPending ||
+              updateNichesMutation.isPending ||
+              updateSocialsMutation.isPending
                 ? 'Saving...'
                 : 'Save'}
             </button>
@@ -2490,11 +2601,17 @@ export default function CreatorProfilePage() {
             ) : (
               <button
                 type="button"
-                disabled={updatePersonalInfoMutation.isPending || updateNichesMutation.isPending}
+                disabled={
+                  updatePersonalInfoMutation.isPending ||
+                  updateNichesMutation.isPending ||
+                  updateSocialsMutation.isPending
+                }
                 onClick={() => handleSaveSettings()}
                 className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {updatePersonalInfoMutation.isPending || updateNichesMutation.isPending ? (
+                {updatePersonalInfoMutation.isPending ||
+                updateNichesMutation.isPending ||
+                updateSocialsMutation.isPending ? (
                   <>
                     <RotateCw className="animate-spin" size={14} />
                     Saving...
