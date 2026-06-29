@@ -47,6 +47,8 @@ import {
   useUpdateProfileSocials,
   useNotificationSettings,
   useUpdateNotificationSettings,
+  useSecuritySettings,
+  useUpdateSecuritySettings,
 } from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
@@ -596,6 +598,20 @@ export default function CreatorProfilePage() {
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
   const [biometricLogin, setBiometricLogin] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);
+
+  const { data: serverSecuritySettings } = useSecuritySettings(isPrivacyOpen);
+  const updateSecuritySettingsMutation = useUpdateSecuritySettings();
+
+  // Load security settings from the server
+  useEffect(() => {
+    if (serverSecuritySettings) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setTwoFactorAuth(!!serverSecuritySettings.twoFactorEnabled);
+      setBiometricLogin(!!serverSecuritySettings.biometricLoginEnabled);
+      setLoginAlerts(!!serverSecuritySettings.loginAlertsEnabled);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [serverSecuritySettings]);
 
   // Password fields
   const [currentPassword, setCurrentPassword] = useState('');
@@ -2912,7 +2928,13 @@ export default function CreatorProfilePage() {
                       Extra layer of sign-in protection
                     </span>
                   </div>
-                  <ToggleSwitch checked={twoFactorAuth} onChange={setTwoFactorAuth} />
+                  <ToggleSwitch
+                    checked={twoFactorAuth}
+                    onChange={(checked) => {
+                      setTwoFactorAuth(checked);
+                      updateSecuritySettingsMutation.mutate({ twoFactorEnabled: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2922,7 +2944,13 @@ export default function CreatorProfilePage() {
                       Use fingerprint or face ID
                     </span>
                   </div>
-                  <ToggleSwitch checked={biometricLogin} onChange={setBiometricLogin} />
+                  <ToggleSwitch
+                    checked={biometricLogin}
+                    onChange={(checked) => {
+                      setBiometricLogin(checked);
+                      updateSecuritySettingsMutation.mutate({ biometricLoginEnabled: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 3 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2932,7 +2960,13 @@ export default function CreatorProfilePage() {
                       Notify me of new sign-ins
                     </span>
                   </div>
-                  <ToggleSwitch checked={loginAlerts} onChange={setLoginAlerts} />
+                  <ToggleSwitch
+                    checked={loginAlerts}
+                    onChange={(checked) => {
+                      setLoginAlerts(checked);
+                      updateSecuritySettingsMutation.mutate({ loginAlertsEnabled: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>

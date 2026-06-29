@@ -53,7 +53,23 @@ export const profileApi = {
 
   updateNotificationSettings: (payload: Partial<NotificationSettings>) =>
     apiClient.patch('/api/v1/profile/notifications', payload),
+
+  getSecuritySettings: () => apiClient.get<GetSecuritySettingsResponse>('/api/v1/profile/security'),
+
+  updateSecuritySettings: (payload: Partial<SecuritySettings>) =>
+    apiClient.patch('/api/v1/profile/security', payload),
 };
+
+export interface SecuritySettings {
+  twoFactorEnabled: boolean;
+  biometricLoginEnabled: boolean;
+  loginAlertsEnabled: boolean;
+}
+
+export interface GetSecuritySettingsResponse {
+  message: string;
+  settings: SecuritySettings;
+}
 
 export interface NotificationSettings {
   newCampaigns: boolean;

@@ -6,6 +6,7 @@ import {
   UpdateProfileSocialsPayload,
   UpdateProfilePayoutPayload,
   NotificationSettings,
+  SecuritySettings,
 } from '@/services/profileApi';
 import { useAuthStore } from '@/store/authStore';
 
@@ -126,6 +127,30 @@ export function useUpdateNotificationSettings() {
     },
     onError: () => {
       toast.error('Could not update notification preferences');
+    },
+  });
+}
+
+export function useSecuritySettings(enabled: boolean) {
+  return useQuery({
+    queryKey: ['securitySettings'],
+    queryFn: () => profileApi.getSecuritySettings().then((r) => r.data.settings),
+    enabled,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useUpdateSecuritySettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: Partial<SecuritySettings>) => profileApi.updateSecuritySettings(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['securitySettings'] });
+      toast.success('Security settings updated');
+    },
+    onError: () => {
+      toast.error('Could not update security settings');
     },
   });
 }
