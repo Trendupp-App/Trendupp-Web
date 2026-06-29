@@ -57,11 +57,11 @@ export const profileApi = {
 
 export interface NotificationSettings {
   newCampaigns: boolean;
-  appUpdates: boolean;
+  applicationUpdates: boolean;
   paymentAlerts: boolean;
   brandMessages: boolean;
-  push: boolean;
-  email: boolean;
+  pushNotifications: boolean;
+  emailNotifications: boolean;
   weeklySummary: boolean;
   marketingOffers: boolean;
 }

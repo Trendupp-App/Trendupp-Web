@@ -580,11 +580,11 @@ export default function CreatorProfilePage() {
     if (serverNotiSettings) {
       /* eslint-disable react-hooks/set-state-in-effect */
       setNotiNewCampaigns(!!serverNotiSettings.newCampaigns);
-      setNotiAppUpdates(!!serverNotiSettings.appUpdates);
+      setNotiAppUpdates(!!serverNotiSettings.applicationUpdates);
       setNotiPaymentAlerts(!!serverNotiSettings.paymentAlerts);
       setNotiBrandMessages(!!serverNotiSettings.brandMessages);
-      setNotiPush(!!serverNotiSettings.push);
-      setNotiEmail(!!serverNotiSettings.email);
+      setNotiPush(!!serverNotiSettings.pushNotifications);
+      setNotiEmail(!!serverNotiSettings.emailNotifications);
       setNotiWeeklySummary(!!serverNotiSettings.weeklySummary);
       setNotiMarketingOffers(!!serverNotiSettings.marketingOffers);
       /* eslint-enable react-hooks/set-state-in-effect */
@@ -2729,7 +2729,7 @@ export default function CreatorProfilePage() {
                     checked={notiAppUpdates}
                     onChange={(checked) => {
                       setNotiAppUpdates(checked);
-                      updateNotiSettingsMutation.mutate({ appUpdates: checked });
+                      updateNotiSettingsMutation.mutate({ applicationUpdates: checked });
                     }}
                   />
                 </div>
@@ -2783,7 +2783,7 @@ export default function CreatorProfilePage() {
                     checked={notiPush}
                     onChange={(checked) => {
                       setNotiPush(checked);
-                      updateNotiSettingsMutation.mutate({ push: checked });
+                      updateNotiSettingsMutation.mutate({ pushNotifications: checked });
                     }}
                   />
                 </div>
@@ -2796,7 +2796,7 @@ export default function CreatorProfilePage() {
                     checked={notiEmail}
                     onChange={(checked) => {
                       setNotiEmail(checked);
-                      updateNotiSettingsMutation.mutate({ email: checked });
+                      updateNotiSettingsMutation.mutate({ emailNotifications: checked });
                     }}
                   />
                 </div>
