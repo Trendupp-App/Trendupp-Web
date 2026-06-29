@@ -55,6 +55,7 @@ import {
   useDeactivateAccount,
   useSupportTicketCategories,
   useSupportTickets,
+  useSubmitSupportTicket,
   type SupportTicket,
 } from '@/hooks/useProfile';
 
@@ -644,6 +645,7 @@ export default function CreatorProfilePage() {
   const [userRating, setUserRating] = useState(0);
   const [helpStep, setHelpStep] = useState<'main' | 'ticket' | 'my-tickets'>('main');
   const [ticketCategory, setTicketCategory] = useState('Select a category');
+  const [ticketCategoryId, setTicketCategoryId] = useState<string | null>(null);
   const [ticketSubject, setTicketSubject] = useState('');
   const [ticketDescription, setTicketDescription] = useState('');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -654,6 +656,7 @@ export default function CreatorProfilePage() {
   const { data: myTickets, isLoading: ticketsLoading } = useSupportTickets(
     isHelpOpen && helpStep === 'my-tickets',
   );
+  const submitTicketMutation = useSubmitSupportTicket();
   // Action: Handle ticket attachments file selector change (store File objects)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -3873,25 +3876,30 @@ export default function CreatorProfilePage() {
                       {isCategoryDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#e8e6f0] rounded-xl shadow-lg z-50 overflow-hidden">
                           {(serverCategories
-                            ? serverCategories.map((c) => (typeof c === 'string' ? c : c.name))
+                            ? serverCategories.map((c) =>
+                                typeof c === 'string'
+                                  ? { id: '', name: c }
+                                  : { id: c.id, name: c.name },
+                              )
                             : [
-                                'Campaign Dispute',
-                                'Payment & Wallet',
-                                'Account Verification',
-                                'Technical Issue',
-                                'Other',
+                                { id: '', name: 'Campaign Dispute' },
+                                { id: '', name: 'Payment & Wallet' },
+                                { id: '', name: 'Account Verification' },
+                                { id: '', name: 'Technical Issue' },
+                                { id: '', name: 'Other' },
                               ]
                           ).map((cat) => (
                             <button
-                              key={cat}
+                              key={cat.name}
                               type="button"
                               onClick={() => {
-                                setTicketCategory(cat);
+                                setTicketCategory(cat.name);
+                                setTicketCategoryId(cat.id || null);
                                 setIsCategoryDropdownOpen(false);
                               }}
                               className="w-full text-left px-4 py-3 text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors cursor-pointer"
                             >
-                              {cat}
+                              {cat.name}
                             </button>
                           ))}
                         </div>
@@ -3981,34 +3989,53 @@ export default function CreatorProfilePage() {
                 {/* Submit Action */}
                 <button
                   type="button"
+                  disabled={submitTicketMutation.isPending}
                   onClick={() => {
                     if (ticketCategory === 'Select a category') {
-                      alert('Please select an issue category.');
+                      toast.error('Please select an issue category.');
                       return;
                     }
                     if (!ticketSubject.trim()) {
-                      alert('Please enter a subject.');
+                      toast.error('Please enter a subject.');
                       return;
                     }
                     if (!ticketDescription.trim()) {
-                      alert('Please provide a description.');
+                      toast.error('Please provide a description.');
                       return;
                     }
 
-                    alert(
-                      `Ticket Submitted Successfully!\nCategory: ${ticketCategory}\nSubject: ${ticketSubject}`,
-                    );
+                    const fd = new FormData();
+                    // API requires issueCategoryId (UUID); fall back to name if no UUID yet
+                    fd.append('issueCategoryId', ticketCategoryId ?? ticketCategory);
+                    fd.append('subject', ticketSubject.trim());
+                    fd.append('description', ticketDescription.trim());
+                    // Only the first file is sent (API accepts a single attachment)
+                    if (uploadedFiles.length > 0) {
+                      fd.append('attachment', uploadedFiles[0]);
+                    }
 
-                    // Reset Form State & return to Main Drawer
-                    setTicketCategory('Select a category');
-                    setTicketSubject('');
-                    setTicketDescription('');
-                    setUploadedFiles([]);
-                    setHelpStep('main');
+                    submitTicketMutation.mutate(fd, {
+                      onSuccess: () => {
+                        // Reset form & return to main help view
+                        setTicketCategory('Select a category');
+                        setTicketCategoryId(null);
+                        setTicketSubject('');
+                        setTicketDescription('');
+                        setUploadedFiles([]);
+                        setHelpStep('main');
+                      },
+                    });
                   }}
-                  className="w-full py-3 bg-brand-pink hover:bg-opacity-95 text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer select-none text-center"
+                  className="w-full py-3 bg-brand-pink hover:bg-opacity-95 text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer select-none text-center disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Submit
+                  {submitTicketMutation.isPending ? (
+                    <>
+                      <RotateCw className="animate-spin" size={12} />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit'
+                  )}
                 </button>
               </div>
             )}

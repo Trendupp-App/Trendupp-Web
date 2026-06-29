@@ -211,3 +211,19 @@ export function useSupportTickets(enabled: boolean) {
     staleTime: 1000 * 60 * 2, // refresh every 2 min
   });
 }
+
+export function useSubmitSupportTicket() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: FormData) => profileApi.submitSupportTicket(payload),
+    onSuccess: ({ data }) => {
+      // Refresh the tickets list so "My Tickets" reflects the new submission
+      queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
+      toast.success(data.message ?? 'Ticket submitted successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit ticket');
+    },
+  });
+}

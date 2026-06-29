@@ -72,7 +72,17 @@ export const profileApi = {
     apiClient.get<GetSupportTicketsResponse>('/api/v1/profile/support-ticket', {
       params: id ? { id } : undefined,
     }),
+
+  submitSupportTicket: (payload: FormData) =>
+    apiClient.post<SubmitSupportTicketResponse>('/api/v1/profile/support-ticket', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 };
+
+export interface SubmitSupportTicketResponse {
+  message: string;
+  ticket?: SupportTicket;
+}
 
 export interface SupportTicket {
   id: string;
