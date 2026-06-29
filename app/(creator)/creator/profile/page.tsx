@@ -458,7 +458,7 @@ const MOCK_BRANDS: ReviewBrand[] = [
 const MOCK_FAQS = [
   {
     q: 'How does escrow payment work?',
-    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt, withdraw payment on or after 30days.',
+    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt. You can withdraw payment on or after 30 days.',
   },
   {
     q: 'How long does profile verification take?',
@@ -1524,7 +1524,7 @@ export default function CreatorProfilePage() {
               </div>
 
               <span className="text-[9px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                Select at least One brand to submit a request
+                Select a brand to submit a request
               </span>
 
               {/* Brands Scroll Area */}
@@ -1556,6 +1556,10 @@ export default function CreatorProfilePage() {
                         </span>
                         <button
                           type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            alert(`Viewing ${brand.name} details...`);
+                          }}
                           className="px-3 py-1 bg-brand-pink-light hover:bg-[#ffe3ec] text-brand-pink font-bold text-[10px] rounded-full transition-colors"
                         >
                           View
@@ -1693,7 +1697,7 @@ export default function CreatorProfilePage() {
 
               <div className="p-4 pb-1">
                 <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                  Select at least One brand to submit a request
+                  Select a brand to submit a request
                 </span>
               </div>
 
