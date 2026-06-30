@@ -10,11 +10,9 @@ export default function Home() {
 
   useEffect(() => {
     if (accessToken && user && user.isEmailVerified) {
-      router.replace(
-        user.role === 'creator' ? '/features/creator/dashboard' : '/features/brand/dashboard',
-      );
+      router.replace(user.role === 'creator' ? '/creator/dashboard' : '/brand/dashboard');
     } else {
-      router.replace('/features/user-type');
+      router.replace('/user-type');
     }
   }, [accessToken, user, router]);
 
