@@ -35,8 +35,10 @@ export default function SubmitProofModal({
       return;
     }
 
-    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/i;
-    if (!urlPattern.test(link)) {
+    const normalizedLink = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+    try {
+      new URL(normalizedLink);
+    } catch {
       setError('Please enter a valid URL');
       return;
     }

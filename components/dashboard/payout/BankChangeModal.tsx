@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { BankCombobox } from '@/shared/BankComboBox';
 import { X, Check, Landmark, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
 
 interface BankChangeModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export default function BankChangeModal({
   initialAccountNumber = '',
   initialAccountName = '',
 }: BankChangeModalProps) {
+  const { user } = useAuthStore();
   const [step, setStep] = useState<'input' | 'confirm'>('input');
 
   const [bankId, setBankId] = useState('');
@@ -41,7 +43,7 @@ export default function BankChangeModal({
   const [isResolving, setIsResolving] = useState(false);
   const [isVerified, setIsVerified] = useState(!!initialAccountName);
 
-  const resolveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const resolveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -64,7 +66,8 @@ export default function BankChangeModal({
       resolveTimerRef.current = setTimeout(() => {
         setIsResolving(false);
         setIsVerified(true);
-        setAccountName('Alex Okafor');
+        const resolvedName = user ? `${user.firstName} ${user.lastName}` : 'Alex Okafor';
+        setAccountName(resolvedName);
       }, 1200);
     } else {
       setIsResolving(false);
@@ -84,7 +87,7 @@ export default function BankChangeModal({
   };
 
   const handleContinue = () => {
-    if (isVerified) {
+    if (isVerified && bankId) {
       setStep('confirm');
     }
   };

@@ -43,9 +43,7 @@ test.describe('App smoke test', () => {
     await descInput.fill('Test ticket description text detailing the issue.');
 
     // Dismiss the success alert and submit the ticket
-    page.once('dialog', async (dialog) => {
-      await dialog.dismiss();
-    });
+    page.once('dialog', (dialog) => dialog.dismiss());
     const submitBtn = page.locator('button:has-text("Submit")').first();
     await expect(submitBtn).toBeVisible();
     await submitBtn.click();

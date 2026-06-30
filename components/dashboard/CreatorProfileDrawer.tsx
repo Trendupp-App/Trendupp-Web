@@ -318,7 +318,7 @@ export default function CreatorProfileDrawer({
             {/* Followers */}
             <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
               <span className="text-white text-[16px] font-bold leading-none">
-                {creator.reach ?? '128K'}
+                {creator.followers ?? creator.reach ?? '128K'}
               </span>
               <span className="text-white/50 text-[10px] font-light leading-none">Followers</span>
             </div>
@@ -442,18 +442,18 @@ export default function CreatorProfileDrawer({
                         </div>
                         <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
                           <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                            Total like
+                            Total likes
                           </span>
                           <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                            140K
+                            {platform.totalLikes ?? '140K'}
                           </span>
                         </div>
                         <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
                           <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                            Total View
+                            Avg. reach
                           </span>
                           <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                            140K
+                            {platform.avgReach ?? '140K'}
                           </span>
                         </div>
                       </div>

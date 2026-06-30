@@ -11,9 +11,9 @@ import {
   DeactivateAccountPayload,
   SupportTicket,
 } from '@/services/profileApi';
+import { useAuthStore } from '@/store/authStore';
 
 export type { SupportTicket };
-import { useAuthStore } from '@/store/authStore';
 
 export function useUpdatePersonalInfo() {
   const updateUser = useAuthStore((s) => s.updateUser);

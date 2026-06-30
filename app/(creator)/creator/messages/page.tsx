@@ -126,6 +126,7 @@ export default function MessagesPage() {
     setTypedMessage('');
 
     // Simulate auto-admin reply
+    const chatId = activeChatId;
     setTimeout(() => {
       const replyMessage: Message = {
         id: Date.now() + 1,
@@ -135,7 +136,7 @@ export default function MessagesPage() {
       };
       setChats((prev) =>
         prev.map((c) => {
-          if (c.id === activeChatId) {
+          if (c.id === chatId) {
             return {
               ...c,
               messages: [...c.messages, replyMessage],
@@ -170,7 +171,7 @@ export default function MessagesPage() {
       ],
     };
 
-    setChats([newChat, ...chats]);
+    setChats((prev) => [newChat, ...prev]);
     setSubject('');
     setNewMsgText('');
     setShowSuccess(false);
