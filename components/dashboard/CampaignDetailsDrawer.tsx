@@ -77,14 +77,14 @@ export default function CampaignDetailsDrawer({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/35 backdrop-blur-[2px] transition-all"
+        className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
         onClick={handleClose}
       />
 
       {/* Slide-out Drawer Panel */}
       <div
         className={cn(
-          'w-full max-w-[560px] h-full bg-white relative z-10 flex flex-col shadow-2xl transition-transform duration-300 ease-out overflow-y-auto auth-scrollbar pb-6 border-0 border-none',
+          'w-full max-w-[560px] h-full bg-white relative z-10 flex flex-col shadow-2xl transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto auth-scrollbar pb-6 border-0 border-none',
           isOpen ? 'translate-x-0' : 'translate-x-full',
         )}
         style={{ border: 'none' }}

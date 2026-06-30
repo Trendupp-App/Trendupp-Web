@@ -152,7 +152,10 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
       )}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
+        onClick={onClose}
+      />
 
       {/* Drawer panel */}
       <div
@@ -161,7 +164,7 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
           'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-[560px]',
           'bg-white rounded-none',
           'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
-          'transition-transform duration-300 ease-out',
+          'transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
           'flex flex-col gap-0 border-0 border-none',
           isOpen
             ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
