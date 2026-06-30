@@ -1,6 +1,12 @@
 'use client';
 
-import { useForm, useFieldArray, type UseFormRegister, type FieldValues } from 'react-hook-form';
+import {
+  useForm,
+  useFieldArray,
+  type UseFormRegister,
+  type FieldValues,
+  type Path,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Trash2, Plus } from 'lucide-react';
@@ -28,7 +34,7 @@ interface StepCampaignBriefProps {
 
 // ── Fix: use the generic base type UseFormRegister<FieldValues> so any
 //    strongly-typed register is assignable to it ────────────────────────────
-function ListField({
+function ListField<TFieldValues extends FieldValues>({
   label,
   placeholder,
   fields,
@@ -43,8 +49,8 @@ function ListField({
   fields: { id: string }[];
   append: () => void;
   remove: (index: number) => void;
-  register: UseFormRegister<FieldValues>;
-  name: string;
+  register: UseFormRegister<TFieldValues>;
+  name: Path<TFieldValues>;
   error?: string;
 }) {
   return (
@@ -56,7 +62,7 @@ function ListField({
             <div className="flex items-center gap-2 flex-1 border border-[#e8e6f0] rounded-md px-3 h-10 focus-within:border-brand-pink focus-within:ring-2 focus-within:ring-brand-pink/10">
               <span className="text-sm text-[#c4c2d4] shrink-0">{index + 1}.</span>
               <input
-                {...register(`${name}.${index}.value`)}
+                {...register(`${name}.${index}.value` as Path<TFieldValues>)}
                 placeholder={placeholder}
                 className="flex-1 text-sm font-light text-[#1a1a2e] focus:outline-none placeholder:text-[#c4c2d4] bg-transparent"
               />

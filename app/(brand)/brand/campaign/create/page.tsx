@@ -29,20 +29,14 @@ type DraftData = {
 export default function NewCampaignPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-
-  // ── Persisted form data ───────────────────────────────────────────────────
   const [step1Data, setStep1Data] = useState<Step1Values | null>(null);
   const [step2Data, setStep2Data] = useState<Step2Values | null>(null);
   const [step3Data, setStep3Data] = useState<Step3Values | null>(null);
   const [draft, setDraft] = useState<DraftData>({});
-
-  // ── API state ─────────────────────────────────────────────────────────────
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<PaymentBreakdown | null>(null);
   const [paidCampaignTitle, setPaidCampaignTitle] = useState<string | undefined>();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  // ── Mutations ─────────────────────────────────────────────────────────────
   const createCampaign = useCreateCampaign((id) => {
     setCampaignId(id);
     goTo(2);
@@ -62,7 +56,6 @@ export default function NewCampaignPage() {
     setShowSuccessModal(true);
   });
 
-  // ── Navigation ────────────────────────────────────────────────────────────
   function goTo(step: number) {
     setCurrentStep(step);
     window.scrollTo({ top: 0, behavior: 'smooth' });
