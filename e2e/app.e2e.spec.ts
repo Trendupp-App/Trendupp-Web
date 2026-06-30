@@ -21,7 +21,7 @@ test.describe('App smoke test', () => {
     await helpBtn.click();
 
     // Check email info is visible (verifies the main help view is loaded)
-    const emailInfo = page.locator('text=trendupp.@gmail.com').first();
+    const emailInfo = page.locator('text=trendupp@gmail.com').first();
     await expect(emailInfo).toBeVisible();
 
     // Click the "Submit a Ticket" card to open form
@@ -41,5 +41,13 @@ test.describe('App smoke test', () => {
     const descInput = page.locator('textarea[placeholder*="Please provide as much detail"]');
     await expect(descInput).toBeVisible();
     await descInput.fill('Test ticket description text detailing the issue.');
+
+    // Dismiss the success alert and submit the ticket
+    page.once('dialog', async (dialog) => {
+      await dialog.dismiss();
+    });
+    const submitBtn = page.locator('button:has-text("Submit")').first();
+    await expect(submitBtn).toBeVisible();
+    await submitBtn.click();
   });
 });

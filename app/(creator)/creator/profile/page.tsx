@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   MapPin,
@@ -35,10 +35,29 @@ import {
   Phone,
   FileText,
   UploadCloud,
+  Inbox,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
+import { useAuthStore } from '@/store/authStore';
+import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
+import {
+  useUpdatePersonalInfo,
+  useUpdateProfileNiches,
+  useUpdateProfileSocials,
+  useNotificationSettings,
+  useUpdateNotificationSettings,
+  useSecuritySettings,
+  useUpdateSecuritySettings,
+  useChangePassword,
+  useDeactivateAccount,
+  useSupportTicketCategories,
+  useSupportTickets,
+  useSubmitSupportTicket,
+  type SupportTicket,
+} from '@/hooks/useProfile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -458,7 +477,7 @@ const MOCK_BRANDS: ReviewBrand[] = [
 const MOCK_FAQS = [
   {
     q: 'How does escrow payment work?',
-    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt, withdraw payment on or after 30days.',
+    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt. You can withdraw payment on or after 30 days.',
   },
   {
     q: 'How long does profile verification take?',
@@ -482,9 +501,71 @@ const MOCK_FAQS = [
   },
 ];
 
+function parseFollowersCount(val: string | number): number {
+  if (typeof val === 'number') return val;
+  if (!val || val === 'Not connected') return 0;
+  const numStr = val.toUpperCase().replace('N/A', '').trim();
+  let multiplier = 1;
+  let parsed = numStr;
+  if (numStr.endsWith('K')) {
+    multiplier = 1000;
+    parsed = numStr.slice(0, -1);
+  } else if (numStr.endsWith('M')) {
+    multiplier = 1000000;
+    parsed = numStr.slice(0, -1);
+  }
+  const num = parseFloat(parsed);
+  return isNaN(num) ? 0 : Math.round(num * multiplier);
+}
+
 export default function CreatorProfilePage() {
+  // Queries & Mutations
+  const { user } = useAuthStore();
+  const { data: countries } = useCountries();
+  const { data: nationalities } = useNationalities();
+
   // States
-  const [profile, setProfile] = useState<CreatorProfile>(INITIAL_PROFILE);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profile, setProfile] = useState<CreatorProfile>(() => {
+    if (user) {
+      return {
+        ...INITIAL_PROFILE,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        handle: user.username || '',
+        email: user.email,
+        bio: user.bio || '',
+        image: user.avatarUrl || INITIAL_PROFILE.image,
+        niches:
+          user.niches && user.niches.length > 0
+            ? user.niches.map((n) => n.name)
+            : INITIAL_PROFILE.niches,
+        // Match connected platforms from user.socialsConnected
+        platforms: INITIAL_PROFILE.platforms.map((plat) => {
+          const key = plat.name.toLowerCase() as keyof typeof user.socialsConnected;
+          const isConnected = user.socialsConnected ? !!user.socialsConnected[key] : false;
+          return {
+            ...plat,
+            connected: isConnected,
+            handle: isConnected ? user.username || '' : '',
+          };
+        }),
+      };
+    }
+    return INITIAL_PROFILE;
+  });
+
+  // Find country ID by name to load state list
+  const currentCountryObj = countries?.find(
+    (c) => c.name.toLowerCase() === profile.location.split(',')[1]?.trim().toLowerCase(),
+  );
+  const currentCountryId = currentCountryObj?.id;
+
+  const { data: states } = useStates(currentCountryId);
+  const { data: allNiches } = useNiches();
+  const updatePersonalInfoMutation = useUpdatePersonalInfo();
+  const updateNichesMutation = useUpdateProfileNiches();
+  const updateSocialsMutation = useUpdateProfileSocials();
+
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
   type Drawer = 'edit' | 'notifications' | 'privacy' | 'analytics' | 'help' | null;
@@ -501,11 +582,46 @@ export default function CreatorProfilePage() {
   const [notiWeeklySummary, setNotiWeeklySummary] = useState(false);
   const [notiMarketingOffers, setNotiMarketingOffers] = useState(false);
 
+  const { data: serverNotiSettings } = useNotificationSettings(activeDrawer === 'notifications');
+  const updateNotiSettingsMutation = useUpdateNotificationSettings();
+
+  // Load notification settings from the server
+  useEffect(() => {
+    if (serverNotiSettings) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setNotiNewCampaigns(!!serverNotiSettings.newCampaigns);
+      setNotiAppUpdates(!!serverNotiSettings.applicationUpdates);
+      setNotiPaymentAlerts(!!serverNotiSettings.paymentAlerts);
+      setNotiBrandMessages(!!serverNotiSettings.brandMessages);
+      setNotiPush(!!serverNotiSettings.pushNotifications);
+      setNotiEmail(!!serverNotiSettings.emailNotifications);
+      setNotiWeeklySummary(!!serverNotiSettings.weeklySummary);
+      setNotiMarketingOffers(!!serverNotiSettings.marketingOffers);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [serverNotiSettings]);
+
   // Privacy & Security States
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false); // will be derived from activeDrawer
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
   const [biometricLogin, setBiometricLogin] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);
+
+  const { data: serverSecuritySettings } = useSecuritySettings(isPrivacyOpen);
+  const updateSecuritySettingsMutation = useUpdateSecuritySettings();
+  const changePasswordMutation = useChangePassword();
+  const deactivateMutation = useDeactivateAccount();
+
+  // Load security settings from the server
+  useEffect(() => {
+    if (serverSecuritySettings) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setTwoFactorAuth(!!serverSecuritySettings.twoFactorEnabled);
+      setBiometricLogin(!!serverSecuritySettings.biometricLoginEnabled);
+      setLoginAlerts(!!serverSecuritySettings.loginAlertsEnabled);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [serverSecuritySettings]);
 
   // Password fields
   const [currentPassword, setCurrentPassword] = useState('');
@@ -527,31 +643,42 @@ export default function CreatorProfilePage() {
   const [helpSearchQuery, setHelpSearchQuery] = useState('');
   const [expandedFaqIdx, setExpandedFaqIdx] = useState<number | null>(null);
   const [userRating, setUserRating] = useState(0);
-  const [helpStep, setHelpStep] = useState<'main' | 'ticket'>('main');
+  const [helpStep, setHelpStep] = useState<'main' | 'ticket' | 'my-tickets'>('main');
   const [ticketCategory, setTicketCategory] = useState('Select a category');
+  const [ticketCategoryId, setTicketCategoryId] = useState<string | null>(null);
   const [ticketSubject, setTicketSubject] = useState('');
   const [ticketDescription, setTicketDescription] = useState('');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
+  const { data: serverCategories } = useSupportTicketCategories(isHelpOpen);
+  const { data: myTickets, isLoading: ticketsLoading } = useSupportTickets(
+    isHelpOpen && helpStep === 'my-tickets',
+  );
+  const submitTicketMutation = useSubmitSupportTicket();
   // Action: Handle ticket attachments file selector change (store File objects)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
       // Enforce a max of 5 files and 10MB per file
       const filtered = filesArray.filter((file) => file.size <= 10 * 1024 * 1024);
-      const combined = [...uploadedFiles, ...filtered];
-      const unique = combined.reduce<File[]>((acc, cur) => {
-        if (!acc.find((f) => f.name === cur.name && f.size === cur.size)) acc.push(cur);
-        return acc;
-      }, []);
-      setUploadedFiles(unique.slice(0, 5)); // limit to 5 files
+      setUploadedFiles((prev) => {
+        const combined = [...prev, ...filtered];
+        const unique = combined.reduce<File[]>((acc, cur) => {
+          if (!acc.find((f) => f.name === cur.name && f.size === cur.size)) acc.push(cur);
+          return acc;
+        }, []);
+        return unique.slice(0, 5); // limit to 5 files
+      });
     }
   };
 
   // Prevent background scrolling when Edit Profile, Notifications, Privacy, Analytics, or Help drawer is open
   useEffect(() => {
-    if (activeDrawer) {
+    const isAnyOpen =
+      activeDrawer || isEditProfileOpen || isPrivacyOpen || isAnalyticsOpen || isHelpOpen;
+    if (isAnyOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -559,7 +686,7 @@ export default function CreatorProfilePage() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [activeDrawer]);
+  }, [activeDrawer, isEditProfileOpen, isPrivacyOpen, isAnalyticsOpen, isHelpOpen]);
 
   // Micro-animation trigger for Earnings Trend chart
   useEffect(() => {
@@ -605,6 +732,8 @@ export default function CreatorProfilePage() {
   const [editLastName, setEditLastName] = useState('');
   const [editHandle, setEditHandle] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
+  const [editAvatarPreview, setEditAvatarPreview] = useState<string>('');
   const [editCountry, setEditCountry] = useState('Nigeria');
   const [editState, setEditState] = useState('Lagos');
   const [editNationality, setEditNationality] = useState('Nigeria');
@@ -670,24 +799,161 @@ export default function CreatorProfilePage() {
     setEditPlatforms(profile.platforms);
     setEditTab('personal');
     setConfirmingPlatform(null);
+    setEditAvatarFile(null);
+    setEditAvatarPreview(profile.image);
     setIsEditProfileOpen(true);
   };
 
   // Action: Save Profile Settings
   const handleSaveSettings = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setProfile({
-      ...profile,
-      name: `${editFirstName.trim()} ${editLastName.trim()}`.trim(),
-      handle: editHandle.trim(),
-      email: editEmail.trim(),
-      location: `${editState.trim()}, ${editCountry.trim()}`,
-      nationality: editNationality.trim(),
-      bio: editBio,
-      niches: editNiches,
-      platforms: editPlatforms,
+
+    if (editTab === 'niche') {
+      const nicheIds = editNiches
+        .map((name) => allNiches?.find((n) => n.name.toLowerCase() === name.toLowerCase())?.id)
+        .filter(Boolean) as string[];
+
+      updateNichesMutation.mutate(
+        { nicheIds },
+        {
+          onSuccess: ({ data }) => {
+            const u = data?.user;
+            setProfile((prev) => ({
+              ...prev,
+              niches: u.niches.map((n) => n.name),
+            }));
+            setIsEditProfileOpen(false);
+          },
+        },
+      );
+      return;
+    }
+
+    if (editTab === 'social') {
+      const instagramPlat = editPlatforms.find((p) => p.name === 'Instagram');
+      const tiktokPlat = editPlatforms.find((p) => p.name === 'TikTok');
+      const youtubePlat = editPlatforms.find((p) => p.name === 'YouTube');
+      const twitterPlat = editPlatforms.find((p) => p.name === 'X (Twitter)');
+
+      const payload = {
+        instagramUsername: instagramPlat?.connected
+          ? instagramPlat.handle === 'Not connected'
+            ? editHandle
+            : instagramPlat.handle
+          : null,
+        instagramFollowers: instagramPlat?.connected
+          ? parseFollowersCount(instagramPlat.followers)
+          : 0,
+        tiktokUsername: tiktokPlat?.connected
+          ? tiktokPlat.handle === 'Not connected'
+            ? editHandle
+            : tiktokPlat.handle
+          : null,
+        tiktokFollowers: tiktokPlat?.connected ? parseFollowersCount(tiktokPlat.followers) : 0,
+        youtubeUsername: youtubePlat?.connected
+          ? youtubePlat.handle === 'Not connected'
+            ? editHandle
+            : youtubePlat.handle
+          : null,
+        youtubeFollowers: youtubePlat?.connected ? parseFollowersCount(youtubePlat.followers) : 0,
+        twitterUsername: twitterPlat?.connected
+          ? twitterPlat.handle === 'Not connected'
+            ? editHandle
+            : twitterPlat.handle
+          : null,
+        twitterFollowers: twitterPlat?.connected ? parseFollowersCount(twitterPlat.followers) : 0,
+      };
+
+      updateSocialsMutation.mutate(payload, {
+        onSuccess: ({ data }) => {
+          const u = data?.user;
+          setProfile((prev) => ({
+            ...prev,
+            platforms: prev.platforms.map((plat) => {
+              const name = plat.name;
+              if (name === 'Instagram') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.instagram,
+                  handle: u.instagramUsername || 'Not connected',
+                  followers: u.instagramFollowers ? `${u.instagramFollowers}` : 'Not connected',
+                };
+              }
+              if (name === 'TikTok') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.tiktok,
+                  handle: u.tiktokUsername || 'Not connected',
+                  followers: u.tiktokFollowers ? `${u.tiktokFollowers}` : 'Not connected',
+                };
+              }
+              if (name === 'YouTube') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.youtube,
+                  handle: u.youtubeUsername || 'Not connected',
+                  followers: u.youtubeFollowers ? `${u.youtubeFollowers}` : 'Not connected',
+                };
+              }
+              if (name === 'X (Twitter)') {
+                return {
+                  ...plat,
+                  connected: !!u.socialsConnected.twitter,
+                  handle: u.twitterUsername || 'Not connected',
+                  followers: u.twitterFollowers ? `${u.twitterFollowers}` : 'Not connected',
+                };
+              }
+              return plat;
+            }),
+          }));
+          setIsEditProfileOpen(false);
+        },
+      });
+      return;
+    }
+
+    // Look up country, nationality and state IDs by name
+    const countryObj = countries?.find(
+      (c) => c.name.toLowerCase() === editCountry.trim().toLowerCase(),
+    );
+    const countryId = countryObj?.id || '';
+
+    const nationalityObj = nationalities?.find(
+      (n) => n.name.toLowerCase() === editNationality.trim().toLowerCase(),
+    );
+    const nationalityId = nationalityObj?.id || '';
+
+    const stateObj = states?.find((s) => s.name.toLowerCase() === editState.trim().toLowerCase());
+    const stateId = stateObj?.id || '';
+
+    const formData = new FormData();
+    formData.append('firstName', editFirstName.trim());
+    formData.append('lastName', editLastName.trim());
+    formData.append('username', editHandle.trim());
+    formData.append('email', editEmail.trim());
+    formData.append('bio', editBio);
+    if (nationalityId) formData.append('nationalityId', nationalityId);
+    if (countryId) formData.append('countryId', countryId);
+    if (stateId) formData.append('stateId', stateId);
+
+    if (editAvatarFile) {
+      formData.append('avatar', editAvatarFile);
+    }
+
+    updatePersonalInfoMutation.mutate(formData, {
+      onSuccess: ({ data }) => {
+        const u = data?.user;
+        setProfile((prev) => ({
+          ...prev,
+          name: `${u.firstName} ${u.lastName}`.trim(),
+          handle: u.username || '',
+          email: u.email,
+          bio: u.bio || '',
+          image: u.avatarUrl || prev.image,
+        }));
+        setIsEditProfileOpen(false);
+      },
     });
-    setIsEditProfileOpen(false);
   };
 
   // Action: Reset Settings Form / Close
@@ -1520,7 +1786,7 @@ export default function CreatorProfilePage() {
               </div>
 
               <span className="text-[9px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                Select at least One brand to submit a request
+                Select a brand to submit a request
               </span>
 
               {/* Brands Scroll Area */}
@@ -1552,6 +1818,10 @@ export default function CreatorProfilePage() {
                         </span>
                         <button
                           type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            alert(`Viewing ${brand.name} details...`);
+                          }}
                           className="px-3 py-1 bg-brand-pink-light hover:bg-[#ffe3ec] text-brand-pink font-bold text-[10px] rounded-full transition-colors"
                         >
                           View
@@ -1689,7 +1959,7 @@ export default function CreatorProfilePage() {
 
               <div className="p-4 pb-1">
                 <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                  Select at least One brand to submit a request
+                  Select a brand to submit a request
                 </span>
               </div>
 
@@ -1874,7 +2144,7 @@ export default function CreatorProfilePage() {
           className={cn(
             'absolute bottom-0 left-0 right-0 bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-out',
             'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-full md:max-w-[480px] md:border-l md:border-[#e8e6f0] rounded-t-3xl md:rounded-none h-[92vh] md:h-full overflow-hidden',
-            activeDrawer === 'edit'
+            isEditProfileOpen
               ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
               : 'translate-y-full md:translate-x-full md:translate-y-0',
           )}
@@ -1898,6 +2168,11 @@ export default function CreatorProfilePage() {
             <h3 className="text-sm font-bold text-[#1a1a2e]">Edit Profile</h3>
             <button
               type="button"
+              disabled={
+                updatePersonalInfoMutation.isPending ||
+                updateNichesMutation.isPending ||
+                updateSocialsMutation.isPending
+              }
               onClick={() => {
                 if (editTab === 'social' && confirmingPlatform) {
                   // Connect and Save
@@ -1934,9 +2209,13 @@ export default function CreatorProfilePage() {
                   handleSaveSettings();
                 }
               }}
-              className="text-xs font-bold text-brand-pink hover:underline"
+              className="text-xs font-bold text-brand-pink hover:underline disabled:opacity-50"
             >
-              Save
+              {updatePersonalInfoMutation.isPending ||
+              updateNichesMutation.isPending ||
+              updateSocialsMutation.isPending
+                ? 'Saving...'
+                : 'Save'}
             </button>
           </div>
 
@@ -1985,7 +2264,7 @@ export default function CreatorProfilePage() {
                 <div className="flex flex-col items-center py-2 select-none">
                   <div className="relative w-22 h-22 rounded-full border-[3px] border-brand-pink bg-zinc-700 shadow-md">
                     <Image
-                      src={profile.image}
+                      src={editAvatarPreview || profile.image}
                       alt="Profile Avatar"
                       fill
                       className="object-cover rounded-full"
@@ -1994,10 +2273,23 @@ export default function CreatorProfilePage() {
                     <button
                       type="button"
                       className="absolute bottom-0.5 right-0.5 w-6.5 h-6.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center border-2 border-white shadow-sm cursor-pointer transition-transform active:scale-90"
-                      onClick={() => alert('Profile picture upload clicked')}
+                      onClick={() => fileInputRef.current?.click()}
                     >
                       <Camera size={12} className="stroke-white stroke-[2.5]" />
                     </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setEditAvatarFile(file);
+                          setEditAvatarPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
                   </div>
                   <span className="text-[10px] text-[#7a7a9a] font-medium mt-2 text-center block">
                     Add a profile picture to stand out
@@ -2363,10 +2655,24 @@ export default function CreatorProfilePage() {
             ) : (
               <button
                 type="button"
+                disabled={
+                  updatePersonalInfoMutation.isPending ||
+                  updateNichesMutation.isPending ||
+                  updateSocialsMutation.isPending
+                }
                 onClick={() => handleSaveSettings()}
-                className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center"
+                className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Save
+                {updatePersonalInfoMutation.isPending ||
+                updateNichesMutation.isPending ||
+                updateSocialsMutation.isPending ? (
+                  <>
+                    <RotateCw className="animate-spin" size={14} />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
               </button>
             )}
           </div>
@@ -2436,7 +2742,13 @@ export default function CreatorProfilePage() {
                       Get alerted when matching campaigns go live
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiNewCampaigns} onChange={setNotiNewCampaigns} />
+                  <ToggleSwitch
+                    checked={notiNewCampaigns}
+                    onChange={(checked) => {
+                      setNotiNewCampaigns(checked);
+                      updateNotiSettingsMutation.mutate({ newCampaigns: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2446,7 +2758,13 @@ export default function CreatorProfilePage() {
                       Status changes on your applications
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiAppUpdates} onChange={setNotiAppUpdates} />
+                  <ToggleSwitch
+                    checked={notiAppUpdates}
+                    onChange={(checked) => {
+                      setNotiAppUpdates(checked);
+                      updateNotiSettingsMutation.mutate({ applicationUpdates: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 3 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2456,7 +2774,13 @@ export default function CreatorProfilePage() {
                       Deposits, withdrawals and escrow releases
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiPaymentAlerts} onChange={setNotiPaymentAlerts} />
+                  <ToggleSwitch
+                    checked={notiPaymentAlerts}
+                    onChange={(checked) => {
+                      setNotiPaymentAlerts(checked);
+                      updateNotiSettingsMutation.mutate({ paymentAlerts: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 4 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2466,7 +2790,13 @@ export default function CreatorProfilePage() {
                       Campaign Chat Notifications
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiBrandMessages} onChange={setNotiBrandMessages} />
+                  <ToggleSwitch
+                    checked={notiBrandMessages}
+                    onChange={(checked) => {
+                      setNotiBrandMessages(checked);
+                      updateNotiSettingsMutation.mutate({ brandMessages: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -2482,14 +2812,26 @@ export default function CreatorProfilePage() {
                   <div className="flex flex-col pr-4">
                     <span className="text-xs font-bold text-[#1a1a2e]">Push Notifications</span>
                   </div>
-                  <ToggleSwitch checked={notiPush} onChange={setNotiPush} />
+                  <ToggleSwitch
+                    checked={notiPush}
+                    onChange={(checked) => {
+                      setNotiPush(checked);
+                      updateNotiSettingsMutation.mutate({ pushNotifications: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
                   <div className="flex flex-col pr-4">
                     <span className="text-xs font-bold text-[#1a1a2e]">Email Notifications</span>
                   </div>
-                  <ToggleSwitch checked={notiEmail} onChange={setNotiEmail} />
+                  <ToggleSwitch
+                    checked={notiEmail}
+                    onChange={(checked) => {
+                      setNotiEmail(checked);
+                      updateNotiSettingsMutation.mutate({ emailNotifications: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -2508,7 +2850,13 @@ export default function CreatorProfilePage() {
                       Highlights every Monday morning
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiWeeklySummary} onChange={setNotiWeeklySummary} />
+                  <ToggleSwitch
+                    checked={notiWeeklySummary}
+                    onChange={(checked) => {
+                      setNotiWeeklySummary(checked);
+                      updateNotiSettingsMutation.mutate({ weeklySummary: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2518,7 +2866,13 @@ export default function CreatorProfilePage() {
                       Promotions and platform news
                     </span>
                   </div>
-                  <ToggleSwitch checked={notiMarketingOffers} onChange={setNotiMarketingOffers} />
+                  <ToggleSwitch
+                    checked={notiMarketingOffers}
+                    onChange={(checked) => {
+                      setNotiMarketingOffers(checked);
+                      updateNotiSettingsMutation.mutate({ marketingOffers: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -2591,7 +2945,13 @@ export default function CreatorProfilePage() {
                       Extra layer of sign-in protection
                     </span>
                   </div>
-                  <ToggleSwitch checked={twoFactorAuth} onChange={setTwoFactorAuth} />
+                  <ToggleSwitch
+                    checked={twoFactorAuth}
+                    onChange={(checked) => {
+                      setTwoFactorAuth(checked);
+                      updateSecuritySettingsMutation.mutate({ twoFactorEnabled: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 2 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2601,7 +2961,13 @@ export default function CreatorProfilePage() {
                       Use fingerprint or face ID
                     </span>
                   </div>
-                  <ToggleSwitch checked={biometricLogin} onChange={setBiometricLogin} />
+                  <ToggleSwitch
+                    checked={biometricLogin}
+                    onChange={(checked) => {
+                      setBiometricLogin(checked);
+                      updateSecuritySettingsMutation.mutate({ biometricLoginEnabled: checked });
+                    }}
+                  />
                 </div>
                 {/* Item 3 */}
                 <div className="p-4 flex items-center justify-between bg-white">
@@ -2611,7 +2977,13 @@ export default function CreatorProfilePage() {
                       Notify me of new sign-ins
                     </span>
                   </div>
-                  <ToggleSwitch checked={loginAlerts} onChange={setLoginAlerts} />
+                  <ToggleSwitch
+                    checked={loginAlerts}
+                    onChange={(checked) => {
+                      setLoginAlerts(checked);
+                      updateSecuritySettingsMutation.mutate({ loginAlertsEnabled: checked });
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -2701,16 +3073,40 @@ export default function CreatorProfilePage() {
                 {/* Update button */}
                 <button
                   type="button"
+                  disabled={changePasswordMutation.isPending}
                   onClick={() => {
-                    alert('Password updated successfully');
-                    setCurrentPassword('');
-                    setNewPassword('');
-                    setConfirmPassword('');
+                    if (!currentPassword.trim() || !newPassword.trim()) {
+                      toast.error('Please fill in all password fields');
+                      return;
+                    }
+                    if (newPassword !== confirmPassword) {
+                      toast.error('New passwords do not match');
+                      return;
+                    }
+                    changePasswordMutation.mutate(
+                      { currentPassword, newPassword },
+                      {
+                        onSuccess: () => {
+                          setCurrentPassword('');
+                          setNewPassword('');
+                          setConfirmPassword('');
+                        },
+                      },
+                    );
                   }}
-                  className="w-full md:w-auto md:self-end mt-2 px-8 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center"
+                  className="w-full md:w-auto md:self-end mt-2 px-8 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  <span className="block md:hidden">Update Password</span>
-                  <span className="hidden md:block">Update password</span>
+                  {changePasswordMutation.isPending ? (
+                    <>
+                      <RotateCw className="animate-spin" size={12} />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <span className="block md:hidden">Update Password</span>
+                      <span className="hidden md:block">Update password</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -2727,14 +3123,29 @@ export default function CreatorProfilePage() {
               </p>
               <button
                 type="button"
+                disabled={deactivateMutation.isPending}
                 onClick={() => {
-                  if (confirm('Are you sure you want to deactivate your account?')) {
-                    alert('Account deactivated');
+                  const password = window.prompt(
+                    'Are you sure you want to deactivate your account? This action is irreversible.\n\nTo confirm, please enter your password:',
+                  );
+                  if (password !== null) {
+                    if (!password.trim()) {
+                      toast.error('Password is required to deactivate your account');
+                      return;
+                    }
+                    deactivateMutation.mutate({ password });
                   }
                 }}
-                className="w-full md:w-auto md:self-start py-2.5 bg-white border border-[#fca5a5] hover:bg-rose-50 text-[#ef4444] rounded-xl text-xs font-bold active:scale-98 transition-all text-center px-6 cursor-pointer select-none"
+                className="w-full md:w-auto md:self-start py-2.5 bg-white border border-[#fca5a5] hover:bg-rose-50 text-[#ef4444] rounded-xl text-xs font-bold active:scale-98 transition-all text-center px-6 cursor-pointer select-none disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Deactivate account
+                {deactivateMutation.isPending ? (
+                  <>
+                    <RotateCw className="animate-spin" size={12} />
+                    Deactivating...
+                  </>
+                ) : (
+                  'Deactivate account'
+                )}
               </button>
             </div>
           </div>
@@ -3115,7 +3526,7 @@ export default function CreatorProfilePage() {
             <button
               type="button"
               onClick={() => {
-                if (helpStep === 'ticket') {
+                if (helpStep === 'ticket' || helpStep === 'my-tickets') {
                   setHelpStep('main');
                 } else {
                   setIsHelpOpen(false);
@@ -3126,13 +3537,17 @@ export default function CreatorProfilePage() {
               <ChevronLeft size={18} />
             </button>
             <h3 className="text-base font-bold text-[#1a1a2e]">
-              {helpStep === 'ticket' ? 'Submit a Ticket' : 'Help & Support'}
+              {helpStep === 'ticket'
+                ? 'Submit a Ticket'
+                : helpStep === 'my-tickets'
+                  ? 'My Tickets'
+                  : 'Help & Support'}
             </h3>
           </div>
 
           {/* Desktop Header */}
           <div className="hidden md:flex items-center justify-between p-6 border-b border-[#e8e6f0]/40 bg-white shrink-0">
-            {helpStep === 'ticket' ? (
+            {helpStep === 'ticket' || helpStep === 'my-tickets' ? (
               <button
                 type="button"
                 onClick={() => setHelpStep('main')}
@@ -3142,11 +3557,13 @@ export default function CreatorProfilePage() {
                 <span>Back</span>
               </button>
             ) : (
-              <h3 className="text-base font-bold text-[#1a1a2e]">Help & Support</h3>
+              <h3 className="text-base font-bold text-[#1a1a2e]">Help &amp; Support</h3>
             )}
 
-            {helpStep === 'ticket' && (
-              <h3 className="text-sm font-extrabold text-[#1a1a2e]">Submit a ticket</h3>
+            {(helpStep === 'ticket' || helpStep === 'my-tickets') && (
+              <h3 className="text-sm font-extrabold text-[#1a1a2e]">
+                {helpStep === 'ticket' ? 'Submit a ticket' : 'My Tickets'}
+              </h3>
             )}
 
             <button
@@ -3192,10 +3609,10 @@ export default function CreatorProfilePage() {
                   <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1 block">
                     Contact Us
                   </span>
-                  <div className="grid grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                     {/* Email Card */}
                     <div
-                      onClick={() => window.open('mailto:trendupp.@gmail.com')}
+                      onClick={() => window.open('mailto:trendupp@gmail.com')}
                       className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
                     >
                       <div className="w-9 h-9 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
@@ -3203,7 +3620,7 @@ export default function CreatorProfilePage() {
                       </div>
                       <span className="text-[10px] font-bold text-[#1a1a2e]">Email</span>
                       <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
-                        trendupp.@gmail.com
+                        trendupp@gmail.com
                       </span>
                     </div>
 
@@ -3232,6 +3649,20 @@ export default function CreatorProfilePage() {
                       <span className="text-[10px] font-bold text-[#1a1a2e]">Submit a Ticket</span>
                       <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
                         Response within 24 hrs
+                      </span>
+                    </div>
+
+                    {/* My Tickets Card */}
+                    <div
+                      onClick={() => setHelpStep('my-tickets')}
+                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
+                        <Inbox size={16} />
+                      </div>
+                      <span className="text-[10px] font-bold text-[#1a1a2e]">My Tickets</span>
+                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
+                        Track submissions
                       </span>
                     </div>
                   </div>
@@ -3321,6 +3752,89 @@ export default function CreatorProfilePage() {
                   </button>
                 </div>
               </>
+            ) : helpStep === 'my-tickets' ? (
+              // My Tickets History View
+              <div className="flex flex-col gap-4">
+                <span className="text-xs text-[#7a7a9a] leading-normal pl-1 block">
+                  All support tickets you have submitted.
+                </span>
+
+                {ticketsLoading ? (
+                  <div className="flex flex-col gap-2.5">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col gap-2 animate-pulse"
+                      >
+                        <div className="h-3 bg-[#f4f3f6] rounded w-2/3" />
+                        <div className="h-2.5 bg-[#f4f3f6] rounded w-1/2" />
+                        <div className="h-2 bg-[#f4f3f6] rounded w-1/4 mt-1" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !myTickets || myTickets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[#f4f3f6] flex items-center justify-center">
+                      <Inbox size={22} className="text-[#9a99b0]" />
+                    </div>
+                    <p className="text-xs font-semibold text-[#7a7a9a]">
+                      You have no submitted tickets yet.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setHelpStep('ticket')}
+                      className="text-[10px] font-bold text-brand-pink hover:underline cursor-pointer"
+                    >
+                      Submit your first ticket →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    {(myTickets as SupportTicket[]).map((t) => {
+                      const statusMeta: Record<
+                        string,
+                        { label: string; bg: string; text: string }
+                      > = {
+                        open: { label: 'Open', bg: '#eff6ff', text: '#2563eb' },
+                        in_progress: { label: 'In Progress', bg: '#fff7ed', text: '#ea580c' },
+                        resolved: { label: 'Resolved', bg: '#f0fdf4', text: '#16a34a' },
+                        closed: { label: 'Closed', bg: '#f4f3f6', text: '#7a7a9a' },
+                      };
+                      const s = statusMeta[t.status] ?? {
+                        label: t.status,
+                        bg: '#f4f3f6',
+                        text: '#7a7a9a',
+                      };
+                      return (
+                        <div
+                          key={t.id}
+                          className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col gap-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[11px] font-bold text-[#1a1a2e] leading-snug flex-1">
+                              {t.subject}
+                            </span>
+                            <span
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                              style={{ backgroundColor: s.bg, color: s.text }}
+                            >
+                              {s.label}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-[#7a7a9a]">{t.category}</span>
+                          <span className="text-[9px] text-[#9a99b0] mt-0.5">
+                            {new Date(t.createdAt).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             ) : (
               // Submit a Ticket Form View
               <div className="flex flex-col gap-5">
@@ -3361,23 +3875,31 @@ export default function CreatorProfilePage() {
 
                       {isCategoryDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#e8e6f0] rounded-xl shadow-lg z-50 overflow-hidden">
-                          {[
-                            'Campaign Dispute',
-                            'Payment & Wallet',
-                            'Account Verification',
-                            'Technical Issue',
-                            'Other',
-                          ].map((cat) => (
+                          {(serverCategories
+                            ? serverCategories.map((c) =>
+                                typeof c === 'string'
+                                  ? { id: '', name: c }
+                                  : { id: c.id, name: c.name },
+                              )
+                            : [
+                                { id: '', name: 'Campaign Dispute' },
+                                { id: '', name: 'Payment & Wallet' },
+                                { id: '', name: 'Account Verification' },
+                                { id: '', name: 'Technical Issue' },
+                                { id: '', name: 'Other' },
+                              ]
+                          ).map((cat) => (
                             <button
-                              key={cat}
+                              key={cat.name}
                               type="button"
                               onClick={() => {
-                                setTicketCategory(cat);
+                                setTicketCategory(cat.name);
+                                setTicketCategoryId(cat.id || null);
                                 setIsCategoryDropdownOpen(false);
                               }}
                               className="w-full text-left px-4 py-3 text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors cursor-pointer"
                             >
-                              {cat}
+                              {cat.name}
                             </button>
                           ))}
                         </div>
@@ -3467,34 +3989,53 @@ export default function CreatorProfilePage() {
                 {/* Submit Action */}
                 <button
                   type="button"
+                  disabled={submitTicketMutation.isPending}
                   onClick={() => {
                     if (ticketCategory === 'Select a category') {
-                      alert('Please select an issue category.');
+                      toast.error('Please select an issue category.');
                       return;
                     }
                     if (!ticketSubject.trim()) {
-                      alert('Please enter a subject.');
+                      toast.error('Please enter a subject.');
                       return;
                     }
                     if (!ticketDescription.trim()) {
-                      alert('Please provide a description.');
+                      toast.error('Please provide a description.');
                       return;
                     }
 
-                    alert(
-                      `Ticket Submitted Successfully!\nCategory: ${ticketCategory}\nSubject: ${ticketSubject}`,
-                    );
+                    const fd = new FormData();
+                    // API requires issueCategoryId (UUID); fall back to name if no UUID yet
+                    fd.append('issueCategoryId', ticketCategoryId ?? ticketCategory);
+                    fd.append('subject', ticketSubject.trim());
+                    fd.append('description', ticketDescription.trim());
+                    // Only the first file is sent (API accepts a single attachment)
+                    if (uploadedFiles.length > 0) {
+                      fd.append('attachment', uploadedFiles[0]);
+                    }
 
-                    // Reset Form State & return to Main Drawer
-                    setTicketCategory('Select a category');
-                    setTicketSubject('');
-                    setTicketDescription('');
-                    setUploadedFiles([]);
-                    setHelpStep('main');
+                    submitTicketMutation.mutate(fd, {
+                      onSuccess: () => {
+                        // Reset form & return to main help view
+                        setTicketCategory('Select a category');
+                        setTicketCategoryId(null);
+                        setTicketSubject('');
+                        setTicketDescription('');
+                        setUploadedFiles([]);
+                        setHelpStep('main');
+                      },
+                    });
                   }}
-                  className="w-full py-3 bg-brand-pink hover:bg-opacity-95 text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer select-none text-center"
+                  className="w-full py-3 bg-brand-pink hover:bg-opacity-95 text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer select-none text-center disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Submit
+                  {submitTicketMutation.isPending ? (
+                    <>
+                      <RotateCw className="animate-spin" size={12} />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit'
+                  )}
                 </button>
               </div>
             )}

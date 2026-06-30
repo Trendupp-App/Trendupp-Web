@@ -16,6 +16,9 @@ interface Platform {
   handle: string;
   followers: string;
   icon: 'instagram' | 'tiktok' | 'youtube' | 'twitter';
+  engRate?: string;
+  totalLikes?: string;
+  avgReach?: string;
 }
 
 interface CreatorReview {
@@ -45,6 +48,8 @@ interface CreatorProfile {
   platforms?: Platform[];
   portfolio?: PortfolioItem[];
   reviews?: CreatorReview[];
+  followers?: string;
+  engagement?: string;
 }
 
 interface CreatorProfileDrawerProps {
@@ -203,136 +208,145 @@ export default function CreatorProfileDrawer({
       )}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
+        onClick={onClose}
+      />
 
       {/* Drawer panel */}
       <div
         className={cn(
           'absolute bottom-0 left-0 right-0',
           'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-[500px]',
-          'bg-[#f4f4f8] rounded-t-3xl md:rounded-none',
+          'bg-white rounded-none',
           'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
-          'transition-transform duration-300 ease-out',
-          'border-0 border-none',
+          'transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+          'border-0 border-none flex flex-col gap-0',
           isOpen
             ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
             : 'translate-y-full md:translate-x-full md:translate-y-0',
         )}
         style={{ border: 'none' }}
       >
-        {/* Floating Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-6 text-white/75 hover:text-white transition-colors focus:outline-none z-20 cursor-pointer p-1.5"
-          aria-label="Close creator drawer"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-4 h-4"
+        {/* ── FULL-BLEED NAVY HERO HEADER ── */}
+        <div className="relative bg-[#040039] bg-gradient-to-b from-[#09052f] to-[#120d3d] pt-12 pb-8 px-5 flex flex-col items-center text-center select-none shrink-0 w-full">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-6 text-white/75 hover:text-white transition-colors focus:outline-none z-20 cursor-pointer p-1.5 border-none bg-transparent"
+            aria-label="Close creator drawer"
           >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
 
-        {/* ── DARK NAVY HERO HEADER ── */}
-        <div className="relative bg-[#040039] pt-12 pb-8 px-5 flex flex-col items-center text-center">
-          {/* Circular profile image with pink ring */}
-          <div className="w-[100px] h-[100px] rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-300 shadow-xl mb-4 mt-2">
-            <Image
-              src={creator.image}
-              alt={creator.name}
-              width={100}
-              height={100}
-              className="object-cover w-full h-full"
-            />
+          {/* Centered Avatar with tier badge */}
+          <div className="relative mt-4 mb-4 shrink-0">
+            <div className="w-24 h-24 rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-300 shadow-xl relative">
+              <Image
+                src={creator.image}
+                alt={creator.name}
+                fill
+                className="object-cover"
+                sizes="96px"
+              />
+            </div>
+            {/* Small tier badge on bottom right */}
+            <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand-pink border-2 border-[#09052f] flex items-center justify-center text-white text-[11px] font-bold shadow-md select-none">
+              {creator.tier ? creator.tier[0].toUpperCase() : 'M'}
+            </div>
           </div>
 
-          {/* Name + Rating pill inline */}
-          <div className="flex items-center gap-2.5 mb-1">
-            <h2 className="text-white text-[22px] font-bold leading-tight">{creator.name}</h2>
-            <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
-              <span className="text-amber-400 text-sm">★</span>
-              <span className="text-white text-[13px] font-semibold">{creator.rating}</span>
+          {/* Name + Rating Badge Row */}
+          <div className="flex items-center gap-2 mt-1">
+            <h2 className="text-white text-[20px] font-bold leading-tight">{creator.name}</h2>
+            <div className="flex items-center gap-1 bg-white/15 rounded-full px-2.5 py-0.5">
+              <span className="text-amber-400 text-xs">★</span>
+              <span className="text-white text-xs font-semibold">{creator.rating}</span>
             </div>
           </div>
 
           {/* Handle */}
-          <p className="text-white/50 text-[13px] mb-3">@{creator.handle}</p>
+          <p className="text-white/50 text-[13px] mt-1.5">@{creator.handle}</p>
 
-          {/* Badge pill — "Impact Advocate" style */}
+          {/* Badge pill — "Impact Advocate" style with gear icon */}
           {creator.badge && (
-            <div className="flex items-center gap-0 mb-3">
-              <div className="flex items-center bg-white rounded-full pl-5 pr-2 py-2.5 shadow-sm">
-                <span className="text-brand-pink text-[14px] font-bold tracking-tight">
-                  {creator.badge}
-                </span>
-                {/* Small medal icon on right edge */}
-                <div className="ml-2 w-7 h-7 rounded-full bg-brand-pink flex items-center justify-center shadow-md">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-3.5 h-3.5"
-                  >
-                    <circle cx="12" cy="8" r="6" />
-                    <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-                  </svg>
-                </div>
-              </div>
+            <div className="mt-3 px-4 py-1.5 bg-white border border-brand-pink rounded-full flex items-center gap-2 shadow-sm">
+              <span className="text-brand-pink text-xs font-bold">{creator.badge}</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#d7176f"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-3.5 h-3.5 animate-spin-slow"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
             </div>
           )}
 
           {/* Location */}
           {creator.location && (
-            <div className="flex items-center gap-1 mb-5">
+            <div className="flex items-center gap-1 mt-3">
               <MapPin size={12} className="text-white/40" />
               <span className="text-white/50 text-[12px]">{creator.location}</span>
             </div>
           )}
 
-          {/* Stats row — dark rounded card */}
-          <div className="w-full bg-white/10 rounded-2xl flex items-stretch divide-x divide-white/15 overflow-hidden">
-            {/* Reach */}
-            <div className="flex-1 flex flex-col items-center justify-center py-4 gap-0.5">
-              <span className="text-white text-[20px] font-bold leading-tight">
-                {creator.reach ?? '—'}
+          {/* 4-Column Stats row */}
+          <div className="w-full bg-white/10 rounded-[18px] flex items-stretch divide-x divide-white/10 overflow-hidden shrink-0 mt-5">
+            {/* Engagement */}
+            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+              <span className="text-white text-[16px] font-bold leading-none">
+                {creator.engagement ?? '7.2%'}
               </span>
-              <span className="text-white/45 text-[11px] font-light">Reach</span>
+              <span className="text-white/50 text-[10px] font-light leading-none">Engagement</span>
+            </div>
+            {/* Followers */}
+            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+              <span className="text-white text-[16px] font-bold leading-none">
+                {creator.reach ?? '128K'}
+              </span>
+              <span className="text-white/50 text-[10px] font-light leading-none">Followers</span>
             </div>
             {/* Campaigns */}
-            <div className="flex-1 flex flex-col items-center justify-center py-4 gap-0.5">
-              <span className="text-white text-[20px] font-bold leading-tight">
+            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+              <span className="text-white text-[16px] font-bold leading-none">
                 {creator.campaignCount}
               </span>
-              <span className="text-white/45 text-[11px] font-light">Campaigns</span>
+              <span className="text-white/50 text-[10px] font-light leading-none">Campaigns</span>
             </div>
             {/* Earned */}
-            <div className="flex-1 flex flex-col items-center justify-center py-4 gap-0.5">
-              <span className="text-white text-[20px] font-bold leading-tight">
-                {creator.earned ?? '—'}
+            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+              <span className="text-white text-[16px] font-bold leading-none">
+                {creator.earned ?? '1.2M'}
               </span>
-              <span className="text-white/45 text-[11px] font-light">Earned</span>
+              <span className="text-white/50 text-[10px] font-light leading-none">Earned</span>
             </div>
           </div>
         </div>
 
         {/* ── TABS: Portfolio | Reviews ── */}
-        <div className="bg-white border-b border-[#e8e6f0]/50 flex w-full text-[13px] font-medium text-[#9a99b0]">
+        <div className="bg-white border-b border-[#e8e6f0]/50 flex w-full text-[13px] font-medium text-[#9a99b0] shrink-0">
           {(['portfolio', 'reviews'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                'flex-1 text-center py-3.5 capitalize transition-all focus:outline-none',
+                'flex-1 text-center py-3.5 capitalize transition-all focus:outline-none cursor-pointer',
                 activeTab === tab
                   ? 'text-brand-pink font-semibold border-b-2 border-brand-pink'
                   : 'hover:text-[#5a5a7a]',
@@ -344,91 +358,119 @@ export default function CreatorProfileDrawer({
         </div>
 
         {/* ── CONTENT BODY ── */}
-        <div className="px-4 py-5 flex flex-col gap-5">
+        <div className="px-6 py-6 flex flex-col gap-6">
           {activeTab === 'portfolio' && (
             <>
               {/* ── BIO ── */}
               <div>
-                <h3 className="text-[15px] font-bold text-[#1a1a2e] mb-2">Bio</h3>
-                <div className="bg-white rounded-2xl px-4 py-3.5 shadow-sm border border-[#f0eef8]">
-                  <p className="text-[13px] text-[#5a5a7a] font-light leading-relaxed whitespace-pre-line">
-                    {displayBio}
-                    {isTruncated && (
-                      <>
-                        <span className="text-[#5a5a7a]">...</span>
-                        <button
-                          onClick={() => setShowFullBio(true)}
-                          className="text-brand-pink font-semibold ml-1 focus:outline-none"
-                        >
-                          See More
-                        </button>
-                      </>
-                    )}
-                  </p>
-                </div>
-
-                {/* Creator Niche card */}
-                {creator.niches && creator.niches.length > 0 && (
-                  <div className="mt-2.5 bg-white rounded-2xl p-3.5 flex items-center gap-3 shadow-sm border border-[#f0eef8]">
-                    <NicheIcon />
-                    <div className="flex flex-col gap-1.5 min-w-0">
-                      <span className="text-[10px] font-semibold text-[#9a99b0] leading-none tracking-wide">
-                        Creator Niche
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {creator.niches.map((niche) => (
-                          <span
-                            key={niche}
-                            className="text-[11px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-3 py-1 rounded-full leading-none"
+                <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-2.5">Bio</h3>
+                <div className="flex flex-col gap-3">
+                  <div className="bg-white rounded-2xl px-4 py-3.5 shadow-sm border border-[#e8e6f0]/60 w-full">
+                    <p className="text-[12px] text-[#5a5a7a] font-light leading-relaxed whitespace-pre-line">
+                      {displayBio}
+                      {isTruncated && (
+                        <>
+                          <span className="text-[#5a5a7a]">...</span>
+                          <button
+                            onClick={() => setShowFullBio(true)}
+                            className="text-brand-pink font-semibold ml-1 focus:outline-none cursor-pointer"
                           >
-                            {niche}
-                          </span>
-                        ))}
+                            See More
+                          </button>
+                        </>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Creator Niche card */}
+                  {creator.niches && creator.niches.length > 0 && (
+                    <div className="bg-white rounded-2xl p-4 flex items-center gap-3.5 shadow-sm border border-[#e8e6f0]/60 w-full">
+                      <NicheIcon />
+                      <div className="flex flex-col gap-2 min-w-0">
+                        <span className="text-[11px] font-medium text-[#7a7a9a] leading-none">
+                          Creator Niche
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {creator.niches.map((niche) => (
+                            <span
+                              key={niche}
+                              className="text-[11px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-3.5 py-1.5 rounded-full leading-none"
+                            >
+                              {niche}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* ── PLATFORMS ── */}
               {creator.platforms && creator.platforms.length > 0 && (
-                <div>
-                  <h3 className="text-[15px] font-bold text-[#1a1a2e] mb-3">Platforms</h3>
-                  <div className="flex flex-col gap-2.5">
-                    {creator.platforms.map((platform) => (
-                      <div
-                        key={platform.name}
-                        className="bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between shadow-sm border border-[#f0eef8]"
-                      >
+                <div className="w-full flex flex-col gap-2.5">
+                  <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-0.5">Platforms</h3>
+                  {creator.platforms.map((platform) => (
+                    <div
+                      key={platform.name}
+                      className="bg-white rounded-[20px] p-5 flex flex-col border border-[#e8e6f0]/60 shadow-sm w-full"
+                    >
+                      {/* Header Row */}
+                      <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-3">
                           <PlatformIcon icon={platform.icon} />
                           <div className="flex flex-col">
-                            <span className="text-[14px] font-semibold text-[#1a1a2e] leading-tight">
+                            <span className="text-[13px] font-bold text-[#1a1a2e] leading-tight">
                               {platform.name}
                             </span>
-                            <span className="text-[11px] text-[#9a99b0] font-light leading-tight">
+                            <span className="text-[11px] text-[#9a99b0] font-light leading-tight mt-0.5">
                               @{platform.handle}
                             </span>
                           </div>
                         </div>
-                        <span className="text-[14px] font-bold text-brand-pink">
-                          {platform.followers}
-                        </span>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* Stats Row */}
+                      <div className="grid grid-cols-3 gap-2 mt-3.5">
+                        <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                          <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                            Followers
+                          </span>
+                          <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                            {platform.followers ?? '72k'}
+                          </span>
+                        </div>
+                        <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                          <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                            Total like
+                          </span>
+                          <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                            140K
+                          </span>
+                        </div>
+                        <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                          <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                            Total View
+                          </span>
+                          <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                            140K
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
               {/* ── PORTFOLIO GRID ── */}
               {portfolio.length > 0 && (
-                <div>
-                  <h3 className="text-[15px] font-bold text-[#1a1a2e] mb-3">Portfolio</h3>
-                  <div className="grid grid-cols-3 gap-2">
+                <div className="pb-8 w-full flex flex-col gap-3">
+                  <h3 className="text-[14px] font-bold text-[#1a1a2e]">Portfolio</h3>
+                  <div className="grid grid-cols-3 gap-2 w-full">
                     {visibleItems.map((item) => (
                       <div
                         key={item.id}
-                        className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-200 cursor-pointer group"
+                        className="relative aspect-square rounded-[20px] overflow-hidden bg-zinc-200 cursor-pointer group w-full"
                       >
                         <Image
                           src={item.image}
@@ -437,27 +479,30 @@ export default function CreatorProfileDrawer({
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                           sizes="33vw"
                         />
-                        {/* Dark gradient overlay at bottom */}
-                        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/65 to-transparent" />
-                        {/* Brand name */}
-                        <span className="absolute bottom-1.5 left-2 text-[10px] text-white font-semibold leading-none drop-shadow-sm">
+                        {/* Simple overlay text on bottom left */}
+                        <div className="absolute bottom-3 left-3 text-[11px] text-white font-bold leading-none z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                           {item.brandName}
-                        </span>
+                        </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Load More */}
-                  <button
-                    onClick={() =>
-                      visiblePortfolio < portfolio.length
-                        ? setVisiblePortfolio((p) => p + 6)
-                        : undefined
-                    }
-                    className="w-full mt-3 py-3.5 text-[13px] font-semibold text-[#7a7a9a] bg-[#eceaf4] rounded-2xl hover:bg-[#e0ddf0] transition-colors focus:outline-none"
-                  >
-                    Load More
-                  </button>
+                  {/* Load More button */}
+                  {visiblePortfolio < portfolio.length && (
+                    <button
+                      onClick={() => setVisiblePortfolio((p) => p + 6)}
+                      className="w-full mt-2 py-4 text-[13px] font-semibold text-[#1a1a2e] bg-[#f4f2fa] rounded-[18px] hover:bg-[#eae8f2] transition-colors focus:outline-none cursor-pointer border-none"
+                    >
+                      Load More
+                    </button>
+                  )}
+
+                  {/* Show Load More even when all portfolio items are shown if there are >= 4 */}
+                  {visiblePortfolio >= portfolio.length && portfolio.length >= 1 && (
+                    <button className="w-full mt-2 py-4 text-[13px] font-semibold text-[#7a7a9a] bg-[#f4f2fa]/70 rounded-[18px] focus:outline-none cursor-default border-none">
+                      Load More
+                    </button>
+                  )}
                 </div>
               )}
             </>
@@ -465,7 +510,7 @@ export default function CreatorProfileDrawer({
 
           {/* ── REVIEWS TAB ── */}
           {activeTab === 'reviews' && (
-            <div className="bg-white -mx-4 -my-5 px-5 py-6 flex flex-col gap-6 min-h-[600px]">
+            <div className="bg-white -mx-6 -my-6 px-6 py-6 flex flex-col gap-6 min-h-[600px]">
               {/* Rating Summary Section (No card, directly on white bg) */}
               <div className="flex items-center justify-start gap-8">
                 {/* Left side: big score & stars */}
