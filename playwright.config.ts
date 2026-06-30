@@ -31,5 +31,15 @@ export default defineConfig({
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    // NextAuth v4 hard-requires a secret when running a production server
+    // (`next start`), which is what CI uses. Provide test-only fallbacks so the
+    // e2e web server boots without NO_SECRET; real values (CI secrets / Vercel
+    // env) still take precedence when present.
+    env: {
+      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ?? 'e2e-playwright-secret-not-for-production',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? 'http://localhost:3001',
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'e2e-dummy-google-client-id',
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? 'e2e-dummy-google-client-secret',
+    },
   },
 });
