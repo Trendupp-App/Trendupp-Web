@@ -1,7 +1,6 @@
 'use client';
 
 import { Search, Bell, ChevronDown, Menu } from 'lucide-react';
-import Image from 'next/image';
 import UserAvatar from './UserAvatar';
 
 interface HeaderUser {

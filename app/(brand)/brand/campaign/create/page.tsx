@@ -9,7 +9,6 @@ import StepCampaignBrief, {
 } from '@/components/create-campaign/StepCampaignBrief';
 import StepSuccess, { type Step3Values } from '@/components/create-campaign/StepSuccess';
 import StepReview from '@/components/create-campaign/StepReview';
-import StepPayment, { type PaymentBreakdown } from '@/components/create-campaign/StepPayment';
 import CampaignSuccessModal from '@/components/create-campaign/CampaignSuccessModal';
 import { Step1Input, type Step1Values } from '@/lib/validations/createCampaignSchemas';
 import {
@@ -18,6 +17,8 @@ import {
   useSubmitCampaign,
   usePayCampaign,
 } from '@/hooks/useCampaign';
+import StepPayment from '@/components/create-campaign/StepPayment';
+import type { PaymentBreakdown } from '@/types/campaign';
 
 type DraftData = {
   step1?: Partial<Step1Input>;
@@ -84,9 +85,6 @@ export default function NewCampaignPage() {
       title: data.title,
       goal: data.goal,
       totalBudget: Number(data.budget),
-      paymentPerCreator: data.paymentPerCreator,
-      contentType: data.contentType,
-      duration: Number(data.duration),
       creatorCategoryId: data.creatorTier,
       preferredPlatformIds: data.platforms,
       coverImage: data._coverFile,
@@ -94,6 +92,7 @@ export default function NewCampaignPage() {
   }
 
   // ── Step 2 ────────────────────────────────────────────────────────────────
+
   function handleStep2Next(data: Step2Values) {
     setStep2Data(data);
     setDraft((d) => ({ ...d, step2: data }));
@@ -103,7 +102,7 @@ export default function NewCampaignPage() {
       id: campaignId,
       payload: {
         currentStep: 2,
-        brief: data.brief,
+        campaignBrief: data.brief, // renamed to match API
         deliverables: data.deliverables.map((d) => d.value).filter(Boolean),
         contentDirection: data.contentDirection.map((d) => d.value).filter(Boolean),
         contentGuidelines: {

@@ -1,5 +1,3 @@
-'use client';
-
 interface LoaderProps {
   header: string;
   subheader: string;

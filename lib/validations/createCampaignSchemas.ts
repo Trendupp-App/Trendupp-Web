@@ -17,20 +17,6 @@ export const stepDetailsSchema = z.object({
     .min(1, 'Budget is required')
     .refine((v) => !isNaN(Number(v)) && Number(v) > 0, 'Enter a valid budget'),
 
-  paymentPerCreator: z.string().min(1, 'Payment per creator is required'),
-
-  contentType: z.enum(CONTENT_TYPES, {
-    error: 'Please select a content type',
-  }),
-
-  duration: z
-    .string()
-    .min(1, 'Duration is required')
-    .refine((v) => {
-      const n = Number(v);
-      return Number.isInteger(n) && n >= 1 && n <= 90;
-    }, 'Duration must be a whole number between 1 and 90'),
-
   creatorTier: z.string().min(1, 'Please select a creator tier'),
 
   platforms: z.array(z.string()).min(1, 'Select at least one platform'),

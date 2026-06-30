@@ -54,7 +54,6 @@ export default function StepDetails({
   const selectedPlatforms = useWatch({ control, name: 'platforms' }) ?? [];
   const selectedGoal = useWatch({ control, name: 'goal' });
   const selectedTier = useWatch({ control, name: 'creatorTier' });
-  const selectedContentType = useWatch({ control, name: 'contentType' });
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -153,52 +152,6 @@ export default function StepDetails({
         {errors.budget && <p className="text-[11px] text-red-400">{errors.budget.message}</p>}
       </div>
 
-      {/* Payment per creator */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Payment per creator</label>
-        <input
-          {...register('paymentPerCreator')}
-          type="number"
-          placeholder="Enter amount per creator"
-          className={inputCls}
-        />
-        {errors.paymentPerCreator && (
-          <p className="text-[11px] text-red-400">{errors.paymentPerCreator.message}</p>
-        )}
-      </div>
-
-      {/* Content type */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Content type</label>
-        <ComboBox
-          options={CONTENT_TYPES.map((t) => ({ value: t, label: t }))}
-          value={selectedContentType}
-          onValueChange={(val) =>
-            setValue('contentType', val as (typeof CONTENT_TYPES)[number], { shouldValidate: true })
-          }
-          placeholder="Select content type"
-          searchPlaceholder="Search type…"
-          emptyText="No type found."
-        />
-        {errors.contentType && (
-          <p className="text-[11px] text-red-400">{errors.contentType.message}</p>
-        )}
-      </div>
-
-      {/* Duration */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Duration (seconds)</label>
-        <input
-          {...register('duration')}
-          type="number"
-          min={1}
-          max={90}
-          placeholder="e.g. 30 (max 90s)"
-          className={inputCls}
-        />
-        {errors.duration && <p className="text-[11px] text-red-400">{errors.duration.message}</p>}
-      </div>
-
       {/* Creator tier — from API */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#1a1a2e]">Creator tier</label>
@@ -247,7 +200,7 @@ export default function StepDetails({
                   type="button"
                   onClick={() => togglePlatform(p.id)}
                   className={cn(
-                    'px-4 py-1.5 rounded-full text-sm font-light border transition-colors',
+                    'px-4 py-1.5 cursor-pointer rounded-full text-sm font-light border transition-colors',
                     isSelected
                       ? 'border-brand-pink text-brand-pink bg-brand-pink/5'
                       : 'border-[#e8e6f0] text-[#7a7a9a] hover:border-brand-pink/50 hover:text-brand-pink/70',

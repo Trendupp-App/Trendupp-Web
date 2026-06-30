@@ -5,7 +5,7 @@ interface BaseEntity {
   deletedAt: string | null;
 }
 
-//Reference data
+// ── Reference data ────────────────────────────────────────────────────────────
 
 export interface CampaignPlatform extends BaseEntity {
   name: string;
@@ -17,7 +17,7 @@ export interface CreatorCategory extends BaseEntity {
   maxFollowers: number | null;
 }
 
-//Enums (validated by API)
+// ── Enums (validated by API) ──────────────────────────────────────────────────
 
 export const CAMPAIGN_GOALS = ['Create Content', 'Amplify Content'] as const;
 export type CampaignGoal = (typeof CAMPAIGN_GOALS)[number];
@@ -25,9 +25,14 @@ export type CampaignGoal = (typeof CAMPAIGN_GOALS)[number];
 export const CONTENT_TYPES = ['Video', 'Carousel', 'Reel', 'Tweet', 'Image'] as const;
 export type ContentType = (typeof CONTENT_TYPES)[number];
 
-//Campaign
+// ── Campaign ──────────────────────────────────────────────────────────────────
 
-export type CampaignStatus = 'draft' | 'submitted' | 'live';
+export type CampaignStatus = 'draft' | 'submitted' | 'live' | 'active' | 'completed';
+
+export interface ContentGuidelines {
+  dos: string[];
+  donts: string[];
+}
 
 export interface Campaign extends BaseEntity {
   title: string;
@@ -40,38 +45,41 @@ export interface Campaign extends BaseEntity {
   preferredPlatformIds: string[];
   currentStep: number;
   status: CampaignStatus;
+  coverImage?: string;
   // Step 2
+  campaignBrief?: string;
   deliverables?: string[];
   contentDirection?: string[];
-  contentGuidelines?: { dos: string[]; donts: string[] };
+  contentGuidelines?: ContentGuidelines;
   // Step 3
   usageRights?: string;
   successLooksLike?: string;
+  creatorCategory?: CreatorCategory;
 }
 
-//Payloads
+export interface CreatorCategory {
+  name: string;
+}
+
+// ── Payloads ──────────────────────────────────────────────────────────────────
 
 export interface CreateCampaignPayload {
   title: string;
   goal: CampaignGoal;
   totalBudget: number;
-  paymentPerCreator: string;
-  contentType: ContentType;
-  duration: number;
   creatorCategoryId: string;
   preferredPlatformIds: string[];
+  campaignBrief?: string;
+  contentGuidelines?: ContentGuidelines;
   coverImage?: File;
 }
 
 export interface PatchCampaignStep2Payload {
   currentStep: 2;
-  brief: string;
+  campaignBrief: string;
   deliverables: string[];
   contentDirection: string[];
-  contentGuidelines: {
-    dos: string[];
-    donts: string[];
-  };
+  contentGuidelines: ContentGuidelines;
 }
 
 export interface PatchCampaignStep3Payload {
@@ -90,7 +98,7 @@ export type PatchCampaignPayload =
   | PatchCampaignStep3Payload
   | PatchCampaignStep4Payload;
 
-//Responses
+// ── Responses ─────────────────────────────────────────────────────────────────
 
 export interface CreateCampaignResponse {
   message: string;
@@ -102,18 +110,21 @@ export interface PatchCampaignResponse {
   campaign: Campaign;
 }
 
+export interface PaymentBreakdown {
+  campaignBudget: number;
+  trenduppFee: number;
+  vat: number;
+  totalToPay: number;
+}
+
 export interface SubmitCampaignResponse {
   message: string;
   campaign: {
     id: string;
+    title: string;
+    totalBudget: number;
     status: 'submitted';
     currentStep: 5;
-    paymentBreakdown: {
-      campaignBudget: number;
-      trenduppFee: number;
-      vat: number;
-      totalToPay: number;
-    };
   };
   payment: {
     campaignId: string;
@@ -127,11 +138,12 @@ export interface PayCampaignPayload {
 }
 
 export interface PayCampaignResponse {
+  message?: string;
   campaign: {
     id: string;
+    title?: string;
     status: 'live';
     paymentStatus: 'paid';
-    title?: string;
   };
   payment: {
     id: string;

@@ -6,6 +6,8 @@ import type {
   CreateCampaignPayload,
   PatchCampaignPayload,
   PayCampaignPayload,
+  PaymentBreakdown,
+  Campaign,
 } from '@/types/campaign';
 
 export function useCampaignPlatforms() {
@@ -51,19 +53,22 @@ export function usePatchCampaign(onSuccess?: () => void) {
   });
 }
 
-export function useSubmitCampaign(
-  onSuccess: (breakdown: {
-    campaignBudget: number;
-    trenduppFee: number;
-    vat: number;
-    totalToPay: number;
-  }) => void,
-) {
+export function useSubmitCampaign(onSuccess: (breakdown: PaymentBreakdown) => void) {
   return useMutation({
     mutationFn: (id: string) => campaignApi.submitCampaign(id),
     onSuccess: ({ data }) => {
+      console.log('submit response:', JSON.stringify(data, null, 2));
       toast.success(data.message ?? 'Campaign submitted', { duration: 900 });
-      onSuccess(data.campaign.paymentBreakdown);
+      const totalBudget = data.campaign.totalBudget;
+      const trenduppFee = Math.round(totalBudget * 0.15 * 100) / 100;
+      const vat = Math.round(totalBudget * 0.075 * 100) / 100;
+
+      onSuccess({
+        campaignBudget: totalBudget,
+        trenduppFee,
+        vat,
+        totalToPay: data.payment.amount, // use the exact figure from the API
+      });
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit campaign');
@@ -91,5 +96,17 @@ export function useCampaign(id: string | null) {
     queryFn: () => campaignApi.getCampaign(id!).then((r) => r.data),
     enabled: !!id,
     staleTime: 0,
+  });
+}
+
+export function useMyCampaigns(
+  status?: 'draft' | 'live' | 'active' | 'completed',
+  enabled: boolean = true,
+) {
+  return useQuery({
+    queryKey: ['my-campaigns', status],
+    queryFn: () => campaignApi.getMyCampaigns(status).then((r) => r.data),
+    staleTime: 1000 * 30,
+    enabled,
   });
 }

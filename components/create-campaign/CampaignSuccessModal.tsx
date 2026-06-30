@@ -29,7 +29,7 @@ export default function CampaignSuccessModal({
       actions={[
         {
           label: 'View all campaign',
-          onClick: () => router.push('/brand/campaigns'),
+          onClick: () => router.push('/brand/campaign'),
         },
         {
           label: 'New campaign',

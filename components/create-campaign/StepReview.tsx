@@ -91,16 +91,16 @@ export default function StepReview({
           label="Budget"
           value={step1.budget ? `₦${Number(step1.budget).toLocaleString()}` : undefined}
         />
-        <ReviewRow
+        {/* <ReviewRow
           label="Payment per creator"
           value={
             step1.paymentPerCreator
               ? `₦${Number(step1.paymentPerCreator).toLocaleString()}`
               : undefined
           }
-        />
-        <ReviewRow label="Content type" value={step1.contentType} />
-        <ReviewRow label="Duration" value={step1.duration ? `${step1.duration}s` : undefined} />
+        /> */}
+        {/* <ReviewRow label="Content type" value={step1.contentType} /> */}
+        {/* <ReviewRow label="Duration" value={step1.duration ? `${step1.duration}s` : undefined} /> */}
         <ReviewRow label="Creator tier" value={tierName} />
         <ReviewRow label="Platforms" value={platformNames} />
       </ReviewSection>
