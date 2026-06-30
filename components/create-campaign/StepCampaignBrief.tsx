@@ -11,19 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Trash2, Plus } from 'lucide-react';
 import StepFooter from './StepFooter';
-
-// ── Schema ────────────────────────────────────────────────────────────────────
-const listItemSchema = z.object({ value: z.string() });
-
-const schema = z.object({
-  brief: z.string().min(1, 'Campaign brief is required'),
-  deliverables: z.array(listItemSchema).min(1, 'Add at least one deliverable'),
-  contentDirection: z.array(listItemSchema),
-  dos: z.array(listItemSchema),
-  donts: z.array(listItemSchema),
-});
-
-export type Step2Values = z.infer<typeof schema>;
+import { stepCampaignBriefSchema, type Step2Values } from '@/lib/validations/createCampaignSchemas';
 
 interface StepCampaignBriefProps {
   defaultValues?: Partial<Step2Values>;
@@ -103,7 +91,7 @@ export default function StepCampaignBrief({
     getValues,
     formState: { errors },
   } = useForm<Step2Values>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(stepCampaignBriefSchema),
     defaultValues: {
       brief: '',
       deliverables: [{ value: '' }],
@@ -139,7 +127,7 @@ export default function StepCampaignBrief({
         fields={deliverables.fields}
         append={() => deliverables.append({ value: '' })}
         remove={deliverables.remove}
-        register={register as UseFormRegister<FieldValues>}
+        register={register}
         name="deliverables"
         error={errors.deliverables?.message}
       />
@@ -150,7 +138,7 @@ export default function StepCampaignBrief({
         fields={contentDirection.fields}
         append={() => contentDirection.append({ value: '' })}
         remove={contentDirection.remove}
-        register={register as UseFormRegister<FieldValues>}
+        register={register}
         name="contentDirection"
       />
 
@@ -160,7 +148,7 @@ export default function StepCampaignBrief({
         fields={dos.fields}
         append={() => dos.append({ value: '' })}
         remove={dos.remove}
-        register={register as UseFormRegister<FieldValues>}
+        register={register}
         name="dos"
       />
 
@@ -170,7 +158,7 @@ export default function StepCampaignBrief({
         fields={donts.fields}
         append={() => donts.append({ value: '' })}
         remove={donts.remove}
-        register={register as UseFormRegister<FieldValues>}
+        register={register}
         name="donts"
       />
 

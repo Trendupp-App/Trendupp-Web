@@ -12,7 +12,7 @@ import {
   type Step1Values,
   type Step1Input,
 } from '@/lib/validations/createCampaignSchemas';
-import { CAMPAIGN_GOALS, CONTENT_TYPES } from '@/types/campaign';
+import { CAMPAIGN_GOALS } from '@/types/campaign';
 import { useCampaignPlatforms, useCreatorCategories } from '@/hooks/useCampaign';
 import { ComboBox } from '@/shared/ComboBox';
 

@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CampaignPageShell from '@/components/create-campaign/CampaignPageShell';
 import StepDetails from '@/components/create-campaign/StepDetails';
-import StepCampaignBrief, {
-  type Step2Values,
-} from '@/components/create-campaign/StepCampaignBrief';
+import { type Step2Values } from '@/lib/validations/createCampaignSchemas';
+import StepCampaignBrief from '@/components/create-campaign/StepCampaignBrief';
 import StepSuccess, { type Step3Values } from '@/components/create-campaign/StepSuccess';
 import StepReview from '@/components/create-campaign/StepReview';
 import CampaignSuccessModal from '@/components/create-campaign/CampaignSuccessModal';

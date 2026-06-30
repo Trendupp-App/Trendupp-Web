@@ -27,3 +27,15 @@ export type Step1Input = z.input<typeof stepDetailsSchema>;
 
 // Output type (after Zod transforms — same here, but good practice)
 export type Step1Values = z.output<typeof stepDetailsSchema>;
+
+const listItemSchema = z.object({ value: z.string() });
+
+export const stepCampaignBriefSchema = z.object({
+  brief: z.string().min(1, 'Campaign brief is required'),
+  deliverables: z.array(listItemSchema).min(1, 'Add at least one deliverable'),
+  contentDirection: z.array(listItemSchema),
+  dos: z.array(listItemSchema),
+  donts: z.array(listItemSchema),
+});
+
+export type Step2Values = z.infer<typeof stepCampaignBriefSchema>;
