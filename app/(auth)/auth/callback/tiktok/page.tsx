@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
-import VerifyOtpPage from './verifyOtpPage';
 import PageLoader from '@/components/skeletons/PageLoader';
+import TiktokCallbackPage from './tiktokCallBackPage';
 
 export default function Page() {
   return (
     <Suspense fallback={<PageLoader />}>
-      <VerifyOtpPage />
+      <TiktokCallbackPage />
     </Suspense>
   );
 }

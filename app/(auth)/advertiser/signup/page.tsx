@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { socials } from '@/constants/socials';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,10 +17,16 @@ import {
 import { BackButton } from '@/shared/BackButton';
 import { toast } from 'sonner';
 import { useRoles, useSignup } from '@/hooks/useAuthMutations';
+import { TermsDialog } from '@/shared/TermsDialog';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
+import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
+import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 
 export default function AdvertiserSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+
   const router = useRouter();
   const { data: roles } = useRoles();
   const signup = useSignup();
@@ -35,9 +40,11 @@ export default function AdvertiserSignupPage() {
     resolver: zodResolver(advertiserSignupSchema),
     defaultValues: {
       terms: false,
-      promo: false,
+      acceptedPromotions: false,
     },
   });
+
+  const termsAccepted = useWatch({ control, name: 'terms' });
 
   async function onSubmit(values: AdvertiserSignupValues) {
     const creatorRole = roles?.find((r) => r.name === 'brand');
@@ -46,15 +53,15 @@ export default function AdvertiserSignupPage() {
     await signup.mutateAsync({
       email: values.email,
       password: values.password,
-      firstName: values.firstName,
-      lastName: values.lastName,
+      brandName: values.brandName,
       role: creatorRole.id,
       acceptedTerms: values.terms,
+      acceptedPromotions: values.acceptedPromotions,
     });
 
     setTimeout(() => {
       router.push(`/verify-email?email=${encodeURIComponent(values.email)}&type=brand`);
-    }, 1500);
+    }, 500);
   }
 
   const inputCls =
@@ -81,15 +88,25 @@ export default function AdvertiserSignupPage() {
 
           {/* Social */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            {socials?.map(({ label, icon: Icon }) => (
-              <button
-                key={label}
-                aria-label={`Sign up with ${label}`}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#e8e6f0] bg-white transition-colors hover:border-brand-pink/40"
-              >
-                <Icon size={20} />
-              </button>
-            ))}
+            <GoogleSignInButton
+              role={roles?.find((r) => r.name === 'brand')?.id ?? ''}
+              acceptedTerms={!!termsAccepted}
+              acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
+              onRequireTerms={() => setTermsOpen(true)}
+            />
+            <TiktokSignInButton
+              role={roles?.find((r) => r.name === 'brand')?.id ?? ''}
+              acceptedTerms={!!termsAccepted}
+              acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
+              onRequireTerms={() => setTermsOpen(true)}
+            />
+
+            <InstagramSignInButton
+              role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
+              acceptedTerms={!!termsAccepted}
+              acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
+              onRequireTerms={() => setTermsOpen(true)}
+            />
           </div>
 
           <div className="flex items-center gap-3 mb-4">
@@ -99,35 +116,20 @@ export default function AdvertiserSignupPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-            {/* First / Last */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Brand Name */}
+            <div className="grid grid-cols-1 gap-3">
               <div className="flex flex-col gap-1">
-                <Label className="text-sm font-light text-[#1a1a2e]">First name</Label>
+                <Label className="text-sm font-light text-[#1a1a2e]">Brand name</Label>
                 <div className="relative">
                   <User size={15} className={iconCls} />
                   <Input
-                    {...register('firstName')}
-                    placeholder="Enter first name"
-                    className={`pl-9 ${inputCls}`}
-                  />
-                </div>
-                {errors.firstName && (
-                  <p className="text-[11px] text-red-400">{errors.firstName.message}</p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label className="text-sm font-light text-[#1a1a2e]">Last name</Label>
-                <div className="relative">
-                  <User size={15} className={iconCls} />
-                  <Input
-                    {...register('lastName')}
+                    {...register('brandName')}
                     placeholder="Enter last name"
                     className={`pl-9 ${inputCls}`}
                   />
                 </div>
-                {errors.lastName && (
-                  <p className="text-[11px] text-red-400">{errors.lastName.message}</p>
+                {errors.brandName && (
+                  <p className="text-[11px] text-red-400">{errors.brandName.message}</p>
                 )}
               </div>
             </div>
@@ -219,9 +221,13 @@ export default function AdvertiserSignupPage() {
                     className="text-[11px] text-[#7a7a9a] leading-relaxed cursor-pointer"
                   >
                     By registering you agree with our{' '}
-                    <a href="#" className="text-brand-pink hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => setTermsOpen(true)}
+                      className="text-brand-pink cursor-pointer hover:underline"
+                    >
                       Terms & Conditions
-                    </a>
+                    </button>
                   </label>
                 </div>
                 {errors.terms && <p className="text-[11px] text-red-400">{errors.terms.message}</p>}
@@ -230,7 +236,7 @@ export default function AdvertiserSignupPage() {
               {/* Promo — optional */}
               <div className="flex items-start gap-2">
                 <Controller
-                  name="promo"
+                  name="acceptedPromotions"
                   control={control}
                   render={({ field }) => (
                     <Checkbox
@@ -261,6 +267,7 @@ export default function AdvertiserSignupPage() {
           </form>
         </div>
       </div>
+      <TermsDialog open={termsOpen} onOpenChange={setTermsOpen} />
     </AuthLayout>
   );
 }

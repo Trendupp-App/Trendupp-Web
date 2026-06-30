@@ -15,6 +15,9 @@ import { signinSchema, SigninValues } from '@/lib/validations/loginSchema';
 import { BackButton } from '@/shared/BackButton';
 import { useLogin } from '@/hooks/useAuthMutations';
 import { AxiosError } from 'axios';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
+import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
+import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +38,7 @@ export default function SigninPage() {
       const dest = data.user.role === 'creator' ? '/creator/dashboard' : '/brand/dashboard';
       setTimeout(() => {
         router.push(dest);
-      }, 1500);
+      }, 500);
     } catch (err) {
       const message: string =
         (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? '';
@@ -86,15 +89,9 @@ export default function SigninPage() {
 
           {/* Social */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            {socials?.map(({ label, icon: Icon }) => (
-              <button
-                key={label}
-                aria-label={`Sign in with ${label}`}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#e8e6f0] bg-white transition-colors hover:border-brand-pink/40"
-              >
-                <Icon size={20} />
-              </button>
-            ))}
+            <GoogleSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
+            <TiktokSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
+            <InstagramSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
           </div>
 
           <div className="flex items-center gap-3 mb-4">

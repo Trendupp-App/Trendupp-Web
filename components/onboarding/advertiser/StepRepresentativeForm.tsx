@@ -3,11 +3,12 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Phone } from 'lucide-react';
-import type { AdvertiserOnboardingData } from '@/types/Onboarding';
+import type { AdvertiserOnboardingData, UpdateRepresentativePayload } from '@/types/Onboarding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { schema, Values } from '@/lib/validations/advertiserRepresentativeFormSchema';
+import { useUpdateRepresentative } from '@/hooks/useOnboardingMutations';
 
 interface Props {
   onNext: (data: Partial<AdvertiserOnboardingData>) => void;
@@ -15,17 +16,30 @@ interface Props {
 }
 
 export default function StepRepresentative({ onNext, defaultValues }: Props) {
+  const { mutate: updateRepresentative, isPending } = useUpdateRepresentative();
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues ?? {},
   });
 
+  function onSubmit(values: Values) {
+    const payload: UpdateRepresentativePayload = {
+      repFirstName: values.firstName,
+      repLastName: values.lastName,
+      repEmail: values.email,
+      repPhone: values.phone,
+    };
+
+    updateRepresentative(payload, { onSuccess: () => onNext(values) });
+  }
+
   return (
-    <form onSubmit={handleSubmit(onNext)} className="flex flex-col gap-4 w-full">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
       {/* First name */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">First name</Label>
@@ -86,10 +100,10 @@ export default function StepRepresentative({ onNext, defaultValues }: Props) {
 
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isPending}
         className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >
-        Continue
+        {isPending ? 'Saving...' : 'Continue'}
       </Button>
     </form>
   );
