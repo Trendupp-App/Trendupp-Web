@@ -12,6 +12,7 @@ import {
   LogOut,
   TrendingUp,
   Megaphone,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -28,6 +29,7 @@ const CREATOR_NAV_ITEMS: NavItem[] = [
   { label: 'Explore', href: '/creator/explore', icon: Compass },
   { label: 'News', href: '/creator/news', icon: TrendingUp },
   { label: 'My work', href: '/creator/my-work', icon: Briefcase },
+  { label: 'Messages', href: '/creator/messages', icon: MessageSquare },
   { label: 'Payout', href: '/creator/payout', icon: Wallet },
   { label: 'My profile', href: '/creator/profile', icon: User },
 ];
