@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -111,7 +111,9 @@ export default function BankChangeModal({
             {/* Header */}
             <div className="flex justify-between items-start">
               <div className="flex flex-col gap-0.5">
-                <h3 className="text-base font-bold text-[#1a1a2e]">Change Bank Account</h3>
+                <DialogTitle className="text-base font-bold text-[#1a1a2e]">
+                  Change Bank Account
+                </DialogTitle>
                 <p className="text-[11px] font-light text-[#7a7a9a]">
                   Enter your payout bank details
                 </p>
@@ -192,7 +194,9 @@ export default function BankChangeModal({
           <div className="flex flex-col gap-5 w-full">
             {/* Header */}
             <div className="flex justify-between items-start">
-              <h3 className="text-base font-bold text-[#1a1a2e]">Confirm New Account</h3>
+              <DialogTitle className="text-base font-bold text-[#1a1a2e]">
+                Confirm New Account
+              </DialogTitle>
               <button
                 onClick={() => setStep('input')}
                 className="w-7 h-7 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#7a7a9a] transition-colors border-none cursor-pointer"

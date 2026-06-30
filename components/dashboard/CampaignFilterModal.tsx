@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Search, ChevronDown, ChevronUp } from 'lucide-react';
@@ -99,7 +99,9 @@ export default function CampaignFilterModal({
       >
         {/* Header with Title and Circle Close Icon */}
         <div className="flex items-center justify-between w-full pb-1">
-          <h2 className="text-[18px] font-bold text-[#1a1a2e] tracking-tight">Filter & Sort</h2>
+          <DialogTitle className="text-[18px] font-bold text-[#1a1a2e] tracking-tight">
+            Filter & Sort
+          </DialogTitle>
           <button
             onClick={onClose}
             className="w-9 h-9 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#1a1a2e] transition-colors focus:outline-none cursor-pointer border-none"
