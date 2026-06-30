@@ -12,26 +12,52 @@ export default function WelcomePage() {
   const params = useSearchParams();
   const type = params.get('type') ?? 'creator';
   const user = useAuthStore((state) => state.user);
-  const destination = type === 'advertiser' ? '/brand/dashboard' : '/creator/dashboard';
+  const destination = type === 'brand' ? '/brand/dashboard' : '/creator/dashboard';
 
   const progress = user?.onboardingPercentage ?? 0;
-
+  const isAdvertiser = user?.role === 'brand';
   const steps = user?.onboardingStepsCompleted;
 
-  let message = 'Complete your profile to get noticed by brands';
+  let message = isAdvertiser
+    ? 'Complete your profile to get noticed by creators'
+    : 'Complete your profile to get noticed by brands';
 
-  if (steps && !steps.profile) {
-    message = 'Add your username, bio and profile details.';
-  } else if (steps && !steps.niches) {
-    message = 'Choose your creator niches.';
-  } else if (steps && !steps.socials) {
-    message = 'Connect your social media accounts.';
-  } else if (steps && !steps.payout) {
-    message = 'Set up your payout information.';
-  } else if (steps && steps.payout && steps.niches && steps.profile && steps.socials) {
-    message = 'Congratulations your profile is set.';
+  if (isAdvertiser) {
+    if (steps && !steps.profile) message = 'Add your brand details and logo.';
+    else if (steps && !('industries' in steps && steps.industries))
+      message = 'Choose your brand industries.';
+    else if (steps && !('representative' in steps && steps.representative))
+      message = 'Add your brand representative.';
+    else if (steps && !steps.socials) message = 'Connect your social media accounts.';
+    else if (
+      steps &&
+      steps.profile &&
+      'industries' in steps &&
+      steps.industries &&
+      'representative' in steps &&
+      steps.representative &&
+      steps.socials
+    ) {
+      message = 'Congratulations your profile is set.';
+    }
+  } else {
+    if (steps && !steps.profile) message = 'Add your username, bio and profile details.';
+    else if (steps && 'niches' in steps && !steps.niches) message = 'Choose your creator niches.';
+    else if (steps && !steps.socials) message = 'Connect your social media accounts.';
+    else if (steps && 'payout' in steps && !steps.payout)
+      message = 'Set up your payout information.';
+    else if (
+      steps &&
+      'payout' in steps &&
+      steps.payout &&
+      'niches' in steps &&
+      steps.niches &&
+      steps.profile &&
+      steps.socials
+    ) {
+      message = 'Congratulations your profile is set.';
+    }
   }
-
   const handleOnboard = () => {
     router.push(`/onboard?type=${type}`);
   };

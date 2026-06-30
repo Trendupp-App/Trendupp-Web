@@ -1,28 +1,13 @@
 import type { NextConfig } from 'next';
 
+const allowedDevOrigins = process.env.ALLOWED_DEV_ORIGINS
+  ? process.env.ALLOWED_DEV_ORIGINS.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
+  : [];
+
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
-
-  devIndicators: false,
-
-  async redirects() {
-    return [
-      {
-        source: '/features/:path*',
-        destination: '/:path*',
-        permanent: true,
-      },
-    ];
-  },
+  allowedDevOrigins,
 };
 
 export default nextConfig;
