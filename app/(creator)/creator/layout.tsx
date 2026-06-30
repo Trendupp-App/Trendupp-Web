@@ -28,6 +28,8 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
     headerTitle = 'Payout';
   } else if (pathname.includes('/profile')) {
     headerTitle = 'My profile';
+  } else if (pathname.includes('/messages')) {
+    headerTitle = 'Messages';
   }
 
   // In a real application, you'd load the logged-in user profile here.

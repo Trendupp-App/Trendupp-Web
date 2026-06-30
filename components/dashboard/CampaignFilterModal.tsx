@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { Search, ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useCallback } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ModalHeader } from '@/components/ui/modal-header';
+import { ToggleButtonGroup } from '@/components/ui/toggle-button-group';
+import { CheckboxList } from '@/components/ui/checkbox-list';
+import { ModalActionButton } from '@/components/ui/modal-action-button';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export interface FilterState {
   sortBy: 'Newest' | 'Closing Soon' | 'Highest Budget' | null;
@@ -22,8 +23,8 @@ interface CampaignFilterModalProps {
   currentFilters: FilterState;
 }
 
-const SORT_BY_OPTIONS = ['Newest', 'Closing Soon', 'Highest Budget'] as const;
-const PLATFORM_OPTIONS = ['Instagram', 'TikTok', 'YouTube', 'X (Twitter)'] as const;
+const SORT_BY_OPTIONS = ['Newest', 'Highest Budget', 'Closing Soon'] as const;
+const PLATFORM_OPTIONS = ['Instagram', 'TikTok', 'YouTube', 'X'] as const;
 const NICHE_OPTIONS = [
   'Fashion',
   'Tech',
@@ -44,28 +45,40 @@ export default function CampaignFilterModal({
   onReset,
   currentFilters,
 }: CampaignFilterModalProps) {
-  const [sortBy, setSortBy] = useState<FilterState['sortBy']>(currentFilters.sortBy);
+  // State
+  const [sortBy, setSortBy] = useState<FilterState['sortBy']>(currentFilters.sortBy ?? 'Newest');
   const [platforms, setPlatforms] = useState<string[]>(currentFilters.platforms);
   const [niches, setNiches] = useState<string[]>(currentFilters.niches);
   const [campaignGoal, setCampaignGoal] = useState<FilterState['campaignGoal']>(
     currentFilters.campaignGoal,
   );
-
-  // Local state for niche dropdown search & toggle
-  const [isNicheOpen, setIsNicheOpen] = useState(true); // Default open as in screenshot
+  const [isNicheOpen, setIsNicheOpen] = useState(true);
   const [nicheSearch, setNicheSearch] = useState('');
 
+  // Helpers
+  const togglePlatform = useCallback(
+    (platform: string) =>
+      setPlatforms((prev) =>
+        prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform],
+      ),
+    [],
+  );
+
+  const toggleNiche = useCallback(
+    (niche: string) =>
+      setNiches((prev) =>
+        prev.includes(niche) ? prev.filter((n) => n !== niche) : [...prev, niche],
+      ),
+    [],
+  );
+
+  // Actions
   const handleApply = () => {
-    onApply({
-      sortBy,
-      platforms,
-      niches,
-      campaignGoal,
-    });
+    onApply({ sortBy, platforms, niches, campaignGoal });
     onClose();
   };
 
-  const handleLocalReset = () => {
+  const handleReset = () => {
     setSortBy('Newest');
     setPlatforms([]);
     setNiches([]);
@@ -74,97 +87,51 @@ export default function CampaignFilterModal({
     onReset();
   };
 
-  const togglePlatform = (platform: string) => {
-    setPlatforms((prev) =>
-      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform],
-    );
-  };
-
-  const toggleNiche = (niche: string) => {
-    setNiches((prev) =>
-      prev.includes(niche) ? prev.filter((n) => n !== niche) : [...prev, niche],
-    );
-  };
-
-  // Filter niches dynamically
-  const filteredNiches = NICHE_OPTIONS.filter((niche) =>
-    niche.toLowerCase().includes(nicheSearch.toLowerCase()),
-  );
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto rounded-[24px] bg-white border border-[#e8e6f0]/60 p-6 flex flex-col gap-6 shadow-xl scrollbar-hide">
-        <DialogHeader className="flex flex-row items-center justify-between pb-2 border-b border-[#e8e6f0]/40">
-          <DialogTitle className="text-base font-bold text-[#1a1a2e] tracking-tight">
-            Filter & Sort
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto rounded-[24px] bg-white border border-[#e8e6f0]/60 p-6 flex flex-col gap-6 shadow-xl scrollbar-hide select-none"
+      >
+        <ModalHeader title="Filter & Sort" onClose={onClose} />
 
         {/* SORT BY */}
-        <div className="flex flex-col gap-2.5">
+        <section className="flex flex-col gap-2.5">
           <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
             Sort By
           </span>
-          <div className="flex flex-wrap gap-2">
-            {SORT_BY_OPTIONS.map((option) => {
-              const isSelected = sortBy === option;
-              return (
-                <button
-                  key={option}
-                  onClick={() => setSortBy(option)}
-                  className={cn(
-                    'px-4 py-2 text-xs font-semibold rounded-2xl border transition-all duration-200 cursor-pointer',
-                    isSelected
-                      ? 'bg-[#040039] text-white border-[#040039] shadow-sm'
-                      : 'bg-white text-[#1a1a2e] border-[#e8e6f0] hover:bg-[#fcfbfd]',
-                  )}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          <ToggleButtonGroup
+            options={SORT_BY_OPTIONS}
+            selected={sortBy ?? ''}
+            onSelect={setSortBy}
+          />
+        </section>
 
         {/* PLATFORMS */}
-        <div className="flex flex-col gap-2.5">
+        <section className="flex flex-col gap-2.5">
           <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
             Platforms
           </span>
-          <div className="flex flex-wrap gap-2">
-            {PLATFORM_OPTIONS.map((option) => {
-              const isSelected = platforms.includes(option);
-              return (
-                <button
-                  key={option}
-                  onClick={() => togglePlatform(option)}
-                  className={cn(
-                    'px-4 py-2 text-xs font-semibold rounded-2xl border transition-all duration-200 cursor-pointer',
-                    isSelected
-                      ? 'bg-[#040039] text-white border-[#040039] shadow-sm'
-                      : 'bg-white text-[#1a1a2e] border-[#e8e6f0] hover:bg-[#fcfbfd]',
-                  )}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          <ToggleButtonGroup
+            options={PLATFORM_OPTIONS}
+            selected={platforms}
+            multiple
+            onSelect={togglePlatform}
+          />
+        </section>
 
-        {/* NICHE (Custom Collapsible Select) */}
-        <div className="flex flex-col gap-2.5">
+        {/* NICHE */}
+        <section className="flex flex-col gap-2.5">
           <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
             Niche
           </span>
-          <div className="border border-[#e8e6f0] rounded-[18px] p-4 flex flex-col bg-white">
-            {/* Header Select Trigger */}
+          <div className="border border-[#e8e6f0] rounded-[20px] p-4 flex flex-col bg-white">
             <button
               onClick={() => setIsNicheOpen(!isNicheOpen)}
-              className="flex items-center justify-between w-full text-xs font-semibold text-[#1a1a2e] cursor-pointer focus:outline-none"
+              className="flex items-center justify-between w-full text-xs font-semibold text-[#1a1a2e] cursor-pointer focus:outline-none border-none bg-transparent"
             >
               <span>
-                {niches.length > 0
+                {niches.length
                   ? `${niches.length} Niche${niches.length > 1 ? 's' : ''} Selected`
                   : 'Select Niche'}
               </span>
@@ -174,94 +141,39 @@ export default function CampaignFilterModal({
                 <ChevronDown className="w-4 h-4 text-[#7a7a9a]" />
               )}
             </button>
-
-            {/* Dropdown Content */}
-            {isNicheOpen && (
-              <div className="flex flex-col gap-3 mt-3">
-                <hr className="border-[#e8e6f0]/40 -mx-4" />
-
-                {/* Search Box */}
-                <div className="relative w-full">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9a99b0]" />
-                  <input
-                    type="text"
-                    placeholder="Search niche"
-                    value={nicheSearch}
-                    onChange={(e) => setNicheSearch(e.target.value)}
-                    className="w-full h-9 bg-white border border-[#e8e6f0] rounded-xl pl-9 pr-3 text-xs font-light text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 placeholder-[#9a99b0]"
-                  />
-                </div>
-
-                {/* Checkboxes List */}
-                <div className="max-h-36 overflow-y-auto flex flex-col gap-3 pt-1 select-none pr-1">
-                  {filteredNiches.length > 0 ? (
-                    filteredNiches.map((niche) => {
-                      const isChecked = niches.includes(niche);
-                      return (
-                        <label
-                          key={niche}
-                          className="flex items-center gap-2.5 cursor-pointer text-xs font-light text-[#5e5e5e] hover:text-[#1a1a2e]"
-                        >
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={() => toggleNiche(niche)}
-                            className="w-4 h-4 border-[#e8e6f0] data-[state=checked]:bg-[#040039] data-[state=checked]:border-[#040039]"
-                          />
-                          <span>{niche}</span>
-                        </label>
-                      );
-                    })
-                  ) : (
-                    <span className="text-[11px] font-light text-[#9a99b0] py-2">
-                      No niches found
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+            <CheckboxList
+              options={NICHE_OPTIONS}
+              selected={niches}
+              onToggle={toggleNiche}
+              open={isNicheOpen}
+              search={nicheSearch}
+              setSearch={setNicheSearch}
+              placeholder="Search niche"
+            />
           </div>
-        </div>
+        </section>
 
         {/* CAMPAIGN GOAL */}
-        <div className="flex flex-col gap-2.5">
+        <section className="flex flex-col gap-2.5">
           <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
             Campaign Goal
           </span>
-          <div className="flex flex-wrap gap-2">
-            {GOAL_OPTIONS.map((option) => {
-              const isSelected = campaignGoal === option;
-              return (
-                <button
-                  key={option}
-                  onClick={() => setCampaignGoal(isSelected ? null : option)}
-                  className={cn(
-                    'px-4 py-2 text-xs font-semibold rounded-2xl border transition-all duration-200 cursor-pointer',
-                    isSelected
-                      ? 'bg-[#040039] text-white border-[#040039] shadow-sm'
-                      : 'bg-white text-[#1a1a2e] border-[#e8e6f0] hover:bg-[#fcfbfd]',
-                  )}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          <ToggleButtonGroup
+            options={GOAL_OPTIONS}
+            selected={campaignGoal ?? ''}
+            variant="segmented"
+            onSelect={(opt) => setCampaignGoal(campaignGoal === opt ? null : opt)}
+          />
+        </section>
 
-        {/* Actions Stack */}
-        <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-[#e8e6f0]/40">
-          <Button
-            onClick={handleApply}
-            className="w-full py-5 rounded-[18px] bg-brand-pink text-white hover:bg-brand-pink/90 font-semibold text-xs transition-colors shadow-sm cursor-pointer border-none"
-          >
+        {/* ACTION BUTTONS */}
+        <div className="flex flex-col gap-3 mt-4 w-full">
+          <ModalActionButton variant="primary" onClick={handleApply}>
             Apply Filters
-          </Button>
-          <Button
-            onClick={handleLocalReset}
-            className="w-full py-5 rounded-[18px] bg-[#f0effb] text-[#040039] hover:bg-[#e4e2fa] font-semibold text-xs transition-colors cursor-pointer border-none shadow-none"
-          >
+          </ModalActionButton>
+          <ModalActionButton variant="secondary" onClick={handleReset}>
             Reset
-          </Button>
+          </ModalActionButton>
         </div>
       </DialogContent>
     </Dialog>
