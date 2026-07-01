@@ -35,6 +35,11 @@ export interface WorkCampaign {
   revisionComment?: string;
   escrowReleaseDate?: string;
   actualAmount?: number;
+  niches?: string[];
+  goal?: 'Content Creation' | 'Amplification' | null;
+  createdAt?: string;
+  budgetMax?: number;
+  daysLeftNumber?: number;
 }
 
 interface WorkCampaignCardProps {

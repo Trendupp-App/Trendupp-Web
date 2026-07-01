@@ -55,6 +55,18 @@ export default function CampaignFilterModal({
   const [isNicheOpen, setIsNicheOpen] = useState(true);
   const [nicheSearch, setNicheSearch] = useState('');
 
+  // Synchronize local states when the modal is opened
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setSortBy(currentFilters.sortBy ?? 'Newest');
+      setPlatforms(currentFilters.platforms ?? []);
+      setNiches(currentFilters.niches ?? []);
+      setCampaignGoal(currentFilters.campaignGoal ?? null);
+    }
+  }
+
   // Helpers
   const togglePlatform = useCallback(
     (platform: string) =>

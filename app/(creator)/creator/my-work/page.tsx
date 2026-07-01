@@ -16,6 +16,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMinMax: '₦150K–₦300K',
     budgetString: '₦150,000 – 300,000',
     daysLeft: '5d 14h',
+    daysLeftNumber: 5,
     status: 'In progress',
     platform: 'Instagram',
     tier: 'Micro',
@@ -23,6 +24,10 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
       'Create your content off-platform, then return to submit the link for brand review. Keep your content within the brief guidelines. Submit content within the next 3-5 days.',
     image:
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    niches: ['Fashion', 'Lifestyle'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-24T12:00:00Z',
+    budgetMax: 300000,
   },
   {
     id: 2,
@@ -31,37 +36,48 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMinMax: '₦150K–₦300K',
     budgetString: '₦150,000 – 300,000',
     daysLeft: '4d 12h',
+    daysLeftNumber: 4,
     status: 'Under review',
-    platform: 'Instagram',
+    platform: 'TikTok',
     tier: 'Micro',
     guidelines:
       "The brand has up to 48 hours to review your submission. You'll receive a push notification with their decision.",
     image:
       'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
+    niches: ['Fashion', 'Beauty'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-23T10:00:00Z',
+    budgetMax: 300000,
   },
   {
     id: 3,
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
+    budgetMinMax: '₦150K–₦450K',
+    budgetString: '₦150,000 – 450,000',
     daysLeft: '3d 8h',
+    daysLeftNumber: 3,
     status: 'Revision requested',
-    platform: 'Instagram',
+    platform: 'YouTube',
     tier: 'Micro',
     guidelines: 'Please adjust lighting and duration.',
     revisionComment:
       'The video needs to clearly show the front camera quality. Please reshoot the selfie segment with better lighting. Duration should be exactly 45 seconds.',
     image:
       'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+    niches: ['Lifestyle', 'Travel'],
+    goal: 'Amplification',
+    createdAt: '2026-06-22T08:00:00Z',
+    budgetMax: 450000,
   },
   {
     id: 4,
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
+    budgetMinMax: '₦150K–₦200K',
+    budgetString: '₦150,000 – 200,000',
     daysLeft: '2d 6h',
+    daysLeftNumber: 2,
     status: 'Approved',
     platform: 'Instagram',
     tier: 'Micro',
@@ -69,6 +85,10 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
       'Publish your content on YouTube, then come back to submit proof of posting. The post must stay live for 24 hours before payment is released.',
     image:
       'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=80',
+    niches: ['Fashion'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-21T09:00:00Z',
+    budgetMax: 200000,
   },
   {
     id: 5,
@@ -77,26 +97,36 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMinMax: '₦150K–₦300K',
     budgetString: '₦150,000 – 300,000',
     daysLeft: '4d',
+    daysLeftNumber: 4,
     status: 'Selected',
-    platform: 'Instagram',
+    platform: 'TikTok',
     tier: 'Micro',
     guidelines: 'Awaiting your acceptance of this offer.',
     image:
       'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
+    niches: ['Tech'],
+    goal: 'Amplification',
+    createdAt: '2026-06-20T14:00:00Z',
+    budgetMax: 300000,
   },
   {
     id: 6,
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
+    budgetMinMax: '₦150K–₦350K',
+    budgetString: '₦150,000 – 350,000',
     daysLeft: '6d',
+    daysLeftNumber: 6,
     status: 'Pending',
     platform: 'Instagram',
     tier: 'Micro',
     guidelines: 'Awaiting brand decision.',
     image:
       'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
+    niches: ['Lifestyle'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-19T11:00:00Z',
+    budgetMax: 350000,
   },
   {
     id: 7,
@@ -105,12 +135,17 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMinMax: '₦150K–₦300K',
     budgetString: '₦150,000 – 300,000',
     daysLeft: '0d',
+    daysLeftNumber: 0,
     status: 'Declined',
-    platform: 'Instagram',
+    platform: 'X',
     tier: 'Micro',
     guidelines: 'Sorry you have not been selected.',
     image:
       'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
+    niches: ['Finance', 'Tech'],
+    goal: 'Amplification',
+    createdAt: '2026-06-18T09:00:00Z',
+    budgetMax: 300000,
   },
   {
     id: 8,
@@ -119,6 +154,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMinMax: '₦150K–₦250K',
     budgetString: '₦150,000 – 250,000',
     daysLeft: '0d',
+    daysLeftNumber: 0,
     status: 'Payment released',
     platform: 'Instagram',
     tier: 'Micro',
@@ -127,6 +163,10 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     escrowReleaseDate: 'June 28, 2026',
     image:
       'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+    niches: ['Fashion'],
+    goal: 'Content Creation',
+    createdAt: '2026-06-17T12:00:00Z',
+    budgetMax: 250000,
   },
 ];
 
@@ -155,6 +195,7 @@ export default function MyWorkPage() {
 
   // Handle link submission (moves campaign to "Under Review")
   const handleSubmitLink = (_link: string) => {
+    void _link;
     if (submitLinkCampaign) {
       setCampaigns((prev) =>
         prev.map((c) => (c.id === submitLinkCampaign.id ? { ...c, status: 'Under review' } : c)),
@@ -165,6 +206,7 @@ export default function MyWorkPage() {
 
   // Handle proof submission (moves campaign to "Payment Released")
   const handleSubmitProof = (_link: string) => {
+    void _link;
     if (submitProofCampaign) {
       setCampaigns((prev) =>
         prev.map((c) =>
@@ -224,42 +266,74 @@ export default function MyWorkPage() {
     },
   };
 
-  // Filter campaigns depending on tab and sub-pill selection
-  const filteredCampaigns = campaigns.filter((c) => {
-    // Platform and niche checks from filter modal
-    if (filters.platforms.length > 0 && !filters.platforms.includes(c.platform)) {
-      return false;
-    }
+  // Filter campaigns depending on tab, sub-pill selection, and filter modal selections
+  const filteredCampaigns = campaigns
+    .filter((c) => {
+      // 1. Platform check
+      if (filters.platforms.length > 0 && !filters.platforms.includes(c.platform)) {
+        return false;
+      }
 
-    if (activeTab === 'Active') {
-      const isActive = ['In progress', 'Under review', 'Revision requested', 'Approved'].includes(
-        c.status,
-      );
-      if (!isActive) return false;
+      // 2. Niche check
+      if (filters.niches.length > 0) {
+        const hasMatchingNiche = c.niches?.some((n) => filters.niches.includes(n));
+        if (!hasMatchingNiche) return false;
+      }
 
-      if (activeSubFilter === 'In Progress') return c.status === 'In progress';
-      if (activeSubFilter === 'Pending Approval') return c.status === 'Under review';
-      if (activeSubFilter === 'Revision') return c.status === 'Revision requested';
-      if (activeSubFilter === 'Approved') return c.status === 'Approved';
+      // 3. Campaign Goal check
+      if (filters.campaignGoal && c.goal !== filters.campaignGoal) {
+        return false;
+      }
+
+      // 4. Tab and Sub-pill checks
+      if (activeTab === 'Active') {
+        const isActive = ['In progress', 'Under review', 'Revision requested', 'Approved'].includes(
+          c.status,
+        );
+        if (!isActive) return false;
+
+        if (activeSubFilter === 'In Progress') return c.status === 'In progress';
+        if (activeSubFilter === 'Pending Approval') return c.status === 'Under review';
+        if (activeSubFilter === 'Revision') return c.status === 'Revision requested';
+        if (activeSubFilter === 'Approved') return c.status === 'Approved';
+        return true;
+      }
+
+      if (activeTab === 'Applied') {
+        const isApplied = ['Selected', 'Pending', 'Declined'].includes(c.status);
+        if (!isApplied) return false;
+
+        if (activeSubFilter === 'Accepted') return c.status === 'Selected';
+        if (activeSubFilter === 'Pending') return c.status === 'Pending';
+        if (activeSubFilter === 'Rejected') return c.status === 'Declined';
+        return true;
+      }
+
+      if (activeTab === 'Done') {
+        return c.status === 'Payment released';
+      }
+
       return true;
-    }
-
-    if (activeTab === 'Applied') {
-      const isApplied = ['Selected', 'Pending', 'Declined'].includes(c.status);
-      if (!isApplied) return false;
-
-      if (activeSubFilter === 'Accepted') return c.status === 'Selected';
-      if (activeSubFilter === 'Pending') return c.status === 'Pending';
-      if (activeSubFilter === 'Rejected') return c.status === 'Declined';
-      return true;
-    }
-
-    if (activeTab === 'Done') {
-      return c.status === 'Payment released';
-    }
-
-    return true;
-  });
+    })
+    .sort((a, b) => {
+      // 5. Sort filters
+      if (filters.sortBy === 'Newest') {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      }
+      if (filters.sortBy === 'Closing Soon') {
+        const daysA = a.daysLeftNumber ?? 999999;
+        const daysB = b.daysLeftNumber ?? 999999;
+        return daysA - daysB;
+      }
+      if (filters.sortBy === 'Highest Budget') {
+        const budgetA = a.budgetMax ?? 0;
+        const budgetB = b.budgetMax ?? 0;
+        return budgetB - budgetA;
+      }
+      return 0;
+    });
 
   return (
     <div className="flex flex-col gap-6 w-full pb-12 select-none">
