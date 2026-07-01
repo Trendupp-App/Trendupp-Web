@@ -1,27 +1,30 @@
 'use client';
 
 import { Search, Bell, ChevronDown, Menu } from 'lucide-react';
-import Image from 'next/image';
+import UserAvatar from './UserAvatar';
+
+interface HeaderUser {
+  displayName: string;
+  initials: string;
+  avatarUrl?: string;
+}
 
 interface HeaderProps {
   title?: string;
-  user?: {
-    name: string;
-    avatar: string;
-  };
+  user?: HeaderUser;
   onNotificationClick?: () => void;
   onMenuClick?: () => void;
 }
 
 export default function Header({
   title = 'Dashboard',
-  user = { name: 'Alex Okafor', avatar: '' },
+  user = { displayName: 'User', initials: 'U' },
   onNotificationClick,
   onMenuClick,
 }: HeaderProps) {
   return (
     <header className="h-20 bg-white border-b border-[#e8e6f0]/60 flex items-center justify-between px-4 md:px-8 shrink-0 select-none">
-      {/* Mobile view header: search, hamburger, and notifications */}
+      {/* Mobile view header: hamburger, search, notifications */}
       <div className="flex md:hidden items-center gap-3 w-full">
         {/* Hamburger Menu Button */}
         <button
@@ -46,6 +49,7 @@ export default function Header({
         <button
           onClick={onNotificationClick}
           className="relative p-2.5 rounded-full bg-[#f4f3f6]/60 border border-[#e8e6f0]/40 text-[#5a5a7a] active:scale-95 transition-transform shrink-0"
+          aria-label="Notifications"
         >
           <Bell size={18} className="text-[#5a5a7a]" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
@@ -73,28 +77,19 @@ export default function Header({
           <button
             onClick={onNotificationClick}
             className="relative p-2 rounded-full hover:bg-[#f4f3f6] transition-colors text-[#5a5a7a]"
+            aria-label="Notifications"
           >
             <Bell size={20} className="text-[#5a5a7a]" />
-            {/* Notification badge dot */}
             <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
           </button>
 
           {/* User Dropdown */}
           <div className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-[#f4f3f6]/60 rounded-xl transition-all">
-            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-brand-pink-light border border-brand-pink/20 flex items-center justify-center text-brand-pink text-xs font-semibold">
-              {user.avatar ? (
-                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
-              ) : (
-                <span>
-                  {user.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                </span>
-              )}
-            </div>
-            <span className="text-xs font-medium text-[#1a1a2e] hidden lg:inline">{user.name}</span>
-            <ChevronDown size={14} className="text-[#9a99b0]" />
+            <UserAvatar avatarUrl={user.avatarUrl} initials={user.initials} size={44} />
+            <span className="text-xs font-medium text-[#1a1a2e] hidden sm:inline truncate max-w-[120px]">
+              {user.displayName}
+            </span>
+            <ChevronDown size={14} className="text-[#9a99b0] shrink-0" />
           </div>
         </div>
       </div>

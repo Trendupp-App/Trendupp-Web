@@ -90,6 +90,7 @@ export interface CreatorProfilePayload {
 export interface BrandProfilePayload {
   countryId: string;
   stateId: string;
+  brandName?: string;
   city?: string;
   bio?: string;
   websiteUrl?: string;

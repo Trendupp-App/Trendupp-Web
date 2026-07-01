@@ -89,7 +89,7 @@ export default function TiktokCallbackPage() {
         },
       },
     );
-  }, [searchParams]);
+  }, [searchParams, exchangeTiktokToken, router]);
 
   return (
     <AuthLayout

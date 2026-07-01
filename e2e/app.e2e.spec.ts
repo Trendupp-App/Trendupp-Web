@@ -1,6 +1,44 @@
 import { test, expect } from '@playwright/test';
 
+// The (creator) layout redirects to /signin unless the persisted auth store has
+// an accessToken + user. Seed a fake session into localStorage (Zustand
+// `persist`, key "trendupp-auth") before each navigation so guarded
+// /creator/* routes render in CI without a real login.
+const AUTH_STORAGE = {
+  state: {
+    accessToken: 'e2e-test-access-token',
+    user: {
+      id: 'e2e-user',
+      email: 'e2e@trendupp.test',
+      firstName: 'E2E',
+      lastName: 'Tester',
+      role: 'creator',
+      isEmailVerified: true,
+      onboardingPercentage: 100,
+      onboardingStepsCompleted: { profile: true, niches: true, socials: true, payout: true },
+      socialsConnected: { instagram: false, tiktok: false, youtube: false, twitter: false },
+      username: 'e2e_tester',
+      niches: [],
+      industries: [],
+      assignedTier: 'Nano Creator',
+      bio: null,
+      avatarUrl: null,
+      bankName: null,
+      bankAccountNumber: null,
+      bankAccountName: null,
+      brandRepresentative: null,
+    },
+  },
+  version: 0,
+};
+
 test.describe('App smoke test', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript((storage) => {
+      window.localStorage.setItem('trendupp-auth', JSON.stringify(storage));
+    }, AUTH_STORAGE);
+  });
+
   test('homepage loads successfully', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle(/trendupp/i);

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { X, Link2, AlertCircle, Clock, Plus } from 'lucide-react';
-import { WorkCampaign } from '../WorkCampaignCard';
+import { WorkCampaign } from '@/components/creator-dashboard/WorkCampaignCard';
 
 interface SubmitProofModalProps {
   isOpen: boolean;

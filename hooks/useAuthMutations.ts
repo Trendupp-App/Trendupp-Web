@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 import { authApi } from '@/services/authApi';
 import { useAuthStore } from '@/store/authStore';
 import { AxiosError } from 'axios';
-import { signIn, signOut } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
+// i will use signOut in next auth very soon
 
 export function useRoles() {
   return useQuery({
