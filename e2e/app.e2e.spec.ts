@@ -1,6 +1,68 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('App smoke test', () => {
+  test.beforeEach(async ({ page }) => {
+    const isMock = process.env.CI || !process.env.PLAYWRIGHT_USE_REAL_AUTH;
+    if (isMock) {
+      // Mock nationalities
+      await page.route('**/users/onboarding/nationalities', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+      });
+
+      // Mock countries
+      await page.route('**/users/onboarding/countries', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+      });
+
+      // Mock niches
+      await page.route('**/users/onboarding/niches', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+      });
+
+      // Mock support ticket categories
+      await page.route('**/api/v1/profile/support-ticket/categories', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            categories: ['General Support', 'Payment Issue', 'Bug Report', 'Feedback'],
+          }),
+        });
+      });
+
+      // Mock support ticket submission
+      await page.route('**/api/v1/profile/support-ticket', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Ticket submitted successfully',
+            ticket: {
+              id: 'e2e-ticket-123',
+              category: 'General Support',
+              subject: 'Test subject',
+              description: 'Test description',
+              status: 'open',
+              createdAt: new Date().toISOString(),
+            },
+          }),
+        });
+      });
+    }
+  });
+
   test('homepage loads successfully', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle(/trendupp/i);
