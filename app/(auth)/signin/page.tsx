@@ -20,6 +20,8 @@ import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
+
   const router = useRouter();
   const login = useLogin();
 
@@ -88,7 +90,12 @@ export default function SigninPage() {
 
           {/* Social */}
           <div className="flex items-center justify-center gap-3 mb-4">
-            <GoogleSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
+            <GoogleSignInButton
+              role="creator"
+              acceptedTerms={true}
+              acceptedPromotions={false}
+              onPendingChange={setGooglePending}
+            />
             <TiktokSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
             <InstagramSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
           </div>
@@ -150,7 +157,7 @@ export default function SigninPage() {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || googlePending}
               className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
               {isSubmitting ? 'Signing in…' : 'Sign in'}

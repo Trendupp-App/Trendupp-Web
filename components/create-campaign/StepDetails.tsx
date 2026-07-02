@@ -15,12 +15,13 @@ import {
 import { CAMPAIGN_GOALS } from '@/types/campaign';
 import { useCampaignPlatforms, useCreatorCategories } from '@/hooks/useCampaign';
 import { ComboBox } from '@/shared/ComboBox';
-
+import { useNiches } from '@/hooks/useOnboardingQueries';
 interface StepDetailsProps {
   defaultValues?: Partial<Step1Input>;
   onNext: (data: Step1Values) => void;
   onBack: () => void;
   onSaveDraft?: (data: Step1Input) => void;
+  isLoading?: boolean;
 }
 
 export default function StepDetails({
@@ -28,6 +29,7 @@ export default function StepDetails({
   onNext,
   onBack,
   onSaveDraft,
+  isLoading,
 }: StepDetailsProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(defaultValues?.coverImage ?? null);
@@ -35,6 +37,7 @@ export default function StepDetails({
 
   const { data: platforms = [], isLoading: platformsLoading } = useCampaignPlatforms();
   const { data: creatorCategories = [], isLoading: categoriesLoading } = useCreatorCategories();
+  const { data: niches = [], isLoading: nichesLoading } = useNiches();
 
   const {
     register,
@@ -54,6 +57,7 @@ export default function StepDetails({
   const selectedPlatforms = useWatch({ control, name: 'platforms' }) ?? [];
   const selectedGoal = useWatch({ control, name: 'goal' });
   const selectedTier = useWatch({ control, name: 'creatorTier' });
+  const selectedNiche = useWatch({ control, name: 'creatorNicheId' });
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -169,21 +173,28 @@ export default function StepDetails({
         )}
       </div>
 
-      {/* <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#1a1a2e]">Creator niche</label>
         <ComboBox
           options={niches.map((n) => ({ value: n.id, label: n.name }))}
           value={selectedNiche}
-          onValueChange={(val) => setValue('creatorNiche', val, { shouldValidate: true })}
+          onValueChange={(val) => setValue('creatorNicheId', val, { shouldValidate: true })}
           placeholder="Select niche"
           searchPlaceholder="Search niche…"
           emptyText="No niche found."
           loading={nichesLoading}
         />
-        {errors.creatorNiche && (
-          <p className="text-[11px] text-red-400">{errors.creatorNiche.message}</p>
+        {errors.creatorNicheId && (
+          <p className="text-[11px] text-red-400">{errors.creatorNicheId.message}</p>
         )}
-      </div> */}
+      </div>
+
+      {/* Timeline — NEW */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#1a1a2e]">Timeline</label>
+        <input {...register('timeline')} type="date" className={inputCls} />
+        {errors.timeline && <p className="text-[11px] text-red-400">{errors.timeline.message}</p>}
+      </div>
 
       {/* Platform — from API */}
       <div className="flex flex-col gap-2">
@@ -220,6 +231,7 @@ export default function StepDetails({
         onSaveDraft={onSaveDraft ? () => onSaveDraft(getValues()) : undefined}
         onContinue={handleSubmit(handleSubmitWithFile)}
         continueDisabled={false}
+        isLoading={isLoading}
       />
     </form>
   );

@@ -20,6 +20,7 @@ interface Props {
   acceptedTerms: boolean;
   acceptedPromotions: boolean;
   onRequireTerms?: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }
 
 export function GoogleSignInButton({
@@ -27,11 +28,16 @@ export function GoogleSignInButton({
   acceptedTerms,
   acceptedPromotions,
   onRequireTerms,
+  onPendingChange,
 }: Props) {
   const { data: session } = useSession();
   const { exchangeGoogleToken } = useGoogleAuth();
   const router = useRouter();
   const hasExchanged = useRef(false);
+
+  useEffect(() => {
+    onPendingChange?.(exchangeGoogleToken.isPending);
+  }, [exchangeGoogleToken.isPending, onPendingChange]);
 
   useEffect(() => {
     if (!session?.idToken || hasExchanged.current) return;

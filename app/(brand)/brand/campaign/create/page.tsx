@@ -68,7 +68,7 @@ export default function NewCampaignPage() {
     }
   }
 
-  // ── Step 1 ────────────────────────────────────────────────────────────────
+  // ── Step 1
   function handleStep1Next(data: Step1Values & { _coverFile?: File }) {
     setStep1Data(data);
     setDraft((d) => ({ ...d, step1: data }));
@@ -79,11 +79,13 @@ export default function NewCampaignPage() {
       totalBudget: Number(data.budget),
       creatorCategoryId: data.creatorTier,
       preferredPlatformIds: data.platforms,
+      creatorNicheId: data.creatorNicheId,
+      timeline: new Date(data.timeline).toISOString(),
       coverImage: data._coverFile,
     });
   }
 
-  // ── Step 2 ────────────────────────────────────────────────────────────────
+  // ── Step 2
 
   function handleStep2Next(data: Step2Values) {
     setStep2Data(data);
@@ -94,7 +96,7 @@ export default function NewCampaignPage() {
       id: campaignId,
       payload: {
         currentStep: 2,
-        campaignBrief: data.brief, // renamed to match API
+        campaignBrief: data.brief,
         deliverables: data.deliverables.map((d) => d.value).filter(Boolean),
         contentDirection: data.contentDirection.map((d) => d.value).filter(Boolean),
         contentGuidelines: {
@@ -105,7 +107,7 @@ export default function NewCampaignPage() {
     });
   }
 
-  // ── Step 3 ────────────────────────────────────────────────────────────────
+  // ── Step 3
   function handleStep3Next(data: Step3Values) {
     setStep3Data(data);
     setDraft((d) => ({ ...d, step3: data }));
@@ -121,23 +123,22 @@ export default function NewCampaignPage() {
     });
   }
 
-  // ── Step 4 (review → submit) ──────────────────────────────────────────────
+  // ── Step 4 (review → submit)
   function handleReviewNext() {
     if (!campaignId) return;
     submitCampaign.mutate(campaignId);
   }
 
-  // ── Step 5 (pay) ──────────────────────────────────────────────────────────
+  // ── Step 5 (pay)
   function handlePay() {
     if (!campaignId) return;
-    // Replace paymentReference with your gateway's returned ref when integrated
     payCampaign.mutate({
       id: campaignId,
       payload: { paymentReference: `pay_ref_${Date.now()}` },
     });
   }
 
-  // ── Draft helpers ─────────────────────────────────────────────────────────
+  // ── Draft helpers
   function handleSaveDraft1(data: Step1Input) {
     setDraft((d) => ({ ...d, step1: data }));
   }
@@ -171,6 +172,7 @@ export default function NewCampaignPage() {
             onNext={handleStep1Next}
             onBack={handleBack}
             onSaveDraft={handleSaveDraft1}
+            isLoading={createCampaign.isPending}
           />
         )}
 
@@ -180,6 +182,7 @@ export default function NewCampaignPage() {
             onNext={handleStep2Next}
             onBack={() => goTo(1)}
             onSaveDraft={handleSaveDraft2}
+            isLoading={patchCampaign.isPending}
           />
         )}
 
@@ -189,6 +192,7 @@ export default function NewCampaignPage() {
             onNext={handleStep3Next}
             onBack={() => goTo(2)}
             onSaveDraft={handleSaveDraft3}
+            isLoading={patchCampaign.isPending}
           />
         )}
 
