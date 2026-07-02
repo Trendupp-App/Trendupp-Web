@@ -28,6 +28,8 @@ export const campaignApi = {
     appendIfDefined(fd, 'totalBudget', String(payload.totalBudget));
     appendIfDefined(fd, 'creatorCategoryId', payload.creatorCategoryId);
     payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
+    appendIfDefined(fd, 'creatorNicheId', payload.creatorNicheId);
+    appendIfDefined(fd, 'timeline', payload.timeline);
     appendIfDefined(fd, 'campaignBrief', payload.campaignBrief);
     if (payload.coverImage instanceof File) {
       fd.append('coverImage', payload.coverImage);
@@ -60,7 +62,7 @@ export const campaignApi = {
     });
   },
 
-  getMyCampaigns: (status?: 'draft' | 'live' | 'active' | 'completed') =>
+  getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
