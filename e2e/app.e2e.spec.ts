@@ -61,6 +61,28 @@ test.describe('App smoke test', () => {
         });
       });
     }
+
+    // Mock generic profile API endpoints to avoid 401 redirects
+    await page.route('**/api/v1/profile/**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      });
+    });
+    // Mock auth user endpoint used by Zustand store
+    await page.route('**/api/v1/users/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'user-123',
+          email: 'test@example.com',
+          name: 'Test User',
+        }),
+      });
+    });
+    // End of mocking block
   });
 
   test('homepage loads successfully', async ({ page }) => {
@@ -71,10 +93,13 @@ test.describe('App smoke test', () => {
 
   test('help & support drawer opens and handles ticket submission', async ({ page }) => {
     await page.goto('/creator/profile');
+    // Ensure the page is fully loaded before interacting
+    await page.waitForLoadState('networkidle');
 
     // Click settings tab trigger
+    // Wait for settings tab to be present and visible
+    await page.waitForSelector('#tab-trigger-settings', { state: 'visible', timeout: 10000 });
     const settingsTab = page.locator('#tab-trigger-settings');
-    await expect(settingsTab).toBeVisible();
     await settingsTab.click();
 
     // Check that settings item for help exists and click it
