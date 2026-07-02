@@ -42,7 +42,7 @@ export default function FeedbackModal({
         <p className="text-sm text-[#1a1a2e] leading-relaxed">{message}</p>
 
         {/* Actions */}
-        <div className="flex flex-col gap-3 w-full mt-1">
+        <div className="flex gap-3 w-full mt-1">
           {actions.map((action) => (
             <button
               key={action.label}
@@ -50,7 +50,7 @@ export default function FeedbackModal({
               className={cn(
                 'w-full py-3 rounded-xl text-sm transition-colors',
                 action.variant === 'primary'
-                  ? 'bg-brand-pink text-white font-medium hover:bg-brand-pink/90'
+                  ? 'bg-brand-pink cursor-pointer text-white font-medium hover:bg-brand-pink/90'
                   : 'border border-[#e8e6f0] text-[#1a1a2e] font-light hover:bg-[#faf9fc]',
               )}
             >

@@ -7,10 +7,10 @@ function fmt(n: number) {
   return `₦${n.toLocaleString('en-NG')}`;
 }
 
-function daysLeft(createdAt: string): number {
-  const created = new Date(createdAt).getTime();
-  const deadlineMs = created + 48 * 60 * 60 * 1000;
-  const diff = deadlineMs - Date.now();
+function daysLeft(timeline?: string): number {
+  if (!timeline) return 0;
+  const deadline = new Date(timeline).getTime();
+  const diff = deadline - Date.now();
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
@@ -24,7 +24,7 @@ const STATUS_CONFIG: Record<
 > = {
   live: {
     label: 'Live',
-    badgeCls: 'text-emerald-600 border-emerald-100',
+    badgeCls: 'text-emerald-700 border-emerald-700',
     ctaLabel: 'Review applications',
   },
   active: {
@@ -52,6 +52,21 @@ const STATUS_CONFIG: Record<
     badgeCls: 'text-emerald-600 border-emerald-100',
     ctaLabel: 'View live content',
   },
+  completed: {
+    label: 'Completed',
+    badgeCls: 'text-slate-600 border-slate-200',
+    ctaLabel: 'View summary',
+  },
+  submitted: {
+    label: 'Submitted',
+    badgeCls: 'text-purple-600 border-purple-100',
+    ctaLabel: 'Awaiting approval',
+  },
+  draft: {
+    label: 'Draft',
+    badgeCls: 'text-[#9a99b0] border-[#e8e6f0]',
+    ctaLabel: 'Continue editing',
+  },
 };
 
 interface CampaignCardProps {
@@ -61,7 +76,9 @@ interface CampaignCardProps {
 
 export default function CampaignCard({ campaign, applicantsCount = 0 }: CampaignCardProps) {
   const router = useRouter();
-  const config = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.live;
+  // const config = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.live;
+  const displayStatus = campaign.subStatus ?? campaign.status;
+  const config = STATUS_CONFIG[displayStatus] ?? STATUS_CONFIG.live;
 
   return (
     <div className="bg-white border border-[#e8e6f0] rounded-2xl overflow-hidden flex flex-col">
@@ -81,13 +98,14 @@ export default function CampaignCard({ campaign, applicantsCount = 0 }: Campaign
         {campaign.status === 'live' && (
           <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full">
             <Clock size={10} />
-            {daysLeft(campaign.createdAt)} days left
+            {daysLeft(campaign.timeline)}days left
           </div>
         )}
 
         <div
           className={cn(
-            'absolute bottom-2 right-2 bg-white text-[10px] font-semibold px-2.5 py-1 rounded-full border',
+            'absolute bottom-2 right-2 bg-white text-[10px] font-semibold px-2.5 py-1 rounded-full border-[1.5px]',
+            campaign.status === 'live' && 'animate-caret-blink',
             config.badgeCls,
           )}
         >
@@ -118,8 +136,8 @@ export default function CampaignCard({ campaign, applicantsCount = 0 }: Campaign
         </div>
 
         <button
-          onClick={() => router.push(`/brand/campaigns/${campaign.id}/applications`)}
-          className="w-full mt-1 py-2.5 border border-[#e8e6f0] rounded-xl text-xs text-[#1a1a2e] font-light hover:bg-[#faf9fc] transition-colors"
+          onClick={() => router.push(`/brand/campaign/${campaign.id}`)}
+          className="w-full mt-1 cursor-pointer py-2.5 border border-[#e8e6f0] rounded-xl text-xs text-[#1a1a2e] font-light hover:bg-[#faf9fc] transition-colors"
         >
           {config.ctaLabel}
         </button>

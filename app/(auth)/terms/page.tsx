@@ -1,11 +1,10 @@
 import { Suspense } from 'react';
+import TermsPage from './termsPage';
 import PageLoader from '@/components/skeletons/PageLoader';
-import AdvertiserSignupPage from './AdvertiserSignUpPage';
-
 export default function Page() {
   return (
     <Suspense fallback={<PageLoader />}>
-      <AdvertiserSignupPage />
+      <TermsPage />
     </Suspense>
   );
 }
