@@ -102,17 +102,18 @@ test.describe('App smoke test', () => {
       await hamburger.click();
     }
 
-    // Ensure the tab navigation bar is visible
+    // Ensure the tab navigation bar is visible and contains the three main tabs
     const tabBar = page.locator('#tab-nav-bar');
-    await tabBar.waitFor({ state: 'visible', timeout: 30000 });
-    // Click the Settings tab using its ID, forcing the click in case it is hidden
-    const settingsTab = page.locator('#tab-trigger-settings');
-    await settingsTab.click({ force: true });
+    await expect(tabBar).toBeVisible({ timeout: 30000 });
+    await expect(tabBar.locator('button')).toHaveCount(3, { timeout: 30000 });
 
-    // Wait for the Help item in Settings to be visible before interacting
-    await page.waitForSelector('#settings-item-help', { state: 'visible', timeout: 30000 });
+    // Click the Settings tab by its accessible name
+    const settingsTab = tabBar.getByRole('button', { name: /settings/i }).first();
+    await settingsTab.click();
+
+    // Wait for the Help item in Settings to be visible and click it once
     const helpBtn = page.locator('#settings-item-help');
-    await expect(helpBtn).toBeVisible();
+    await expect(helpBtn).toBeVisible({ timeout: 30000 });
     await helpBtn.click();
 
     // Check email info is visible (verifies the main help view is loaded)
