@@ -1,4 +1,3 @@
-// lib/auth/authApi.ts
 import apiClient from '@/lib/apiClient';
 import type { AuthUser } from '@/store/authStore';
 import { MessageResponse } from '@/types/auth';

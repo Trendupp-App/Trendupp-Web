@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const schema = z.object({
-  // brandName: z.string().min(1, 'Enter your brand name'),
+  brandName: z.string().min(1, 'Enter your brand name'),
   bio: z.string().optional(),
   country: z.string().min(1, 'Select your country'),
   state: z.string().optional(),

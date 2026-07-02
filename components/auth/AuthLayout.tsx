@@ -19,11 +19,11 @@ interface AuthLayoutProps {
 const SLIDES = 3;
 
 export default function AuthLayout({
-  imageSrc,
-  imageAlt,
-  headlineTop,
-  headlineBottom,
-  tagline,
+  // imageSrc,
+  // imageAlt,
+  // headlineTop,
+  // headlineBottom,
+  // tagline,
   slideIndex = 0,
   children,
 }: AuthLayoutProps) {
@@ -32,7 +32,7 @@ export default function AuthLayout({
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % SLIDE_DATA.length);
-    }, 2000);
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
   return (

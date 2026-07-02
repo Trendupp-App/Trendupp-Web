@@ -86,7 +86,7 @@ export default function InstagramCallbackPage() {
         },
       },
     );
-  }, [searchParams]);
+  }, [searchParams, exchangeInstagramToken, router]);
 
   return (
     <AuthLayout

@@ -24,7 +24,7 @@ export function TermsDialog({ open, onOpenChange }: TermsDialogProps) {
       >
         <DialogHeader className="px-6 py-5 shrink-0 border-b border-[#f0eef8]">
           <div className="flex items-center justify-between">
-            <DialogTitle className="sr-only">Terms & Conditions and Privacy Policy</DialogTitle>{' '}
+            <DialogTitle className="">Terms & Conditions and Privacy Policy.</DialogTitle>{' '}
             <DialogPrimitive.Close className="rounded-sm border border-brand-pink text-brand-pink cursor-pointer  opacity-70 mt-4 transition-opacity">
               <X size={18} />
             </DialogPrimitive.Close>

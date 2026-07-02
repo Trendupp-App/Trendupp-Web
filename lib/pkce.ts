@@ -1,5 +1,5 @@
 export function generateCodeVerifier(): string {
-  const bytes = new Uint8Array(32); // 32 bytes = 256 bits of entropy
+  const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
   const base64 = btoa(String.fromCharCode(...bytes));
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');

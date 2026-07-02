@@ -1,12 +1,13 @@
 'use client';
-
 import { useState } from 'react';
 import WorkTabs from '@/components/dashboard/my-work/WorkTabs';
-import WorkCampaignCard, { WorkCampaign } from '@/components/dashboard/WorkCampaignCard';
-import WorkDetailsDrawer from '@/components/dashboard/WorkDetailsDrawer';
+import WorkCampaignCard, { WorkCampaign } from '@/components/creator-dashboard/WorkCampaignCard';
+import WorkDetailsDrawer from '@/components/creator-dashboard/WorkDetailsDrawer';
 import SubmitContentModal from '@/components/dashboard/my-work/SubmitContentModal';
 import SubmitProofModal from '@/components/dashboard/my-work/SubmitProofModal';
-import CampaignFilterModal, { FilterState } from '@/components/dashboard/CampaignFilterModal';
+import CampaignFilterModal, {
+  FilterState,
+} from '@/components/creator-dashboard/CampaignFilterModal';
 
 const INITIAL_CAMPAIGNS: WorkCampaign[] = [
   {

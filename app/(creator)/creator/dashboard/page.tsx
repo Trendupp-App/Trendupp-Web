@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Clock, Users, ArrowUpRight, Eye, Ticket, ExternalLink, Newspaper } from 'lucide-react';
-import CompletenessCard from '@/components/dashboard/CompletenessCard';
-import BannerCarousel from '@/components/dashboard/BannerCarousel';
-import StatCard from '@/components/dashboard/StatCard';
-import CampaignCard from '@/components/dashboard/CampaignCard';
-import SocialCampaignCard from '@/components/dashboard/SocialCampaignCard';
-import AnalyticsDrawer from '@/components/dashboard/AnalyticsDrawer';
+import CompletenessCard from '@/components/creator-dashboard/CompletenessCard';
+import BannerCarousel from '@/components/creator-dashboard/BannerCarousel';
+import StatCard from '@/components/creator-dashboard/StatCard';
+import CampaignCard from '@/components/creator-dashboard/CampaignCard';
+import SocialCampaignCard from '@/components/creator-dashboard/SocialCampaignCard';
+import AnalyticsDrawer from '@/components/creator-dashboard/AnalyticsDrawer';
 import { cn } from '@/lib/utils';
 
 type FilterType = 'all' | 'live' | 'past' | 'news';

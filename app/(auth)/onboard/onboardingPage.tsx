@@ -123,7 +123,8 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 export default function OnboardingPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const userType = (params.get('type') ?? 'creator') as 'creator' | 'brand';
+  const user = useAuthStore((s) => s.user);
+  const userType = (params.get('type') ?? user?.role ?? 'creator') as 'creator' | 'brand';
   const userName = params.get('name') ?? undefined;
 
   const isAdvertiser = userType === 'brand';
@@ -132,7 +133,7 @@ export default function OnboardingPage() {
 
   // const [stepIndex, setStepIndex] = useState(0);
   // const [data, setData] = useState<OnboardingData>({});
-  const user = useAuthStore((s) => s.user);
+  // const user = useAuthStore((s) => s.user);
 
   const draft = readOnboardingDraft<OnboardingData>(user?.id);
   const serverResumeIndex = getResumeStepIndex(steps, user?.onboardingStepsCompleted, isAdvertiser);
@@ -187,7 +188,8 @@ export default function OnboardingPage() {
   }
 
   function goToDashboard() {
-    router.push(isAdvertiser ? '/brand/dashboard' : '/creator/dashboard');
+    const role = user?.role ?? userType;
+    router.push(role === 'brand' ? '/brand/dashboard' : '/creator/dashboard');
   }
 
   const layoutProps = isAdvertiser

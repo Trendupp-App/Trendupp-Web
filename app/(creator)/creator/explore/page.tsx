@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import CampaignCard from '@/components/dashboard/CampaignCard';
-import BrandCard from '@/components/dashboard/BrandCard';
-import BrandProfileDrawer from '@/components/dashboard/BrandProfileDrawer';
-import CreatorCard from '@/components/dashboard/CreatorCard';
-import CreatorProfileDrawer from '@/components/dashboard/CreatorProfileDrawer';
-import CampaignDetailsDrawer from '@/components/dashboard/CampaignDetailsDrawer';
-import CampaignFilterModal, { FilterState } from '@/components/dashboard/CampaignFilterModal';
+import CampaignCard from '@/components/creator-dashboard/CampaignCard';
+import BrandCard from '@/components/creator-dashboard/BrandCard';
+import BrandProfileDrawer from '@/components/creator-dashboard/BrandProfileDrawer';
+import CreatorCard from '@/components/creator-dashboard/CreatorCard';
+import CreatorProfileDrawer from '@/components/creator-dashboard/CreatorProfileDrawer';
+import CampaignDetailsDrawer from '@/components/creator-dashboard/CampaignDetailsDrawer';
+import CampaignFilterModal, {
+  FilterState,
+} from '@/components/creator-dashboard/CampaignFilterModal';
 import { cn } from '@/lib/utils';
 
 type MainTab = 'campaigns' | 'brands' | 'creators';
