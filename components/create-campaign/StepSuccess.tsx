@@ -28,6 +28,7 @@ interface StepSuccessProps {
   onNext: (data: Step3Values) => void;
   onBack: () => void;
   onSaveDraft?: (data: Step3Values) => void;
+  isLoading?: boolean;
 }
 
 export default function StepSuccess({
@@ -35,6 +36,7 @@ export default function StepSuccess({
   onNext,
   onBack,
   onSaveDraft,
+  isLoading,
 }: StepSuccessProps) {
   const [rulesOpen, setRulesOpen] = useState(true);
 
@@ -126,6 +128,7 @@ export default function StepSuccess({
         onBack={onBack}
         onSaveDraft={onSaveDraft ? () => onSaveDraft(getValues()) : undefined}
         onContinue={handleSubmit(onNext)}
+        isLoading={isLoading}
       />
     </form>
   );

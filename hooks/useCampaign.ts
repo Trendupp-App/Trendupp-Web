@@ -57,17 +57,13 @@ export function useSubmitCampaign(onSuccess: (breakdown: PaymentBreakdown) => vo
   return useMutation({
     mutationFn: (id: string) => campaignApi.submitCampaign(id),
     onSuccess: ({ data }) => {
-      console.log('submit response:', JSON.stringify(data, null, 2));
       toast.success(data.message ?? 'Campaign submitted', { duration: 900 });
-      const totalBudget = data.campaign.totalBudget;
-      const trenduppFee = Math.round(totalBudget * 0.15 * 100) / 100;
-      const vat = Math.round(totalBudget * 0.075 * 100) / 100;
-
+      const bd = data.campaign.paymentBreakdown; // use the server-computed breakdown directly
       onSuccess({
-        campaignBudget: totalBudget,
-        trenduppFee,
-        vat,
-        totalToPay: data.payment.amount, // use the exact figure from the API
+        campaignBudget: bd.campaignBudget,
+        trenduppFee: bd.trenduppFee,
+        vat: bd.vat,
+        totalToPay: bd.totalToPay,
       });
     },
     onError: (err: AxiosError<{ message?: string }>) => {
@@ -100,7 +96,7 @@ export function useCampaign(id: string | null) {
 }
 
 export function useMyCampaigns(
-  status?: 'draft' | 'live' | 'active' | 'completed',
+  status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted',
   enabled: boolean = true,
 ) {
   return useQuery({

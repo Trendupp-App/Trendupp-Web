@@ -8,7 +8,6 @@ import {
   type Path,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Trash2, Plus } from 'lucide-react';
 import StepFooter from './StepFooter';
 import { stepCampaignBriefSchema, type Step2Values } from '@/lib/validations/createCampaignSchemas';
@@ -18,6 +17,7 @@ interface StepCampaignBriefProps {
   onNext: (data: Step2Values) => void;
   onBack: () => void;
   onSaveDraft?: (data: Step2Values) => void;
+  isLoading?: boolean;
 }
 
 // ── Fix: use the generic base type UseFormRegister<FieldValues> so any
@@ -83,6 +83,7 @@ export default function StepCampaignBrief({
   onNext,
   onBack,
   onSaveDraft,
+  isLoading,
 }: StepCampaignBriefProps) {
   const {
     register,
@@ -166,6 +167,7 @@ export default function StepCampaignBrief({
         onBack={onBack}
         onSaveDraft={onSaveDraft ? () => onSaveDraft(getValues()) : undefined}
         onContinue={handleSubmit(onNext)}
+        isLoading={isLoading}
       />
     </form>
   );

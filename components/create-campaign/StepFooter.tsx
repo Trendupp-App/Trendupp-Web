@@ -52,7 +52,7 @@ export default function StepFooter({
           onClick={onContinue}
           disabled={continueDisabled || isLoading}
           className={cn(
-            'flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md transition-colors',
+            'flex items-center cursor-pointer gap-2 px-6 py-2.5 text-sm font-medium rounded-md transition-colors',
             continueDisabled || isLoading
               ? 'bg-brand-pink/30 text-white/70 cursor-not-allowed'
               : 'bg-brand-pink text-white hover:bg-brand-pink/90 shadow-sm',
