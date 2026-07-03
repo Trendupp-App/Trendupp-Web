@@ -144,4 +144,235 @@ test.describe('App smoke test', () => {
     await expect(submitBtn).toBeVisible();
     await submitBtn.click();
   });
+
+  test('can apply for a campaign successfully', async ({ page }) => {
+    // 1. Mock campaigns endpoint
+    await page.route('**/api/v1/campaigns', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: '9260e2fb-f229-4740-a779-1f939b810067',
+              title: 'Summer Style Collection 2025',
+              totalBudget: 300000,
+              timeline: '2026-07-31T23:59:59.999Z',
+              status: 'live',
+              creatorCategory: {
+                name: 'Micro',
+              },
+              preferredPlatforms: [
+                {
+                  id: 'instagram-platform-id',
+                  name: 'Instagram',
+                },
+              ],
+            },
+          ],
+        }),
+      });
+    });
+
+    // 2. Mock campaign details endpoint
+    await page.route('**/api/v1/campaigns/9260e2fb-f229-4740-a779-1f939b810067', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: '9260e2fb-f229-4740-a779-1f939b810067',
+          title: 'Summer Style Collection 2025',
+          totalBudget: 300000,
+          timeline: '2026-07-31T23:59:59.999Z',
+          status: 'live',
+          creatorCategory: {
+            name: 'Micro',
+          },
+          preferredPlatforms: [
+            {
+              id: 'instagram-platform-id',
+              name: 'Instagram',
+            },
+          ],
+          campaignBrief: 'Brief description of the summer collection.',
+          deliverables: ['1x Instagram Reel'],
+          contentDirection: ['A creative before-and-after dynamic style transition.'],
+          contentGuidelines: {
+            dos: ['Use high-quality vertical video format.'],
+            donts: ['Do not show competing brands.'],
+          },
+          usageRights: '1-year digital usage rights.',
+          successLooksLike: 'High engagement and style inspiration comments.',
+        }),
+      });
+    });
+
+    // 3. Mock platforms endpoint
+    await page.route('**/api/v1/campaigns/platforms', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: 'instagram-platform-id',
+            name: 'Instagram',
+          },
+        ]),
+      });
+    });
+
+    // 4. Mock apply endpoint
+    await page.route(
+      '**/api/v1/campaigns/9260e2fb-f229-4740-a779-1f939b810067/applications',
+      async (route) => {
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Application submitted successfully',
+            application: {
+              id: 'app-987',
+            },
+          }),
+        });
+      },
+    );
+
+    // Navigate to Creator Dashboard
+    await page.goto('/creator/dashboard');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForLoadState('networkidle');
+
+    // Click on the campaign card to open drawer
+    const campaignCard = page
+      .locator('text=Summer Style Collection 2025')
+      .filter({ visible: true })
+      .first();
+    await expect(campaignCard).toBeVisible({ timeout: 10000 });
+    await campaignCard.click();
+
+    // Verify drawer opens
+    const drawerTitle = page.locator('h3:has-text("Summer Style Collection 2025")').first();
+    await expect(drawerTitle).toBeVisible();
+
+    // Click "Apply" button inside drawer
+    const applyBtn = page.locator('.auth-scrollbar button:has-text("Apply")').first();
+    await expect(applyBtn).toBeVisible();
+    await applyBtn.click();
+
+    // Fill application form
+    const ideaInput = page.locator('#contentTitle');
+    await expect(ideaInput).toBeVisible();
+    await ideaInput.fill(
+      'This is my creative content idea concept that has more than twenty characters.',
+    );
+
+    const feeInput = page.locator('input[placeholder="Enter amount"]');
+    await expect(feeInput).toBeVisible();
+    await feeInput.fill('150000');
+
+    // Click Submit Application
+    const submitBtn = page.locator('.auth-scrollbar button:has-text("Submit Application")').first();
+    await expect(submitBtn).toBeVisible();
+    await submitBtn.click();
+
+    // Verify success view
+    const successTitle = page.locator('h3:has-text("You\'re in the running!")').first();
+    await expect(successTitle).toBeVisible();
+  });
+
+  test('formats camelCase validation error messages from API', async ({ page }) => {
+    // 1. Mock campaigns list
+    await page.route('**/api/v1/campaigns', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: '9260e2fb-f229-4740-a779-1f939b810067',
+              title: 'Summer Style Collection 2025',
+              totalBudget: 300000,
+              timeline: '2026-07-31T23:59:59.999Z',
+              status: 'live',
+              creatorCategory: { name: 'Micro' },
+              preferredPlatforms: [{ id: 'instagram-platform-id', name: 'Instagram' }],
+            },
+          ],
+        }),
+      });
+    });
+
+    // 2. Mock campaign details
+    await page.route('**/api/v1/campaigns/9260e2fb-f229-4740-a779-1f939b810067', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: '9260e2fb-f229-4740-a779-1f939b810067',
+          title: 'Summer Style Collection 2025',
+          totalBudget: 300000,
+          timeline: '2026-07-31T23:59:59.999Z',
+          status: 'live',
+          creatorCategory: { name: 'Micro' },
+          preferredPlatforms: [{ id: 'instagram-platform-id', name: 'Instagram' }],
+          campaignBrief: 'Brief description.',
+        }),
+      });
+    });
+
+    // 3. Mock platforms list
+    await page.route('**/api/v1/campaigns/platforms', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ id: 'instagram-platform-id', name: 'Instagram' }]),
+      });
+    });
+
+    // 4. Mock apply endpoint returning validation error
+    await page.route(
+      '**/api/v1/campaigns/9260e2fb-f229-4740-a779-1f939b810067/applications',
+      async (route) => {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'pastWorkLink must be a valid URL',
+            error: 'Bad Request',
+            statusCode: 400,
+          }),
+        });
+      },
+    );
+
+    // Navigate to Creator Dashboard
+    await page.goto('/creator/dashboard');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForLoadState('networkidle');
+
+    // Click on campaign card
+    const campaignCard = page
+      .locator('text=Summer Style Collection 2025')
+      .filter({ visible: true })
+      .first();
+    await campaignCard.click();
+
+    // Click Apply
+    await page.locator('.auth-scrollbar button:has-text("Apply")').first().click();
+
+    // Fill form
+    await page
+      .locator('#contentTitle')
+      .fill('This is my creative content idea concept that has more than twenty characters.');
+    await page.locator('input[placeholder="Enter amount"]').fill('150000');
+    await page.locator('#workLink').fill('not-a-valid-url');
+
+    // Submit
+    await page.locator('.auth-scrollbar button:has-text("Submit Application")').first().click();
+
+    // Verify toast shows formatted message
+    const toastMessage = page.locator('text=Past work link must be a valid URL').first();
+    await expect(toastMessage).toBeVisible({ timeout: 5000 });
+  });
 });

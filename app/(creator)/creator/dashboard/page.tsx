@@ -10,84 +10,15 @@ import StatCard from '@/components/creator-dashboard/StatCard';
 import CampaignCard from '@/components/creator-dashboard/CampaignCard';
 import SocialCampaignCard from '@/components/creator-dashboard/SocialCampaignCard';
 import AnalyticsDrawer from '@/components/creator-dashboard/AnalyticsDrawer';
+import CampaignDetailsDrawer, {
+  MappedCampaign,
+} from '@/components/creator-dashboard/CampaignDetailsDrawer';
+import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
+import { useCampaigns } from '@/hooks/useCampaign';
+import { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
 
 type FilterType = 'all' | 'live' | 'past' | 'news';
-
-const MOCK_CAMPAIGNS = [
-  {
-    id: 1,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budget: '₦150,000 - ₦300,000',
-    daysLeft: '1d 14h left',
-    tier: 'Micro',
-    appliedCount: 47,
-    status: 'live' as const,
-    image:
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 2,
-    title: 'TECNO SPARK 20 Launch',
-    brand: 'Tecno Mobile',
-    budget: '₦200,000 - ₦500,000',
-    daysLeft: '3d 0h left',
-    tier: 'Macro',
-    appliedCount: 89,
-    status: 'live' as const,
-    image:
-      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 3,
-    title: 'Healthy Living Challenge',
-    brand: 'Nestlé Nigeria',
-    budget: '₦80,000 - ₦180,000',
-    daysLeft: '8h left',
-    tier: 'Nano',
-    appliedCount: 23,
-    status: 'live' as const,
-    image:
-      'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 4,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budget: '₦150,000 - ₦300,000',
-    daysLeft: 'Closed',
-    tier: 'Micro',
-    appliedCount: 47,
-    status: 'past' as const,
-    image:
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 5,
-    title: 'TECNO SPARK 20 Launch',
-    brand: 'Tecno Mobile',
-    budget: '₦200,000 - ₦500,000',
-    daysLeft: 'Closed',
-    tier: 'Macro',
-    appliedCount: 89,
-    status: 'past' as const,
-    image:
-      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 6,
-    title: 'Healthy Living Challenge',
-    brand: 'Nestlé Nigeria',
-    budget: '₦80,000 - ₦180,000',
-    daysLeft: 'Closed',
-    tier: 'Nano',
-    appliedCount: 23,
-    status: 'past' as const,
-    image:
-      'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
-  },
-];
 
 const MOCK_NEWS = [
   {
@@ -166,6 +97,54 @@ export default function CreatorDashboardPage() {
   const [socialSlide, setSocialSlide] = useState(0);
   const [newsSlide, setNewsSlide] = useState(0);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
+
+  // Fetch campaigns from backend
+  const { data: liveCampaigns = [], isLoading } = useCampaigns();
+
+  const getDaysLeft = (timelineDate: string) => {
+    const diffTime = new Date(timelineDate).getTime() - new Date().getTime();
+    if (diffTime <= 0) return 'Closed';
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays > 0) return `${diffDays}d left`;
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    return `${diffHours}h left`;
+  };
+
+  const mappedCampaigns = liveCampaigns.map((c: Campaign) => ({
+    id: c.id,
+    title: c.title,
+    brand: c.brand?.username || 'Unknown Brand',
+    budget: `₦${c.totalBudget.toLocaleString()}`,
+    budgetMin: c.totalBudget,
+    budgetMax: c.totalBudget,
+    daysLeft: getDaysLeft(c.timeline),
+    daysLeftNumber: Math.max(
+      0,
+      Math.floor((new Date(c.timeline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+    ),
+    tier: c.creatorCategory?.name || 'Nano',
+    appliedCount: c.applicationsCount?.total || 0,
+    image:
+      c.coverImage ||
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    niches: c.creatorNiche ? [c.creatorNiche.name] : [],
+    platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
+    status: (c.status === 'active'
+      ? 'live'
+      : c.status === 'completed'
+        ? 'past'
+        : c.status) as string,
+    isSocialImpact: false,
+    goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
+    createdAt: c.createdAt,
+    campaignBrief: c.campaignBrief || 'No brief provided.',
+    deliverables: c.deliverables || [],
+    contentDirection: c.contentDirection || [],
+    contentGuidelines: c.contentGuidelines || { dos: [], donts: [] },
+    usageRights: c.usageRights || '',
+    successLooksLike: c.successLooksLike || '',
+  }));
 
   // Auto-scroll for Social Impact Campaigns carousel on desktop
   useEffect(() => {
@@ -183,7 +162,7 @@ export default function CreatorDashboardPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const filteredCampaigns = MOCK_CAMPAIGNS.filter((campaign) => {
+  const filteredCampaigns = mappedCampaigns.filter((campaign) => {
     if (activeFilter === 'all') return campaign.status === 'live';
     if (activeFilter === 'news') return false; // Handled separately
     return campaign.status === activeFilter;
@@ -300,7 +279,22 @@ export default function CreatorDashboardPage() {
         </div>
 
         {/* Dynamic Display based on Active Filter */}
-        {activeFilter !== 'news' ? (
+        {isLoading ? (
+          <div>
+            {/* Mobile View Skeleton */}
+            <div className="lg:hidden flex flex-col gap-4 w-full pb-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+            {/* Desktop View Skeleton */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-x-6 gap-y-4 w-full pb-4 select-none">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        ) : activeFilter !== 'news' ? (
           <div>
             {/* Mobile View */}
             <div className="lg:hidden w-full select-none">
@@ -308,7 +302,11 @@ export default function CreatorDashboardPage() {
                 /* Horizontal scrolling list for "All" active tab */
                 <div className="flex flex-row overflow-x-auto gap-4 w-full pb-4 scrollbar-hide">
                   {filteredCampaigns.map((campaign) => (
-                    <div key={campaign.id} className="w-[220px] shrink-0">
+                    <div
+                      key={campaign.id}
+                      className="w-[220px] shrink-0 cursor-pointer"
+                      onClick={() => setSelectedCampaign(campaign)}
+                    >
                       <CampaignCard
                         title={campaign.title}
                         brand={campaign.brand}
@@ -326,7 +324,11 @@ export default function CreatorDashboardPage() {
                 /* Vertical stack list for "Live" or "Past" active tabs */
                 <div className="flex flex-col gap-4 w-full pb-4">
                   {filteredCampaigns.map((campaign) => (
-                    <div key={campaign.id} className="w-full">
+                    <div
+                      key={campaign.id}
+                      className="w-full cursor-pointer"
+                      onClick={() => setSelectedCampaign(campaign)}
+                    >
                       <CampaignCard
                         title={campaign.title}
                         brand={campaign.brand}
@@ -345,7 +347,11 @@ export default function CreatorDashboardPage() {
             {/* Desktop View: Grid for all tabs */}
             <div className="hidden lg:grid lg:grid-cols-3 gap-x-6 gap-y-4 w-full pb-4 select-none">
               {filteredCampaigns.map((campaign) => (
-                <div key={campaign.id} className="w-full">
+                <div
+                  key={campaign.id}
+                  className="w-full cursor-pointer"
+                  onClick={() => setSelectedCampaign(campaign)}
+                >
                   <CampaignCard
                     title={campaign.title}
                     brand={campaign.brand}
@@ -752,6 +758,11 @@ export default function CreatorDashboardPage() {
         </div>
       )}
       <AnalyticsDrawer isOpen={isAnalyticsOpen} onClose={() => setIsAnalyticsOpen(false)} />
+      <CampaignDetailsDrawer
+        isOpen={!!selectedCampaign}
+        onClose={() => setSelectedCampaign(null)}
+        campaign={selectedCampaign}
+      />
     </div>
   );
 }

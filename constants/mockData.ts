@@ -16,6 +16,12 @@ export interface Campaign {
   niches?: string[];
   goal?: 'Content Creation' | 'Amplification';
   createdAt?: string;
+  campaignBrief?: string;
+  deliverables?: string[];
+  contentDirection?: string[];
+  contentGuidelines?: { dos: string[]; donts: string[] };
+  usageRights?: string;
+  successLooksLike?: string;
 }
 
 export interface Brand {
@@ -99,6 +105,32 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     niches: ['Fashion', 'Lifestyle'],
     goal: 'Content Creation',
     createdAt: '2026-06-24T12:00:00Z',
+    campaignBrief:
+      'Zara Africa is launching its Summer style collection across West Africa. We want authentic creators to showcase our new arrivals in an aspirational but relatable way — think Lagos street style meets global fashion week energy.',
+    deliverables: [
+      '1 x Instagram carousel post (5-8 slides) featuring the outfits',
+      '1 x Instagram Reel (30-60 seconds) styling tutorial',
+      '3 x Instagram Stories with product tags',
+    ],
+    contentDirection: [
+      "Dramatic before and after revealing the collection's impact.",
+      'Incorporate the clothing styling seamlessly into your lifestyle routine.',
+      'Step-by-step guide to achieving an effortless, elegant look.',
+    ],
+    contentGuidelines: {
+      dos: [
+        'Ensure high-visibility, natural or soft white lighting.',
+        'Tag @ZaraAfrica in the caption and on the video.',
+      ],
+      donts: [
+        'Do not feature or mention competitor clothing brands.',
+        'Avoid cluttered backgrounds; maintain an editorial aesthetic.',
+      ],
+    },
+    usageRights:
+      'By participating in this campaign, creators grant Zara Africa permission to repost and use campaign content across its digital platforms for marketing and promotional purposes.',
+    successLooksLike:
+      "We are looking for content that feels authentic, relatable, visually appealing, and inspires women to explore the new Summer Style Collection. We are excited to collaborate with you and can't wait to see your creativity bring the Summer Style Collection to life.",
   },
   {
     id: 2,
@@ -119,6 +151,31 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     niches: ['Tech'],
     goal: 'Amplification',
     createdAt: '2026-06-23T10:00:00Z',
+    campaignBrief:
+      'Showcase the design and camera features of the new TECNO SPARK 20 phone. Focus on mobile photography, low-light selfies, and smooth gaming capabilities.',
+    deliverables: [
+      '1 x Instagram Reel (30-60s) showing unboxing & review',
+      '1 x YouTube Video (8-12m) full tech review',
+      '2 x Instagram Story frames featuring sample camera shots',
+    ],
+    contentDirection: [
+      'Interactive unboxing showing key accessories and screen refresh rate.',
+      'Test the front-facing dual-flash selfie camera in low-light environments.',
+      'Show gameplay performance with highly graphics-intensive games.',
+    ],
+    contentGuidelines: {
+      dos: [
+        'Mention the dual-flash front camera and game booster features.',
+        'Include link to purchase in bio/description.',
+      ],
+      donts: [
+        'Do not compare with other smartphone brands (e.g. Infinix, Samsung).',
+        'Avoid editing photos taken by the phone; keep them authentic.',
+      ],
+    },
+    usageRights: '6 months digital usage rights across Tecno Mobile official social platforms.',
+    successLooksLike:
+      'High engagement rates, tech-related comments, and increased clicks on the purchase link.',
   },
   {
     id: 3,
@@ -139,6 +196,30 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     niches: ['Food', 'Lifestyle'],
     goal: 'Content Creation',
     createdAt: '2026-06-22T08:00:00Z',
+    campaignBrief:
+      'Inspire your audience to live healthier by sharing a daily routine or meal prep using Nestlé wellness products.',
+    deliverables: [
+      '1 x TikTok video (45-60s) sharing a healthy breakfast recipe',
+      '1 x Instagram Post with full recipe details in caption',
+    ],
+    contentDirection: [
+      'A morning routine video featuring step-by-step healthy meal preparation.',
+      'Highlight nutritional benefits of the Nestlé products used.',
+    ],
+    contentGuidelines: {
+      dos: [
+        'Keep the video fast-paced, high energy, and inspiring.',
+        'Show the product packaging clearly.',
+      ],
+      donts: [
+        'Do not use any non-Nestlé milk, cereal, or wellness products.',
+        'Avoid medical claims; focus on overall healthy lifestyle.',
+      ],
+    },
+    usageRights:
+      '12 months digital usage rights on Nestle Wellness Nigeria website and social media.',
+    successLooksLike:
+      'Healthy recipe saves, organic sharing, and comments asking about product availability.',
   },
   {
     id: 4,
@@ -159,6 +240,28 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     niches: ['Music', 'Lifestyle'],
     goal: 'Amplification',
     createdAt: '2026-06-21T09:00:00Z',
+    campaignBrief:
+      'Promote our new curation playlist featuring the hottest Afrobeat hits of the month. Ask your followers to share their favorite song from the list.',
+    deliverables: [
+      '1 x YouTube Short / Reel recommending songs to listen to',
+      '1 x post on X (Twitter) with playlist link and interactive question',
+    ],
+    contentDirection: [
+      'A reaction video listening to the tracks on the playlist.',
+      'Dance or transition video using one of the top trending tracks from the playlist.',
+    ],
+    contentGuidelines: {
+      dos: [
+        'Instruct followers to download the Audiomack app.',
+        'Tag @AudiomackAfrica and use #AudiomackAfrobeats.',
+      ],
+      donts: [
+        'Do not link to Spotify, Apple Music, or other streaming competitors.',
+        'Do not use low-quality audio in your video.',
+      ],
+    },
+    usageRights: 'Unlimited digital usage rights for Audiomack marketing channels.',
+    successLooksLike: 'High click-through rate to the playlist link and track streams.',
   },
   {
     id: 5,
@@ -179,6 +282,28 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
     niches: ['Beauty', 'Fashion'],
     goal: 'Content Creation',
     createdAt: '2026-06-20T14:00:00Z',
+    campaignBrief:
+      'A beauty routine takeover featuring House of Tara cosmetics. Show a transition from a natural look to a flawless, glamorous makeup finish.',
+    deliverables: [
+      '1 x Instagram Reel (30-45s) makeup transformation',
+      '1 x TikTok video tutorial on perfect blending technique',
+    ],
+    contentDirection: [
+      'Transition reel synced to popular background music.',
+      'Brief tutorial explaining color matching and products used.',
+    ],
+    contentGuidelines: {
+      dos: [
+        'Show before/after clearly with identical lighting.',
+        'List all product shades used in the caption.',
+      ],
+      donts: [
+        'Do not use filters that alter skin texture or makeup colors.',
+        'Do not mix with competitor makeup brands.',
+      ],
+    },
+    usageRights: 'Lifetime digital usage rights across House of Tara digital channels.',
+    successLooksLike: 'Audience comments asking about specific shades and high save rates.',
   },
   {
     id: 6,

@@ -55,6 +55,13 @@ export interface Campaign extends BaseEntity {
   usageRights?: string;
   successLooksLike?: string;
   creatorCategory?: CreatorCategory;
+  // Optional populated fields from API
+  brand?: { username: string };
+  applicationsCount?: { total: number };
+  creatorNiche?: { name: string };
+  preferredPlatforms?: Array<{ id: string; name: string }>;
+  timeline: string;
+  createdAt: string;
 }
 
 export interface CreatorCategory {
@@ -150,4 +157,18 @@ export interface PayCampaignResponse {
     paymentReference: string;
     paymentStatus: 'paid';
   };
+}
+
+export interface ApplyCampaignPayload {
+  contentIdea: string;
+  pastWorkLink?: string;
+  primaryPlatformId: string;
+  secondaryPlatformId?: string;
+  feeRequest: number;
+  comments?: string;
+}
+
+export interface ApplyCampaignResponse {
+  message?: string;
+  application?: unknown;
 }

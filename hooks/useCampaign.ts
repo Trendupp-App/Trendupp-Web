@@ -7,7 +7,7 @@ import type {
   PatchCampaignPayload,
   PayCampaignPayload,
   PaymentBreakdown,
-  Campaign,
+  ApplyCampaignPayload,
 } from '@/types/campaign';
 
 export function useCampaignPlatforms() {
@@ -108,5 +108,38 @@ export function useMyCampaigns(
     queryFn: () => campaignApi.getMyCampaigns(status).then((r) => r.data),
     staleTime: 1000 * 30,
     enabled,
+  });
+}
+
+export function useCampaigns(
+  params?: {
+    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
+    platforms?: string[];
+    niches?: string[];
+    nicheIds?: string[];
+    goal?: string;
+  },
+  enabled: boolean = true,
+) {
+  return useQuery({
+    queryKey: ['campaigns', params],
+    queryFn: () => campaignApi.getCampaigns(params).then((r) => r.data.data),
+    staleTime: 1000 * 30,
+    enabled,
+  });
+}
+
+export function useApplyCampaign(onSuccess: () => void) {
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: ApplyCampaignPayload }) =>
+      campaignApi.applyCampaign(id, payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Application submitted successfully! 🚀', { duration: 1500 });
+      onSuccess();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit application, please try again');
+    },
   });
 }

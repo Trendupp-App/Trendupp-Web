@@ -10,6 +10,8 @@ import type {
   SubmitCampaignResponse,
   PayCampaignPayload,
   PayCampaignResponse,
+  ApplyCampaignPayload,
+  ApplyCampaignResponse,
 } from '@/types/campaign';
 
 function appendIfDefined(form: FormData, key: string, value: unknown) {
@@ -63,10 +65,22 @@ export const campaignApi = {
   getMyCampaigns: (status?: 'draft' | 'live' | 'active' | 'completed') =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
+  getCampaigns: (params?: {
+    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
+    platforms?: string[];
+    niches?: string[];
+    nicheIds?: string[];
+    goal?: string;
+  }) => apiClient.get<{ data: Campaign[] }>('/campaigns', { params }),
+
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
 
   submitCampaign: (id: string) => apiClient.post<SubmitCampaignResponse>(`/campaigns/${id}/submit`),
 
   payCampaign: (id: string, payload: PayCampaignPayload) =>
     apiClient.post<PayCampaignResponse>(`/campaigns/${id}/pay`, payload),
+
+  applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
+    apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
 };
