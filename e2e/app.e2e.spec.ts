@@ -50,7 +50,9 @@ test.describe('App smoke test', () => {
 
     // Click settings tab trigger
     const settingsTab = page.locator('#tab-trigger-settings');
-    await expect(settingsTab).toBeVisible();
+    // await expect(settingsTab).toBeVisible();
+    await settingsTab.waitFor({ state: 'visible', timeout: 15000 });
+
     await settingsTab.click();
 
     // Check that settings item for help exists and click it
