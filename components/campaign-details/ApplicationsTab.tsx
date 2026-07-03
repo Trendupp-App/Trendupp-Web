@@ -5,17 +5,24 @@ import { CheckCircle2, AlertCircle } from 'lucide-react';
 import ApplicationListItem from './ApplicationListItem';
 import ApplicationDetailSheet from './ApplicationDetailSheet';
 import FeedbackModal from '@/shared/FeedBackModal';
-import type { CampaignApplication } from '@/types/application';
-
+import { CampaignApplication } from '@/types/campaign';
+import { useReviewApplication } from '@/hooks/useCampaign';
+import { useQueryClient } from '@tanstack/react-query';
 interface ApplicationsTabProps {
-  applications: CampaignApplication[];
+  campaignId: string;
   campaignTitle: string;
+  applicationsForLive?: CampaignApplication[];
 }
 
 type PendingAction = { type: 'accept' | 'reject'; application: CampaignApplication } | null;
 
-export default function ApplicationsTab({ applications, campaignTitle }: ApplicationsTabProps) {
-  const [selected, setSelected] = useState<CampaignApplication | null>(null);
+export default function ApplicationsTab({
+  campaignId,
+  applicationsForLive,
+  campaignTitle,
+}: ApplicationsTabProps) {
+  const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [resultDialog, setResultDialog] = useState<{
@@ -23,8 +30,17 @@ export default function ApplicationsTab({ applications, campaignTitle }: Applica
     application: CampaignApplication;
   } | null>(null);
 
+  const { mutate: reviewApplication, isPending: isReviewing } = useReviewApplication(
+    campaignId,
+    (appId) => {
+      // keep detail sheet + campaign application list fresh
+      queryClient.invalidateQueries({ queryKey: ['application', appId] });
+      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+  );
+
   function handleView(application: CampaignApplication) {
-    setSelected(application);
+    setSelected(application?.id);
     setSheetOpen(true);
   }
 
@@ -40,22 +56,27 @@ export default function ApplicationsTab({ applications, campaignTitle }: Applica
 
   function handleConfirmAction() {
     if (!pendingAction) return;
-    // TODO: wire to real accept/reject mutation once endpoint is available
-    setResultDialog(pendingAction);
+    const status = pendingAction.type === 'accept' ? 'accepted' : 'rejected';
+
+    reviewApplication(
+      { appId: pendingAction.application.id, status },
+      {
+        onSuccess: () => setResultDialog(pendingAction),
+      },
+    );
     setPendingAction(null);
-    setSheetOpen(false);
   }
 
   return (
     <>
       <div className="flex flex-col gap-3">
-        {applications.map((app) => (
+        {(applicationsForLive || []).map((app) => (
           <ApplicationListItem key={app.id} application={app} onView={handleView} />
         ))}
       </div>
 
       <ApplicationDetailSheet
-        application={selected}
+        applicationId={selected}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         onAccept={handleAcceptRequest}
@@ -70,7 +91,10 @@ export default function ApplicationsTab({ applications, campaignTitle }: Applica
           message={
             <>
               Are you sure you want to {pendingAction.type === 'accept' ? 'accept' : 'reject'}{' '}
-              <strong>{pendingAction.application.creator.name}</strong>
+              <strong>
+                {pendingAction?.application?.creator?.firstName ||
+                  pendingAction?.application?.creator?.lastName}
+              </strong>
               {pendingAction.type === 'accept' ? ' content?' : "'s application?"}
             </>
           }
@@ -83,6 +107,7 @@ export default function ApplicationsTab({ applications, campaignTitle }: Applica
               label: pendingAction.type === 'accept' ? 'Yes, approve' : 'Yes, reject',
               variant: 'primary',
               onClick: handleConfirmAction,
+              loading: isReviewing,
             },
           ]}
         />
@@ -96,8 +121,11 @@ export default function ApplicationsTab({ applications, campaignTitle }: Applica
           message={
             <>
               You have successfully {resultDialog.type === 'accept' ? 'selected' : 'rejected'}{' '}
-              <strong>{resultDialog.application.creator.name}</strong> application for{' '}
-              <strong>{campaignTitle}</strong>
+              <strong>
+                {resultDialog.application?.creator?.firstName ||
+                  resultDialog.application?.creator?.lastName}
+              </strong>{' '}
+              application for <strong>{campaignTitle}</strong>
             </>
           }
           actions={[

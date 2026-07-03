@@ -1,0 +1,139 @@
+{
+  "paymentBreakdown": {
+    "campaignBudget": 4000000,
+    "trenduppFee": 600000,
+    "vat": 300000,
+    "totalToPay": 4900000,
+    "breakdownItems": [
+      {
+        "name": "Trendupp Fee",
+        "type": "percentage",
+        "value": 0.15,
+        "amount": 600000
+      },
+      {
+        "name": "VAT",
+        "type": "percentage",
+        "value": 0.075,
+        "amount": 300000
+      }
+    ]
+  },
+  "id": "7ac0b8b9-b654-48c8-9d0a-09dc5e5a73e6",
+  "createdAt": "2026-06-30T14:40:38.201Z",
+  "updatedAt": "2026-06-30T14:43:17.749Z",
+  "deletedAt": null,
+  "brandId": "82980683-3329-458a-b110-5f3dc0c43dd4",
+  "title": "Create Without Limits",
+  "goal": "Amplify Content",
+  "totalBudget": 4000000,
+  "creatorCategoryId": "c5addbd3-553e-4bfd-993a-95b7e5097cdc",
+  "creatorNicheId": null,
+  "timeline": null,
+  "contentGuidelines": {
+    "dos": ["Productivity features"],
+    "donts": ["Avoid scripted reviews."]
+  },
+  "deliverables": ["One YouTube Short"],
+  "contentDirection": [
+    "Focus on storytelling over specifications.",
+    "Showcase authentic creator workflows."
+  ],
+  "usageRights": "Demonstrate real-life scenarios where the Galaxy device helps you create professional-quality content.",
+  "successLooksLike": "Demonstrate real-life scenarios where the Galaxy device helps you create professional-quality content.",
+  "campaignBrief": "Samsung wants creators to showcase how Galaxy devices empower creativity through photography, videography, editing, and productivity",
+  "acceptedTerms": true,
+  "currentStep": 5,
+  "paymentStatus": "paid",
+  "coverImage": "https://trendupp-s3-bucket.s3.eu-north-1.amazonaws.com/campaign-covers/1782830436571-content-creator-capturing-travel-202606301526.jpeg",
+  "status": "live",
+  "approvedAt": null,
+  "urlIsLive": null,
+  "brand": {
+    "id": "82980683-3329-458a-b110-5f3dc0c43dd4",
+    "firstName": "atcosunstate",
+    "lastName": "",
+    "email": "atcosunstate.atcafrica@gmail.com",
+    "username": "Konsults media"
+  },
+  "creatorCategory": {
+    "id": "c5addbd3-553e-4bfd-993a-95b7e5097cdc",
+    "createdAt": "2026-06-15T00:09:54.404Z",
+    "updatedAt": "2026-06-15T00:09:54.404Z",
+    "deletedAt": null,
+    "name": "Mid-tier",
+    "minFollowers": 100000,
+    "maxFollowers": 499999
+  },
+  "preferredPlatforms": [
+    {
+      "id": "44ae439c-7704-488a-b6d0-87c9ae9be729",
+      "createdAt": "2026-06-15T00:09:54.681Z",
+      "updatedAt": "2026-06-15T00:09:54.681Z",
+      "deletedAt": null,
+      "name": "Instagram",
+      "CampaignPlatform": {
+        "id": "9c6b284e-b6f0-492a-823f-3d31725902b1",
+        "createdAt": "2026-06-30T14:40:38.400Z",
+        "updatedAt": "2026-06-30T14:40:38.400Z",
+        "deletedAt": null,
+        "campaignId": "7ac0b8b9-b654-48c8-9d0a-09dc5e5a73e6",
+        "platformId": "44ae439c-7704-488a-b6d0-87c9ae9be729"
+      }
+    }
+  ],
+  "creatorNiche": null,
+  "applications": [
+    {
+      "id": "e4d05e7b-ed10-47f6-898d-0f9a02c73ea8",
+      "createdAt": "2026-07-02T21:00:51.939Z",
+      "updatedAt": "2026-07-02T21:00:51.939Z",
+      "deletedAt": null,
+      "campaignId": "7ac0b8b9-b654-48c8-9d0a-09dc5e5a73e6",
+      "creatorId": "ab99956b-2180-452a-9b6c-d146142dd3ba",
+      "contentIdea": "I will create a morning routine reel showing how I style the summer collection.",
+      "pastWorkLink": "https://instagram.com/p/example",
+      "primaryPlatformId": "1e849828-20a2-4f26-ba0f-6622290a4e02",
+      "secondaryPlatformId": "44ae439c-7704-488a-b6d0-87c9ae9be729",
+      "feeRequest": 1500,
+      "comments": "How long is the product trial period?",
+      "status": "pending",
+      "primary_platform_id": "1e849828-20a2-4f26-ba0f-6622290a4e02",
+      "secondary_platform_id": "44ae439c-7704-488a-b6d0-87c9ae9be729",
+      "creator": {
+        "id": "ab99956b-2180-452a-9b6c-d146142dd3ba",
+        "firstName": "Human",
+        "lastName": "Opatola",
+        "email": "cwaku96+human@gmail.com",
+        "username": "emperorbj",
+        "avatarUrl": null,
+        "assignedTier": "Nano Creator",
+        "instagramUsername": null,
+        "instagramFollowers": 0,
+        "tiktokUsername": null,
+        "tiktokFollowers": 0,
+        "youtubeUsername": null,
+        "youtubeFollowers": 0,
+        "twitterUsername": "BolajiOpatola",
+        "twitterFollowers": 52
+      },
+      "primaryPlatform": {
+        "id": "1e849828-20a2-4f26-ba0f-6622290a4e02",
+        "createdAt": "2026-06-15T00:09:54.681Z",
+        "updatedAt": "2026-06-15T00:09:54.681Z",
+        "deletedAt": null,
+        "name": "Twitter"
+      },
+      "secondaryPlatform": {
+        "id": "44ae439c-7704-488a-b6d0-87c9ae9be729",
+        "createdAt": "2026-06-15T00:09:54.681Z",
+        "updatedAt": "2026-06-15T00:09:54.681Z",
+        "deletedAt": null,
+        "name": "Instagram"
+      }
+    }
+  ],
+  "applicationsCount": {
+    "total": 1
+  }
+}

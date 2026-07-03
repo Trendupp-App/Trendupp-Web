@@ -130,7 +130,7 @@ export default function CampaignCard({ campaign, applicantsCount = 0 }: Campaign
           {campaign.status === 'live' && (
             <div className="flex items-center gap-1 text-xs text-[#9a99b0]">
               <Users size={12} />
-              {applicantsCount} applied
+              {campaign?.applicationsCount?.total} applied
             </div>
           )}
         </div>

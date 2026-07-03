@@ -22,4 +22,5 @@ export interface CampaignApplication {
   platforms: string[];
   portfolioUrl: string;
   comment?: string;
+  brandReply?: string;
 }

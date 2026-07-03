@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
+import Link from 'next/link';
 
 const DRAFT_KEY = 'creator-signup-draft';
 
@@ -321,6 +322,12 @@ export default function CreatorSignupPage() {
                 {signup.isPending ? 'Creating account…' : 'Sign up'}
               </Button>
             </form>
+            <p className="text-sm text-text-secondary text-center mt-5">
+              Already have an account?{' '}
+              <Link href="/signin" className="text-brand-pink font-extralight hover:underline">
+                Login
+              </Link>
+            </p>
           </div>
         </div>
       </AuthLayout>
