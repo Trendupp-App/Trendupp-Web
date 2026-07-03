@@ -3781,6 +3781,7 @@ export default function CreatorProfilePage() {
                       You have no submitted tickets yet.
                     </p>
                     <button
+                      id="help-card-submit-ticket"
                       type="button"
                       onClick={() => setHelpStep('ticket')}
                       className="text-[10px] font-bold text-brand-pink hover:underline cursor-pointer"
@@ -3913,6 +3914,7 @@ export default function CreatorProfilePage() {
                       Subject
                     </label>
                     <input
+                      id="ticket-subject-input"
                       type="text"
                       placeholder="Brief summary of your issue"
                       value={ticketSubject}
@@ -3927,6 +3929,7 @@ export default function CreatorProfilePage() {
                       Description
                     </label>
                     <textarea
+                      id="ticket-description-input"
                       placeholder="Please provide as much detail as possible to help us resolve your issue quickly."
                       value={ticketDescription}
                       onChange={(e) => setTicketDescription(e.target.value)}
