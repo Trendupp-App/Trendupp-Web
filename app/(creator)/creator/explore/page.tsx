@@ -91,17 +91,19 @@ export default function ExplorePage() {
     budget: `₦${c.totalBudget.toLocaleString()}`,
     budgetMin: c.totalBudget,
     budgetMax: c.totalBudget,
-    daysLeft: getDaysLeft(c.timeline),
+    daysLeft: getDaysLeft(c.timeline || ''),
     daysLeftNumber: Math.max(
       0,
-      Math.floor((new Date(c.timeline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+      Math.floor(
+        (new Date(c.timeline || '').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+      ),
     ),
     tier: c.creatorCategory?.name || 'Nano',
     appliedCount: c.applicationsCount?.total || 0,
     image:
       c.coverImage ||
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    niches: c.creatorNiche ? [c.creatorNiche.name] : [],
+    niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
     platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
     status: (c.status === 'active'
       ? 'live'
