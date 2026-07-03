@@ -3640,6 +3640,7 @@ export default function CreatorProfilePage() {
 
                     {/* Submit Ticket Card */}
                     <div
+                      id="help-card-submit-ticket"
                       onClick={() => setHelpStep('ticket')}
                       className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
                     >
@@ -3781,7 +3782,6 @@ export default function CreatorProfilePage() {
                       You have no submitted tickets yet.
                     </p>
                     <button
-                      id="help-card-submit-ticket"
                       type="button"
                       onClick={() => setHelpStep('ticket')}
                       className="text-[10px] font-bold text-brand-pink hover:underline cursor-pointer"
