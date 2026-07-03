@@ -45,6 +45,7 @@ export default function FeedbackModal({
         <div className="flex gap-3 w-full mt-1">
           {actions.map((action) => (
             <button
+              type="button"
               key={action.label}
               onClick={action.onClick}
               disabled={action.loading}

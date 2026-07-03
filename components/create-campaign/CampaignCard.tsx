@@ -71,10 +71,9 @@ const STATUS_CONFIG: Record<
 
 interface CampaignCardProps {
   campaign: Campaign;
-  applicantsCount?: number;
 }
 
-export default function CampaignCard({ campaign, applicantsCount = 0 }: CampaignCardProps) {
+export default function CampaignCard({ campaign }: CampaignCardProps) {
   const router = useRouter();
   // const config = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.live;
   const displayStatus = campaign.subStatus ?? campaign.status;

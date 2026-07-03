@@ -94,8 +94,6 @@ interface BrandCampaignSectionsProps {
 export default function BrandCampaignSections({
   isProfileComplete = true,
 }: BrandCampaignSectionsProps) {
-  // const {data} = useMyCampaigns();
-  // console.log("data campaigns:", data);
   const { data: activeCampaigns = [], isLoading: activeLoading } = useMyCampaigns(
     'active',
     isProfileComplete,

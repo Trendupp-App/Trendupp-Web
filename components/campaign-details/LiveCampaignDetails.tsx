@@ -21,9 +21,9 @@ export default function LiveCampaignDetail({ campaign }: { campaign: Campaign })
         <CampaignOverviewTab campaign={campaign} />
       ) : (
         <ApplicationsTab
-          campaignId={campaign?.id}
-          applicationsForLive={campaign?.applications}
-          campaignTitle={campaign?.title}
+          campaignId={campaign.id}
+          applicationsForLive={campaign.applications}
+          campaignTitle={campaign.title}
         />
       )}
     </>

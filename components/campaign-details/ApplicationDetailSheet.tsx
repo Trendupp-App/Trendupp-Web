@@ -2,9 +2,9 @@
 
 import { ArrowRight, CircleCheck, CircleX, ArrowUpRight, BadgeCheck, XCircle } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import type { CampaignApplication } from '@/types/campaign';
+import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
-import { useApplication } from '@/hooks/useCampaign'; // adjust path to your hooks file
+import { useApplication } from '@/hooks/useCampaign';
 import ApplicationDetailSkeleton from '@/components/skeletons/ApplicationDetailSkeleton';
 
 function fmt(n: number) {
@@ -15,9 +15,9 @@ interface ApplicationDetailSheetProps {
   applicationId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAccept: (application: CampaignApplication) => void;
-  onReject: (application: CampaignApplication) => void;
-  onViewProfile?: (application: CampaignApplication) => void;
+  onAccept: (application: CampaignApplicationDto) => void;
+  onReject: (application: CampaignApplicationDto) => void;
+  onViewProfile?: (application: CampaignApplicationDto) => void;
 }
 
 export default function ApplicationDetailSheet({
@@ -39,8 +39,8 @@ export default function ApplicationDetailSheet({
       <SheetContent side="right" className="w-full sm:max-w-[520px] overflow-y-auto">
         <SheetHeader className="sr-only">
           <SheetTitle>
-            {application?.creator?.firstName || application?.creator?.lastName || 'Applicant'}
-            &apos;s application
+            {`${application?.creator?.firstName ?? ''} ${application?.creator?.lastName ?? ''}`.trim() ||
+              ''}
           </SheetTitle>
         </SheetHeader>
 
@@ -66,7 +66,7 @@ export default function ApplicationDetailSheet({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-base font-semibold text-white truncate">
-                    {application.creator?.firstName || application.creator?.lastName}
+                    {`${application.creator?.firstName ?? ''} ${application.creator?.lastName ?? ''}`.trim()}
                   </p>
                 </div>
                 {application.creator?.instagramUsername ? (
@@ -123,10 +123,9 @@ export default function ApplicationDetailSheet({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[#9a99b0]">Platforms</span>
                   <span className="text-sm text-[#1a1a2e]">
-                    {application.primaryPlatform?.name}
-                  </span>
-                  <span className="text-sm text-[#1a1a2e]">
-                    {application.secondaryPlatform?.name || ''}
+                    {[application.primaryPlatform?.name, application.secondaryPlatform?.name]
+                      .filter(Boolean)
+                      .join(', ') || '—'}
                   </span>
                 </div>
 
@@ -134,7 +133,7 @@ export default function ApplicationDetailSheet({
                   <span className="text-sm text-[#9a99b0]">Past work</span>
 
                   <a
-                    href={application.pastWorkLink || '#'}
+                    href={application.pastWorkLink || 'www.mywork.com'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm text-brand-pink hover:underline"
@@ -188,6 +187,18 @@ export default function ApplicationDetailSheet({
                     className="w-full cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-colors"
                   >
                     Accept anyway
+                  </button>
+                </div>
+              )}
+
+              {application.status === 'accepted' && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => onReject(application)}
+                    className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors"
+                  >
+                    <CircleX className="size-4" />
+                    <p>Reject</p>
                   </button>
                 </div>
               )}

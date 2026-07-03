@@ -77,8 +77,8 @@ export interface Campaign extends BaseEntity {
   }[];
   creatorNicheId?: string;
   timeline?: string;
-  approvedAt?: string;
-  urlIsLive?: boolean;
+  approvedAt?: string | null;
+  urlIsLive?: boolean | null;
   creatorNiche?: {
     id?: string;
     createdAt?: string;
@@ -91,7 +91,7 @@ export interface Campaign extends BaseEntity {
     breakdownItems: { name: string; type: string; value: number; amount: number }[];
   };
   applicationsCount?: { total: number };
-  applications?: CampaignApplication[];
+  applications?: CampaignApplicationDto[];
   subStatus?: CampaignSubStatus;
 }
 
@@ -121,7 +121,7 @@ export interface Creator {
   twitterFollowers: number;
 }
 
-export interface CampaignApplication {
+export interface CampaignApplicationDto {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -134,7 +134,7 @@ export interface CampaignApplication {
   secondaryPlatformId: string;
   feeRequest: number;
   comments: string;
-  status: 'pending' | 'approved' | 'rejected' | string;
+  status: 'pending' | 'approved' | 'rejected';
   primary_platform_id: string;
   secondary_platform_id: string;
   creator: Creator;

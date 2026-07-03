@@ -5,16 +5,16 @@ import { CheckCircle2, AlertCircle } from 'lucide-react';
 import ApplicationListItem from './ApplicationListItem';
 import ApplicationDetailSheet from './ApplicationDetailSheet';
 import FeedbackModal from '@/shared/FeedBackModal';
-import { CampaignApplication } from '@/types/campaign';
+import type { CampaignApplicationDto } from '@/types/campaign';
 import { useReviewApplication } from '@/hooks/useCampaign';
 import { useQueryClient } from '@tanstack/react-query';
 interface ApplicationsTabProps {
   campaignId: string;
   campaignTitle: string;
-  applicationsForLive?: CampaignApplication[];
+  applicationsForLive?: CampaignApplicationDto[];
 }
 
-type PendingAction = { type: 'accept' | 'reject'; application: CampaignApplication } | null;
+type PendingAction = { type: 'accept' | 'reject'; application: CampaignApplicationDto } | null;
 
 export default function ApplicationsTab({
   campaignId,
@@ -27,7 +27,7 @@ export default function ApplicationsTab({
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [resultDialog, setResultDialog] = useState<{
     type: 'accept' | 'reject';
-    application: CampaignApplication;
+    application: CampaignApplicationDto;
   } | null>(null);
 
   const { mutate: reviewApplication, isPending: isReviewing } = useReviewApplication(
@@ -39,29 +39,35 @@ export default function ApplicationsTab({
     },
   );
 
-  function handleView(application: CampaignApplication) {
+  function handleView(application: CampaignApplicationDto) {
     setSelected(application?.id);
     setSheetOpen(true);
   }
 
-  function handleAcceptRequest(application: CampaignApplication) {
+  function handleAcceptRequest(application: CampaignApplicationDto) {
     setPendingAction({ type: 'accept', application });
     setSheetOpen(false);
   }
 
-  function handleRejectRequest(application: CampaignApplication) {
+  function handleRejectRequest(application: CampaignApplicationDto) {
     setPendingAction({ type: 'reject', application });
     setSheetOpen(false);
   }
 
   function handleConfirmAction() {
     if (!pendingAction) return;
-    const status = pendingAction.type === 'accept' ? 'accepted' : 'rejected';
-
+    const action = pendingAction;
+    const status = action.type === 'accept' ? 'accepted' : 'rejected';
     reviewApplication(
       { appId: pendingAction.application.id, status },
       {
-        onSuccess: () => setResultDialog(pendingAction),
+        onSuccess: () => {
+          setResultDialog(action);
+          setPendingAction(null);
+        },
+        onError: () => {
+          setPendingAction(null);
+        },
       },
     );
     setPendingAction(null);
@@ -92,8 +98,8 @@ export default function ApplicationsTab({
             <>
               Are you sure you want to {pendingAction.type === 'accept' ? 'accept' : 'reject'}{' '}
               <strong>
-                {pendingAction?.application?.creator?.firstName ||
-                  pendingAction?.application?.creator?.lastName}
+                {`${pendingAction?.application?.creator?.firstName ?? ''} ${pendingAction?.application?.creator?.lastName ?? ''}`.trim() ||
+                  ''}
               </strong>
               {pendingAction.type === 'accept' ? ' content?' : "'s application?"}
             </>
@@ -122,8 +128,8 @@ export default function ApplicationsTab({
             <>
               You have successfully {resultDialog.type === 'accept' ? 'selected' : 'rejected'}{' '}
               <strong>
-                {resultDialog.application?.creator?.firstName ||
-                  resultDialog.application?.creator?.lastName}
+                {`${resultDialog.application?.creator?.firstName ?? ''} ${resultDialog.application?.creator?.lastName ?? ''}`.trim() ||
+                  ''}
               </strong>{' '}
               application for <strong>{campaignTitle}</strong>
             </>

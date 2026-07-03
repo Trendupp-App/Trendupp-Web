@@ -17,7 +17,6 @@ interface CampaignStatsRowProps {
 }
 
 export default function CampaignStatsRow({ campaign }: CampaignStatsRowProps) {
-  console.log('campaign', campaign);
   return (
     <div className="border border-[#e8e6f0] rounded-xl p-5 flex items-center justify-around gap-4 mb-6">
       <div>
