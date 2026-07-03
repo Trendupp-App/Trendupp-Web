@@ -42,12 +42,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { user, accessToken, hasHydrated } = useAuthStore();
 
-  const [isMounted, setIsMounted] = useState(false);
-
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-
     setIsMobileMenuOpen(false);
   }, [pathname]);
 

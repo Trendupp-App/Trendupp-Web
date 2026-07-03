@@ -722,8 +722,6 @@ export default function CreatorProfilePage() {
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newBrandName, setNewBrandName] = useState('');
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [selectedPresetIndex, setSelectedPresetIndex] = useState<number | null>(null);
   const [socialMediaLink, setSocialMediaLink] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 

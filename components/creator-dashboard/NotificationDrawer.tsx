@@ -73,7 +73,7 @@ type CategoryFilter = 'all' | 'campaigns' | 'payments' | 'content' | 'reminders'
 
 export default function NotificationDrawer({ isOpen, onClose }: NotificationDrawerProps) {
   const [activeFilter, setActiveFilter] = useState<CategoryFilter>('all');
-  const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+  const notifications = MOCK_NOTIFICATIONS;
 
   // Prevent scroll behind the drawer when it is open
   useEffect(() => {

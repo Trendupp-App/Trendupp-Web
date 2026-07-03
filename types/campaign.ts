@@ -266,4 +266,3 @@ export interface ApplyCampaignResponse {
   application?: unknown;
 }
 export type CampaignSubStatus = 'in_progress' | 'content_review' | 'revision' | 'live_content';
-
