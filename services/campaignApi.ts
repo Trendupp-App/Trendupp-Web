@@ -10,7 +10,7 @@ import type {
   SubmitCampaignResponse,
   PayCampaignPayload,
   PayCampaignResponse,
-  CampaignApplication,
+  CampaignApplicationDto,
 } from '@/types/campaign';
 
 function appendIfDefined(form: FormData, key: string, value: unknown) {
@@ -74,7 +74,7 @@ export const campaignApi = {
     apiClient.post<PayCampaignResponse>(`/campaigns/${id}/pay`, payload),
 
   getApplication: (id: string) =>
-    apiClient.get<{ application: CampaignApplication }>(`/campaigns/applications/${id}`),
+    apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),
 
   reviewApplication: (campaignId: string, appId: string, status: 'accepted' | 'rejected') =>
     apiClient.patch<{

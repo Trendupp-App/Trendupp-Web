@@ -134,7 +134,7 @@ export interface CampaignApplicationDto {
   secondaryPlatformId: string;
   feeRequest: number;
   comments: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected';
   primary_platform_id: string;
   secondary_platform_id: string;
   creator: Creator;
