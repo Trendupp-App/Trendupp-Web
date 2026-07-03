@@ -122,3 +122,36 @@ export interface UpdateProfilePayoutResponse {
     bankAccountName: string | null;
   };
 }
+
+// types/campaign.ts (or a new types/creatorProfile.ts)
+export interface CreatorProfileDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  city: string | null;
+  state: { id: string; name: string } | null;
+  country: { id: string; name: string } | null;
+  role: 'creator' | 'brand';
+  platforms: Partial<
+    Record<
+      'instagram' | 'tiktok' | 'youtube' | 'twitter',
+      { username: string; followers: number; totalLikes?: number; totalViews?: number }
+    >
+  >;
+  niches: Array<{ id: string; name: string }>;
+  assignedTier: string | null;
+  avgRating: number | null;
+  totalReviews: number;
+  reviews: Array<{
+    id: string;
+    brandName: string;
+    rating: number;
+    text: string;
+    date: string;
+  }>;
+  portfolio?: Array<{ id: string; imageUrl: string; brandName?: string }>;
+}

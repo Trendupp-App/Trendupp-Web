@@ -12,6 +12,7 @@ import {
   SupportTicket,
 } from '@/services/profileApi';
 import { useAuthStore } from '@/store/authStore';
+import { usersApi } from '@/services/usersApi';
 
 export type { SupportTicket };
 
@@ -225,5 +226,14 @@ export function useSubmitSupportTicket() {
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit ticket');
     },
+  });
+}
+
+export function useCreatorProfile(id: string | null) {
+  return useQuery({
+    queryKey: ['creator-profile', id],
+    queryFn: () => usersApi.getExploreProfile(id!).then((r) => r.data),
+    enabled: !!id,
+    staleTime: 1000 * 60,
   });
 }
