@@ -1,6 +1,6 @@
 'use client';
 
-import type { CampaignApplication } from '@/types/campaign';
+import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
 import { ChevronRight } from 'lucide-react';
 
@@ -9,8 +9,8 @@ function fmt(n: number) {
 }
 
 interface ApplicationListItemProps {
-  application: CampaignApplication;
-  onView: (application: CampaignApplication) => void;
+  application: CampaignApplicationDto;
+  onView: (application: CampaignApplicationDto) => void;
 }
 
 export default function ApplicationListItem({ application, onView }: ApplicationListItemProps) {
