@@ -14,13 +14,13 @@ export function TermsDialog({ open, onOpenChange }: TermsDialogProps) {
       <DialogContent
         showCloseButton={false}
         className="w-[90vw] max-w-[500px] p-0 flex flex-col overflow-hidden"
-        style={{
-          position: 'fixed',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          maxHeight: '80vh',
-        }}
+        // style={{
+        //   position: 'fixed',
+        //   left: '50%',
+        //   top: '50%',
+        //   transform: 'translate(-50%, -50%)',
+        //   maxHeight: '80vh',
+        // }}
       >
         <DialogHeader className="px-6 py-5 shrink-0 border-b border-[#f0eef8]">
           <div className="flex items-center justify-between">

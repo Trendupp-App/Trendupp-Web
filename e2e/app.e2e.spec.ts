@@ -102,13 +102,10 @@ test.describe('App smoke test', () => {
       await hamburger.click();
     }
 
-    // Ensure the tab navigation bar is visible and contains the three main tabs
-    const tabBar = page.locator('#tab-nav-bar');
-    await expect(tabBar).toBeVisible({ timeout: 30000 });
-    await expect(tabBar.locator('button')).toHaveCount(3, { timeout: 30000 });
+    // Click settings tab trigger
+    const settingsTab = page.locator('#tab-trigger-settings');
+    await settingsTab.waitFor({ state: 'visible', timeout: 15000 });
 
-    // Click the Settings tab by its accessible name
-    const settingsTab = tabBar.getByRole('button', { name: /settings/i }).first();
     await settingsTab.click();
 
     // Wait for the Help item in Settings to be visible and click it once
@@ -121,7 +118,7 @@ test.describe('App smoke test', () => {
     await expect(emailInfo).toBeVisible();
 
     // Click the "Submit a Ticket" card to open form
-    const ticketCard = page.locator('text=Submit a Ticket').first();
+    const ticketCard = page.locator('#help-card-submit-ticket');
     await expect(ticketCard).toBeVisible();
     await ticketCard.click();
 

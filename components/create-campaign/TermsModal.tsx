@@ -69,7 +69,7 @@ export default function TermsModal({ onAgree, onClose }: TermsModalProps) {
         <div className="px-6 pb-6 pt-3 shrink-0">
           <button
             onClick={onAgree}
-            className="w-full py-3.5 bg-brand-pink text-white text-sm font-medium rounded-xl hover:bg-brand-pink/90 transition-colors"
+            className="w-full py-3.5 cursor-pointer bg-brand-pink text-white text-sm font-medium rounded-xl hover:bg-brand-pink/90 transition-colors"
           >
             Agree
           </button>

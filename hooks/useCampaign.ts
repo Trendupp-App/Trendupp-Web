@@ -57,17 +57,13 @@ export function useSubmitCampaign(onSuccess: (breakdown: PaymentBreakdown) => vo
   return useMutation({
     mutationFn: (id: string) => campaignApi.submitCampaign(id),
     onSuccess: ({ data }) => {
-      console.log('submit response:', JSON.stringify(data, null, 2));
       toast.success(data.message ?? 'Campaign submitted', { duration: 900 });
-      const totalBudget = data.campaign.totalBudget;
-      const trenduppFee = Math.round(totalBudget * 0.15 * 100) / 100;
-      const vat = Math.round(totalBudget * 0.075 * 100) / 100;
-
+      const bd = data.campaign.paymentBreakdown; // use the server-computed breakdown directly
       onSuccess({
-        campaignBudget: totalBudget,
-        trenduppFee,
-        vat,
-        totalToPay: data.payment.amount, // use the exact figure from the API
+        campaignBudget: bd.campaignBudget,
+        trenduppFee: bd.trenduppFee,
+        vat: bd.vat,
+        totalToPay: bd.totalToPay,
       });
     },
     onError: (err: AxiosError<{ message?: string }>) => {
@@ -100,7 +96,7 @@ export function useCampaign(id: string | null) {
 }
 
 export function useMyCampaigns(
-  status?: 'draft' | 'live' | 'active' | 'completed',
+  status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted',
   enabled: boolean = true,
 ) {
   return useQuery({
@@ -111,35 +107,28 @@ export function useMyCampaigns(
   });
 }
 
-export function useCampaigns(
-  params?: {
-    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
-    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
-    platforms?: string[];
-    niches?: string[];
-    nicheIds?: string[];
-    goal?: string;
-  },
-  enabled: boolean = true,
-) {
+export function useApplication(id: string | null) {
   return useQuery({
-    queryKey: ['campaigns', params],
-    queryFn: () => campaignApi.getCampaigns(params).then((r) => r.data.data),
-    staleTime: 1000 * 30,
-    enabled,
+    queryKey: ['application', id],
+    queryFn: () => campaignApi.getApplication(id!).then((r) => r.data.application),
+    enabled: !!id,
+    staleTime: 0,
   });
 }
 
-export function useApplyCampaign(onSuccess: () => void) {
+export function useReviewApplication(
+  campaignId: string,
+  onSuccess: (appId: string, status: 'accepted' | 'rejected') => void,
+) {
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: ApplyCampaignPayload }) =>
-      campaignApi.applyCampaign(id, payload),
-    onSuccess: ({ data }) => {
-      toast.success(data.message ?? 'Application submitted successfully! 🚀', { duration: 1500 });
-      onSuccess();
+    mutationFn: ({ appId, status }: { appId: string; status: 'accepted' | 'rejected' }) =>
+      campaignApi.reviewApplication(campaignId, appId, status),
+    onSuccess: ({ data }, variables) => {
+      toast.success(data.message, { duration: 900 });
+      onSuccess(variables.appId, variables.status);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not submit application, please try again');
+      toast.error(err?.response?.data?.message ?? 'Could not update application');
     },
   });
 }

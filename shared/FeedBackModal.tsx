@@ -1,12 +1,13 @@
 'use client';
 
-import { type LucideIcon } from 'lucide-react';
+import { Loader2, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface FeedbackModalAction {
   label: string;
   onClick: () => void;
   variant?: 'primary' | 'secondary';
+  loading?: boolean;
 }
 
 export interface FeedbackModalProps {
@@ -22,7 +23,6 @@ export default function FeedbackModal({
   message,
   actions,
 }: FeedbackModalProps) {
-  // Derive a border colour from the icon colour class (e.g. text-emerald-500 → border-emerald-500)
   const borderColor = iconColor.replace('text-', 'border-');
 
   return (
@@ -42,18 +42,22 @@ export default function FeedbackModal({
         <p className="text-sm text-[#1a1a2e] leading-relaxed">{message}</p>
 
         {/* Actions */}
-        <div className="flex flex-col gap-3 w-full mt-1">
+        <div className="flex gap-3 w-full mt-1">
           {actions.map((action) => (
             <button
+              type="button"
               key={action.label}
               onClick={action.onClick}
+              disabled={action.loading}
               className={cn(
                 'w-full py-3 rounded-xl text-sm transition-colors',
                 action.variant === 'primary'
-                  ? 'bg-brand-pink text-white font-medium hover:bg-brand-pink/90'
+                  ? 'bg-brand-pink cursor-pointer text-white font-medium hover:bg-brand-pink/90'
                   : 'border border-[#e8e6f0] text-[#1a1a2e] font-light hover:bg-[#faf9fc]',
+                action.loading && 'opacity-70 cursor-not-allowed',
               )}
             >
+              {action.loading && <Loader2 size={16} className="animate-spin" />}
               {action.label}
             </button>
           ))}

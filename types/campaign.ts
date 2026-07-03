@@ -17,7 +17,7 @@ export interface CreatorCategory extends BaseEntity {
   maxFollowers: number | null;
 }
 
-// ── Enums (validated by API) ──────────────────────────────────────────────────
+// ── Enums (validated by API)
 
 export const CAMPAIGN_GOALS = ['Create Content', 'Amplify Content'] as const;
 export type CampaignGoal = (typeof CAMPAIGN_GOALS)[number];
@@ -25,7 +25,7 @@ export type CampaignGoal = (typeof CAMPAIGN_GOALS)[number];
 export const CONTENT_TYPES = ['Video', 'Carousel', 'Reel', 'Tweet', 'Image'] as const;
 export type ContentType = (typeof CONTENT_TYPES)[number];
 
-// ── Campaign ──────────────────────────────────────────────────────────────────
+//  Campaign
 
 export type CampaignStatus = 'draft' | 'submitted' | 'live' | 'active' | 'completed';
 
@@ -38,9 +38,9 @@ export interface Campaign extends BaseEntity {
   title: string;
   goal: CampaignGoal;
   totalBudget: number;
-  paymentPerCreator: string;
-  contentType: ContentType;
-  duration: number;
+  paymentPerCreator?: string;
+  contentType?: ContentType;
+  duration?: number;
   creatorCategoryId: string;
   preferredPlatformIds: string[];
   currentStep: number;
@@ -54,18 +54,94 @@ export interface Campaign extends BaseEntity {
   // Step 3
   usageRights?: string;
   successLooksLike?: string;
-  creatorCategory?: CreatorCategory;
-  // Optional populated fields from API
-  brand?: { username: string };
+  paymentStatus?: 'unpaid' | 'paid';
+  acceptedTerms?: boolean;
+  brandId?: string;
+
+  brand?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+  };
+  creatorCategory?: {
+    id: string;
+    name: string;
+    minFollowers: number;
+    maxFollowers: number | null;
+  };
+  preferredPlatforms?: {
+    id: string;
+    name: string;
+  }[];
+  creatorNicheId?: string;
+  timeline?: string;
+  approvedAt?: string | null;
+  urlIsLive?: boolean | null;
+  creatorNiche?: {
+    id?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    name?: string;
+    order?: number;
+  };
+  paymentBreakdown?: PaymentBreakdown & {
+    breakdownItems: { name: string; type: string; value: number; amount: number }[];
+  };
   applicationsCount?: { total: number };
-  creatorNiche?: { name: string };
-  preferredPlatforms?: Array<{ id: string; name: string }>;
-  timeline: string;
-  createdAt: string;
+  applications?: CampaignApplicationDto[];
+  subStatus?: CampaignSubStatus;
 }
 
-export interface CreatorCategory {
+export interface Platform {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
   name: string;
+}
+
+export interface Creator {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  avatarUrl: string | null;
+  assignedTier: string;
+  instagramUsername: string | null;
+  instagramFollowers: number;
+  tiktokUsername: string | null;
+  tiktokFollowers: number;
+  youtubeUsername: string | null;
+  youtubeFollowers: number;
+  twitterUsername: string | null;
+  twitterFollowers: number;
+}
+
+export interface CampaignApplicationDto {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  campaignId: string;
+  creatorId: string;
+  contentIdea: string;
+  pastWorkLink: string;
+  primaryPlatformId: string;
+  secondaryPlatformId: string;
+  feeRequest: number;
+  comments: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  primary_platform_id: string;
+  secondary_platform_id: string;
+  creator: Creator;
+  primaryPlatform: Platform;
+  secondaryPlatform: Platform;
+  campaign?: Campaign;
+  submissions?: unknown[];
 }
 
 // ── Payloads ──────────────────────────────────────────────────────────────────
@@ -75,6 +151,8 @@ export interface CreateCampaignPayload {
   goal: CampaignGoal;
   totalBudget: number;
   creatorCategoryId: string;
+  creatorNicheId: string;
+  timeline: string;
   preferredPlatformIds: string[];
   campaignBrief?: string;
   contentGuidelines?: ContentGuidelines;
@@ -128,10 +206,9 @@ export interface SubmitCampaignResponse {
   message: string;
   campaign: {
     id: string;
-    title: string;
-    totalBudget: number;
     status: 'submitted';
     currentStep: 5;
+    paymentBreakdown: PaymentBreakdown;
   };
   payment: {
     campaignId: string;
@@ -139,6 +216,22 @@ export interface SubmitCampaignResponse {
     paymentStatus: 'unpaid';
   };
 }
+
+// export interface SubmitCampaignResponse {
+//   message: string;
+//   campaign: {
+//     id: string;
+//     title: string;
+//     totalBudget: number;
+//     status: 'submitted';
+//     currentStep: 5;
+//   };
+//   payment: {
+//     campaignId: string;
+//     amount: number;
+//     paymentStatus: 'unpaid';
+//   };
+// }
 
 export interface PayCampaignPayload {
   paymentReference: string;
@@ -172,3 +265,5 @@ export interface ApplyCampaignResponse {
   message?: string;
   application?: unknown;
 }
+export type CampaignSubStatus = 'in_progress' | 'content_review' | 'revision' | 'live_content';
+

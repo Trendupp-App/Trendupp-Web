@@ -10,8 +10,7 @@ import type {
   SubmitCampaignResponse,
   PayCampaignPayload,
   PayCampaignResponse,
-  ApplyCampaignPayload,
-  ApplyCampaignResponse,
+  CampaignApplicationDto,
 } from '@/types/campaign';
 
 function appendIfDefined(form: FormData, key: string, value: unknown) {
@@ -30,6 +29,8 @@ export const campaignApi = {
     appendIfDefined(fd, 'totalBudget', String(payload.totalBudget));
     appendIfDefined(fd, 'creatorCategoryId', payload.creatorCategoryId);
     payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
+    appendIfDefined(fd, 'creatorNicheId', payload.creatorNicheId);
+    appendIfDefined(fd, 'timeline', payload.timeline);
     appendIfDefined(fd, 'campaignBrief', payload.campaignBrief);
     if (payload.coverImage instanceof File) {
       fd.append('coverImage', payload.coverImage);
@@ -62,7 +63,7 @@ export const campaignApi = {
     });
   },
 
-  getMyCampaigns: (status?: 'draft' | 'live' | 'active' | 'completed') =>
+  getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
   getCampaigns: (params?: {
@@ -81,6 +82,12 @@ export const campaignApi = {
   payCampaign: (id: string, payload: PayCampaignPayload) =>
     apiClient.post<PayCampaignResponse>(`/campaigns/${id}/pay`, payload),
 
-  applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
-    apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
+  getApplication: (id: string) =>
+    apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),
+
+  reviewApplication: (campaignId: string, appId: string, status: 'accepted' | 'rejected') =>
+    apiClient.patch<{
+      message: string;
+      application: { id: string; status: 'accepted' | 'rejected' };
+    }>(`/campaigns/${campaignId}/applications/${appId}`, { status }),
 };

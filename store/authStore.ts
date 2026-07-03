@@ -39,9 +39,11 @@ export interface AuthUser {
 interface AuthState {
   accessToken: string | null;
   user: AuthUser | null;
+  hasHydrated: boolean;
   setSession: (token: string, user: AuthUser) => void;
   clearSession: () => void;
   updateUser: (patch: Partial<AuthUser>) => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -49,6 +51,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       accessToken: null,
       user: null,
+      hasHydrated: false,
       setSession: (accessToken, user) => set({ accessToken, user }),
       clearSession: () => {
         set({ accessToken: null, user: null });
@@ -57,10 +60,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       updateUser: (patch) => set((s) => ({ user: s.user ? { ...s.user, ...patch } : null })),
+      setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
       name: 'trendupp-auth',
       partialize: (s) => ({ accessToken: s.accessToken, user: s.user }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     },
   ),
 );
