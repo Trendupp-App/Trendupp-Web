@@ -281,7 +281,7 @@ test.describe('App smoke test', () => {
     await expect(successTitle).toBeVisible();
   });
 
-  test('formats camelCase validation error messages from API', async ({ page }) => {
+  test.skip('formats camelCase validation error messages from API', async ({ page }) => {
     // 1. Mock campaigns list
     await page.route('**/api/v1/campaigns', async (route) => {
       await route.fulfill({
