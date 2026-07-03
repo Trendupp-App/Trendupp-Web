@@ -5,6 +5,7 @@ import { CheckCircle2, AlertCircle } from 'lucide-react';
 import ApplicationListItem from './ApplicationListItem';
 import ApplicationDetailSheet from './ApplicationDetailSheet';
 import FeedbackModal from '@/shared/FeedBackModal';
+import CreatorProfileSheet from '@/components/campaign-details/CreatorProfileSheet';
 import type { CampaignApplicationDto } from '@/types/campaign';
 import { useReviewApplication } from '@/hooks/useCampaign';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,6 +26,8 @@ export default function ApplicationsTab({
   const [selected, setSelected] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [profileCreatorId, setProfileCreatorId] = useState<string | null>(null);
+  const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const [resultDialog, setResultDialog] = useState<{
     type: 'accept' | 'reject';
     application: CampaignApplicationDto;
@@ -42,6 +45,13 @@ export default function ApplicationsTab({
   function handleView(application: CampaignApplicationDto) {
     setSelected(application?.id);
     setSheetOpen(true);
+  }
+
+  function handleViewProfile(application: CampaignApplicationDto) {
+    // Swap sheets: close the application detail sheet, open the profile sheet
+    setSheetOpen(false);
+    setProfileCreatorId(application.creator.id);
+    setProfileSheetOpen(true);
   }
 
   function handleAcceptRequest(application: CampaignApplicationDto) {
@@ -87,6 +97,17 @@ export default function ApplicationsTab({
         onOpenChange={setSheetOpen}
         onAccept={handleAcceptRequest}
         onReject={handleRejectRequest}
+        onViewProfile={handleViewProfile}
+      />
+
+      <CreatorProfileSheet
+        creatorId={profileCreatorId}
+        open={profileSheetOpen}
+        onOpenChange={(open) => {
+          setProfileSheetOpen(open);
+          // Optional: go back to the application sheet when the profile sheet closes
+          if (!open && selected) setSheetOpen(true);
+        }}
       />
 
       {/* Confirm accept/reject */}
