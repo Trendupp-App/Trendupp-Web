@@ -10,7 +10,6 @@ interface ProfileHeroBannerProps {
 
 export default function ProfileHeroBanner({ onEditProfile }: ProfileHeroBannerProps) {
   const user = useAuthStore((s) => s.user);
-  console.log('USER DATA', user);
   const clearSession = useAuthStore((s) => s.clearSession);
 
   const displayName = user?.username ?? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();

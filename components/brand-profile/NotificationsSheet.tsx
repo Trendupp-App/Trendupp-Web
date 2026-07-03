@@ -54,8 +54,6 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
   const { data: settings, isLoading } = useNotificationSettings();
   const { mutate: updateNotifications } = useUpdateNotifications();
 
-  console.log('Notification settings:', settings);
-
   function toggle(key: keyof NotificationSettings) {
     if (!settings) return;
     updateNotifications({ [key]: !settings[key] });

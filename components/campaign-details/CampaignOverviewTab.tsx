@@ -45,7 +45,6 @@ interface CampaignOverviewTabProps {
 
 export default function CampaignOverviewTab({ campaign }: CampaignOverviewTabProps) {
   const platforms = campaign.preferredPlatforms ?? [];
-  console.log('campaign', campaign);
 
   return (
     <div className="flex flex-col gap-4">

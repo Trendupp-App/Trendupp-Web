@@ -77,7 +77,8 @@ export interface Campaign extends BaseEntity {
   }[];
   creatorNicheId?: string;
   timeline?: string;
-
+  approvedAt?: string | null;
+  urlIsLive?: boolean | null;
   creatorNiche?: {
     id?: string;
     createdAt?: string;
@@ -90,8 +91,57 @@ export interface Campaign extends BaseEntity {
     breakdownItems: { name: string; type: string; value: number; amount: number }[];
   };
   applicationsCount?: { total: number };
-
+  applications?: CampaignApplicationDto[];
   subStatus?: CampaignSubStatus;
+}
+
+export interface Platform {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  name: string;
+}
+
+export interface Creator {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  avatarUrl: string | null;
+  assignedTier: string;
+  instagramUsername: string | null;
+  instagramFollowers: number;
+  tiktokUsername: string | null;
+  tiktokFollowers: number;
+  youtubeUsername: string | null;
+  youtubeFollowers: number;
+  twitterUsername: string | null;
+  twitterFollowers: number;
+}
+
+export interface CampaignApplicationDto {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  campaignId: string;
+  creatorId: string;
+  contentIdea: string;
+  pastWorkLink: string;
+  primaryPlatformId: string;
+  secondaryPlatformId: string;
+  feeRequest: number;
+  comments: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  primary_platform_id: string;
+  secondary_platform_id: string;
+  creator: Creator;
+  primaryPlatform: Platform;
+  secondaryPlatform: Platform;
+  campaign?: Campaign;
+  submissions?: unknown[];
 }
 
 // ── Payloads ──────────────────────────────────────────────────────────────────

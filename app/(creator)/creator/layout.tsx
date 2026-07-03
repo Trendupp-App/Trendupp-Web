@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/shared/Sidebar';
 import Header from '@/shared/Header';
@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, accessToken } = useAuthStore();
+  const { user, accessToken, hasHydrated } = useAuthStore();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -48,11 +48,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   useEffect(() => {
-    if (!accessToken || !user) {
+    if (hasHydrated && (!accessToken || !user)) {
       router.replace('/signin');
     }
-  }, [accessToken, user, router]);
+  }, [accessToken, user, router, hasHydrated]);
 
+  if (!hasHydrated) return <PageLoader />;
   if (!accessToken || !user) return <PageLoader />;
 
   const isBrand = user?.role === 'brand';

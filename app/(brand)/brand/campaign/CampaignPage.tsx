@@ -109,7 +109,7 @@ export default function BrandCampaignsPage() {
   };
 
   function handleDeleteDraft(id: string) {
-    console.log('delete draft', id);
+    console.log('Delete draft campaign with id:', id);
   }
 
   return (

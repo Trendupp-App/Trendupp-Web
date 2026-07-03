@@ -50,7 +50,8 @@ test.describe('App smoke test', () => {
 
     // Click settings tab trigger
     const settingsTab = page.locator('#tab-trigger-settings');
-    await expect(settingsTab).toBeVisible();
+    await settingsTab.waitFor({ state: 'visible', timeout: 15000 });
+
     await settingsTab.click();
 
     // Check that settings item for help exists and click it
@@ -63,7 +64,7 @@ test.describe('App smoke test', () => {
     await expect(emailInfo).toBeVisible();
 
     // Click the "Submit a Ticket" card to open form
-    const ticketCard = page.locator('text=Submit a Ticket').first();
+    const ticketCard = page.locator('#help-card-submit-ticket');
     await expect(ticketCard).toBeVisible();
     await ticketCard.click();
 
