@@ -106,3 +106,29 @@ export function useMyCampaigns(
     enabled,
   });
 }
+
+export function useApplication(id: string | null) {
+  return useQuery({
+    queryKey: ['application', id],
+    queryFn: () => campaignApi.getApplication(id!).then((r) => r.data.application),
+    enabled: !!id,
+    staleTime: 0,
+  });
+}
+
+export function useReviewApplication(
+  campaignId: string,
+  onSuccess: (appId: string, status: 'accepted' | 'rejected') => void,
+) {
+  return useMutation({
+    mutationFn: ({ appId, status }: { appId: string; status: 'accepted' | 'rejected' }) =>
+      campaignApi.reviewApplication(campaignId, appId, status),
+    onSuccess: ({ data }, variables) => {
+      toast.success(data.message, { duration: 900 });
+      onSuccess(variables.appId, variables.status);
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not update application');
+    },
+  });
+}

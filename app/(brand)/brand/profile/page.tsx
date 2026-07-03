@@ -17,7 +17,6 @@ type SheetType = 'notifications' | 'security' | 'help' | null;
 
 export default function BrandProfilePage() {
   const user = useAuthStore((s) => s.user);
-  console.log('USER DATA', user);
   const [activeTab, setActiveTab] = useState<ProfileTab>('settings');
   const [editOpen, setEditOpen] = useState(false);
   const [openSheet, setOpenSheet] = useState<SheetType>(null);
