@@ -28,6 +28,18 @@ export interface AuthUser {
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
+  nationalityId?: string | null;
+  countryId?: string | null;
+  stateId?: string | null;
+  city?: string | null;
+  instagramUsername?: string | null;
+  instagramFollowers?: number | null;
+  tiktokUsername?: string | null;
+  tiktokFollowers?: number | null;
+  youtubeUsername?: string | null;
+  youtubeFollowers?: number | null;
+  twitterUsername?: string | null;
+  twitterFollowers?: number | null;
   brandRepresentative: {
     firstName: string | null;
     lastName: string | null;

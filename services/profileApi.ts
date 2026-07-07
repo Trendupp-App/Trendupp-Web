@@ -1,80 +1,66 @@
 import apiClient from '@/lib/apiClient';
+import type { AuthUser } from '@/store/authStore';
 
-export interface UpdatePersonalInfoResponse {
-  message: string;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    username: string;
-    bio: string | null;
-    avatarUrl: string | null;
-    nationalityId: string | null;
-    countryId: string | null;
-    stateId: string | null;
-    onboardingPercentage: number;
-    isEmailVerified: boolean;
-  };
+export interface UpdatePersonalInfoResponse extends Partial<AuthUser> {
+  message?: string;
+  user?: Partial<AuthUser>;
 }
 
 export interface UpdateProfileNichesPayload {
   nicheIds: string[];
 }
 
-export interface UpdateProfileNichesResponse {
-  message: string;
-  user: {
-    id: string;
-    niches: Array<{ id: string; name: string; order: number }>;
-    onboardingPercentage: number;
-  };
+export interface UpdateProfileNichesResponse extends Partial<AuthUser> {
+  message?: string;
+  user?: Partial<AuthUser>;
 }
 
 export const profileApi = {
+  getUserDetail: (id: string) => apiClient.get<AuthUser>(`/users/${id}`),
+
   updatePersonalInfo: (payload: FormData) =>
-    apiClient.patch<UpdatePersonalInfoResponse>('/api/v1/profile/personal-info', payload, {
+    apiClient.patch<UpdatePersonalInfoResponse>('/profile/personal-info', payload, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     }),
 
   updateNiches: (payload: UpdateProfileNichesPayload) =>
-    apiClient.put<UpdateProfileNichesResponse>('/api/v1/profile/niches', payload),
+    apiClient.put<UpdateProfileNichesResponse>('/profile/niches', payload),
 
   updateSocials: (payload: UpdateProfileSocialsPayload) =>
-    apiClient.patch<UpdateProfileSocialsResponse>('/api/v1/profile/socials', payload),
+    apiClient.patch<UpdateProfileSocialsResponse>('/profile/socials', payload),
 
   updatePayout: (payload: UpdateProfilePayoutPayload) =>
-    apiClient.patch<UpdateProfilePayoutResponse>('/api/v1/profile/payout', payload),
+    apiClient.patch<UpdateProfilePayoutResponse>('/profile/payout', payload),
 
   getNotificationSettings: () =>
-    apiClient.get<GetNotificationSettingsResponse>('/api/v1/profile/notifications'),
+    apiClient.get<GetNotificationSettingsResponse>('/profile/notifications'),
 
   updateNotificationSettings: (payload: Partial<NotificationSettings>) =>
-    apiClient.patch('/api/v1/profile/notifications', payload),
+    apiClient.patch('/profile/notifications', payload),
 
-  getSecuritySettings: () => apiClient.get<GetSecuritySettingsResponse>('/api/v1/profile/security'),
+  getSecuritySettings: () => apiClient.get<GetSecuritySettingsResponse>('/profile/security'),
 
   updateSecuritySettings: (payload: Partial<SecuritySettings>) =>
-    apiClient.patch('/api/v1/profile/security', payload),
+    apiClient.patch('/profile/security', payload),
 
   changePassword: (payload: ChangePasswordPayload) =>
-    apiClient.patch<ChangePasswordResponse>('/api/v1/profile/password', payload),
+    apiClient.patch<ChangePasswordResponse>('/profile/password', payload),
 
   deactivateAccount: (payload: DeactivateAccountPayload) =>
-    apiClient.post<{ message: string }>('/api/v1/profile/deactivate', payload),
+    apiClient.post<{ message: string }>('/profile/deactivate', payload),
 
   getSupportTicketCategories: () =>
-    apiClient.get<GetSupportTicketCategoriesResponse>('/api/v1/profile/support-ticket/categories'),
+    apiClient.get<GetSupportTicketCategoriesResponse>('/profile/support-ticket/categories'),
 
   getSupportTickets: (id?: string) =>
-    apiClient.get<GetSupportTicketsResponse>('/api/v1/profile/support-ticket', {
+    apiClient.get<GetSupportTicketsResponse>('/profile/support-ticket', {
       params: id ? { id } : undefined,
     }),
 
   submitSupportTicket: (payload: FormData) =>
-    apiClient.post<SubmitSupportTicketResponse>('/api/v1/profile/support-ticket', payload, {
+    apiClient.post<SubmitSupportTicketResponse>('/profile/support-ticket', payload, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
 };
@@ -151,15 +137,9 @@ export interface UpdateProfilePayoutPayload {
   bankAccountName: string;
 }
 
-export interface UpdateProfilePayoutResponse {
-  message: string;
-  user: {
-    id: string;
-    bankName: string | null;
-    bankAccountNumber: string | null;
-    bankAccountName: string | null;
-    onboardingPercentage: number;
-  };
+export interface UpdateProfilePayoutResponse extends Partial<AuthUser> {
+  message?: string;
+  user?: Partial<AuthUser>;
 }
 
 export interface UpdateProfileSocialsPayload {
@@ -173,24 +153,7 @@ export interface UpdateProfileSocialsPayload {
   twitterFollowers?: number | null;
 }
 
-export interface UpdateProfileSocialsResponse {
-  message: string;
-  user: {
-    id: string;
-    instagramUsername: string | null;
-    tiktokUsername: string | null;
-    youtubeUsername: string | null;
-    twitterUsername: string | null;
-    instagramFollowers: number;
-    tiktokFollowers: number;
-    youtubeFollowers: number;
-    twitterFollowers: number;
-    socialsConnected: {
-      instagram: boolean;
-      tiktok: boolean;
-      youtube: boolean;
-      twitter: boolean;
-    };
-    assignedTier: string | null;
-  };
+export interface UpdateProfileSocialsResponse extends Partial<AuthUser> {
+  message?: string;
+  user?: Partial<AuthUser>;
 }

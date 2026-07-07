@@ -15,6 +15,15 @@ import { useAuthStore } from '@/store/authStore';
 
 export type { SupportTicket };
 
+export function useUserDetail(id: string | null) {
+  return useQuery({
+    queryKey: ['profile', id],
+    queryFn: () => profileApi.getUserDetail(id!).then((r) => r.data),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
 export function useUpdatePersonalInfo() {
   const updateUser = useAuthStore((s) => s.updateUser);
   const queryClient = useQueryClient();
@@ -22,19 +31,19 @@ export function useUpdatePersonalInfo() {
   return useMutation({
     mutationFn: (formData: FormData) => profileApi.updatePersonalInfo(formData),
     onSuccess: ({ data }) => {
-      const u = data?.user;
+      const u = data?.user || data;
       // Sync global auth store
       updateUser({
-        firstName: u.firstName,
-        lastName: u.lastName,
-        email: u.email,
-        username: u.username,
-        bio: u.bio,
-        avatarUrl: u.avatarUrl,
+        firstName: u?.firstName,
+        lastName: u?.lastName,
+        email: u?.email,
+        username: u?.username,
+        bio: u?.bio,
+        avatarUrl: u?.avatarUrl,
       });
       // Invalidate queries to refresh view
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success(data.message ?? 'Personal info updated successfully');
+      toast.success(data?.message ?? 'Personal info updated successfully');
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update profile');
@@ -49,14 +58,14 @@ export function useUpdateProfileNiches() {
   return useMutation({
     mutationFn: (payload: { nicheIds: string[] }) => profileApi.updateNiches(payload),
     onSuccess: ({ data }) => {
-      const u = data?.user;
+      const u = data?.user || data;
       // Sync global auth store
       updateUser({
-        niches: u.niches,
+        niches: u?.niches,
       });
       // Invalidate queries to refresh view
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success(data.message ?? 'Niches updated successfully');
+      toast.success(data?.message ?? 'Niches updated successfully');
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update niches');
@@ -71,15 +80,15 @@ export function useUpdateProfileSocials() {
   return useMutation({
     mutationFn: (payload: UpdateProfileSocialsPayload) => profileApi.updateSocials(payload),
     onSuccess: ({ data }) => {
-      const u = data?.user;
+      const u = data?.user || data;
       // Sync global auth store
       updateUser({
-        socialsConnected: u.socialsConnected,
-        assignedTier: u.assignedTier,
+        socialsConnected: u?.socialsConnected,
+        assignedTier: u?.assignedTier,
       });
       // Invalidate queries to refresh view
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success(data.message ?? 'Social accounts updated successfully');
+      toast.success(data?.message ?? 'Social accounts updated successfully');
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update social connections');
@@ -94,16 +103,16 @@ export function useUpdateProfilePayout() {
   return useMutation({
     mutationFn: (payload: UpdateProfilePayoutPayload) => profileApi.updatePayout(payload),
     onSuccess: ({ data }) => {
-      const u = data?.user;
+      const u = data?.user || data;
       // Sync global auth store
       updateUser({
-        bankName: u.bankName,
-        bankAccountNumber: u.bankAccountNumber,
-        bankAccountName: u.bankAccountName,
+        bankName: u?.bankName,
+        bankAccountNumber: u?.bankAccountNumber,
+        bankAccountName: u?.bankAccountName,
       });
       // Invalidate queries to refresh view
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success(data.message ?? 'Payout details saved successfully');
+      toast.success(data?.message ?? 'Payout details saved successfully');
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not save payout details');

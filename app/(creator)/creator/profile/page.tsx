@@ -44,6 +44,7 @@ import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import { useAuthStore } from '@/store/authStore';
 import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
 import {
+  useUserDetail,
   useUpdatePersonalInfo,
   useUpdateProfileNiches,
   useUpdateProfileSocials,
@@ -562,6 +563,63 @@ export default function CreatorProfilePage() {
 
   const { data: states } = useStates(currentCountryId);
   const { data: allNiches } = useNiches();
+  const { data: userDetail } = useUserDetail(user?.id || null);
+
+  // Sync profile state when userDetail changes
+  useEffect(() => {
+    const activeUser = userDetail || user;
+    if (activeUser) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setProfile((prev) => {
+        let countryName = '';
+        if (activeUser.countryId && countries) {
+          const cObj = countries.find((c) => c.id === activeUser.countryId);
+          if (cObj) countryName = cObj.name;
+        }
+        let stateName = activeUser.city || '';
+        if (activeUser.stateId && states) {
+          const sObj = states.find((s) => s.id === activeUser.stateId);
+          if (sObj) stateName = sObj.name;
+        }
+
+        const location = countryName
+          ? stateName
+            ? `${stateName}, ${countryName}`
+            : countryName
+          : prev.location;
+
+        return {
+          ...prev,
+          name: `${activeUser.firstName} ${activeUser.lastName}`.trim(),
+          handle: activeUser.username || '',
+          email: activeUser.email,
+          bio: activeUser.bio || '',
+          image: activeUser.avatarUrl || INITIAL_PROFILE.image,
+          location: location,
+          niches:
+            activeUser.niches && activeUser.niches.length > 0
+              ? activeUser.niches.map((n) => n.name)
+              : INITIAL_PROFILE.niches,
+          platforms: INITIAL_PROFILE.platforms.map((plat) => {
+            const nameLower = plat.name.toLowerCase();
+            const key = (
+              nameLower === 'x (twitter)' ? 'twitter' : nameLower
+            ) as keyof typeof activeUser.socialsConnected;
+            const isConnected = activeUser.socialsConnected
+              ? !!activeUser.socialsConnected[key]
+              : false;
+            return {
+              ...plat,
+              connected: isConnected,
+              handle: isConnected ? activeUser.username || '' : '',
+            };
+          }),
+        };
+      });
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [userDetail, user, countries, states]);
+
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updateNichesMutation = useUpdateProfileNiches();
   const updateSocialsMutation = useUpdateProfileSocials();
@@ -815,10 +873,10 @@ export default function CreatorProfilePage() {
         { nicheIds },
         {
           onSuccess: ({ data }) => {
-            const u = data?.user;
+            const u = data?.user || data;
             setProfile((prev) => ({
               ...prev,
-              niches: u.niches.map((n) => n.name),
+              niches: u?.niches ? u.niches.map((n) => n.name) : prev.niches,
             }));
             setIsEditProfileOpen(false);
           },
@@ -864,7 +922,7 @@ export default function CreatorProfilePage() {
 
       updateSocialsMutation.mutate(payload, {
         onSuccess: ({ data }) => {
-          const u = data?.user;
+          const u = data?.user || data;
           setProfile((prev) => ({
             ...prev,
             platforms: prev.platforms.map((plat) => {
@@ -872,33 +930,33 @@ export default function CreatorProfilePage() {
               if (name === 'Instagram') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.instagram,
-                  handle: u.instagramUsername || 'Not connected',
-                  followers: u.instagramFollowers ? `${u.instagramFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.instagram,
+                  handle: u?.instagramUsername || 'Not connected',
+                  followers: u?.instagramFollowers ? `${u.instagramFollowers}` : 'Not connected',
                 };
               }
               if (name === 'TikTok') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.tiktok,
-                  handle: u.tiktokUsername || 'Not connected',
-                  followers: u.tiktokFollowers ? `${u.tiktokFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.tiktok,
+                  handle: u?.tiktokUsername || 'Not connected',
+                  followers: u?.tiktokFollowers ? `${u.tiktokFollowers}` : 'Not connected',
                 };
               }
               if (name === 'YouTube') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.youtube,
-                  handle: u.youtubeUsername || 'Not connected',
-                  followers: u.youtubeFollowers ? `${u.youtubeFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.youtube,
+                  handle: u?.youtubeUsername || 'Not connected',
+                  followers: u?.youtubeFollowers ? `${u.youtubeFollowers}` : 'Not connected',
                 };
               }
               if (name === 'X (Twitter)') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.twitter,
-                  handle: u.twitterUsername || 'Not connected',
-                  followers: u.twitterFollowers ? `${u.twitterFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.twitter,
+                  handle: u?.twitterUsername || 'Not connected',
+                  followers: u?.twitterFollowers ? `${u.twitterFollowers}` : 'Not connected',
                 };
               }
               return plat;
@@ -940,14 +998,14 @@ export default function CreatorProfilePage() {
 
     updatePersonalInfoMutation.mutate(formData, {
       onSuccess: ({ data }) => {
-        const u = data?.user;
+        const u = data?.user || data;
         setProfile((prev) => ({
           ...prev,
-          name: `${u.firstName} ${u.lastName}`.trim(),
-          handle: u.username || '',
-          email: u.email,
-          bio: u.bio || '',
-          image: u.avatarUrl || prev.image,
+          name: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() || prev.name,
+          handle: u?.username || '',
+          email: u?.email || '',
+          bio: u?.bio || '',
+          image: u?.avatarUrl || prev.image,
         }));
         setIsEditProfileOpen(false);
       },
@@ -2463,7 +2521,10 @@ export default function CreatorProfilePage() {
                     Select Niches
                   </label>
                   <div className="flex flex-wrap gap-2.5 mt-1">
-                    {ALL_NICHES_INDUSTRIES.map((niche) => {
+                    {(allNiches && allNiches.length > 0
+                      ? allNiches.map((n) => n.name)
+                      : ALL_NICHES_INDUSTRIES
+                    ).map((niche) => {
                       const active = editNiches.includes(niche);
                       return (
                         <button

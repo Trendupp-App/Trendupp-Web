@@ -109,6 +109,59 @@ test.describe('App smoke test', () => {
         }),
       });
     });
+    // Mock user details endpoint
+    await page.route('**/api/v1/users/*', async (route) => {
+      const url = route.request().url();
+      if (
+        route.request().method() === 'GET' &&
+        !url.includes('/onboarding') &&
+        !url.includes('/explore') &&
+        !url.includes('/me')
+      ) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'e2e-user',
+            email: 'e2e@trendupp.test',
+            firstName: 'E2E',
+            lastName: 'Tester',
+            role: 'creator',
+            isEmailVerified: true,
+            onboardingPercentage: 100,
+            onboardingStepsCompleted: { profile: true, niches: true, socials: true, payout: true },
+            socialsConnected: { instagram: false, tiktok: false, youtube: false, twitter: false },
+            username: 'e2e_tester',
+            niches: [],
+            industries: [],
+            assignedTier: 'Nano Creator',
+            bio: null,
+            avatarUrl: null,
+            bankName: null,
+            bankAccountNumber: null,
+            bankAccountName: null,
+            brandRepresentative: null,
+            notificationSettings: {
+              newCampaigns: true,
+              brandMessages: true,
+              paymentAlerts: true,
+              weeklySummary: false,
+              marketingOffers: false,
+              pushNotifications: true,
+              applicationUpdates: true,
+              emailNotifications: true,
+            },
+            securitySettings: {
+              twoFactorEnabled: false,
+              loginAlertsEnabled: true,
+              biometricLoginEnabled: true,
+            },
+          }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
     // End of mocking block
     // Mock campaigns list to include our test campaign
     await page.route('**/api/v1/campaigns', async (route) => {
