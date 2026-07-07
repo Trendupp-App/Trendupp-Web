@@ -38,7 +38,6 @@ const BRAND_NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/brand/dashboard', icon: LayoutDashboard },
   { label: 'Campaigns', href: '/brand/campaign', icon: Megaphone },
   { label: 'Explore', href: '/brand/explore', icon: Compass },
-  { label: 'News', href: '/brand/news', icon: TrendingUp },
   { label: 'Payout', href: '/brand/payout', icon: Wallet },
   { label: 'My profile', href: '/brand/profile', icon: User },
 ];
@@ -47,10 +46,12 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, clearSession } = useAuthStore();
 
+  console.log('Sidebar user:', user);
+
   const isBrand = user?.role === 'brand';
   const navItems = isBrand ? BRAND_NAV_ITEMS : CREATOR_NAV_ITEMS;
 
-  const displayName = user ? `${user.firstName} ${user.lastName}`.trim() : 'User';
+  const displayName = user ? `${user.username}`.trim() : 'User';
 
   const initials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase()

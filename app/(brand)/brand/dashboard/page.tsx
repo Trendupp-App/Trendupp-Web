@@ -19,7 +19,7 @@ function getGreeting(): string {
 export default function BrandDashboardPage() {
   const user = useAuthStore((s) => s.user);
 
-  const firstName = user?.firstName ?? 'there';
+  const firstName = user?.username ?? 'there';
   const onboardingPercentage = user?.onboardingPercentage ?? 0;
   const isProfileComplete = onboardingPercentage >= 100;
 

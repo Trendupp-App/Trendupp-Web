@@ -53,35 +53,26 @@ export function usePatchCampaign(onSuccess?: () => void) {
   });
 }
 
-export function useSubmitCampaign(onSuccess: (breakdown: PaymentBreakdown) => void) {
+export function useSubmitCampaign(
+  onSuccess: (breakdown: PaymentBreakdown, paymentUrl: string) => void,
+) {
   return useMutation({
     mutationFn: (id: string) => campaignApi.submitCampaign(id),
     onSuccess: ({ data }) => {
       toast.success(data.message ?? 'Campaign submitted', { duration: 900 });
-      const bd = data.campaign.paymentBreakdown; // use the server-computed breakdown directly
-      onSuccess({
-        campaignBudget: bd.campaignBudget,
-        trenduppFee: bd.trenduppFee,
-        vat: bd.vat,
-        totalToPay: bd.totalToPay,
-      });
+      const bd = data.campaign.paymentBreakdown;
+      onSuccess(
+        {
+          campaignBudget: bd.campaignBudget,
+          trenduppFee: bd.trenduppFee,
+          vat: bd.vat,
+          totalToPay: bd.totalToPay,
+        },
+        data.payment.paymentUrl,
+      );
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit campaign');
-    },
-  });
-}
-
-export function usePayCampaign(onSuccess: (campaignTitle?: string) => void) {
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: PayCampaignPayload }) =>
-      campaignApi.payCampaign(id, payload),
-    onSuccess: ({ data }) => {
-      toast.success('Payment confirmed! Campaign is now live 🎉', { duration: 1500 });
-      onSuccess(data.campaign.title);
-    },
-    onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Payment failed, please try again');
     },
   });
 }

@@ -8,8 +8,6 @@ import type {
   PatchCampaignPayload,
   PatchCampaignResponse,
   SubmitCampaignResponse,
-  PayCampaignPayload,
-  PayCampaignResponse,
   CampaignApplicationDto,
 } from '@/types/campaign';
 
@@ -22,6 +20,7 @@ export const campaignApi = {
   getPlatforms: () => apiClient.get<CampaignPlatform[]>('/campaigns/platforms'),
 
   getCreatorCategories: () => apiClient.get<CreatorCategory[]>('/campaigns/creator-categories'),
+
   createCampaign: (payload: CreateCampaignPayload) => {
     const fd = new FormData();
     appendIfDefined(fd, 'title', payload.title);
@@ -44,6 +43,19 @@ export const campaignApi = {
     const fd = new FormData();
     // Always send currentStep
     fd.append('currentStep', String(payload.currentStep));
+
+    if (payload.currentStep === 1) {
+      appendIfDefined(fd, 'title', payload.title);
+      appendIfDefined(fd, 'goal', payload.goal);
+      appendIfDefined(fd, 'totalBudget', String(payload.totalBudget));
+      appendIfDefined(fd, 'creatorCategoryId', payload.creatorCategoryId);
+      appendIfDefined(fd, 'creatorNicheId', payload.creatorNicheId);
+      payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
+      appendIfDefined(fd, 'timeline', payload.timeline);
+      if (payload.coverImage instanceof File) {
+        fd.append('coverImage', payload.coverImage);
+      }
+    }
 
     if (payload.currentStep === 2) {
       appendIfDefined(fd, 'campaignBrief', payload.campaignBrief);
@@ -69,9 +81,6 @@ export const campaignApi = {
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
 
   submitCampaign: (id: string) => apiClient.post<SubmitCampaignResponse>(`/campaigns/${id}/submit`),
-
-  payCampaign: (id: string, payload: PayCampaignPayload) =>
-    apiClient.post<PayCampaignResponse>(`/campaigns/${id}/pay`, payload),
 
   getApplication: (id: string) =>
     apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),

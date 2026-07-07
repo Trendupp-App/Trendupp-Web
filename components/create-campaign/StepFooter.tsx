@@ -10,7 +10,6 @@ interface StepFooterProps {
   continueLabel?: string;
   continueDisabled?: boolean;
   isLoading?: boolean;
-  hideSaveDraft?: boolean;
 }
 
 export default function StepFooter({
@@ -20,7 +19,6 @@ export default function StepFooter({
   continueLabel = 'Continue',
   continueDisabled = false,
   isLoading = false,
-  hideSaveDraft = false,
 }: StepFooterProps) {
   return (
     <div className="flex items-center justify-between mt-8 pt-4">
@@ -35,18 +33,6 @@ export default function StepFooter({
       </button>
 
       <div className="flex items-center gap-3">
-        {/* Save as draft */}
-        {!hideSaveDraft && onSaveDraft && (
-          <button
-            type="button"
-            onClick={onSaveDraft}
-            className="px-5 py-2.5 text-sm font-light text-[#9a99b0] hover:text-[#1a1a2e] transition-colors"
-          >
-            Save as draft
-          </button>
-        )}
-
-        {/* Continue */}
         <button
           type="button"
           onClick={onContinue}

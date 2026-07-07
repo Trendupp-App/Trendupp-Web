@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  ArrowRight,
-  CircleCheck,
-  CircleX,
-  ArrowUpRight,
-  BadgeCheck,
-  XCircle,
-  UserRound,
-} from 'lucide-react';
+import { CircleCheck, CircleX, ArrowUpRight, XCircle, UserRound } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';

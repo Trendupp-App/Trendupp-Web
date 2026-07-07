@@ -37,10 +37,6 @@ export default function BrandCampaignsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  // Derive mainTab straight from the URL on every render — no effect needed.
-  // Falls back to local override (set when the user clicks a tab manually
-  // without the URL changing first).
   const [manualTab, setManualTab] = useState<MainTab | null>(null);
 
   const mainTab: MainTab = useMemo(() => {

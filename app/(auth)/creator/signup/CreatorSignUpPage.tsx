@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, UserCircle } from 'lucide-react';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,7 @@ export default function CreatorSignupPage() {
         password: values.password,
         firstName: values.firstName,
         lastName: values.lastName,
+        username: values.username,
         role: creatorRole.id,
         acceptedTerms: values.terms,
         acceptedPromotions: values.acceptedPromotions,
@@ -188,6 +189,21 @@ export default function CreatorSignupPage() {
                     <p className="text-[11px] text-red-400">{errors.lastName.message}</p>
                   )}
                 </div>
+              </div>
+              {/* Username*/}
+              <div className="flex flex-col gap-1">
+                <Label className="text-sm font-light text-[#1a1a2e]">User name</Label>
+                <div className="relative">
+                  <UserCircle size={15} className={iconCls} />
+                  <Input
+                    {...register('username')}
+                    placeholder="Enter your user name"
+                    className={`pl-9 ${inputCls}`}
+                  />
+                </div>
+                {errors.username && (
+                  <p className="text-[11px] text-red-400">{errors.username.message}</p>
+                )}
               </div>
 
               {/* Email */}
