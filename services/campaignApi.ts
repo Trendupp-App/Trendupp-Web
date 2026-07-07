@@ -113,4 +113,26 @@ export const campaignApi = {
       `/campaigns/${id}/submissions/${submissionId}/live`,
       payload,
     ),
+
+  getCreatorReviews: (creatorId: string) =>
+    apiClient.get<{ reviews: BackendReview[] }>(`/campaigns/reviews/creator/${creatorId}`),
 };
+
+export interface BackendReview {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt?: string;
+  campaign?: {
+    id: string;
+    title: string;
+    brand?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      companyName?: string | null;
+      avatarUrl?: string | null;
+    };
+  };
+}

@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import { useAuthStore } from '@/store/authStore';
+import { useCreatorReviews } from '@/hooks/useCampaign';
 import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
 import {
   useUserDetail,
@@ -564,6 +565,54 @@ export default function CreatorProfilePage() {
   const { data: states } = useStates(currentCountryId);
   const { data: allNiches } = useNiches();
   const { data: userDetail } = useUserDetail(user?.id || null);
+  const { data: serverReviews } = useCreatorReviews(user?.id || null);
+
+  const activeReviews =
+    serverReviews && serverReviews.length > 0
+      ? serverReviews.map((rev) => {
+          const brandName =
+            rev.campaign?.brand?.companyName ||
+            `${rev.campaign?.brand?.firstName || ''} ${rev.campaign?.brand?.lastName || ''}`.trim() ||
+            'Brand';
+          const logoText = brandName.slice(0, 2).toUpperCase();
+          const logoBgOptions = ['bg-[#00c288]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ec4899]'];
+          const logoBg = logoBgOptions[brandName.length % logoBgOptions.length] || 'bg-[#7c3aed]';
+
+          let date = 'Recent';
+          if (rev.createdAt) {
+            try {
+              const d = new Date(rev.createdAt);
+              const months = [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+              ];
+              date = `${months[d.getMonth()]} ${d.getFullYear()}`;
+            } catch (e) {
+              // ignore
+            }
+          }
+
+          return {
+            id: rev.id,
+            brandName,
+            logoText,
+            logoBg,
+            date,
+            rating: rev.rating,
+            text: rev.comment,
+          };
+        })
+      : MOCK_REVIEWS;
 
   // Sync profile state when userDetail changes
   useEffect(() => {
@@ -596,6 +645,7 @@ export default function CreatorProfilePage() {
           bio: activeUser.bio || '',
           image: activeUser.avatarUrl || INITIAL_PROFILE.image,
           location: location,
+          rating: activeUser.avgRating || prev.rating,
           niches:
             activeUser.niches && activeUser.niches.length > 0
               ? activeUser.niches.map((n) => n.name)
@@ -1518,7 +1568,7 @@ export default function CreatorProfilePage() {
 
             {/* Reviews List */}
             <div className="flex flex-col gap-4">
-              {MOCK_REVIEWS.map((rev) => (
+              {activeReviews.map((rev) => (
                 <div
                   key={rev.id}
                   className="border border-[#e8e6f0] bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-xs"

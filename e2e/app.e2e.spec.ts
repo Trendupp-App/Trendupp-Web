@@ -162,6 +162,14 @@ test.describe('App smoke test', () => {
         await route.continue();
       }
     });
+    // Mock creator reviews endpoint
+    await page.route('**/api/v1/campaigns/reviews/creator/*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ reviews: [] }),
+      });
+    });
     // End of mocking block
     // Mock campaigns list to include our test campaign
     await page.route('**/api/v1/campaigns', async (route) => {

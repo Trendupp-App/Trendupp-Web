@@ -46,6 +46,7 @@ export interface AuthUser {
     email: string | null;
     phone: string | null;
   } | null;
+  avgRating?: number | null;
 }
 
 interface AuthState {

@@ -224,3 +224,12 @@ export function useSubmitProofOfPosting(onSuccess: () => void) {
     },
   });
 }
+
+export function useCreatorReviews(creatorId: string | null) {
+  return useQuery({
+    queryKey: ['creatorReviews', creatorId],
+    queryFn: () => campaignApi.getCreatorReviews(creatorId!).then((r) => r.data.reviews),
+    enabled: !!creatorId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
