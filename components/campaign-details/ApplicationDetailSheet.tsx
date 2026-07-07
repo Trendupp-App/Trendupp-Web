@@ -1,6 +1,14 @@
 'use client';
 
-import { ArrowRight, CircleCheck, CircleX, ArrowUpRight, BadgeCheck, XCircle } from 'lucide-react';
+import {
+  ArrowRight,
+  CircleCheck,
+  CircleX,
+  ArrowUpRight,
+  BadgeCheck,
+  XCircle,
+  UserRound,
+} from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
@@ -17,7 +25,7 @@ interface ApplicationDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   onAccept: (application: CampaignApplicationDto) => void;
   onReject: (application: CampaignApplicationDto) => void;
-  onViewProfile?: (application: CampaignApplicationDto) => void;
+  onViewProfile: (application: CampaignApplicationDto) => void;
 }
 
 export default function ApplicationDetailSheet({
@@ -33,6 +41,8 @@ export default function ApplicationDetailSheet({
   const initials = application?.creator
     ? `${application.creator.firstName?.[0] ?? ''}${application.creator.lastName?.[0] ?? ''}`.toUpperCase()
     : 'U';
+
+  console.log('Checks', application);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -69,38 +79,15 @@ export default function ApplicationDetailSheet({
                     {`${application.creator?.firstName ?? ''} ${application.creator?.lastName ?? ''}`.trim()}
                   </p>
                 </div>
-                {application.creator?.instagramUsername ? (
-                  <p className="text-sm text-[#9a99b0]">
-                    ({application.creator.instagramUsername})
-                  </p>
-                ) : application.creator?.tiktokUsername ? (
-                  <p className="text-sm text-[#9a99b0]">({application.creator.tiktokUsername})</p>
-                ) : application.creator?.youtubeUsername ? (
-                  <p className="text-sm text-[#9a99b0]">({application.creator.youtubeUsername})</p>
-                ) : application.creator?.twitterUsername ? (
-                  <p className="text-sm text-[#9a99b0]">({application.creator.twitterUsername})</p>
-                ) : null}
-              </div>
-              {application.creator?.assignedTier && (
-                <span className="flex items-center gap-1 text-xs font-medium text-brand-pink bg-white px-3 py-1.5 rounded-full shrink-0 mr-6">
-                  <BadgeCheck size={13} />
-                  {application.creator.assignedTier}
-                </span>
-              )}
-            </div>
-
-            {onViewProfile && (
-              <div className="px-3 pt-3">
                 <button
                   onClick={() => onViewProfile(application)}
-                  className="flex items-center gap-1 text-xs font-medium text-[#1a1a4d] hover:text-brand-pink transition-colors ml-auto"
+                  className="flex items-center gap-1 text-xs font-medium text-white bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
                 >
+                  <UserRound size={13} />
                   View profile
-                  <ArrowRight size={12} />
                 </button>
               </div>
-            )}
-
+            </div>
             <div className="px-6 py-5 flex flex-col gap-6">
               {/* Application details */}
               <div className="border border-[#e8e6f0] rounded-xl p-5 flex flex-col gap-4">
