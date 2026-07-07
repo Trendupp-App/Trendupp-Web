@@ -8,10 +8,18 @@ import SubmitProofModal from '@/components/dashboard/my-work/SubmitProofModal';
 import CampaignFilterModal, {
   FilterState,
 } from '@/components/creator-dashboard/CampaignFilterModal';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useMyApplications,
+  useSubmitContentDraft,
+  useSubmitProofOfPosting,
+} from '@/hooks/useCampaign';
+import { toast } from 'sonner';
+import { CampaignApplicationDto, Campaign } from '@/types/campaign';
 
 const INITIAL_CAMPAIGNS: WorkCampaign[] = [
   {
-    id: 1,
+    id: '1',
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦300K',
@@ -31,7 +39,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMax: 300000,
   },
   {
-    id: 2,
+    id: '2',
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦300K',
@@ -51,7 +59,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMax: 300000,
   },
   {
-    id: 3,
+    id: '3',
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦450K',
@@ -72,7 +80,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMax: 450000,
   },
   {
-    id: 4,
+    id: '4',
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦200K',
@@ -92,7 +100,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMax: 200000,
   },
   {
-    id: 5,
+    id: '5',
     title: 'Summer Style Collection 2026',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦300K',
@@ -111,7 +119,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMax: 300000,
   },
   {
-    id: 6,
+    id: '6',
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦350K',
@@ -130,7 +138,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMax: 350000,
   },
   {
-    id: 7,
+    id: '7',
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦300K',
@@ -149,7 +157,7 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
     budgetMax: 300000,
   },
   {
-    id: 8,
+    id: '8',
     title: 'Summer Style Collection 2025',
     brand: 'Zara Africa',
     budgetMinMax: '₦150K–₦250K',
@@ -171,10 +179,94 @@ const INITIAL_CAMPAIGNS: WorkCampaign[] = [
   },
 ];
 
+interface SubmissionItem {
+  id?: string;
+  status: string;
+  revisionFeedback?: string;
+}
+
+function mapAppToWorkCampaign(app: CampaignApplicationDto): WorkCampaign {
+  const campaign = app.campaign || ({} as Campaign);
+  const brandName = campaign.brand?.username || 'Unknown Brand';
+  const platformName = app.primaryPlatform?.name || 'Instagram';
+
+  // Calculate status
+  let status: WorkCampaign['status'] = 'Pending';
+  let revisionComment = '';
+
+  if (app.status === 'pending') {
+    status = 'Pending';
+  } else if (app.status === 'rejected') {
+    status = 'Declined';
+  } else if (app.status === 'accepted') {
+    const submissions = (app.submissions || []) as SubmissionItem[];
+    if (submissions.length === 0) {
+      status = 'In progress';
+    } else {
+      const latest = submissions[submissions.length - 1];
+      if (latest.status === 'in_progress') {
+        status = 'In progress';
+      } else if (latest.status === 'awaiting_review') {
+        status = 'Under review';
+      } else if (latest.status === 'revision_requested') {
+        status = 'Revision requested';
+        revisionComment = latest.revisionFeedback || 'Please check guidelines and deliverables.';
+      } else if (latest.status === 'live') {
+        status = 'Payment released';
+      }
+    }
+  }
+
+  // Calculate days left
+  let daysLeft = '0d';
+  let daysLeftNumber = 0;
+  if (campaign.timeline) {
+    const diff = new Date(campaign.timeline).getTime() - Date.now();
+    if (diff > 0) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      daysLeft = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+      daysLeftNumber = days;
+    }
+  }
+
+  const latestSubmission = app.submissions?.[app.submissions.length - 1] as
+    | SubmissionItem
+    | undefined;
+
+  return {
+    id: app.id,
+    campaignId: campaign.id,
+    submissionId: latestSubmission?.id,
+    title: campaign.title || 'Untitled Campaign',
+    brand: brandName,
+    budgetMinMax: `₦${(campaign.totalBudget || 0).toLocaleString()}`,
+    budgetString: `₦${(campaign.totalBudget || 0).toLocaleString()}`,
+    daysLeft,
+    daysLeftNumber,
+    status,
+    platform: platformName,
+    tier: campaign.creatorCategory?.name || 'Nano',
+    guidelines: campaign.campaignBrief || 'No guidelines provided',
+    image:
+      campaign.coverImage ||
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    niches: campaign.creatorNiche?.name ? [campaign.creatorNiche.name] : [],
+    goal: campaign.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
+    createdAt: app.createdAt,
+    budgetMax: campaign.totalBudget || 0,
+    actualAmount: app.feeRequest,
+    revisionComment,
+  };
+}
+
 type PrimaryTab = 'Active' | 'Applied' | 'Done';
 
 export default function MyWorkPage() {
-  const [campaigns, setCampaigns] = useState<WorkCampaign[]>(INITIAL_CAMPAIGNS);
+  const queryClient = useQueryClient();
+  const { data: myApps = [], isLoading } = useMyApplications();
+
+  const [mockCampaigns, setMockCampaigns] = useState<WorkCampaign[]>(INITIAL_CAMPAIGNS);
   const [activeTab, setActiveTab] = useState<PrimaryTab>('Active');
   const [activeSubFilter, setActiveSubFilter] = useState<string>('All');
 
@@ -194,11 +286,37 @@ export default function MyWorkPage() {
     campaignGoal: null,
   });
 
+  const submitDraft = useSubmitContentDraft(() => {
+    queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+  });
+
+  const submitProof = useSubmitProofOfPosting(() => {
+    queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+  });
+
+  // Choose between dynamic backend apps or local mocks
+  const campaigns = myApps.length > 0 ? myApps.map(mapAppToWorkCampaign) : mockCampaigns;
+
   // Handle link submission (moves campaign to "Under Review")
-  const handleSubmitLink = (_link: string) => {
-    void _link;
-    if (submitLinkCampaign) {
-      setCampaigns((prev) =>
+  const handleSubmitLink = (link: string) => {
+    if (!submitLinkCampaign) return;
+
+    if (submitLinkCampaign.campaignId && submitLinkCampaign.id) {
+      submitDraft.mutate(
+        {
+          id: submitLinkCampaign.campaignId,
+          appId: submitLinkCampaign.id,
+          payload: { draftLink: link },
+        },
+        {
+          onSuccess: () => {
+            setSubmitLinkCampaign(null);
+          },
+        },
+      );
+    } else {
+      toast.success('Mock Content draft link submitted successfully! (Staging Fallback)');
+      setMockCampaigns((prev) =>
         prev.map((c) => (c.id === submitLinkCampaign.id ? { ...c, status: 'Under review' } : c)),
       );
       setSubmitLinkCampaign(null);
@@ -206,10 +324,32 @@ export default function MyWorkPage() {
   };
 
   // Handle proof submission (moves campaign to "Payment Released")
-  const handleSubmitProof = (_link: string) => {
-    void _link;
-    if (submitProofCampaign) {
-      setCampaigns((prev) =>
+  const handleSubmitProof = (link: string) => {
+    if (!submitProofCampaign) return;
+
+    if (submitProofCampaign.campaignId && submitProofCampaign.submissionId) {
+      const platformKey = submitProofCampaign.platform.toLowerCase();
+      const normalisedKey = platformKey === 'x' ? 'twitter' : platformKey;
+
+      submitProof.mutate(
+        {
+          id: submitProofCampaign.campaignId,
+          submissionId: submitProofCampaign.submissionId,
+          payload: {
+            liveLink: {
+              [normalisedKey]: link,
+            },
+          },
+        },
+        {
+          onSuccess: () => {
+            setSubmitProofCampaign(null);
+          },
+        },
+      );
+    } else {
+      toast.success('Mock Proof of posting submitted successfully! (Staging Fallback)');
+      setMockCampaigns((prev) =>
         prev.map((c) =>
           c.id === submitProofCampaign.id
             ? {
@@ -226,13 +366,13 @@ export default function MyWorkPage() {
   };
 
   const handleAcceptOffer = (campaign: WorkCampaign) => {
-    setCampaigns((prev) =>
+    setMockCampaigns((prev) =>
       prev.map((c) => (c.id === campaign.id ? { ...c, status: 'In progress' } : c)),
     );
   };
 
   const handleDeclineOffer = (campaign: WorkCampaign) => {
-    setCampaigns((prev) =>
+    setMockCampaigns((prev) =>
       prev.map((c) => (c.id === campaign.id ? { ...c, status: 'Declined' } : c)),
     );
   };
@@ -335,6 +475,22 @@ export default function MyWorkPage() {
       }
       return 0;
     });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-6 w-full pb-12 select-none animate-pulse">
+        <div className="flex flex-col gap-1">
+          <div className="h-8 w-32 bg-gray-200 rounded-md"></div>
+          <div className="h-4 w-48 bg-gray-100 rounded-md mt-1"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="h-80 bg-gray-50 border border-gray-100 rounded-[32px]"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full pb-12 select-none">

@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { campaignApi } from '@/services/campaignApi';
@@ -8,6 +8,8 @@ import type {
   PayCampaignPayload,
   PaymentBreakdown,
   ApplyCampaignPayload,
+  SubmitContentDraftPayload,
+  SubmitLiveLinkPayload,
 } from '@/types/campaign';
 
 export function useCampaignPlatforms() {
@@ -153,15 +155,72 @@ export function useCampaigns(
 }
 
 export function useApplyCampaign(onSuccess: () => void) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: ApplyCampaignPayload }) =>
       campaignApi.applyCampaign(id, payload),
     onSuccess: ({ data }) => {
       toast.success(data.message ?? 'Application submitted successfully! 🚀', { duration: 1500 });
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign'] });
+      queryClient.invalidateQueries({ queryKey: ['my-applications'] });
       onSuccess();
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit application, please try again');
+    },
+  });
+}
+
+export function useMyApplications(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['my-applications'],
+    queryFn: () => campaignApi.getMyApplications().then((r) => r.data),
+    staleTime: 1000 * 30,
+    enabled,
+  });
+}
+
+export function useSubmitContentDraft(onSuccess: () => void) {
+  return useMutation({
+    mutationFn: ({
+      id,
+      appId,
+      payload,
+    }: {
+      id: string;
+      appId: string;
+      payload: SubmitContentDraftPayload;
+    }) => campaignApi.submitContentDraft(id, appId, payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Content draft link submitted! 🚀', { duration: 1500 });
+      onSuccess();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit draft, please try again');
+    },
+  });
+}
+
+export function useSubmitProofOfPosting(onSuccess: () => void) {
+  return useMutation({
+    mutationFn: ({
+      id,
+      submissionId,
+      payload,
+    }: {
+      id: string;
+      submissionId: string;
+      payload: SubmitLiveLinkPayload;
+    }) => campaignApi.submitProofOfPosting(id, submissionId, payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Proof of posting submitted successfully! 🎉', {
+        duration: 1500,
+      });
+      onSuccess();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit proof, please try again');
     },
   });
 }

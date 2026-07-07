@@ -266,3 +266,21 @@ export interface ApplyCampaignResponse {
   application?: unknown;
 }
 export type CampaignSubStatus = 'in_progress' | 'content_review' | 'revision' | 'live_content';
+
+export interface SubmitContentDraftPayload {
+  draftLink: string;
+}
+
+export interface SubmitContentDraftResponse {
+  message?: string;
+  application?: unknown;
+}
+
+export interface SubmitLiveLinkPayload {
+  liveLink: Record<string, string>;
+}
+
+export interface SubmitLiveLinkResponse {
+  message?: string;
+  submission?: unknown;
+}

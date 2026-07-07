@@ -13,7 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export interface WorkCampaign {
-  id: number;
+  id: string;
   title: string;
   brand: string;
   budgetMinMax: string; // e.g. "₦150K–₦300K"
@@ -40,6 +40,8 @@ export interface WorkCampaign {
   createdAt?: string;
   budgetMax?: number;
   daysLeftNumber?: number;
+  campaignId?: string;
+  submissionId?: string;
 }
 
 interface WorkCampaignCardProps {

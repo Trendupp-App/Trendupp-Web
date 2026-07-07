@@ -100,7 +100,9 @@ export default function CreatorDashboardPage() {
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
 
   // Fetch campaigns from backend
-  const { data: liveCampaigns = [], isLoading } = useCampaigns();
+  const { data: liveCampaigns = [], isLoading } = useCampaigns({
+    status: activeFilter === 'all' ? undefined : activeFilter === 'live' ? 'live' : 'completed',
+  });
 
   const getDaysLeft = (timelineDate: string) => {
     const diffTime = new Date(timelineDate).getTime() - new Date().getTime();
@@ -132,7 +134,7 @@ export default function CreatorDashboardPage() {
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
     niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
     platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
-    status: (c.status === 'active'
+    status: (c.status === 'active' || c.status === 'live'
       ? 'live'
       : c.status === 'completed'
         ? 'past'
@@ -165,7 +167,7 @@ export default function CreatorDashboardPage() {
   }, []);
 
   const filteredCampaigns = mappedCampaigns.filter((campaign) => {
-    if (activeFilter === 'all') return campaign.status === 'live';
+    if (activeFilter === 'all') return true;
     if (activeFilter === 'news') return false; // Handled separately
     return campaign.status === activeFilter;
   });
@@ -318,6 +320,7 @@ export default function CreatorDashboardPage() {
                         appliedCount={campaign.appliedCount}
                         image={campaign.image}
                         hideApplied={true}
+                        status={campaign.status}
                       />
                     </div>
                   ))}
@@ -339,6 +342,7 @@ export default function CreatorDashboardPage() {
                         tier={campaign.tier}
                         appliedCount={campaign.appliedCount}
                         image={campaign.image}
+                        status={campaign.status}
                       />
                     </div>
                   ))}
@@ -362,6 +366,7 @@ export default function CreatorDashboardPage() {
                     tier={campaign.tier}
                     appliedCount={campaign.appliedCount}
                     image={campaign.image}
+                    status={campaign.status}
                   />
                 </div>
               ))}
@@ -763,7 +768,11 @@ export default function CreatorDashboardPage() {
       <CampaignDetailsDrawer
         isOpen={!!selectedCampaign}
         onClose={() => setSelectedCampaign(null)}
-        campaign={selectedCampaign}
+        campaign={
+          selectedCampaign
+            ? mappedCampaigns.find((c) => c.id === selectedCampaign.id) || selectedCampaign
+            : null
+        }
       />
     </div>
   );

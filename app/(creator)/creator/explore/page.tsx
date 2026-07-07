@@ -72,8 +72,34 @@ export default function ExplorePage() {
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
 
+  // Filter modal visibility & settings
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filterModalKey, setFilterModalKey] = useState(0);
+  const [campaignFilters, setCampaignFilters] = useState<FilterState>({
+    sortBy: 'Newest',
+    platforms: [],
+    niches: [],
+    campaignGoal: null,
+  });
+
   // Fetch campaigns from backend
-  const { data: liveCampaigns = [], isLoading } = useCampaigns();
+  const { data: liveCampaigns = [], isLoading } = useCampaigns({
+    status:
+      activeCampaignFilter === 'all'
+        ? undefined
+        : activeCampaignFilter === 'live'
+          ? 'live'
+          : 'completed',
+    sortBy:
+      campaignFilters.sortBy === 'Newest'
+        ? 'newest'
+        : campaignFilters.sortBy === 'Highest Budget'
+          ? 'highest_budget'
+          : 'closing_soon',
+    platforms: campaignFilters.platforms.length > 0 ? campaignFilters.platforms : undefined,
+    niches: campaignFilters.niches.length > 0 ? campaignFilters.niches : undefined,
+    goal: campaignFilters.campaignGoal || undefined,
+  });
 
   const getDaysLeft = (timelineDate: string) => {
     const diffTime = new Date(timelineDate).getTime() - new Date().getTime();
@@ -105,7 +131,7 @@ export default function ExplorePage() {
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
     niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
     platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
-    status: (c.status === 'active'
+    status: (c.status === 'active' || c.status === 'live'
       ? 'live'
       : c.status === 'completed'
         ? 'past'
@@ -120,16 +146,6 @@ export default function ExplorePage() {
     usageRights: c.usageRights || '',
     successLooksLike: c.successLooksLike || '',
   }));
-
-  // Filter modal visibility & settings
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filterModalKey, setFilterModalKey] = useState(0);
-  const [campaignFilters, setCampaignFilters] = useState<FilterState>({
-    sortBy: 'Newest',
-    platforms: [],
-    niches: [],
-    campaignGoal: null,
-  });
 
   // Filter campaigns
   const filteredCampaigns = mappedCampaigns.filter((campaign) => {
@@ -431,6 +447,7 @@ export default function ExplorePage() {
                   tier={campaign.tier}
                   appliedCount={campaign.appliedCount}
                   image={campaign.image}
+                  status={campaign.status}
                 />
               </div>
             ))
@@ -498,7 +515,11 @@ export default function ExplorePage() {
       <CampaignDetailsDrawer
         isOpen={!!selectedCampaign}
         onClose={() => setSelectedCampaign(null)}
-        campaign={selectedCampaign}
+        campaign={
+          selectedCampaign
+            ? mappedCampaigns.find((c) => c.id === selectedCampaign.id) || selectedCampaign
+            : null
+        }
       />
 
       {/* ── Brand Profile Drawer ── */}

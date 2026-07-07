@@ -13,6 +13,10 @@ import type {
   CampaignApplicationDto,
   ApplyCampaignPayload,
   ApplyCampaignResponse,
+  SubmitContentDraftPayload,
+  SubmitContentDraftResponse,
+  SubmitLiveLinkPayload,
+  SubmitLiveLinkResponse,
 } from '@/types/campaign';
 
 function appendIfDefined(form: FormData, key: string, value: unknown) {
@@ -95,4 +99,18 @@ export const campaignApi = {
 
   applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
     apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
+
+  getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
+
+  submitContentDraft: (id: string, appId: string, payload: SubmitContentDraftPayload) =>
+    apiClient.post<SubmitContentDraftResponse>(
+      `/campaigns/${id}/applications/${appId}/draft`,
+      payload,
+    ),
+
+  submitProofOfPosting: (id: string, submissionId: string, payload: SubmitLiveLinkPayload) =>
+    apiClient.post<SubmitLiveLinkResponse>(
+      `/campaigns/${id}/submissions/${submissionId}/live`,
+      payload,
+    ),
 };

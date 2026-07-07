@@ -24,6 +24,7 @@ export interface MappedCampaign {
   contentGuidelines?: { dos: string[]; donts: string[] };
   usageRights?: string;
   successLooksLike?: string;
+  status?: string;
 }
 
 interface CampaignDetailsDrawerProps {
@@ -495,12 +496,21 @@ export default function CampaignDetailsDrawer({
               </div>
 
               {/* Action apply button */}
-              <Button
-                onClick={() => setDrawerMode('apply')}
-                className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
-              >
-                Apply Now - 38h left →
-              </Button>
+              {campaign.status === 'live' ? (
+                <Button
+                  onClick={() => setDrawerMode('apply')}
+                  className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
+                >
+                  Apply Now - 38h left →
+                </Button>
+              ) : (
+                <Button
+                  disabled
+                  className="w-full bg-[#eaeaf0] text-[#7a7a9a] font-semibold text-[15px] py-6.5 rounded-xl transition-all select-none border-none shrink-0 mt-4 cursor-not-allowed"
+                >
+                  Apply Disabled (Campaign is {campaign.status || 'Pending approval'})
+                </Button>
+              )}
             </div>
           </>
         )}
