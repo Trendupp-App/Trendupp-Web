@@ -560,6 +560,15 @@ export default function CreatorProfilePage() {
 
   const activePortfolio = [...portfolio, ...completedCampaigns];
 
+  const [portfolioPage, setPortfolioPage] = useState(1);
+  const PORTFOLIO_ITEMS_PER_PAGE = 6;
+  const totalPortfolioPages = Math.ceil(activePortfolio.length / PORTFOLIO_ITEMS_PER_PAGE);
+  const safePortfolioPage = Math.max(1, Math.min(portfolioPage, totalPortfolioPages || 1));
+  const paginatedPortfolio = activePortfolio.slice(
+    (safePortfolioPage - 1) * PORTFOLIO_ITEMS_PER_PAGE,
+    safePortfolioPage * PORTFOLIO_ITEMS_PER_PAGE,
+  );
+
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
   type Drawer = 'edit' | 'notifications' | 'privacy' | 'analytics' | 'help' | null;
   const [activeDrawer, setActiveDrawer] = useState<Drawer>(null);
@@ -1351,7 +1360,7 @@ export default function CreatorProfilePage() {
                 </button>
 
                 {/* Portfolio Cards */}
-                {activePortfolio.map((item) => (
+                {paginatedPortfolio.map((item) => (
                   <div
                     key={item.id}
                     className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm bg-zinc-100"
@@ -1397,39 +1406,44 @@ export default function CreatorProfilePage() {
               </span>
 
               {/* Styled Pagination */}
-              <div className="flex items-center gap-1.5" id="pagination-controls">
-                <button
-                  className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
-                  disabled
-                >
-                  &lt;
-                </button>
-                <button className="w-8 h-8 rounded-lg bg-brand-pink text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                  1
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  2
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  3
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  4
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  5
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  6
-                </button>
-                <span className="text-xs text-[#9a99b0] px-1 font-semibold">..</span>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  14
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  &gt;
-                </button>
-              </div>
+              {totalPortfolioPages > 1 && (
+                <div className="flex items-center gap-1.5" id="pagination-controls">
+                  <button
+                    onClick={() => setPortfolioPage((prev) => Math.max(1, prev - 1))}
+                    disabled={safePortfolioPage === 1}
+                    className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
+                  >
+                    &lt;
+                  </button>
+                  {Array.from({ length: totalPortfolioPages }).map((_, idx) => {
+                    const pageNum = idx + 1;
+                    const isActive = pageNum === safePortfolioPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPortfolioPage(pageNum)}
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
+                          isActive
+                            ? 'bg-brand-pink text-white shadow-xs'
+                            : 'border border-[#e8e6f0] hover:bg-[#fcfbfd] text-[#7a7a9a]',
+                        )}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() =>
+                      setPortfolioPage((prev) => Math.min(totalPortfolioPages, prev + 1))
+                    }
+                    disabled={safePortfolioPage === totalPortfolioPages}
+                    className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
+                  >
+                    &gt;
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
