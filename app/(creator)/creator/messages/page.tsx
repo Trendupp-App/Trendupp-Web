@@ -1,14 +1,43 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, MessageCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, MessageCircle, AlertCircle, Plus, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useDisputes, useDisputeDetails } from '@/hooks/useDisputes';
+import { useDisputes, useDisputeDetails, useRaiseDispute } from '@/hooks/useDisputes';
+import { useMyApplications } from '@/hooks/useCampaign';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import type { CampaignApplicationDto } from '@/types/campaign';
 
 export default function MessagesPage() {
   const { data: disputes, isLoading } = useDisputes();
   const [activeDisputeId, setActiveDisputeId] = useState<string | null>(null);
   const { data: activeDispute } = useDisputeDetails(activeDisputeId);
+
+  // New dispute modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState('');
+  const [disputeReason, setDisputeReason] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const { data: myApps } = useMyApplications();
+
+  const raiseDisputeMutation = useRaiseDispute(() => {
+    setIsModalOpen(false);
+    setSelectedCampaignId('');
+    setDisputeReason('');
+    setShowSuccess(true);
+  });
+
+  const handleCreateDispute = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCampaignId || !disputeReason.trim()) return;
+    raiseDisputeMutation.mutate({
+      campaignId: selectedCampaignId,
+      reason: disputeReason,
+    });
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -75,8 +104,8 @@ export default function MessagesPage() {
           <div className="bg-[#fff0f5] border border-[#fcecf3] rounded-2xl p-4 flex gap-3 text-left">
             <MessageCircle className="w-5 h-5 text-brand-pink shrink-0 mt-0.5" />
             <span className="text-[10.5px] font-medium text-[#8b1a47] leading-relaxed">
-              Campaign chats with advertisers are opened by Trendupp when needed. Real disputes list
-              from the API is displayed below.
+              Campaign chats with advertisers are opened by Trendupp when needed. Tap the + button
+              to raise a campaign dispute.
             </span>
           </div>
         </div>
@@ -138,6 +167,15 @@ export default function MessagesPage() {
             ))
           )}
         </div>
+
+        {/* Floating action button (FAB) */}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="absolute bottom-6 right-6 w-12 h-12 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95 cursor-pointer z-10"
+          aria-label="Raise dispute"
+        >
+          <Plus size={22} />
+        </button>
       </div>
 
       {/* 2. Messages Threads Chat Pane */}
@@ -258,6 +296,128 @@ export default function MessagesPage() {
           </div>
         )}
       </div>
+
+      {/* 3. New Dispute Modal Dialog Form */}
+      <Dialog open={isModalOpen} onOpenChange={(open) => !open && setIsModalOpen(false)}>
+        <DialogContent
+          showCloseButton={false}
+          className="sm:max-w-[420px] rounded-[24px] bg-white border border-[#e8e6f0]/60 p-6 flex flex-col gap-5 shadow-xl select-none"
+        >
+          {/* Header */}
+          <div className="flex justify-between items-start">
+            <DialogTitle className="text-[17px] font-bold text-[#1a1a2e]">
+              Raise a Campaign Dispute
+            </DialogTitle>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="w-7 h-7 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#7a7a9a] transition-colors border-none cursor-pointer"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {/* Blue Warning Block */}
+          <div className="bg-[#eff6ff] border border-[#dbeafe] rounded-2xl p-4 flex gap-3 text-left">
+            <AlertCircle className="w-5 h-5 text-[#2563eb] shrink-0 mt-0.5" />
+            <span className="text-[11px] font-medium text-[#1e40af] leading-relaxed">
+              Disputing this campaign will notify Trendupp administrators. They will review the case
+              details and mediate communication between you and the brand.
+            </span>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleCreateDispute} className="flex flex-col gap-4">
+            {/* Campaign Select */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                Select Disputed Campaign
+              </Label>
+              <div className="relative">
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value)}
+                  className="border border-[#e8e6f0] focus:border-brand-pink rounded-xl p-3 text-xs w-full outline-none appearance-none bg-white text-[#1a1a2e] pr-8 cursor-pointer"
+                  required
+                >
+                  <option value="">-- Choose a Campaign --</option>
+                  {myApps?.map((app: CampaignApplicationDto) => {
+                    if (!app.campaign) return null;
+                    const brandName = app.campaign.brand
+                      ? `${app.campaign.brand.firstName} ${app.campaign.brand.lastName}`
+                      : 'Unknown Brand';
+                    return (
+                      <option key={app.campaign.id} value={app.campaign.id}>
+                        {app.campaign.title} ({brandName})
+                      </option>
+                    );
+                  })}
+                </select>
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#7a7a9a]">
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Reason Textarea */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                Reason for Dispute
+              </Label>
+              <Textarea
+                placeholder="Describe the issue in detail (e.g. brand is unresponsive, terms of brief have changed, etc.)..."
+                value={disputeReason}
+                onChange={(e) => setDisputeReason(e.target.value)}
+                className="border-[#e8e6f0] text-xs font-light min-h-[100px] focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink rounded-xl p-3 resize-none"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={
+                !selectedCampaignId || !disputeReason.trim() || raiseDisputeMutation.isPending
+              }
+              className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold text-xs h-11 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/50 cursor-pointer"
+            >
+              {raiseDisputeMutation.isPending ? 'Raising...' : 'Submit Dispute'}
+            </button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 4. Chat Request Sent Successfully Full-page Overlay */}
+      {showSuccess && (
+        <div className="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-8 text-center select-none animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-full bg-[#dcfce7] border border-[#bbf7d0] text-[#16a34a] flex items-center justify-center mb-6">
+            <Check size={32} strokeWidth={2.5} />
+          </div>
+
+          <h3 className="text-xl font-bold text-[#1a1a2e] mb-2">Dispute Raised Successfully</h3>
+          <p className="text-xs font-light text-[#7a7a9a] leading-relaxed max-w-[280px] mb-8">
+            Your dispute has been raised. A Trendupp admin will review the details and mediate
+            shortly.
+          </p>
+
+          <button
+            onClick={() => setShowSuccess(false)}
+            className="bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs py-3.5 px-8 rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer w-full max-w-[280px]"
+          >
+            Back to Messages
+          </button>
+        </div>
+      )}
     </div>
   );
 }
