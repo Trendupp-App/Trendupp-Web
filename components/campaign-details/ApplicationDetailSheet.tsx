@@ -33,9 +33,6 @@ export default function ApplicationDetailSheet({
   const initials = application?.creator
     ? `${application.creator.firstName?.[0] ?? ''}${application.creator.lastName?.[0] ?? ''}`.toUpperCase()
     : 'U';
-
-  console.log('Checks', application);
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-[520px] overflow-y-auto">

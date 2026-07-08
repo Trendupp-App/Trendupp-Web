@@ -10,6 +10,9 @@ import type {
   SubmitCampaignResponse,
   CampaignApplicationDto,
 } from '@/types/campaign';
+import { CampaignSubmission, VetDraftPayload } from '@/types/submissions';
+import type { CreateDisputePayload } from '@/types/dispute';
+import type { CreateReviewPayload } from '@/types/review';
 
 function appendIfDefined(form: FormData, key: string, value: unknown) {
   if (value === undefined || value === null || value === '') return;
@@ -90,4 +93,24 @@ export const campaignApi = {
       message: string;
       application: { id: string; status: 'accepted' | 'rejected' };
     }>(`/campaigns/${campaignId}/applications/${appId}`, { status }),
+
+  getSubmissions: (campaignId: string) =>
+    apiClient.get<{ submissions: CampaignSubmission[] }>(`/campaigns/${campaignId}/submissions`),
+
+  vetDraft: (campaignId: string, submissionId: string, payload: VetDraftPayload) =>
+    apiClient.patch<{ message: string; submission: CampaignSubmission }>(
+      `/campaigns/${campaignId}/submissions/${submissionId}/vet`,
+      payload,
+    ),
+
+  raiseDispute: (payload: CreateDisputePayload) =>
+    apiClient.post<{ message: string; dispute: { id: string } }>('/disputes', payload),
+
+  approveLivePost: (campaignId: string, submissionId: string) =>
+    apiClient.patch<{ message: string; submission: CampaignSubmission }>(
+      `/campaigns/${campaignId}/submissions/${submissionId}/approve-live`,
+    ),
+
+  createReview: (payload: CreateReviewPayload) =>
+    apiClient.post<{ message: string }>('/campaigns/reviews', payload),
 };

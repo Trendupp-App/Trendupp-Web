@@ -1,14 +1,15 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { campaignApi } from '@/services/campaignApi';
 import type {
   CreateCampaignPayload,
   PatchCampaignPayload,
-  PayCampaignPayload,
   PaymentBreakdown,
-  Campaign,
 } from '@/types/campaign';
+import type { VetDraftPayload } from '@/types/submissions';
+import type { CreateDisputePayload } from '@/types/dispute';
+import type { CreateReviewPayload } from '@/types/review';
 
 export function useCampaignPlatforms() {
   return useQuery({
@@ -120,6 +121,75 @@ export function useReviewApplication(
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update application');
+    },
+  });
+}
+
+export function useSubmissions(campaignId: string | null, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['campaign-submissions', campaignId],
+    queryFn: () => campaignApi.getSubmissions(campaignId!).then((r) => r.data.submissions),
+    enabled: !!campaignId && enabled,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+}
+
+export function useVetDraft(campaignId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ submissionId, ...payload }: VetDraftPayload & { submissionId: string }) =>
+      campaignApi.vetDraft(campaignId, submissionId, payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Draft reviewed', { duration: 900 });
+      queryClient.invalidateQueries({ queryKey: ['campaign-submissions', campaignId] });
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not review draft');
+    },
+  });
+}
+
+export function useRaiseDispute(onSuccess?: () => void) {
+  return useMutation({
+    mutationFn: (payload: CreateDisputePayload) => campaignApi.raiseDispute(payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Dispute raised — our team will review this.', {
+        duration: 1500,
+      });
+      onSuccess?.();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not raise dispute');
+    },
+  });
+}
+
+export function useApproveLivePost(campaignId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (submissionId: string) => campaignApi.approveLivePost(campaignId, submissionId),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Live post approved', { duration: 900 });
+      queryClient.invalidateQueries({ queryKey: ['campaign-submissions', campaignId] });
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not approve live post');
+    },
+  });
+}
+
+export function useCreateReview(onSuccess?: () => void) {
+  return useMutation({
+    mutationFn: (payload: CreateReviewPayload) => campaignApi.createReview(payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Review submitted', { duration: 1200 });
+      onSuccess?.();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit review');
     },
   });
 }
