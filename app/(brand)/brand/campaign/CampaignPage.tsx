@@ -37,10 +37,6 @@ export default function BrandCampaignsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  // Derive mainTab straight from the URL on every render — no effect needed.
-  // Falls back to local override (set when the user clicks a tab manually
-  // without the URL changing first).
   const [manualTab, setManualTab] = useState<MainTab | null>(null);
 
   const mainTab: MainTab = useMemo(() => {
@@ -70,10 +66,10 @@ export default function BrandCampaignsPage() {
     'submitted',
     mainTab === 'draft',
   );
-  // const { data: activeCampaigns = [], isLoading: activeLoading } = useMyCampaigns(
-  //   'active',
-  //   mainTab === 'active',
-  // );
+  const { data: activeCampaigns = [], isLoading: activeLoading } = useMyCampaigns(
+    'active',
+    mainTab === 'active',
+  );
   // const { data: completedCampaigns = [], isLoading: completedLoading } = useMyCampaigns(
   //   'completed',
   //   mainTab === 'completed',
@@ -85,9 +81,9 @@ export default function BrandCampaignsPage() {
   );
   const draftTabLoading = draftsLoading || submittedLoading;
 
-  const activeCampaigns = DUMMY_ACTIVE_CAMPAIGNS;
+  // const activeCampaigns = DUMMY_ACTIVE_CAMPAIGNS;
   const completedCampaigns = DUMMY_COMPLETED_CAMPAIGNS;
-  const activeLoading = false;
+  // const activeLoading = false;
   const completedLoading = false;
 
   const filteredActive =

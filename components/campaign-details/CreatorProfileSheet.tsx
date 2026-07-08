@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Star, Award, Image as ImageIcon } from 'lucide-react';
+import { Star, Award, Image as ImageIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useCreatorProfile } from '@/hooks/useProfile';
 import CreatorProfileSkeleton from '@/components/skeletons/CreatorProfileSkeleton';

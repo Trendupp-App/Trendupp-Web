@@ -7,7 +7,6 @@ import { z } from 'zod';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import StepFooter from './StepFooter';
 
-// ── Schema ────────────────────────────────────────────────────────────────────
 const schema = z.object({
   successDescription: z.string().min(1, 'Please describe what success looks like'),
   usageRights: z.string().min(1, 'Please describe your usage rights'),
@@ -27,7 +26,6 @@ interface StepSuccessProps {
   defaultValues?: Partial<Step3Values>;
   onNext: (data: Step3Values) => void;
   onBack: () => void;
-  onSaveDraft?: (data: Step3Values) => void;
   isLoading?: boolean;
 }
 
@@ -35,7 +33,6 @@ export default function StepSuccess({
   defaultValues,
   onNext,
   onBack,
-  onSaveDraft,
   isLoading,
 }: StepSuccessProps) {
   const [rulesOpen, setRulesOpen] = useState(true);
@@ -124,12 +121,7 @@ export default function StepSuccess({
         )}
       </div>
 
-      <StepFooter
-        onBack={onBack}
-        onSaveDraft={onSaveDraft ? () => onSaveDraft(getValues()) : undefined}
-        onContinue={handleSubmit(onNext)}
-        isLoading={isLoading}
-      />
+      <StepFooter onBack={onBack} onContinue={handleSubmit(onNext)} isLoading={isLoading} />
     </form>
   );
 }

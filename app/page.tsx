@@ -7,15 +7,16 @@ import PageLoader from '@/components/skeletons/PageLoader';
 
 export default function Home() {
   const router = useRouter();
-  const { user, accessToken } = useAuthStore();
+  const { user, accessToken, hasHydrated } = useAuthStore();
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (accessToken && user && user.isEmailVerified) {
       router.replace(user.role === 'creator' ? '/creator/dashboard' : '/brand/dashboard');
     } else {
       router.replace('/user-type');
     }
-  }, [accessToken, user, router]);
+  }, [accessToken, user, router, hasHydrated]);
 
   return <PageLoader />;
 }

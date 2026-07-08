@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  ArrowRight,
-  CircleCheck,
-  CircleX,
-  ArrowUpRight,
-  BadgeCheck,
-  XCircle,
-  UserRound,
-} from 'lucide-react';
+import { CircleCheck, CircleX, ArrowUpRight, XCircle, UserRound } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
@@ -41,9 +33,6 @@ export default function ApplicationDetailSheet({
   const initials = application?.creator
     ? `${application.creator.firstName?.[0] ?? ''}${application.creator.lastName?.[0] ?? ''}`.toUpperCase()
     : 'U';
-
-  console.log('Checks', application);
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-[520px] overflow-y-auto">
