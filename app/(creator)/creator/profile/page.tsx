@@ -1365,7 +1365,7 @@ export default function CreatorProfilePage() {
               {profile.niches.map((niche) => (
                 <span
                   key={niche}
-                  className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[10px] px-3 py-1 rounded-full border border-[#7c3aed]/10"
+                  className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[10px] px-3 py-1 rounded-full border border-[#7c3aed]/10 whitespace-nowrap"
                 >
                   {niche}
                 </span>
@@ -1415,15 +1415,15 @@ export default function CreatorProfilePage() {
               <div className="w-9 h-9 rounded-full bg-brand-pink-light flex items-center justify-center shrink-0">
                 <Award size={18} className="text-brand-pink" />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[11px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                   Creator Niche:
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {profile.niches.map((niche) => (
                     <span
                       key={niche}
-                      className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[11px] px-3 py-1 rounded-full border border-[#7c3aed]/10"
+                      className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[11px] px-3 py-1 rounded-full border border-[#7c3aed]/10 whitespace-nowrap"
                     >
                       {niche}
                     </span>
