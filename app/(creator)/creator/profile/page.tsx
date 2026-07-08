@@ -567,52 +567,51 @@ export default function CreatorProfilePage() {
   const { data: userDetail } = useUserDetail(user?.id || null);
   const { data: serverReviews } = useCreatorReviews(user?.id || null);
 
-  const activeReviews =
-    serverReviews && serverReviews.length > 0
-      ? serverReviews.map((rev) => {
-          const brandName =
-            rev.campaign?.brand?.companyName ||
-            `${rev.campaign?.brand?.firstName || ''} ${rev.campaign?.brand?.lastName || ''}`.trim() ||
-            'Brand';
-          const logoText = brandName.slice(0, 2).toUpperCase();
-          const logoBgOptions = ['bg-[#00c288]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ec4899]'];
-          const logoBg = logoBgOptions[brandName.length % logoBgOptions.length] || 'bg-[#7c3aed]';
+  const activeReviews = serverReviews
+    ? serverReviews.map((rev) => {
+        const brandName =
+          rev.campaign?.brand?.companyName ||
+          `${rev.campaign?.brand?.firstName || ''} ${rev.campaign?.brand?.lastName || ''}`.trim() ||
+          'Brand';
+        const logoText = brandName.slice(0, 2).toUpperCase();
+        const logoBgOptions = ['bg-[#00c288]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ec4899]'];
+        const logoBg = logoBgOptions[brandName.length % logoBgOptions.length] || 'bg-[#7c3aed]';
 
-          let date = 'Recent';
-          if (rev.createdAt) {
-            try {
-              const d = new Date(rev.createdAt);
-              const months = [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ];
-              date = `${months[d.getMonth()]} ${d.getFullYear()}`;
-            } catch (e) {
-              // ignore
-            }
+        let date = 'Recent';
+        if (rev.createdAt) {
+          try {
+            const d = new Date(rev.createdAt);
+            const months = [
+              'Jan',
+              'Feb',
+              'Mar',
+              'Apr',
+              'May',
+              'Jun',
+              'Jul',
+              'Aug',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dec',
+            ];
+            date = `${months[d.getMonth()]} ${d.getFullYear()}`;
+          } catch (e) {
+            // ignore
           }
+        }
 
-          return {
-            id: rev.id,
-            brandName,
-            logoText,
-            logoBg,
-            date,
-            rating: rev.rating,
-            text: rev.comment,
-          };
-        })
-      : MOCK_REVIEWS;
+        return {
+          id: rev.id,
+          brandName,
+          logoText,
+          logoBg,
+          date,
+          rating: rev.rating,
+          text: rev.comment,
+        };
+      })
+    : [];
 
   // Sync profile state when userDetail changes
   useEffect(() => {
@@ -645,7 +644,8 @@ export default function CreatorProfilePage() {
           bio: activeUser.bio || '',
           image: activeUser.avatarUrl || INITIAL_PROFILE.image,
           location: location,
-          rating: activeUser.avgRating || prev.rating,
+          rating: activeUser.avgRating || 0,
+          campaignCount: activeUser.totalReviews || 0,
           niches:
             activeUser.niches && activeUser.niches.length > 0
               ? activeUser.niches.map((n) => n.name)
@@ -1568,45 +1568,60 @@ export default function CreatorProfilePage() {
 
             {/* Reviews List */}
             <div className="flex flex-col gap-4">
-              {activeReviews.map((rev) => (
-                <div
-                  key={rev.id}
-                  className="border border-[#e8e6f0] bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-xs"
-                  id={`review-card-${rev.id}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold',
-                          rev.logoBg,
-                        )}
-                      >
-                        {rev.logoText}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-[#1a1a2e]">{rev.brandName}</span>
-                        <span className="text-[10px] text-[#7a7a9a] font-medium mt-0.5">
-                          {rev.date}
-                        </span>
-                      </div>
-                    </div>
-                    {/* Stars review */}
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          size={12}
+              {activeReviews.length > 0 ? (
+                activeReviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="border border-[#e8e6f0] bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-xs"
+                    id={`review-card-${rev.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div
                           className={cn(
-                            i < rev.rating ? 'fill-[#f59e0b] text-[#f59e0b]' : 'text-zinc-200',
+                            'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold',
+                            rev.logoBg,
                           )}
-                        />
-                      ))}
+                        >
+                          {rev.logoText}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-[#1a1a2e]">{rev.brandName}</span>
+                          <span className="text-[10px] text-[#7a7a9a] font-medium mt-0.5">
+                            {rev.date}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Stars review */}
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={12}
+                            className={cn(
+                              i < rev.rating ? 'fill-[#f59e0b] text-[#f59e0b]' : 'text-zinc-200',
+                            )}
+                          />
+                        ))}
+                      </div>
                     </div>
+                    <p className="text-xs leading-relaxed text-[#5a5a7a]">{rev.text}</p>
                   </div>
-                  <p className="text-xs leading-relaxed text-[#5a5a7a]">{rev.text}</p>
+                ))
+              ) : (
+                <div className="border border-dashed border-[#e8e6f0] rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3 select-none">
+                  <div className="w-10 h-10 rounded-full bg-[#f4f3f8] flex items-center justify-center text-[#7a7a9a]">
+                    <Star size={18} className="text-[#9a99b0]" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-bold text-[#1a1a2e]">No reviews yet</p>
+                    <p className="text-[10px] text-[#7a7a9a] max-w-[280px] font-light leading-relaxed">
+                      Completed campaigns that have been rated and reviewed by brand owners will be
+                      displayed here.
+                    </p>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}

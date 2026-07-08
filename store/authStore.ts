@@ -47,6 +47,7 @@ export interface AuthUser {
     phone: string | null;
   } | null;
   avgRating?: number | null;
+  totalReviews?: number | null;
 }
 
 interface AuthState {
