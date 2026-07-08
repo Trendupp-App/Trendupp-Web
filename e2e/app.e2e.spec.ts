@@ -178,6 +178,26 @@ test.describe('App smoke test', () => {
         body: JSON.stringify([]),
       });
     });
+    // Mock disputes list
+    await page.route('**/api/v1/disputes', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+    // Mock disputes stream token
+    await page.route('**/api/v1/disputes/stream-token', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ token: 'mock_token', apiKey: 'mock_apiKey' }),
+      });
+    });
     // End of mocking block
     // Mock campaigns list to include our test campaign
     await page.route('**/api/v1/campaigns', async (route) => {
