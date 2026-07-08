@@ -42,7 +42,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import { useAuthStore } from '@/store/authStore';
-import { useCreatorReviews } from '@/hooks/useCampaign';
+import { useCreatorReviews, useMyApplications } from '@/hooks/useCampaign';
 import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
 import {
   useUserDetail,
@@ -71,7 +71,7 @@ interface Platform {
 }
 
 interface PortfolioItem {
-  id: number;
+  id: number | string;
   image: string;
   brandName: string;
 }
@@ -386,6 +386,7 @@ const INITIAL_PORTFOLIO: PortfolioItem[] = [
   },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MOCK_REVIEWS: CreatorReview[] = [
   {
     id: 1,
@@ -566,6 +567,7 @@ export default function CreatorProfilePage() {
   const { data: allNiches } = useNiches();
   const { data: userDetail } = useUserDetail(user?.id || null);
   const { data: serverReviews } = useCreatorReviews(user?.id || null);
+  const { data: myApps } = useMyApplications();
 
   const activeReviews = serverReviews
     ? serverReviews.map((rev) => {
@@ -596,7 +598,7 @@ export default function CreatorProfilePage() {
               'Dec',
             ];
             date = `${months[d.getMonth()]} ${d.getFullYear()}`;
-          } catch (e) {
+          } catch {
             // ignore
           }
         }
@@ -675,6 +677,30 @@ export default function CreatorProfilePage() {
   const updateSocialsMutation = useUpdateProfileSocials();
 
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
+
+  const completedCampaigns: PortfolioItem[] = myApps
+    ? myApps
+        .filter((app) => app.status === 'accepted')
+        .map((app) => {
+          const brandObj = app.campaign?.brand as
+            | { firstName?: string; lastName?: string; companyName?: string }
+            | undefined;
+          const brandName =
+            brandObj?.companyName ||
+            `${brandObj?.firstName || ''} ${brandObj?.lastName || ''}`.trim() ||
+            'Brand Partner';
+          return {
+            id: app.id,
+            image:
+              app.campaign?.coverImage ||
+              'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
+            brandName,
+          };
+        })
+    : [];
+
+  const activePortfolio = [...portfolio, ...completedCampaigns];
+
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
   type Drawer = 'edit' | 'notifications' | 'privacy' | 'analytics' | 'help' | null;
   const [activeDrawer, setActiveDrawer] = useState<Drawer>(null);
@@ -1099,7 +1125,7 @@ export default function CreatorProfilePage() {
   };
 
   // Action: Delete Portfolio Item
-  const handleDeletePortfolioItem = (id: number) => {
+  const handleDeletePortfolioItem = (id: number | string) => {
     setPortfolio(portfolio.filter((item) => item.id !== id));
   };
 
@@ -1428,7 +1454,7 @@ export default function CreatorProfilePage() {
                 </button>
 
                 {/* Portfolio Cards */}
-                {portfolio.map((item) => (
+                {activePortfolio.map((item) => (
                   <div
                     key={item.id}
                     className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm bg-zinc-100"
@@ -1449,14 +1475,16 @@ export default function CreatorProfilePage() {
                     </span>
 
                     {/* Delete Item Overlay Button */}
-                    <button
-                      id={`btn-delete-portfolio-${item.id}`}
-                      onClick={() => handleDeletePortfolioItem(item.id)}
-                      className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px]"
-                      title="Delete Item"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    {typeof item.id === 'number' && (
+                      <button
+                        id={`btn-delete-portfolio-${item.id}`}
+                        onClick={() => handleDeletePortfolioItem(item.id)}
+                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px]"
+                        title="Delete Item"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1468,7 +1496,7 @@ export default function CreatorProfilePage() {
               id="portfolio-footer"
             >
               <span className="text-xs text-[#7a7a9a] font-light">
-                {portfolio.length} portfolio items
+                {activePortfolio.length} portfolio items
               </span>
 
               {/* Styled Pagination */}

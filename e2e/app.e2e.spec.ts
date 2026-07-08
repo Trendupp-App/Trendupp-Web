@@ -170,6 +170,14 @@ test.describe('App smoke test', () => {
         body: JSON.stringify({ reviews: [] }),
       });
     });
+    // Mock creator campaign applications list
+    await page.route('**/api/v1/campaigns/applications/my', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    });
     // End of mocking block
     // Mock campaigns list to include our test campaign
     await page.route('**/api/v1/campaigns', async (route) => {
