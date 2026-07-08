@@ -1,15 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useDisputeDetails, useActivateDispute } from '@/hooks/useDisputes';
+import { useDisputeDetails, useActivateDispute, useResolveDispute } from '@/hooks/useDisputes';
 import { useMyApplications } from '@/hooks/useCampaign';
 import type { CampaignApplicationDto } from '@/types/campaign';
-import { AlertCircle, CheckCircle, ShieldAlert, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { AlertCircle, CheckCircle, ShieldAlert, Activity, Check } from 'lucide-react';
 
 export default function AdminDisputesPage() {
   const [disputeIdInput, setDisputeIdInput] = useState('');
   const [loadedDisputeId, setLoadedDisputeId] = useState<string | null>(null);
+
+  // Form states for dispute resolution
+  const [resolveAction, setResolveAction] = useState<
+    'release_to_creator' | 'refund_to_brand' | 'split'
+  >('release_to_creator');
+  const [resolveNotes, setResolveNotes] = useState('');
+  const [splitAmount, setSplitAmount] = useState('');
 
   const {
     data: dispute,
@@ -35,9 +41,8 @@ export default function AdminDisputesPage() {
     return 'Unknown Brand';
   };
 
-  const activateMutation = useActivateDispute(() => {
-    // Auto-refresh loaded dispute state by triggering reload
-  });
+  const activateMutation = useActivateDispute();
+  const resolveMutation = useResolveDispute();
 
   const handleLoadDispute = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +53,33 @@ export default function AdminDisputesPage() {
   const handleActivate = () => {
     if (!loadedDisputeId) return;
     activateMutation.mutate({ id: loadedDisputeId });
+  };
+
+  const handleResolveSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loadedDisputeId) return;
+
+    const payload: {
+      action: 'release_to_creator' | 'refund_to_brand' | 'split';
+      notes: string;
+      splitCreatorAmount?: number;
+    } = {
+      action: resolveAction,
+      notes: resolveNotes,
+    };
+
+    if (resolveAction === 'split') {
+      const parsedAmount = parseFloat(splitAmount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return;
+      }
+      payload.splitCreatorAmount = parsedAmount;
+    }
+
+    resolveMutation.mutate({
+      id: loadedDisputeId,
+      payload,
+    });
   };
 
   const getStatusLabel = (status: string) => {
@@ -158,27 +190,139 @@ export default function AdminDisputesPage() {
                       {getStatusLabel(dispute.status)}
                     </span>
                   </div>
+                  {dispute.status === 'resolved' && (
+                    <>
+                      <div className="grid grid-cols-3 gap-2 border-t border-[#e8e6f0]/60 pt-2 mt-1">
+                        <span className="font-bold text-[#7a7a9a]">Resolution Action:</span>
+                        <span className="col-span-2 font-semibold text-[#1a1a2e] capitalize">
+                          {dispute.action?.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      {dispute.splitCreatorAmount !== null && (
+                        <div className="grid grid-cols-3 gap-2">
+                          <span className="font-bold text-[#7a7a9a]">Split Creator Payout:</span>
+                          <span className="col-span-2 font-semibold text-[#1a1a2e]">
+                            ₦{dispute.splitCreatorAmount}
+                          </span>
+                        </div>
+                      )}
+                      {dispute.notes && (
+                        <div className="grid grid-cols-3 gap-2">
+                          <span className="font-bold text-[#7a7a9a]">Resolution Notes:</span>
+                          <span className="col-span-2 font-light text-[#5a5a7a]">
+                            {dispute.notes}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
-                {/* Mediation controls */}
-                <div className="flex flex-col gap-3">
-                  {dispute.status === 'raised' ? (
-                    <button
-                      onClick={handleActivate}
-                      disabled={activateMutation.isPending}
-                      className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs py-3.5 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/50 cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle size={16} />
-                      {activateMutation.isPending ? 'Activating Mediation...' : 'Activate Dispute'}
-                    </button>
-                  ) : (
+                {/* Mediation controls based on status */}
+                <div className="flex flex-col gap-5 border-t border-[#e8e6f0]/40 pt-5">
+                  {dispute.status === 'raised' && (
+                    <div className="flex flex-col gap-3">
+                      <h2 className="text-xs font-bold text-[#1a1a2e]">Mediation Activation</h2>
+                      <p className="text-[10px] text-[#7a7a9a] font-light leading-relaxed">
+                        Mediation is not yet active. Activating this dispute will create the
+                        GetStream chat channel and notify both creator and brand.
+                      </p>
+                      <button
+                        onClick={handleActivate}
+                        disabled={activateMutation.isPending}
+                        className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs py-3.5 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/50 cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={16} />
+                        {activateMutation.isPending
+                          ? 'Activating Mediation...'
+                          : 'Activate Dispute'}
+                      </button>
+                    </div>
+                  )}
+
+                  {dispute.status === 'under_review' && (
+                    <form onSubmit={handleResolveSubmit} className="flex flex-col gap-4 text-left">
+                      <div className="flex flex-col gap-1">
+                        <h2 className="text-xs font-bold text-[#1a1a2e]">
+                          Dispute Resolution Decision
+                        </h2>
+                        <p className="text-[10px] text-[#7a7a9a] font-light leading-relaxed mb-2">
+                          Mediation is active. Resolve the dispute by selecting a fund release
+                          action. This freezes the chat and unlocks payouts.
+                        </p>
+                      </div>
+
+                      {/* Action Dropdown */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                          Resolution Action
+                        </label>
+                        <select
+                          value={resolveAction}
+                          onChange={(e) =>
+                            setResolveAction(
+                              e.target.value as 'release_to_creator' | 'refund_to_brand' | 'split',
+                            )
+                          }
+                          className="border border-[#e8e6f0] focus:border-brand-pink rounded-2xl px-4 py-3 text-xs outline-none bg-white text-[#1a1a2e] w-full"
+                        >
+                          <option value="release_to_creator">Release Escrow to Creator</option>
+                          <option value="refund_to_brand">Refund Escrow to Brand</option>
+                          <option value="split">Split Escrow Funds</option>
+                        </select>
+                      </div>
+
+                      {/* Split Amount Field (Conditional) */}
+                      {resolveAction === 'split' && (
+                        <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                            Split Creator Amount (₦)
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="Enter amount to release to the Creator..."
+                            value={splitAmount}
+                            onChange={(e) => setSplitAmount(e.target.value)}
+                            required
+                            className="border border-[#e8e6f0] focus:border-brand-pink rounded-2xl px-4 py-3 text-xs outline-none bg-white text-[#1a1a2e] w-full"
+                          />
+                        </div>
+                      )}
+
+                      {/* Resolution Notes */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                          Resolution Summary Notes
+                        </label>
+                        <textarea
+                          placeholder="Provide the decision reasoning and summary for both parties..."
+                          value={resolveNotes}
+                          onChange={(e) => setResolveNotes(e.target.value)}
+                          required
+                          rows={3}
+                          className="border border-[#e8e6f0] focus:border-brand-pink rounded-2xl px-4 py-3 text-xs outline-none bg-white text-[#1a1a2e] w-full resize-none"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={resolveMutation.isPending}
+                        className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs py-3.5 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/50 cursor-pointer flex items-center justify-center gap-2 mt-2"
+                      >
+                        <Check size={16} />
+                        {resolveMutation.isPending ? 'Resolving Dispute...' : 'Submit Resolution'}
+                      </button>
+                    </form>
+                  )}
+
+                  {dispute.status === 'resolved' && (
                     <div className="bg-[#f0fdf4] border border-[#dcfce7] rounded-2xl p-4 flex gap-3 text-left w-full">
                       <CheckCircle className="w-5 h-5 text-[#16a34a] shrink-0 mt-0.5" />
                       <div className="flex flex-col gap-1 text-[11px] text-[#15803d]">
-                        <span className="font-bold">Mediation Already Active</span>
+                        <span className="font-bold">Dispute Resolved</span>
                         <span className="leading-relaxed font-light">
-                          This dispute has already been activated by administrators. Chat is opened
-                          for all parties.
+                          This case is fully settled and closed. Escrow funds have been
+                          split/released according to the decision decision.
                         </span>
                       </div>
                     </div>
