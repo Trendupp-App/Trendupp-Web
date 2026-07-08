@@ -1050,10 +1050,18 @@ export default function CreatorProfilePage() {
         {/* Left Side: Avatar & Core Information */}
         <div className="flex flex-col items-center md:flex-row md:items-center gap-5 text-center md:text-left z-10">
           {/* Avatar Ring */}
-          <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-700 shadow-xl shrink-0">
-            <Image src={profile.image} alt={profile.name} fill priority className="object-cover" />
+          <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0">
+            <div className="w-full h-full rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-700 shadow-xl relative">
+              <Image
+                src={profile.image}
+                alt={profile.name}
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
             {/* Small 'M' badge overlapping avatar */}
-            <div className="absolute bottom-0 right-0 w-6.5 h-6.5 rounded-full bg-brand-pink border-2 border-[#040039] flex items-center justify-center text-[10px] font-black text-white shadow-md">
+            <div className="absolute bottom-0 right-0 w-6.5 h-6.5 rounded-full bg-brand-pink border-2 border-[#040039] flex items-center justify-center text-[10px] font-black text-white shadow-md z-10">
               M
             </div>
           </div>
