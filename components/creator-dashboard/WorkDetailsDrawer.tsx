@@ -35,6 +35,7 @@ export default function WorkDetailsDrawer({
     setIsDisputeModalOpen(false);
     setDisputeReason('');
     onClose();
+    window.location.href = '/creator/messages';
   });
 
   const handleRaiseDisputeSubmit = (e: React.FormEvent) => {
