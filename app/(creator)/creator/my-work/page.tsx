@@ -8,6 +8,7 @@ import SubmitProofModal from '@/components/dashboard/my-work/SubmitProofModal';
 import CampaignFilterModal, {
   FilterState,
 } from '@/components/creator-dashboard/CampaignFilterModal';
+import RaiseDisputeModal from '@/components/dashboard/my-work/RaiseDisputeModal';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useMyApplications,
@@ -276,6 +277,9 @@ export default function MyWorkPage() {
   const [submitLinkCampaign, setSubmitLinkCampaign] = useState<WorkCampaign | null>(null);
   // Submit proof modal states
   const [submitProofCampaign, setSubmitProofCampaign] = useState<WorkCampaign | null>(null);
+
+  // Raise dispute modal states
+  const [disputeCampaign, setDisputeCampaign] = useState<WorkCampaign | null>(null);
 
   // Filter modal states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -552,6 +556,10 @@ export default function MyWorkPage() {
           setSelectedCampaign(null);
           setSubmitProofCampaign(c);
         }}
+        onRaiseDispute={(c) => {
+          setSelectedCampaign(null);
+          setDisputeCampaign(c);
+        }}
       />
 
       {/* Submit Draft Link Modal */}
@@ -568,6 +576,13 @@ export default function MyWorkPage() {
         campaign={submitProofCampaign}
         onClose={() => setSubmitProofCampaign(null)}
         onSubmit={handleSubmitProof}
+      />
+
+      {/* Raise Dispute Modal */}
+      <RaiseDisputeModal
+        isOpen={!!disputeCampaign}
+        campaign={disputeCampaign}
+        onClose={() => setDisputeCampaign(null)}
       />
 
       {/* Side Filters Modal Drawer */}
