@@ -676,7 +676,7 @@ export default function CreatorProfilePage() {
   const updateNichesMutation = useUpdateProfileNiches();
   const updateSocialsMutation = useUpdateProfileSocials();
 
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
 
   const completedCampaigns: PortfolioItem[] = myApps
     ? myApps
