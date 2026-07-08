@@ -1,17 +1,39 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronLeft, MessageCircle, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, MessageCircle, AlertCircle, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDisputes, useDisputeDetails } from '@/hooks/useDisputes';
 import { useMyApplications } from '@/hooks/useCampaign';
 import type { CampaignApplicationDto } from '@/types/campaign';
+import { useStreamChat } from '@/lib/providers/StreamChatProvider';
+import { useAuthStore } from '@/store/authStore';
+import type { Channel } from 'stream-chat';
+
+interface StreamMessage {
+  id: string;
+  text?: string;
+  created_at: string;
+  user?: {
+    id: string;
+    name?: string;
+    image?: string;
+  };
+}
 
 export default function MessagesPage() {
   const { data: disputes, isLoading } = useDisputes();
   const [activeDisputeId, setActiveDisputeId] = useState<string | null>(null);
   const { data: activeDispute } = useDisputeDetails(activeDisputeId);
   const { data: myApps } = useMyApplications();
+
+  const { client, isConnected } = useStreamChat();
+  const { user } = useAuthStore();
+  const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
+  const [messages, setMessages] = useState<StreamMessage[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isChannelLoading, setIsChannelLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const getCampaignTitle = (campaignId: string) => {
     const app = myApps?.find(
@@ -71,6 +93,216 @@ export default function MessagesPage() {
     } catch {
       return 'recently';
     }
+  };
+
+  // Watch selected dispute channel when it goes under_review
+  useEffect(() => {
+    if (!client || !isConnected || !activeDispute || activeDispute.status !== 'under_review') {
+      Promise.resolve().then(() => {
+        setActiveChannel((prev) => (prev !== null ? null : prev));
+        setMessages((prev) => (prev.length > 0 ? [] : prev));
+      });
+      return;
+    }
+
+    let isSubscribed = true;
+    Promise.resolve().then(() => {
+      setIsChannelLoading(true);
+    });
+
+    const channel = client.channel('messaging', `dispute_${activeDispute.id}`);
+
+    const watchChannel = async () => {
+      try {
+        const state = await channel.watch();
+        if (isSubscribed) {
+          setActiveChannel(channel);
+          setMessages((state.messages as StreamMessage[]) || []);
+          setIsChannelLoading(false);
+        }
+      } catch (err) {
+        console.error('Error watching channel:', err);
+        if (isSubscribed) {
+          setIsChannelLoading(false);
+        }
+      }
+    };
+
+    watchChannel();
+
+    return () => {
+      isSubscribed = false;
+      Promise.resolve().then(() => {
+        setActiveChannel((prev) => (prev !== null ? null : prev));
+        setMessages((prev) => (prev.length > 0 ? [] : prev));
+      });
+    };
+  }, [client, isConnected, activeDispute]);
+
+  // Subscribe to real-time message events on active channel
+  useEffect(() => {
+    if (!activeChannel) return;
+
+    const listener = activeChannel.on('message.new', (event) => {
+      if (!event.message) return;
+      const newMessage: StreamMessage = {
+        id: event.message.id,
+        text: event.message.text,
+        created_at: event.message.created_at?.toString() || new Date().toISOString(),
+        user: event.message.user
+          ? {
+              id: event.message.user.id,
+              name: event.message.user.name,
+              image: event.message.user.image,
+            }
+          : undefined,
+      };
+
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === newMessage.id)) return prev;
+        return [...prev, newMessage];
+      });
+    });
+
+    return () => {
+      listener.unsubscribe();
+    };
+  }, [activeChannel]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, activeDisputeId]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim() || !activeChannel) return;
+    try {
+      const textToSend = inputText;
+      setInputText('');
+      await activeChannel.sendMessage({ text: textToSend });
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+  };
+
+  const renderMessageList = () => {
+    if (isChannelLoading) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center py-20 gap-2 text-xs text-[#7a7a9a] bg-white">
+          <Loader2 className="animate-spin text-brand-pink" size={24} />
+          <span>Connecting to dispute channel...</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 auth-scrollbar bg-white">
+        {/* Welcome Box / Dispute Metadata */}
+        <div className="flex flex-col gap-3 p-5 bg-[#faf9fc] border border-[#e8e6f0]/50 rounded-[24px] max-w-md text-left self-start">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#1a1a2e]">
+            <AlertCircle size={15} className="text-brand-pink shrink-0" />
+            <span>Mediation Channel Active</span>
+          </div>
+          <p className="text-[11px] font-light text-[#5a5a7a] leading-relaxed">
+            Mediation has been activated by the administrator. Chat messages sent here are visible
+            to the creator, the brand, and the mediation admin.
+          </p>
+          <div className="text-[10px] font-light text-[#7a7a9a] border-t border-[#e8e6f0]/40 pt-2 flex flex-col gap-1">
+            <p>
+              <strong>Dispute ID:</strong> {activeDispute?.id}
+            </p>
+            <p>
+              <strong>Escalated Reason:</strong> {activeDispute?.reason}
+            </p>
+          </div>
+        </div>
+
+        {messages.map((message) => {
+          const isMe = message.user?.id === user?.id;
+          const senderName = message.user?.name || 'User';
+
+          return (
+            <div
+              key={message.id}
+              className={cn(
+                'flex flex-col gap-1 max-w-[70%]',
+                isMe ? 'self-end items-end' : 'self-start items-start',
+              )}
+            >
+              {!isMe && (
+                <span className="text-[9px] font-bold text-[#7a7a9a] px-1">{senderName}</span>
+              )}
+              <div
+                className={cn(
+                  'rounded-[20px] px-4 py-2.5 text-xs break-words leading-relaxed text-left',
+                  isMe
+                    ? 'bg-brand-pink text-white rounded-tr-none'
+                    : 'bg-[#faf9fc] text-[#1a1a2e] border border-[#e8e6f0]/60 rounded-tl-none',
+                )}
+              >
+                {message.text}
+              </div>
+              <span className="text-[8px] text-[#9a99b0] px-1 mt-0.5">
+                {new Date(message.created_at).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+    );
+  };
+
+  const renderFooterInput = () => {
+    if (activeDispute?.status === 'under_review') {
+      return (
+        <form
+          onSubmit={handleSendMessage}
+          className="p-4 border-t border-[#e8e6f0]/60 bg-white flex gap-3 select-none shrink-0"
+        >
+          <input
+            type="text"
+            placeholder="Type a message to other parties and admins..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            disabled={!isConnected || isChannelLoading}
+            className="flex-1 border border-[#e8e6f0] focus:border-brand-pink rounded-2xl px-4 py-2.5 text-xs outline-none bg-white text-[#1a1a2e]"
+          />
+          <button
+            type="submit"
+            disabled={!isConnected || isChannelLoading || !inputText.trim()}
+            className="w-10 h-10 rounded-2xl bg-brand-pink hover:bg-brand-pink/90 disabled:bg-brand-pink/40 text-white flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
+          >
+            <Send size={16} />
+          </button>
+        </form>
+      );
+    }
+
+    if (activeDispute?.status === 'raised') {
+      return (
+        <div className="p-4 border-t border-[#e8e6f0]/60 bg-[#faf9fc] flex gap-3 select-none shrink-0 justify-center">
+          <span className="text-[11.5px] font-light text-[#7a7a9a]">
+            Chat inputs will be enabled once Admin activates mediation.
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4 border-t border-[#e8e6f0]/60 bg-[#faf9fc] flex gap-3 select-none shrink-0 justify-center">
+        <span className="text-[11.5px] font-light text-[#7a7a9a]">
+          This dispute has been resolved and closed.
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -201,87 +433,75 @@ export default function MessagesPage() {
             </div>
 
             {/* Scrollable chat messages area */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 auth-scrollbar bg-white">
-              <div className="flex flex-col gap-4 max-w-md mx-auto items-center justify-center py-10 text-center w-full">
-                <div className="w-12 h-12 rounded-full bg-[#f4f3f6] flex items-center justify-center text-[#9a99b0]">
-                  <AlertCircle size={20} />
-                </div>
-                <span className="text-xs font-bold text-[#1a1a2e]">Dispute Details</span>
-                <div className="text-xs font-light text-[#5a5a7a] bg-[#faf9fc] p-4 rounded-xl text-left border border-[#e8e6f0]/50 w-full">
-                  <p className="mb-2">
-                    <strong>Dispute ID:</strong> {activeDispute.id.slice(0, 8)}...
-                  </p>
-                  <p className="mb-2">
-                    <strong>Campaign:</strong> {getCampaignTitle(activeDispute.campaignId)}
-                  </p>
-                  <p className="mb-2">
-                    <strong>Brand:</strong> {getBrandName(activeDispute.campaignId)}
-                  </p>
-                  <p className="mb-2">
-                    <strong>Escalated Reason:</strong> {activeDispute.reason}
-                  </p>
-                  <p className="mb-2">
-                    <strong>Current Status:</strong>{' '}
-                    <span className="capitalize">{activeDispute.status}</span>
-                  </p>
-                  {activeDispute.notes && (
+            {activeDispute.status === 'under_review' ? (
+              renderMessageList()
+            ) : (
+              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 auth-scrollbar bg-white">
+                <div className="flex flex-col gap-4 max-w-md mx-auto items-center justify-center py-10 text-center w-full">
+                  <div className="w-12 h-12 rounded-full bg-[#f4f3f6] flex items-center justify-center text-[#9a99b0]">
+                    <AlertCircle size={20} />
+                  </div>
+                  <span className="text-xs font-bold text-[#1a1a2e]">Dispute Details</span>
+                  <div className="text-xs font-light text-[#5a5a7a] bg-[#faf9fc] p-4 rounded-xl text-left border border-[#e8e6f0]/50 w-full">
                     <p className="mb-2">
-                      <strong>Admin Notes:</strong> {activeDispute.notes}
+                      <strong>Dispute ID:</strong> {activeDispute.id.slice(0, 8)}...
                     </p>
+                    <p className="mb-2">
+                      <strong>Campaign:</strong> {getCampaignTitle(activeDispute.campaignId)}
+                    </p>
+                    <p className="mb-2">
+                      <strong>Brand:</strong> {getBrandName(activeDispute.campaignId)}
+                    </p>
+                    <p className="mb-2">
+                      <strong>Escalated Reason:</strong> {activeDispute.reason}
+                    </p>
+                    <p className="mb-2">
+                      <strong>Current Status:</strong>{' '}
+                      <span className="capitalize">{activeDispute.status}</span>
+                    </p>
+                    {activeDispute.notes && (
+                      <p className="mb-2">
+                        <strong>Admin Notes:</strong> {activeDispute.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  {activeDispute.status === 'raised' && (
+                    <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-2xl p-4 flex gap-3 text-left w-full mt-2">
+                      <AlertCircle className="w-5 h-5 text-[#d97706] shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-1 text-[11px]">
+                        <span className="font-bold text-[#b45309]">
+                          Waiting for Admin approval...
+                        </span>
+                        <span className="text-[#b45309]/80 leading-relaxed font-light">
+                          This dispute is currently raised. Administrators must review the case
+                          details and activate mediation before communication can begin.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeDispute.status === 'resolved' && (
+                    <div className="text-xs font-light text-[#1e40af] bg-[#eff6ff] p-4 rounded-xl text-left border border-[#dbeafe] w-full">
+                      <p className="mb-1 font-bold">Dispute Resolved</p>
+                      <p className="mb-1">
+                        <strong>Action Taken:</strong> {activeDispute.action}
+                      </p>
+                      {activeDispute.splitCreatorAmount !== null &&
+                        activeDispute.splitCreatorAmount !== undefined && (
+                          <p className="mb-1">
+                            <strong>Split Creator Payout:</strong>{' '}
+                            {activeDispute.splitCreatorAmount}
+                          </p>
+                        )}
+                    </div>
                   )}
                 </div>
-
-                {activeDispute.status === 'raised' && (
-                  <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-2xl p-4 flex gap-3 text-left w-full mt-2">
-                    <AlertCircle className="w-5 h-5 text-[#d97706] shrink-0 mt-0.5" />
-                    <div className="flex flex-col gap-1 text-[11px]">
-                      <span className="font-bold text-[#b45309]">
-                        Waiting for Admin approval...
-                      </span>
-                      <span className="text-[#b45309]/80 leading-relaxed font-light">
-                        This dispute is currently raised. Administrators must review the case
-                        details and activate mediation before communication can begin.
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {activeDispute.status === 'under_review' && (
-                  <div className="bg-[#f0fdf4] border border-[#dcfce7] rounded-2xl p-4 flex gap-3 text-left w-full mt-2">
-                    <MessageCircle className="w-5 h-5 text-[#16a34a] shrink-0 mt-0.5" />
-                    <div className="flex flex-col gap-1 text-[11px]">
-                      <span className="font-bold text-[#15803d]">Admin mediation active</span>
-                      <span className="text-[#15803d]/80 leading-relaxed font-light">
-                        Consent given by administrators. GetStream Chat connection will initialize
-                        in Session 2.
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {activeDispute.status === 'resolved' && (
-                  <div className="text-xs font-light text-[#1e40af] bg-[#eff6ff] p-4 rounded-xl text-left border border-[#dbeafe] w-full">
-                    <p className="mb-1 font-bold">Dispute Resolved</p>
-                    <p className="mb-1">
-                      <strong>Action Taken:</strong> {activeDispute.action}
-                    </p>
-                    {activeDispute.splitCreatorAmount !== null &&
-                      activeDispute.splitCreatorAmount !== undefined && (
-                        <p className="mb-1">
-                          <strong>Split Creator Payout:</strong> {activeDispute.splitCreatorAmount}
-                        </p>
-                      )}
-                  </div>
-                )}
               </div>
-            </div>
+            )}
 
-            {/* Bottom text input footer - disabled for now */}
-            <div className="p-4 border-t border-[#e8e6f0]/60 bg-[#faf9fc] flex gap-3 select-none shrink-0 justify-center">
-              <span className="text-[11.5px] font-light text-[#7a7a9a]">
-                Chat inputs will be enabled once GetStream is initialized in Session 2.
-              </span>
-            </div>
+            {/* Bottom text input footer */}
+            {renderFooterInput()}
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 select-none">
