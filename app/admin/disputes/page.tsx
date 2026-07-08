@@ -16,6 +16,7 @@ import {
 import { useStreamChat } from '@/lib/providers/StreamChatProvider';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
+import type { ResolveDisputePayload } from '@/types/dispute';
 
 interface StreamMessage {
   id: string;
@@ -107,13 +108,9 @@ export default function AdminDisputesPage() {
     e.preventDefault();
     if (!loadedDisputeId) return;
 
-    const payload: {
-      action: 'release_to_creator' | 'refund_to_brand' | 'split';
-      notes: string;
-      splitCreatorAmount?: number;
-    } = {
+    const payload: ResolveDisputePayload = {
       action: resolveAction,
-      notes: resolveNotes,
+      resolutionNotes: resolveNotes,
     };
 
     if (resolveAction === 'split') {
@@ -431,11 +428,11 @@ export default function AdminDisputesPage() {
                             </span>
                           </div>
                         )}
-                        {dispute.notes && (
+                        {(dispute.resolutionNotes || dispute.notes) && (
                           <div className="grid grid-cols-3 gap-2">
                             <span className="font-bold text-[#7a7a9a]">Resolution Notes:</span>
                             <span className="col-span-2 font-light text-[#5a5a7a]">
-                              {dispute.notes}
+                              {dispute.resolutionNotes || dispute.notes}
                             </span>
                           </div>
                         )}

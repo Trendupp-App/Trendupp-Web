@@ -76,16 +76,6 @@ interface PortfolioItem {
   brandName: string;
 }
 
-interface CreatorReview {
-  id: number;
-  brandName: string;
-  logoText: string;
-  logoBg: string;
-  date: string;
-  rating: number;
-  text: string;
-}
-
 interface CreatorProfile {
   name: string;
   handle: string;
@@ -270,34 +260,6 @@ function getPlatformConfirmData(name: string) {
   );
 }
 
-// ── PRESETS FOR PORTFOLIO ────────────────────────────────
-const PORTFOLIO_PRESETS = [
-  {
-    name: 'Zara (Fashion)',
-    url: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Tara (Beauty)',
-    url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Techno (Mobile)',
-    url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Monster (Sports)',
-    url: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Zara (Lifestyle)',
-    url: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Audiomack (Music)',
-    url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=400&q=80',
-  },
-];
-
 // ── MOCK DATA SEED ───────────────────────────────────────
 const INITIAL_PROFILE: CreatorProfile = {
   name: 'Teni Olu',
@@ -347,76 +309,6 @@ const INITIAL_PROFILE: CreatorProfile = {
   ],
 };
 
-const INITIAL_PORTFOLIO: PortfolioItem[] = [
-  {
-    id: 1,
-    image:
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Zara',
-  },
-  {
-    id: 2,
-    image:
-      'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Tara',
-  },
-  {
-    id: 3,
-    image:
-      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Techno',
-  },
-  {
-    id: 4,
-    image:
-      'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Monster',
-  },
-  {
-    id: 5,
-    image:
-      'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Zara',
-  },
-  {
-    id: 6,
-    image:
-      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Audiomack',
-  },
-];
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const MOCK_REVIEWS: CreatorReview[] = [
-  {
-    id: 1,
-    brandName: 'Zara Africa',
-    logoText: 'ZA',
-    logoBg: 'bg-[#00c288]',
-    date: 'May 2025',
-    rating: 5,
-    text: 'Teni delivered outstanding content that exceeded expectations. Professional, creative, and on time. Would work with again.',
-  },
-  {
-    id: 2,
-    brandName: 'Tecno Mobile',
-    logoText: 'TM',
-    logoBg: 'bg-[#7c3aed]',
-    date: 'Apr 2025',
-    rating: 5,
-    text: 'Excellent content quality with great audience engagement. Would definitely collaborate again.',
-  },
-  {
-    id: 3,
-    brandName: 'Nestlé Nigeria',
-    logoText: 'NN',
-    logoBg: 'bg-[#f59e0b]',
-    date: 'Mar 2025',
-    rating: 4,
-    text: 'Good content creation. Minor revisions needed but the final result was great quality.',
-  },
-];
-
 interface ReviewBrand {
   id: number;
   name: string;
@@ -425,57 +317,6 @@ interface ReviewBrand {
   followers: string;
   logo: string;
 }
-
-const MOCK_BRANDS: ReviewBrand[] = [
-  {
-    id: 1,
-    name: 'Zara Africa',
-    industry: 'Fashion',
-    campaigns: 5,
-    followers: '2.1M',
-    logo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 2,
-    name: 'Tecno Mobile',
-    industry: 'Tech',
-    campaigns: 12,
-    followers: '890K',
-    logo: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 3,
-    name: 'Nestlé Nigeria',
-    industry: 'Food',
-    campaigns: 8,
-    followers: '540K',
-    logo: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 4,
-    name: 'Audiomack Africa',
-    industry: 'Music',
-    campaigns: 3,
-    followers: '1.5M',
-    logo: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 5,
-    name: 'Monster Energy NG',
-    industry: 'Sports',
-    campaigns: 4,
-    followers: '280K',
-    logo: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 6,
-    name: 'GTBank',
-    industry: 'Finance',
-    campaigns: 9,
-    followers: '3.2M',
-    logo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
-  },
-];
 
 const MOCK_FAQS = [
   {
@@ -614,6 +455,24 @@ export default function CreatorProfilePage() {
         };
       })
     : [];
+
+  const totalReviewsCount = activeReviews.length;
+  const averageRating =
+    totalReviewsCount > 0
+      ? (activeReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviewsCount).toFixed(1)
+      : '0.0';
+
+  const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  activeReviews.forEach((r) => {
+    const star = Math.max(1, Math.min(5, Math.round(r.rating))) as 5 | 4 | 3 | 2 | 1;
+    starCounts[star] += 1;
+  });
+
+  const getPercentage = (stars: number) => {
+    if (totalReviewsCount === 0) return '0%';
+    const count = starCounts[stars as 5 | 4 | 3 | 2 | 1] || 0;
+    return `${Math.round((count / totalReviewsCount) * 100)}%`;
+  };
 
   // Sync profile state when userDetail changes
   useEffect(() => {
@@ -840,8 +699,42 @@ export default function CreatorProfilePage() {
   const [personalMessage, setPersonalMessage] = useState('');
   const [brandSearchQuery, setBrandSearchQuery] = useState('');
 
-  const selectedBrand = MOCK_BRANDS.find((brand) => brand.id === selectedBrandId);
-  const filteredBrands = MOCK_BRANDS.filter(
+  interface CampaignBrandWithExtra {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+    companyName?: string | null;
+    avatarUrl?: string | null;
+  }
+
+  const reviewBrands: ReviewBrand[] = [];
+  if (myApps) {
+    const brandsMap = new Map<string, ReviewBrand>();
+    myApps.forEach((app, idx) => {
+      const b = app.campaign?.brand as CampaignBrandWithExtra;
+      if (b && b.id) {
+        const name = b.companyName || `${b.firstName || ''} ${b.lastName || ''}`.trim() || 'Brand';
+        if (!brandsMap.has(b.id)) {
+          brandsMap.set(b.id, {
+            id: idx + 1,
+            name,
+            industry: app.campaign?.creatorCategory?.name || 'Campaign',
+            campaigns: 1,
+            followers: '—',
+            logo:
+              b.avatarUrl ||
+              'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
+          });
+        }
+      }
+    });
+    reviewBrands.push(...Array.from(brandsMap.values()));
+  }
+
+  const selectedBrand = reviewBrands.find((brand) => brand.id === selectedBrandId);
+  const filteredBrands = reviewBrands.filter(
     (brand) =>
       brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
       brand.industry.toLowerCase().includes(brandSearchQuery.toLowerCase()),
@@ -1102,10 +995,6 @@ export default function CreatorProfilePage() {
 
     if (uploadedFile) {
       finalImageUrl = URL.createObjectURL(uploadedFile);
-    } else if (socialMediaLink.trim()) {
-      // Use a random preset image so a beautiful preview is displayed
-      const randomPreset = PORTFOLIO_PRESETS[Math.floor(Math.random() * PORTFOLIO_PRESETS.length)];
-      finalImageUrl = randomPreset.url;
     } else {
       finalImageUrl =
         'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80'; // fallback
@@ -1544,35 +1433,43 @@ export default function CreatorProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center border-b border-[#e8e6f0]/60 pb-6">
               {/* Score Column */}
               <div className="flex items-center gap-6 justify-between md:justify-start md:col-span-2">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[44px] font-black text-[#1a1a2e] leading-none">4.9</span>
+                <div className="flex flex-col gap-1 text-left">
+                  <span className="text-[44px] font-black text-[#1a1a2e] leading-none">
+                    {averageRating}
+                  </span>
                   <div className="flex items-center gap-0.5 mt-1">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={14} className="fill-[#f59e0b] text-[#f59e0b]" />
+                      <Star
+                        key={i}
+                        size={14}
+                        className={cn(
+                          'text-[#f59e0b]',
+                          i < Math.round(Number(averageRating)) ? 'fill-[#f59e0b]' : 'fill-none',
+                        )}
+                      />
                     ))}
                   </div>
-                  <span className="text-[11px] text-[#7a7a9a] font-medium mt-1">17 reviews</span>
+                  <span className="text-[11px] text-[#7a7a9a] font-medium mt-1">
+                    {totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'}
+                  </span>
                 </div>
 
                 {/* Rating Progress Bars */}
                 <div className="flex flex-col gap-1.5 flex-1 max-w-[240px]">
-                  {[
-                    { stars: 5, pct: '85%' },
-                    { stars: 4, pct: '15%' },
-                    { stars: 3, pct: '5%' },
-                    { stars: 2, pct: '0%' },
-                    { stars: 1, pct: '0%' },
-                  ].map((row) => (
-                    <div key={row.stars} className="flex items-center gap-2">
-                      <span className="text-[10px] text-[#7a7a9a] font-bold w-2">{row.stars}</span>
-                      <div className="flex-1 h-1.5 bg-[#e8e6f0] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[#f59e0b] rounded-full"
-                          style={{ width: row.pct }}
-                        />
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const pct = getPercentage(stars);
+                    return (
+                      <div key={stars} className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#7a7a9a] font-bold w-2">{stars}</span>
+                        <div className="flex-1 h-1.5 bg-[#e8e6f0] rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#f59e0b] rounded-full"
+                            style={{ width: pct }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

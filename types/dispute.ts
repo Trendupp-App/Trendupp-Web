@@ -11,6 +11,7 @@ export interface Dispute {
   reason: string;
   status: DisputeStatus;
   notes?: string | null;
+  resolutionNotes?: string | null;
   action?: 'release_to_creator' | 'refund_to_brand' | 'split' | null;
   splitCreatorAmount?: number | null;
 }
@@ -23,7 +24,7 @@ export interface RaiseDisputePayload {
 
 export interface ResolveDisputePayload {
   action: 'release_to_creator' | 'refund_to_brand' | 'split';
-  notes: string;
+  resolutionNotes: string;
   splitCreatorAmount?: number;
 }
 

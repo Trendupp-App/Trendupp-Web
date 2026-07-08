@@ -459,9 +459,10 @@ export default function MessagesPage() {
                       <strong>Current Status:</strong>{' '}
                       <span className="capitalize">{activeDispute.status}</span>
                     </p>
-                    {activeDispute.notes && (
+                    {(activeDispute.resolutionNotes || activeDispute.notes) && (
                       <p className="mb-2">
-                        <strong>Admin Notes:</strong> {activeDispute.notes}
+                        <strong>Admin Notes:</strong>{' '}
+                        {activeDispute.resolutionNotes || activeDispute.notes}
                       </p>
                     )}
                   </div>
