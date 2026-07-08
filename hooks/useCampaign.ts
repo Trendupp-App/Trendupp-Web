@@ -10,6 +10,7 @@ import type {
   ApplyCampaignPayload,
   SubmitContentDraftPayload,
   SubmitLiveLinkPayload,
+  CampaignApplicationDto,
 } from '@/types/campaign';
 
 export function useCampaignPlatforms() {
@@ -173,9 +174,20 @@ export function useApplyCampaign(onSuccess: () => void) {
 }
 
 export function useMyApplications(enabled: boolean = true) {
-  return useQuery({
+  return useQuery<CampaignApplicationDto[]>({
     queryKey: ['my-applications'],
-    queryFn: () => campaignApi.getMyApplications().then((r) => r.data),
+    queryFn: () =>
+      campaignApi.getMyApplications().then((r) => {
+        const data = r.data as
+          | { applications?: CampaignApplicationDto[] }
+          | CampaignApplicationDto[]
+          | undefined;
+        return data && 'applications' in data && Array.isArray(data.applications)
+          ? data.applications
+          : Array.isArray(data)
+            ? data
+            : [];
+      }),
     staleTime: 1000 * 30,
     enabled,
   });
