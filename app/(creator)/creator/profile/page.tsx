@@ -267,8 +267,7 @@ const INITIAL_PROFILE: CreatorProfile = {
   tier: 'Micro Creator',
   rating: 4.9,
   campaignCount: 14,
-  image:
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  image: '',
   location: 'Lagos, Nigeria',
   reach: '72.4K',
   earned: '₦847K',
@@ -364,7 +363,7 @@ function parseFollowersCount(val: string | number): number {
 
 export default function CreatorProfilePage() {
   // Queries & Mutations
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { data: countries } = useCountries();
   const { data: nationalities } = useNationalities();
 
@@ -977,6 +976,9 @@ export default function CreatorProfilePage() {
     updatePersonalInfoMutation.mutate(formData, {
       onSuccess: ({ data }) => {
         const u = data?.user || data;
+        if (u) {
+          updateUser(u);
+        }
         setProfile((prev) => ({
           ...prev,
           name: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() || prev.name,
@@ -1060,15 +1062,26 @@ export default function CreatorProfilePage() {
         <div className="flex flex-col items-center md:flex-row md:items-center gap-5 text-center md:text-left z-10">
           {/* Avatar Ring */}
           <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0">
-            <div className="w-full h-full rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-700 shadow-xl relative">
-              <Image
-                src={profile.image}
-                alt={profile.name}
-                fill
-                priority
-                className="object-cover"
-              />
-            </div>
+            {profile.image ? (
+              <div className="w-full h-full rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-700 shadow-xl relative">
+                <Image
+                  src={profile.image}
+                  alt={profile.name}
+                  fill
+                  priority
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full rounded-full border-[3.5px] border-brand-pink bg-brand-pink-light flex items-center justify-center text-brand-pink text-3xl font-bold shadow-xl">
+                {profile.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2)}
+              </div>
+            )}
             {/* Small 'M' badge overlapping avatar */}
             <div className="absolute bottom-0 right-0 w-6.5 h-6.5 rounded-full bg-brand-pink border-2 border-[#040039] flex items-center justify-center text-[10px] font-black text-white shadow-md z-10">
               M
