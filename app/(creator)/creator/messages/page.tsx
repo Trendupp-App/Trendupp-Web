@@ -4,11 +4,31 @@ import { useState } from 'react';
 import { ChevronLeft, MessageCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDisputes, useDisputeDetails } from '@/hooks/useDisputes';
+import { useMyApplications } from '@/hooks/useCampaign';
+import type { CampaignApplicationDto } from '@/types/campaign';
 
 export default function MessagesPage() {
   const { data: disputes, isLoading } = useDisputes();
   const [activeDisputeId, setActiveDisputeId] = useState<string | null>(null);
   const { data: activeDispute } = useDisputeDetails(activeDisputeId);
+  const { data: myApps } = useMyApplications();
+
+  const getCampaignTitle = (campaignId: string) => {
+    const app = myApps?.find(
+      (a: CampaignApplicationDto) => a.campaignId === campaignId || a.campaign?.id === campaignId,
+    );
+    return app?.campaign?.title || `Campaign ${campaignId.slice(0, 8)}`;
+  };
+
+  const getBrandName = (campaignId: string) => {
+    const app = myApps?.find(
+      (a: CampaignApplicationDto) => a.campaignId === campaignId || a.campaign?.id === campaignId,
+    );
+    if (app?.campaign?.brand) {
+      return `${app.campaign.brand.firstName} ${app.campaign.brand.lastName}`;
+    }
+    return 'Unknown Brand';
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -112,7 +132,7 @@ export default function MessagesPage() {
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-bold text-[#1a1a2e] group-hover:text-brand-pink transition-colors">
-                        Dispute: {dispute.campaignId.slice(0, 8)}
+                        Dispute: {getCampaignTitle(dispute.campaignId)}
                       </span>
                       <span
                         className={cn(
@@ -163,10 +183,10 @@ export default function MessagesPage() {
                 </div>
                 <div className="flex flex-col text-left">
                   <span className="text-xs font-bold text-[#1a1a2e]">
-                    Campaign dispute: {activeDispute.campaignId.slice(0, 8)}
+                    Campaign dispute: {getCampaignTitle(activeDispute.campaignId)}
                   </span>
                   <span className="text-[9.5px] font-light text-[#7a7a9a]">
-                    Disputed Campaign Escrow
+                    Disputed Campaign Escrow • {getBrandName(activeDispute.campaignId)}
                   </span>
                 </div>
               </div>
@@ -189,10 +209,13 @@ export default function MessagesPage() {
                 <span className="text-xs font-bold text-[#1a1a2e]">Dispute Details</span>
                 <div className="text-xs font-light text-[#5a5a7a] bg-[#faf9fc] p-4 rounded-xl text-left border border-[#e8e6f0]/50 w-full">
                   <p className="mb-2">
-                    <strong>Dispute ID:</strong> {activeDispute.id}
+                    <strong>Dispute ID:</strong> {activeDispute.id.slice(0, 8)}...
                   </p>
                   <p className="mb-2">
-                    <strong>Campaign ID:</strong> {activeDispute.campaignId}
+                    <strong>Campaign:</strong> {getCampaignTitle(activeDispute.campaignId)}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Brand:</strong> {getBrandName(activeDispute.campaignId)}
                   </p>
                   <p className="mb-2">
                     <strong>Escalated Reason:</strong> {activeDispute.reason}
