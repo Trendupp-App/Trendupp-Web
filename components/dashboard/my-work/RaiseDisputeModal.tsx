@@ -28,8 +28,10 @@ export default function RaiseDisputeModal({ isOpen, campaign, onClose }: RaiseDi
     e.preventDefault();
     if (!reason.trim() || !campaign) return;
 
+    const actualCampaignId = campaign.campaignId || campaign.id;
+
     raiseDisputeMutation.mutate({
-      campaignId: campaign.id,
+      campaignId: actualCampaignId,
       reason: reason,
     });
   };
