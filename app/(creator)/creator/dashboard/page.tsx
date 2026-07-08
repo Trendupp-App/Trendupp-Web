@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Users, Eye } from 'lucide-react';
 import CompletenessCard from '@/components/creator-dashboard/CompletenessCard';
 import BannerCarousel from '@/components/creator-dashboard/BannerCarousel';
@@ -19,6 +20,7 @@ import { useAuthStore } from '@/store/authStore';
 type FilterType = 'all' | 'live' | 'past';
 
 export default function CreatorDashboardPage() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const isProfileCompleted = user?.onboardingPercentage === 100;
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
@@ -182,7 +184,10 @@ export default function CreatorDashboardPage() {
               {activeFilter === 'past' ? 'Past Campaigns' : 'Live Campaigns'}
             </h3>
           </div>
-          <button className="flex items-center gap-1 text-xs font-semibold text-brand-pink hover:underline cursor-pointer">
+          <button
+            onClick={() => router.push('/creator/explore')}
+            className="flex items-center gap-1 text-xs font-semibold text-brand-pink hover:underline cursor-pointer border-none bg-transparent outline-none"
+          >
             <span>See all</span>
             <span className="text-[10px] font-bold">&gt;</span>
           </button>
