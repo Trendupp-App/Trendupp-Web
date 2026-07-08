@@ -5,6 +5,10 @@ import Image from 'next/image';
 import { X, Clock, Check, ChevronLeft, AlertCircle, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WorkCampaign } from './WorkCampaignCard';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useRaiseDispute } from '@/hooks/useDisputes';
 
 interface WorkDetailsDrawerProps {
   isOpen: boolean;
@@ -24,6 +28,23 @@ export default function WorkDetailsDrawer({
   onSubmitProof,
 }: WorkDetailsDrawerProps) {
   const [activeTab, setActiveTab] = useState<DrawerTab>('Overview');
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+
+  const raiseDisputeMutation = useRaiseDispute(() => {
+    setIsDisputeModalOpen(false);
+    setDisputeReason('');
+    onClose();
+  });
+
+  const handleRaiseDisputeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!disputeReason.trim() || !campaign) return;
+    raiseDisputeMutation.mutate({
+      campaignId: campaign.id,
+      reason: disputeReason,
+    });
+  };
 
   // Lock scrolling when the drawer is open
   useEffect(() => {
@@ -528,6 +549,17 @@ export default function WorkDetailsDrawer({
                   Submit Proof of Posting
                 </button>
               )}
+
+              {/* Raise Dispute Button */}
+              {campaign.status !== 'Payment released' && (
+                <button
+                  onClick={() => setIsDisputeModalOpen(true)}
+                  className="w-full border border-red-200 bg-red-50/50 hover:bg-red-50 text-red-600 font-bold text-xs py-3.5 rounded-2xl transition-all active:scale-95 cursor-pointer mt-4 flex items-center justify-center gap-1.5"
+                >
+                  <AlertCircle size={14} />
+                  Raise a Dispute
+                </button>
+              )}
             </div>
           )}
           {/* Floating Chat/Message Icon (Bottom Right of white scrollable content area) */}
@@ -543,6 +575,60 @@ export default function WorkDetailsDrawer({
           </button>
         </div>
       </div>
+
+      {/* Raise Dispute Modal Dialog */}
+      <Dialog
+        open={isDisputeModalOpen}
+        onOpenChange={(open) => !open && setIsDisputeModalOpen(false)}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="sm:max-w-[420px] rounded-[24px] bg-white border border-[#e8e6f0]/60 p-6 flex flex-col gap-5 shadow-xl select-none"
+        >
+          <div className="flex justify-between items-start">
+            <DialogTitle className="text-[17px] font-bold text-[#1a1a2e]">
+              Raise a Campaign Dispute
+            </DialogTitle>
+            <button
+              onClick={() => setIsDisputeModalOpen(false)}
+              className="w-7 h-7 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#7a7a9a] transition-colors border-none cursor-pointer"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          <div className="bg-[#eff6ff] border border-[#dbeafe] rounded-2xl p-4 flex gap-3 text-left">
+            <AlertCircle className="w-5 h-5 text-[#2563eb] shrink-0 mt-0.5" />
+            <span className="text-[11px] font-medium text-[#1e40af] leading-relaxed">
+              Disputing this campaign will notify Trendupp administrators. They will review the case
+              details and mediate communication between you and the brand.
+            </span>
+          </div>
+
+          <form onSubmit={handleRaiseDisputeSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                Reason for Dispute
+              </Label>
+              <Textarea
+                placeholder="Describe the issue in detail (e.g. brand is unresponsive, terms of brief have changed, etc.)..."
+                value={disputeReason}
+                onChange={(e) => setDisputeReason(e.target.value)}
+                className="border-[#e8e6f0] text-xs font-light min-h-[100px] focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink rounded-xl p-3 resize-none"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!disputeReason.trim() || raiseDisputeMutation.isPending}
+              className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold text-xs h-11 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/50 cursor-pointer"
+            >
+              {raiseDisputeMutation.isPending ? 'Raising...' : 'Submit Dispute'}
+            </button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
