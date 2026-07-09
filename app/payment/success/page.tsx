@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
 import CampaignDetailsSkeleton from '@/components/skeletons/CampaignDetailsSkeleton';
-import NewCampaignPage from './CreatCampaignPage';
+import SuccessPage from './SuccessPage';
 
 export default function Page() {
   return (
     <Suspense fallback={<CampaignDetailsSkeleton />}>
-      <NewCampaignPage />
+      <SuccessPage />
     </Suspense>
   );
 }
