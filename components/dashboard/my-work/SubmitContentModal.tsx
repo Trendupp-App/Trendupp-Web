@@ -27,6 +27,40 @@ export default function SubmitContentModal({
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getEmbedUrl = (url: string) => {
+    try {
+      const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+      const parsed = new URL(normalized);
+
+      // YouTube
+      if (parsed.hostname.includes('youtube.com') || parsed.hostname.includes('youtu.be')) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = normalized.match(regExp);
+        if (match && match[2].length === 11) {
+          return { type: 'youtube' as const, url: `https://www.youtube.com/embed/${match[2]}` };
+        }
+      }
+
+      // Google Drive
+      if (parsed.hostname.includes('drive.google.com')) {
+        const match = normalized.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          return {
+            type: 'drive' as const,
+            url: `https://drive.google.com/file/d/${match[1]}/preview`,
+          };
+        }
+      }
+
+      return { type: 'general' as const, url: normalized, hostname: parsed.hostname };
+    } catch {
+      return null;
+    }
+  };
+
+  const isLinkFilled = link.trim().length > 0;
+  const embedData = isLinkFilled ? getEmbedUrl(link) : null;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -53,8 +87,6 @@ export default function SubmitContentModal({
       onClose();
     }, 1200);
   };
-
-  const isLinkFilled = link.trim().length > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -118,15 +150,39 @@ export default function SubmitContentModal({
           </div>
 
           {/* Optional Preview Area */}
-          {isLinkFilled && (
-            <div className="relative w-full h-[140px] rounded-2xl overflow-hidden bg-black flex items-center justify-center shrink-0 border border-[#e8e6f0]/60">
-              <div className="absolute inset-0 bg-[#09052f] opacity-80" />
-              <span className="absolute bottom-3 left-3 text-[10px] bg-black/55 text-white font-bold px-2 py-1 rounded-md z-10">
-                Preview Loaded
-              </span>
-              <span className="text-white text-xs font-semibold z-10 opacity-70">
-                Draft Content Preview
-              </span>
+          {embedData && (
+            <div className="relative w-full h-[180px] rounded-2xl overflow-hidden bg-black flex flex-col items-center justify-center shrink-0 border border-[#e8e6f0]/60 shadow-inner">
+              {embedData.type === 'youtube' || embedData.type === 'drive' ? (
+                <div className="w-full h-full relative">
+                  <iframe
+                    src={embedData.url}
+                    className="w-full h-full border-none"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Content Preview"
+                  />
+                  <span className="absolute bottom-3 left-3 text-[9px] bg-emerald-600/90 text-white font-bold px-2 py-0.5 rounded-full z-10 shadow-sm backdrop-blur-xs flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    Live Preload Active
+                  </span>
+                </div>
+              ) : (
+                <div className="w-full h-full bg-[#09052f] flex flex-col items-center justify-center p-4 text-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#120a59] to-[#040039] opacity-90" />
+                  <div className="w-10 h-10 rounded-full bg-brand-pink-light flex items-center justify-center text-brand-pink mb-2 z-10">
+                    <Link2 size={18} />
+                  </div>
+                  <span className="text-white text-xs font-semibold z-10">
+                    External Link Preview
+                  </span>
+                  <span className="text-[10px] text-[#9a99b0] mt-1 z-10 truncate max-w-[90%] font-light">
+                    {embedData.hostname}
+                  </span>
+                  <span className="absolute bottom-3 left-3 text-[9px] bg-brand-pink/90 text-white font-bold px-2 py-0.5 rounded-full z-10 shadow-sm">
+                    Link Detected
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
