@@ -45,12 +45,18 @@ function mapAppToWorkCampaign(app: CampaignApplicationDto): WorkCampaign {
       const latest = submissions[submissions.length - 1];
       if (latest.status === 'in_progress') {
         status = 'In progress';
-      } else if (latest.status === 'awaiting_review') {
+      } else if (
+        latest.status === 'awaiting_review' ||
+        latest.status === 'pending_approval' ||
+        latest.status === 'revision-sent'
+      ) {
         status = 'Under review';
       } else if (latest.status === 'revision_requested') {
         status = 'Revision requested';
         revisionComment = latest.revisionFeedback || 'Please check guidelines and deliverables.';
-      } else if (latest.status === 'live') {
+      } else if (latest.status === 'approved' || latest.status === 'livelink_available') {
+        status = 'Approved';
+      } else if (latest.status === 'live' || latest.status === 'done') {
         status = 'Payment released';
       }
     }
