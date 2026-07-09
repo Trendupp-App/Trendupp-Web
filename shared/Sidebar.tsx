@@ -28,10 +28,10 @@ const CREATOR_NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/creator/dashboard', icon: LayoutDashboard },
   { label: 'Explore', href: '/creator/explore', icon: Compass },
   { label: 'News', href: '/creator/news', icon: TrendingUp },
-  { label: 'My work', href: '/creator/my-work', icon: Briefcase },
+  { label: 'My Work', href: '/creator/my-work', icon: Briefcase },
   { label: 'Messages', href: '/creator/messages', icon: MessageSquare },
   { label: 'Payout', href: '/creator/payout', icon: Wallet },
-  { label: 'My profile', href: '/creator/profile', icon: User },
+  { label: 'My Profile', href: '/creator/profile', icon: User },
 ];
 
 const BRAND_NAV_ITEMS: NavItem[] = [
@@ -39,7 +39,7 @@ const BRAND_NAV_ITEMS: NavItem[] = [
   { label: 'Campaigns', href: '/brand/campaign', icon: Megaphone },
   { label: 'Explore', href: '/brand/explore', icon: Compass },
   { label: 'Payout', href: '/brand/payout', icon: Wallet },
-  { label: 'My profile', href: '/brand/profile', icon: User },
+  { label: 'My Profile', href: '/brand/profile', icon: User },
 ];
 
 export default function Sidebar() {
@@ -61,7 +61,7 @@ export default function Sidebar() {
   const roleLabel = isBrand ? 'Brand' : 'Creator';
 
   return (
-    <aside className="w-[260px] h-screen bg-[#fef2f6] border-r border-[#fae2ec] flex flex-col justify-between py-6 px-4 shrink-0">
+    <aside className="w-[260px] h-screen bg-[#fef2f6] border-r border-[#fae2ec] flex flex-col overflow-hidden py-6 px-4 shrink-0">
       <div className="flex flex-col">
         {/* Logo */}
         <div className="px-3 mb-6">
@@ -115,7 +115,7 @@ export default function Sidebar() {
       {/* Logout */}
       <button
         onClick={clearSession}
-        className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm text-[#7a7a9a] hover:bg-white/60 hover:text-red-500 rounded-xl transition-all duration-200 group w-full text-left"
+        className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm text-[#7a7a9a] hover:bg-white/60 hover:text-red-500 rounded-xl transition-all duration-200 group w-full mt-3 text-left"
       >
         <LogOut
           size={18}
