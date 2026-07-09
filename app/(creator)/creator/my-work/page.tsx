@@ -221,10 +221,10 @@ export default function MyWorkPage() {
     done: doneCount,
     activeSub: {
       All: activeCount,
-      'In Progress': campaigns.filter((c) => c.status === 'In progress').length,
-      'Pending Approval': campaigns.filter((c) => c.status === 'Under review').length,
+      'In progress': campaigns.filter((c) => c.status === 'In progress').length,
+      'Content review': campaigns.filter((c) => c.status === 'Under review').length,
       Revision: campaigns.filter((c) => c.status === 'Revision requested').length,
-      Approved: campaigns.filter((c) => c.status === 'Approved').length,
+      'Live content': campaigns.filter((c) => c.status === 'Approved').length,
     },
     appliedSub: {
       All: appliedCount,
@@ -260,10 +260,10 @@ export default function MyWorkPage() {
         );
         if (!isActive) return false;
 
-        if (activeSubFilter === 'In Progress') return c.status === 'In progress';
-        if (activeSubFilter === 'Pending Approval') return c.status === 'Under review';
+        if (activeSubFilter === 'In progress') return c.status === 'In progress';
+        if (activeSubFilter === 'Content review') return c.status === 'Under review';
         if (activeSubFilter === 'Revision') return c.status === 'Revision requested';
-        if (activeSubFilter === 'Approved') return c.status === 'Approved';
+        if (activeSubFilter === 'Live content') return c.status === 'Approved';
         return true;
       }
 
