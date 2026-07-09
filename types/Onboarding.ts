@@ -26,7 +26,7 @@ export type CreatorOnboardingData = {
 
 export interface AdvertiserOnboardingData {
   // StepProfile
-  logo?: string;
+  avatarUrl?: string;
   brandName?: string;
   bio?: string;
   country?: string;

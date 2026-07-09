@@ -1,11 +1,19 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/services/authApi';
-import { useAuthStore } from '@/store/authStore';
+import { AuthUser, useAuthStore } from '@/store/authStore';
 import { AxiosError } from 'axios';
 import { signIn } from 'next-auth/react';
-// i will use signOut in next auth very soon
+import { mapUserProfileToAuthUser } from '@/lib/mapUserProfile';
 
+async function hydrateFullProfile(userId: string, updateUser: (patch: Partial<AuthUser>) => void) {
+  try {
+    const { data: fullProfile } = await authApi.getUserProfile(userId);
+    updateUser(mapUserProfileToAuthUser(fullProfile));
+  } catch (e) {
+    console.error('Failed to hydrate full profile', e);
+  }
+}
 export function useRoles() {
   return useQuery({
     queryKey: ['roles'],
@@ -28,11 +36,13 @@ export function useSignup() {
 
 export function useVerifyOtp() {
   const setSession = useAuthStore((s) => s.setSession);
+  const updateUser = useAuthStore((s) => s.updateUser);
   return useMutation({
     mutationFn: authApi.verifyOtp,
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
       setSession(data.accessToken, data.user);
       toast.success('Email verified successfully!');
+      await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Invalid code');
@@ -43,11 +53,14 @@ export function useVerifyOtp() {
 export function useLogin() {
   const clearSession = useAuthStore((s) => s.clearSession);
   const setSession = useAuthStore((s) => s.setSession);
+  const updateUser = useAuthStore((s) => s.updateUser);
+
   return useMutation({
     mutationFn: authApi.login,
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
       setSession(data.accessToken, data.user);
       toast.success(`Welcome back!`);
+      await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       clearSession();
@@ -93,6 +106,7 @@ export function useResetPassword() {
 export function useGoogleAuth() {
   const setSession = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const updateUser = useAuthStore((s) => s.updateUser);
 
   const googleSignIn = async ({
     role,
@@ -114,9 +128,10 @@ export function useGoogleAuth() {
 
   const exchangeGoogleToken = useMutation({
     mutationFn: authApi.googleAuth,
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
       setSession(data.accessToken, data.user);
       toast.success('Signed in with Google!');
+      await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       clearSession();
@@ -130,12 +145,14 @@ export function useGoogleAuth() {
 export function useTiktokAuth() {
   const setSession = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const updateUser = useAuthStore((s) => s.updateUser);
 
   const exchangeTiktokToken = useMutation({
     mutationFn: authApi.tiktokAuth,
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
       setSession(data.accessToken, data.user);
       toast.success('Signed in with TikTok!');
+      await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       clearSession();
@@ -149,12 +166,14 @@ export function useTiktokAuth() {
 export function useInstagramAuth() {
   const setSession = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const updateUser = useAuthStore((s) => s.updateUser);
 
   const exchangeInstagramToken = useMutation({
     mutationFn: authApi.instagramAuth,
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
       setSession(data.accessToken, data.user);
       toast.success('Signed in with Instagram!');
+      await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       clearSession();

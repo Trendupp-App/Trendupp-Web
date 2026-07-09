@@ -34,7 +34,6 @@ export default function Header({
         >
           <Menu size={20} />
         </button>
-
         {/* Search */}
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a99b0]" />
@@ -63,16 +62,6 @@ export default function Header({
 
         {/* Action Area */}
         <div className="flex items-center gap-3.5 lg:gap-6">
-          {/* Search */}
-          <div className="relative hidden lg:block">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a99b0]" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-[240px] h-9 bg-[#f4f3f6] border-none rounded-full pl-9 pr-4 text-xs font-light text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 placeholder-[#9a99b0] transition-all"
-            />
-          </div>
-
           {/* Notifications */}
           <button
             onClick={onNotificationClick}

@@ -131,10 +131,6 @@ export default function OnboardingPage() {
   const steps: StepId[] = isAdvertiser ? ADVERTISER_STEPS : CREATOR_STEPS;
   const stepMeta = isAdvertiser ? ADVERTISER_STEP_META : CREATOR_STEP_META;
 
-  // const [stepIndex, setStepIndex] = useState(0);
-  // const [data, setData] = useState<OnboardingData>({});
-  // const user = useAuthStore((s) => s.user);
-
   const draft = readOnboardingDraft<OnboardingData>(user?.id);
   const serverResumeIndex = getResumeStepIndex(steps, user?.onboardingStepsCompleted, isAdvertiser);
 
@@ -164,9 +160,6 @@ export default function OnboardingPage() {
   }, [currentStepId, user?.id]);
   // Don't count 'complete' as a numbered step
   const numberedSteps = steps.filter((s): s is Exclude<StepId, 'complete'> => s !== 'complete');
-  // const numberedSteps = steps.filter((s) => s !== 'complete');
-  // const currentNumber = numberedSteps.indexOf(currentStepId) + 1;
-  // const meta = stepMeta[currentStepId as keyof typeof stepMeta];
   const currentNumber = numberedSteps.indexOf(currentStepId as Exclude<StepId, 'complete'>) + 1;
   const meta = stepMeta[currentStepId as Exclude<StepId, 'complete'> as keyof typeof stepMeta];
 
@@ -260,7 +253,7 @@ export default function OnboardingPage() {
           <StepBrandProfile
             onNext={advance}
             defaultValues={{
-              logo: data.logo,
+              logo: data.avatarUrl,
               // brandName: data.brandName,
               bio: data.bio,
               country: data.country,

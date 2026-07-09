@@ -1,6 +1,6 @@
 export const SLIDE_DATA = [
   {
-    src: '/auth/onb3.svg',
+    src: '/auth/onb3.webp',
     alt: 'Creator',
     headlineTop: 'Discover',
     headlineBottom: 'Paid Campaigns',
@@ -9,7 +9,7 @@ export const SLIDE_DATA = [
     imageClassName: '-ml-4 mt-4',
   },
   {
-    src: '/auth/onb4.svg',
+    src: '/auth/onb4.webp',
     alt: 'Advertiser',
     headlineTop: 'Launch your',
     headlineBottom: 'Campaigns',
@@ -17,7 +17,7 @@ export const SLIDE_DATA = [
     imageClassName: 'ml-6 mt-8',
   },
   {
-    src: '/auth/onb5.svg',
+    src: '/auth/onb5.webp',
     alt: 'Grow',
     headlineTop: 'Grow your',
     headlineBottom: 'Brand',

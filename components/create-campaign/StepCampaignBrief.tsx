@@ -16,12 +16,9 @@ interface StepCampaignBriefProps {
   defaultValues?: Partial<Step2Values>;
   onNext: (data: Step2Values) => void;
   onBack: () => void;
-  onSaveDraft?: (data: Step2Values) => void;
   isLoading?: boolean;
 }
 
-// ── Fix: use the generic base type UseFormRegister<FieldValues> so any
-//    strongly-typed register is assignable to it ────────────────────────────
 function ListField<TFieldValues extends FieldValues>({
   label,
   placeholder,
@@ -82,7 +79,6 @@ export default function StepCampaignBrief({
   defaultValues,
   onNext,
   onBack,
-  onSaveDraft,
   isLoading,
 }: StepCampaignBriefProps) {
   const {
@@ -163,12 +159,7 @@ export default function StepCampaignBrief({
         name="donts"
       />
 
-      <StepFooter
-        onBack={onBack}
-        onSaveDraft={onSaveDraft ? () => onSaveDraft(getValues()) : undefined}
-        onContinue={handleSubmit(onNext)}
-        isLoading={isLoading}
-      />
+      <StepFooter onBack={onBack} onContinue={handleSubmit(onNext)} isLoading={isLoading} />
     </form>
   );
 }

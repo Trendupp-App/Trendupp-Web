@@ -1,3 +1,8 @@
+export interface CreateDisputePayload {
+  campaignId: string;
+  reason: string;
+  creatorId?: string;
+}
 export type DisputeStatus = 'raised' | 'under_review' | 'resolved';
 
 export interface Dispute {

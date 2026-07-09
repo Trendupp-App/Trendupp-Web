@@ -7497,7 +7497,7 @@ stop-iteration-iterator@^1.1.0:
 
 stream-chat@^9.50.0:
   version "9.50.0"
-  resolved "https://registry.yarnpkg.com/stream-chat/-/stream-chat-9.50.0.tgz#72ed26815c200562e31fb2858c242037bae4d15d"
+  resolved "https://registry.npmjs.org/stream-chat/-/stream-chat-9.50.0.tgz#72ed26815c200562e31fb2858c242037bae4d15d"
   integrity sha512-T0Pr1srrVXxLbvQQQrEoS1h20UfK8UHMbnoQe5QZhWgaZmE1wIA4zePV2uO0rra0b/VOdNqkwcSdCFKgYn6zJw==
   dependencies:
     "@types/jsonwebtoken" "^9.0.8"

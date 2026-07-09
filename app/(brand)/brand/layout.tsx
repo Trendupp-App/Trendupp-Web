@@ -41,23 +41,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, accessToken } = useAuthStore();
-  const [isMounted, setIsMounted] = useState(false);
-
+  const { user, accessToken, hasHydrated } = useAuthStore();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (isMounted && (!accessToken || !user)) {
+    if (hasHydrated && (!accessToken || !user)) {
       router.replace('/signin');
     }
-  }, [isMounted, accessToken, user, router]);
+  }, [hasHydrated, accessToken, user, router]);
 
-  if (!isMounted || !accessToken || !user) return <PageLoader />;
+  if (!hasHydrated) return <PageLoader />;
+
+  if (!accessToken || !user) return <PageLoader />;
 
   const isBrand = user?.role === 'brand';
   const headerTitle = resolveTitle(pathname, isBrand);
@@ -65,8 +63,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Derived user shape for Header
   const headerUser = user
     ? {
-        displayName: `${user.firstName} ${user.lastName}`.trim(),
-        initials: `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase(),
+        displayName: `${user.username}`.trim(),
+        initials: `${user.username?.[0] ?? ''}`.toUpperCase(),
         avatarUrl: user.avatarUrl ?? undefined,
       }
     : undefined;

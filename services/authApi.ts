@@ -1,6 +1,7 @@
 import apiClient from '@/lib/apiClient';
 import type { AuthUser } from '@/store/authStore';
 import { MessageResponse } from '@/types/auth';
+import { RawUserProfile } from '@/types/profile';
 
 export interface SignupPayload {
   email: string;
@@ -8,6 +9,7 @@ export interface SignupPayload {
   firstName?: string;
   lastName?: string;
   brandName?: string;
+  username?: string;
   phoneNumber?: string;
   role: string;
   acceptedTerms: boolean;
@@ -82,7 +84,11 @@ export const authApi = {
     apiClient.post<MessageResponse>('/auth/password/reset', data),
 
   googleAuth: (data: GoogleAuthPayload) => apiClient.post<AuthResponse>('/auth/google', data),
+
   tiktokAuth: (data: TiktokAuthPayload) => apiClient.post<AuthResponse>('/auth/tiktok', data),
+
   instagramAuth: (data: InstagramAuthPayload) =>
     apiClient.post<AuthResponse>('/auth/instagram', data),
+
+  getUserProfile: (userId: string) => apiClient.get<RawUserProfile>(`/users/${userId}`),
 };

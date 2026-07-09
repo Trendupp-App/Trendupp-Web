@@ -8,8 +8,6 @@ import type {
   PatchCampaignPayload,
   PatchCampaignResponse,
   SubmitCampaignResponse,
-  PayCampaignPayload,
-  PayCampaignResponse,
   CampaignApplicationDto,
   ApplyCampaignPayload,
   ApplyCampaignResponse,
@@ -18,6 +16,9 @@ import type {
   SubmitLiveLinkPayload,
   SubmitLiveLinkResponse,
 } from '@/types/campaign';
+import { CampaignSubmission, VetDraftPayload } from '@/types/submissions';
+import type { CreateDisputePayload } from '@/types/dispute';
+import type { CreateReviewPayload } from '@/types/review';
 
 function appendIfDefined(form: FormData, key: string, value: unknown) {
   if (value === undefined || value === null || value === '') return;
@@ -28,6 +29,7 @@ export const campaignApi = {
   getPlatforms: () => apiClient.get<CampaignPlatform[]>('/campaigns/platforms'),
 
   getCreatorCategories: () => apiClient.get<CreatorCategory[]>('/campaigns/creator-categories'),
+
   createCampaign: (payload: CreateCampaignPayload) => {
     const fd = new FormData();
     appendIfDefined(fd, 'title', payload.title);
@@ -51,6 +53,19 @@ export const campaignApi = {
     // Always send currentStep
     fd.append('currentStep', String(payload.currentStep));
 
+    if (payload.currentStep === 1) {
+      appendIfDefined(fd, 'title', payload.title);
+      appendIfDefined(fd, 'goal', payload.goal);
+      appendIfDefined(fd, 'totalBudget', String(payload.totalBudget));
+      appendIfDefined(fd, 'creatorCategoryId', payload.creatorCategoryId);
+      appendIfDefined(fd, 'creatorNicheId', payload.creatorNicheId);
+      payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
+      appendIfDefined(fd, 'timeline', payload.timeline);
+      if (payload.coverImage instanceof File) {
+        fd.append('coverImage', payload.coverImage);
+      }
+    }
+
     if (payload.currentStep === 2) {
       appendIfDefined(fd, 'campaignBrief', payload.campaignBrief);
       payload.deliverables.forEach((v) => appendIfDefined(fd, 'deliverables', v));
@@ -68,6 +83,8 @@ export const campaignApi = {
       headers: { 'Content-Type': undefined },
     });
   },
+  applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
+    apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
 
   getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
@@ -85,11 +102,10 @@ export const campaignApi = {
 
   submitCampaign: (id: string) => apiClient.post<SubmitCampaignResponse>(`/campaigns/${id}/submit`),
 
-  payCampaign: (id: string, payload: PayCampaignPayload) =>
-    apiClient.post<PayCampaignResponse>(`/campaigns/${id}/pay`, payload),
-
   getApplication: (id: string) =>
     apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),
+
+  getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
 
   reviewApplication: (campaignId: string, appId: string, status: 'accepted' | 'rejected') =>
     apiClient.patch<{
@@ -97,10 +113,25 @@ export const campaignApi = {
       application: { id: string; status: 'accepted' | 'rejected' };
     }>(`/campaigns/${campaignId}/applications/${appId}`, { status }),
 
-  applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
-    apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
+  getSubmissions: (campaignId: string) =>
+    apiClient.get<{ submissions: CampaignSubmission[] }>(`/campaigns/${campaignId}/submissions`),
 
-  getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
+  vetDraft: (campaignId: string, submissionId: string, payload: VetDraftPayload) =>
+    apiClient.patch<{ message: string; submission: CampaignSubmission }>(
+      `/campaigns/${campaignId}/submissions/${submissionId}/vet`,
+      payload,
+    ),
+
+  raiseDispute: (payload: CreateDisputePayload) =>
+    apiClient.post<{ message: string; dispute: { id: string } }>('/disputes', payload),
+
+  approveLivePost: (campaignId: string, submissionId: string) =>
+    apiClient.patch<{ message: string; submission: CampaignSubmission }>(
+      `/campaigns/${campaignId}/submissions/${submissionId}/approve-live`,
+    ),
+
+  createReview: (payload: CreateReviewPayload) =>
+    apiClient.post<{ message: string }>('/campaigns/reviews', payload),
 
   submitContentDraft: (id: string, appId: string, payload: SubmitContentDraftPayload) =>
     apiClient.post<SubmitContentDraftResponse>(
