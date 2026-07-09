@@ -14,90 +14,10 @@ import BankChangeModal from '@/components/dashboard/payout/BankChangeModal';
 import { cn } from '@/lib/utils';
 
 // Mock Transaction History (matches mobile & desktop Figma mockups)
-const MOCK_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx-1',
-    title: 'Summer Style Collection',
-    brandOrDetails: 'Zara Africa',
-    date: 'May 28, 2025',
-    amount: 180000,
-    type: 'credit',
-    status: 'available',
-  },
-  {
-    id: 'tx-2',
-    title: 'TECNO SPARK Launch',
-    brandOrDetails: 'Tecno Mobile',
-    date: 'May 22, 2025',
-    amount: 350000,
-    type: 'credit',
-    status: 'available',
-  },
-  {
-    id: 'tx-3',
-    title: 'Withdrawal',
-    brandOrDetails: 'GTBank ****4521',
-    date: 'May 20, 2025',
-    amount: 200000,
-    type: 'debit',
-    status: 'completed',
-  },
-  {
-    id: 'tx-4',
-    title: 'Music Promo Campaign',
-    brandOrDetails: 'Audiomack',
-    date: 'May 15, 2025',
-    amount: 250000,
-    type: 'credit',
-    status: 'on_hold',
-  },
-  {
-    id: 'tx-5',
-    title: 'Beauty Campaign',
-    brandOrDetails: 'House of Tara',
-    date: 'May 10, 2025',
-    amount: 120000,
-    type: 'credit',
-    status: 'on_hold',
-  },
-  {
-    id: 'tx-6',
-    title: 'Platform Commission',
-    brandOrDetails: 'Trendupp (10%)',
-    date: 'May 10, 2025',
-    amount: 13300,
-    type: 'debit',
-    status: 'completed',
-  },
-];
+const MOCK_TRANSACTIONS: Transaction[] = [];
 
 // Mock Escrow Release Data (matches mobile & desktop Figma mockups)
-const MOCK_ESCROW_RELEASES: EscrowRelease[] = [
-  {
-    id: 'esc-1',
-    title: 'Music Streaming Promo',
-    brand: 'Audiomack',
-    amount: 250000,
-    daysRemaining: 20,
-    releaseDate: 'June 20, 2025',
-  },
-  {
-    id: 'esc-2',
-    title: 'Beauty Campaign',
-    brand: 'House of Tara',
-    amount: 120000,
-    daysRemaining: 28,
-    releaseDate: 'June 28, 2025',
-  },
-  {
-    id: 'esc-3',
-    title: 'Sports Energy Drive',
-    brand: 'Monster Energy',
-    amount: 80000,
-    daysRemaining: 35,
-    releaseDate: 'July 5, 2025',
-  },
-];
+const MOCK_ESCROW_RELEASES: EscrowRelease[] = [];
 
 export default function CreatorPayoutPage() {
   const { user } = useAuthStore();
@@ -106,10 +26,10 @@ export default function CreatorPayoutPage() {
   const [activeTab, setActiveTab] = useState<'transactions' | 'escrow'>('transactions');
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
-  // Fallbacks using store user details or mock defaults for demonstration
-  const bankName = user?.bankName || 'GTBank (Guaranty Trust)';
-  const accountName = user?.bankAccountName || 'Alex Okafor';
-  const accountNumber = user?.bankAccountNumber || '9867896986';
+  // Fallbacks using store user details or empty defaults
+  const bankName = user?.bankName || '';
+  const accountName = user?.bankAccountName || '';
+  const accountNumber = user?.bankAccountNumber || '';
 
   const handleSaveBankDetails = (values: {
     bankId: string;
@@ -145,8 +65,7 @@ export default function CreatorPayoutPage() {
         </p>
       </div>
 
-      {/* ── Balance Card ── */}
-      <PayoutBalanceCard availableBalance={397.0} hold30Day={450.0} totalEarned={750.0} />
+      <PayoutBalanceCard availableBalance={0.0} hold30Day={0.0} totalEarned={0.0} />
 
       {/* ── Tabs selector container ── */}
       <div className="bg-[#f4f3f6] rounded-2xl p-1 flex gap-1 w-full max-w-[340px] text-xs font-semibold text-[#7a7a9a]">

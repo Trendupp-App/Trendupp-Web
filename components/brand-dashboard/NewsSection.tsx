@@ -106,7 +106,6 @@ interface TopNewsSectionProps {
 
 export default function TopNewsSection({ articles = DUMMY_NEWS }: TopNewsSectionProps) {
   const [page, setPage] = useState(0);
-  const totalPages = articles.length;
 
   return (
     <div className="bg-white border border-[#f0eef8] rounded-2xl p-5 shadow-sm flex flex-col gap-4">

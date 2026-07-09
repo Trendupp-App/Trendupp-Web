@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CAMPAIGN_GOALS, CONTENT_TYPES } from '@/types/campaign';
+import { CAMPAIGN_GOALS } from '@/types/campaign';
 
 // ── Step 1 ────────────────────────────────────────────────────────────────────
 

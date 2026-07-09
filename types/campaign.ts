@@ -252,4 +252,35 @@ export interface PayCampaignResponse {
   };
 }
 
+export interface ApplyCampaignPayload {
+  contentIdea: string;
+  pastWorkLink?: string;
+  primaryPlatformId: string;
+  secondaryPlatformId?: string;
+  feeRequest: number;
+  comments?: string;
+}
+
+export interface ApplyCampaignResponse {
+  message?: string;
+  application?: unknown;
+}
 export type CampaignSubStatus = 'in_progress' | 'content_review' | 'revision' | 'live_content';
+
+export interface SubmitContentDraftPayload {
+  draftLink: string;
+}
+
+export interface SubmitContentDraftResponse {
+  message?: string;
+  application?: unknown;
+}
+
+export interface SubmitLiveLinkPayload {
+  liveLink: Record<string, string>;
+}
+
+export interface SubmitLiveLinkResponse {
+  message?: string;
+  submission?: unknown;
+}

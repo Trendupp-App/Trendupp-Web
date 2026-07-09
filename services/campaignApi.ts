@@ -11,6 +11,12 @@ import type {
   PayCampaignPayload,
   PayCampaignResponse,
   CampaignApplicationDto,
+  ApplyCampaignPayload,
+  ApplyCampaignResponse,
+  SubmitContentDraftPayload,
+  SubmitContentDraftResponse,
+  SubmitLiveLinkPayload,
+  SubmitLiveLinkResponse,
 } from '@/types/campaign';
 
 function appendIfDefined(form: FormData, key: string, value: unknown) {
@@ -66,6 +72,15 @@ export const campaignApi = {
   getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
+  getCampaigns: (params?: {
+    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
+    platforms?: string[];
+    niches?: string[];
+    nicheIds?: string[];
+    goal?: string;
+  }) => apiClient.get<{ data: Campaign[] }>('/campaigns', { params }),
+
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
 
   submitCampaign: (id: string) => apiClient.post<SubmitCampaignResponse>(`/campaigns/${id}/submit`),
@@ -81,4 +96,43 @@ export const campaignApi = {
       message: string;
       application: { id: string; status: 'accepted' | 'rejected' };
     }>(`/campaigns/${campaignId}/applications/${appId}`, { status }),
+
+  applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
+    apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
+
+  getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
+
+  submitContentDraft: (id: string, appId: string, payload: SubmitContentDraftPayload) =>
+    apiClient.post<SubmitContentDraftResponse>(
+      `/campaigns/${id}/applications/${appId}/draft`,
+      payload,
+    ),
+
+  submitProofOfPosting: (id: string, submissionId: string, payload: SubmitLiveLinkPayload) =>
+    apiClient.post<SubmitLiveLinkResponse>(
+      `/campaigns/${id}/submissions/${submissionId}/live`,
+      payload,
+    ),
+
+  getCreatorReviews: (creatorId: string) =>
+    apiClient.get<{ reviews: BackendReview[] }>(`/campaigns/reviews/creator/${creatorId}`),
 };
+
+export interface BackendReview {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt?: string;
+  campaign?: {
+    id: string;
+    title: string;
+    brand?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      companyName?: string | null;
+      avatarUrl?: string | null;
+    };
+  };
+}

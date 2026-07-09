@@ -42,8 +42,10 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import { useAuthStore } from '@/store/authStore';
+import { useCreatorReviews, useMyApplications } from '@/hooks/useCampaign';
 import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
 import {
+  useUserDetail,
   useUpdatePersonalInfo,
   useUpdateProfileNiches,
   useUpdateProfileSocials,
@@ -69,19 +71,9 @@ interface Platform {
 }
 
 interface PortfolioItem {
-  id: number;
+  id: number | string;
   image: string;
   brandName: string;
-}
-
-interface CreatorReview {
-  id: number;
-  brandName: string;
-  logoText: string;
-  logoBg: string;
-  date: string;
-  rating: number;
-  text: string;
 }
 
 interface CreatorProfile {
@@ -268,34 +260,6 @@ function getPlatformConfirmData(name: string) {
   );
 }
 
-// ── PRESETS FOR PORTFOLIO ────────────────────────────────
-const PORTFOLIO_PRESETS = [
-  {
-    name: 'Zara (Fashion)',
-    url: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Tara (Beauty)',
-    url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Techno (Mobile)',
-    url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Monster (Sports)',
-    url: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Zara (Lifestyle)',
-    url: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    name: 'Audiomack (Music)',
-    url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=400&q=80',
-  },
-];
-
 // ── MOCK DATA SEED ───────────────────────────────────────
 const INITIAL_PROFILE: CreatorProfile = {
   name: 'Teni Olu',
@@ -303,8 +267,7 @@ const INITIAL_PROFILE: CreatorProfile = {
   tier: 'Micro Creator',
   rating: 4.9,
   campaignCount: 14,
-  image:
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  image: '',
   location: 'Lagos, Nigeria',
   reach: '72.4K',
   earned: '₦847K',
@@ -345,75 +308,6 @@ const INITIAL_PROFILE: CreatorProfile = {
   ],
 };
 
-const INITIAL_PORTFOLIO: PortfolioItem[] = [
-  {
-    id: 1,
-    image:
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Zara',
-  },
-  {
-    id: 2,
-    image:
-      'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Tara',
-  },
-  {
-    id: 3,
-    image:
-      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Techno',
-  },
-  {
-    id: 4,
-    image:
-      'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Monster',
-  },
-  {
-    id: 5,
-    image:
-      'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Zara',
-  },
-  {
-    id: 6,
-    image:
-      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=400&q=80',
-    brandName: 'Audiomack',
-  },
-];
-
-const MOCK_REVIEWS: CreatorReview[] = [
-  {
-    id: 1,
-    brandName: 'Zara Africa',
-    logoText: 'ZA',
-    logoBg: 'bg-[#00c288]',
-    date: 'May 2025',
-    rating: 5,
-    text: 'Teni delivered outstanding content that exceeded expectations. Professional, creative, and on time. Would work with again.',
-  },
-  {
-    id: 2,
-    brandName: 'Tecno Mobile',
-    logoText: 'TM',
-    logoBg: 'bg-[#7c3aed]',
-    date: 'Apr 2025',
-    rating: 5,
-    text: 'Excellent content quality with great audience engagement. Would definitely collaborate again.',
-  },
-  {
-    id: 3,
-    brandName: 'Nestlé Nigeria',
-    logoText: 'NN',
-    logoBg: 'bg-[#f59e0b]',
-    date: 'Mar 2025',
-    rating: 4,
-    text: 'Good content creation. Minor revisions needed but the final result was great quality.',
-  },
-];
-
 interface ReviewBrand {
   id: number;
   name: string;
@@ -422,57 +316,6 @@ interface ReviewBrand {
   followers: string;
   logo: string;
 }
-
-const MOCK_BRANDS: ReviewBrand[] = [
-  {
-    id: 1,
-    name: 'Zara Africa',
-    industry: 'Fashion',
-    campaigns: 5,
-    followers: '2.1M',
-    logo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 2,
-    name: 'Tecno Mobile',
-    industry: 'Tech',
-    campaigns: 12,
-    followers: '890K',
-    logo: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 3,
-    name: 'Nestlé Nigeria',
-    industry: 'Food',
-    campaigns: 8,
-    followers: '540K',
-    logo: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 4,
-    name: 'Audiomack Africa',
-    industry: 'Music',
-    campaigns: 3,
-    followers: '1.5M',
-    logo: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 5,
-    name: 'Monster Energy NG',
-    industry: 'Sports',
-    campaigns: 4,
-    followers: '280K',
-    logo: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=150&q=80',
-  },
-  {
-    id: 6,
-    name: 'GTBank',
-    industry: 'Finance',
-    campaigns: 9,
-    followers: '3.2M',
-    logo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
-  },
-];
 
 const MOCK_FAQS = [
   {
@@ -520,7 +363,7 @@ function parseFollowersCount(val: string | number): number {
 
 export default function CreatorProfilePage() {
   // Queries & Mutations
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { data: countries } = useCountries();
   const { data: nationalities } = useNationalities();
 
@@ -562,11 +405,169 @@ export default function CreatorProfilePage() {
 
   const { data: states } = useStates(currentCountryId);
   const { data: allNiches } = useNiches();
+  const { data: userDetail } = useUserDetail(user?.id || null);
+  const { data: serverReviews } = useCreatorReviews(user?.id || null);
+  const { data: myApps } = useMyApplications();
+
+  const activeReviews = serverReviews
+    ? serverReviews.map((rev) => {
+        const brandName =
+          rev.campaign?.brand?.companyName ||
+          `${rev.campaign?.brand?.firstName || ''} ${rev.campaign?.brand?.lastName || ''}`.trim() ||
+          'Brand';
+        const logoText = brandName.slice(0, 2).toUpperCase();
+        const logoBgOptions = ['bg-[#00c288]', 'bg-[#7c3aed]', 'bg-[#f59e0b]', 'bg-[#ec4899]'];
+        const logoBg = logoBgOptions[brandName.length % logoBgOptions.length] || 'bg-[#7c3aed]';
+
+        let date = 'Recent';
+        if (rev.createdAt) {
+          try {
+            const d = new Date(rev.createdAt);
+            const months = [
+              'Jan',
+              'Feb',
+              'Mar',
+              'Apr',
+              'May',
+              'Jun',
+              'Jul',
+              'Aug',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dec',
+            ];
+            date = `${months[d.getMonth()]} ${d.getFullYear()}`;
+          } catch {
+            // ignore
+          }
+        }
+
+        return {
+          id: rev.id,
+          brandName,
+          logoText,
+          logoBg,
+          date,
+          rating: rev.rating,
+          text: rev.comment,
+        };
+      })
+    : [];
+
+  const totalReviewsCount = activeReviews.length;
+  const averageRating =
+    totalReviewsCount > 0
+      ? (activeReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviewsCount).toFixed(1)
+      : '0.0';
+
+  const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  activeReviews.forEach((r) => {
+    const star = Math.max(1, Math.min(5, Math.round(r.rating))) as 5 | 4 | 3 | 2 | 1;
+    starCounts[star] += 1;
+  });
+
+  const getPercentage = (stars: number) => {
+    if (totalReviewsCount === 0) return '0%';
+    const count = starCounts[stars as 5 | 4 | 3 | 2 | 1] || 0;
+    return `${Math.round((count / totalReviewsCount) * 100)}%`;
+  };
+
+  // Sync profile state when userDetail changes
+  useEffect(() => {
+    const activeUser = userDetail || user;
+    if (activeUser) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setProfile((prev) => {
+        let countryName = '';
+        if (activeUser.countryId && countries) {
+          const cObj = countries.find((c) => c.id === activeUser.countryId);
+          if (cObj) countryName = cObj.name;
+        }
+        let stateName = activeUser.city || '';
+        if (activeUser.stateId && states) {
+          const sObj = states.find((s) => s.id === activeUser.stateId);
+          if (sObj) stateName = sObj.name;
+        }
+
+        const location = countryName
+          ? stateName
+            ? `${stateName}, ${countryName}`
+            : countryName
+          : prev.location;
+
+        return {
+          ...prev,
+          name: `${activeUser.firstName} ${activeUser.lastName}`.trim(),
+          handle: activeUser.username || '',
+          email: activeUser.email,
+          bio: activeUser.bio || '',
+          image: activeUser.avatarUrl || INITIAL_PROFILE.image,
+          location: location,
+          rating: activeUser.avgRating || 0,
+          campaignCount: activeUser.totalReviews || 0,
+          niches:
+            activeUser.niches && activeUser.niches.length > 0
+              ? activeUser.niches.map((n) => n.name)
+              : INITIAL_PROFILE.niches,
+          platforms: INITIAL_PROFILE.platforms.map((plat) => {
+            const nameLower = plat.name.toLowerCase();
+            const key = (
+              nameLower === 'x (twitter)' ? 'twitter' : nameLower
+            ) as keyof typeof activeUser.socialsConnected;
+            const isConnected = activeUser.socialsConnected
+              ? !!activeUser.socialsConnected[key]
+              : false;
+            return {
+              ...plat,
+              connected: isConnected,
+              handle: isConnected ? activeUser.username || '' : '',
+            };
+          }),
+        };
+      });
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [userDetail, user, countries, states]);
+
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updateNichesMutation = useUpdateProfileNiches();
   const updateSocialsMutation = useUpdateProfileSocials();
 
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+
+  const completedCampaigns: PortfolioItem[] = myApps
+    ? myApps
+        .filter((app) => app.status === 'accepted')
+        .map((app) => {
+          const brandObj = app.campaign?.brand as
+            | { firstName?: string; lastName?: string; companyName?: string }
+            | undefined;
+          const brandName =
+            brandObj?.companyName ||
+            `${brandObj?.firstName || ''} ${brandObj?.lastName || ''}`.trim() ||
+            'Brand Partner';
+          return {
+            id: app.id,
+            image:
+              app.campaign?.coverImage ||
+              'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
+            brandName,
+          };
+        })
+    : [];
+
+  const activePortfolio = [...portfolio, ...completedCampaigns];
+
+  const [portfolioPage, setPortfolioPage] = useState(1);
+  const PORTFOLIO_ITEMS_PER_PAGE = 6;
+  const totalPortfolioPages = Math.ceil(activePortfolio.length / PORTFOLIO_ITEMS_PER_PAGE);
+  const safePortfolioPage = Math.max(1, Math.min(portfolioPage, totalPortfolioPages || 1));
+  const paginatedPortfolio = activePortfolio.slice(
+    (safePortfolioPage - 1) * PORTFOLIO_ITEMS_PER_PAGE,
+    safePortfolioPage * PORTFOLIO_ITEMS_PER_PAGE,
+  );
+
   const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews' | 'settings'>('portfolio');
   type Drawer = 'edit' | 'notifications' | 'privacy' | 'analytics' | 'help' | null;
   const [activeDrawer, setActiveDrawer] = useState<Drawer>(null);
@@ -706,8 +707,42 @@ export default function CreatorProfilePage() {
   const [personalMessage, setPersonalMessage] = useState('');
   const [brandSearchQuery, setBrandSearchQuery] = useState('');
 
-  const selectedBrand = MOCK_BRANDS.find((brand) => brand.id === selectedBrandId);
-  const filteredBrands = MOCK_BRANDS.filter(
+  interface CampaignBrandWithExtra {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+    companyName?: string | null;
+    avatarUrl?: string | null;
+  }
+
+  const reviewBrands: ReviewBrand[] = [];
+  if (myApps) {
+    const brandsMap = new Map<string, ReviewBrand>();
+    myApps.forEach((app, idx) => {
+      const b = app.campaign?.brand as CampaignBrandWithExtra;
+      if (b && b.id) {
+        const name = b.companyName || `${b.firstName || ''} ${b.lastName || ''}`.trim() || 'Brand';
+        if (!brandsMap.has(b.id)) {
+          brandsMap.set(b.id, {
+            id: idx + 1,
+            name,
+            industry: app.campaign?.creatorCategory?.name || 'Campaign',
+            campaigns: 1,
+            followers: '—',
+            logo:
+              b.avatarUrl ||
+              'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
+          });
+        }
+      }
+    });
+    reviewBrands.push(...Array.from(brandsMap.values()));
+  }
+
+  const selectedBrand = reviewBrands.find((brand) => brand.id === selectedBrandId);
+  const filteredBrands = reviewBrands.filter(
     (brand) =>
       brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
       brand.industry.toLowerCase().includes(brandSearchQuery.toLowerCase()),
@@ -722,8 +757,6 @@ export default function CreatorProfilePage() {
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newBrandName, setNewBrandName] = useState('');
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [selectedPresetIndex, setSelectedPresetIndex] = useState<number | null>(null);
   const [socialMediaLink, setSocialMediaLink] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
@@ -817,10 +850,10 @@ export default function CreatorProfilePage() {
         { nicheIds },
         {
           onSuccess: ({ data }) => {
-            const u = data?.user;
+            const u = data?.user || data;
             setProfile((prev) => ({
               ...prev,
-              niches: u.niches.map((n) => n.name),
+              niches: u?.niches ? u.niches.map((n) => n.name) : prev.niches,
             }));
             setIsEditProfileOpen(false);
           },
@@ -866,7 +899,7 @@ export default function CreatorProfilePage() {
 
       updateSocialsMutation.mutate(payload, {
         onSuccess: ({ data }) => {
-          const u = data?.user;
+          const u = data?.user || data;
           setProfile((prev) => ({
             ...prev,
             platforms: prev.platforms.map((plat) => {
@@ -874,33 +907,33 @@ export default function CreatorProfilePage() {
               if (name === 'Instagram') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.instagram,
-                  handle: u.instagramUsername || 'Not connected',
-                  followers: u.instagramFollowers ? `${u.instagramFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.instagram,
+                  handle: u?.instagramUsername || 'Not connected',
+                  followers: u?.instagramFollowers ? `${u.instagramFollowers}` : 'Not connected',
                 };
               }
               if (name === 'TikTok') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.tiktok,
-                  handle: u.tiktokUsername || 'Not connected',
-                  followers: u.tiktokFollowers ? `${u.tiktokFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.tiktok,
+                  handle: u?.tiktokUsername || 'Not connected',
+                  followers: u?.tiktokFollowers ? `${u.tiktokFollowers}` : 'Not connected',
                 };
               }
               if (name === 'YouTube') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.youtube,
-                  handle: u.youtubeUsername || 'Not connected',
-                  followers: u.youtubeFollowers ? `${u.youtubeFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.youtube,
+                  handle: u?.youtubeUsername || 'Not connected',
+                  followers: u?.youtubeFollowers ? `${u.youtubeFollowers}` : 'Not connected',
                 };
               }
               if (name === 'X (Twitter)') {
                 return {
                   ...plat,
-                  connected: !!u.socialsConnected.twitter,
-                  handle: u.twitterUsername || 'Not connected',
-                  followers: u.twitterFollowers ? `${u.twitterFollowers}` : 'Not connected',
+                  connected: !!u?.socialsConnected?.twitter,
+                  handle: u?.twitterUsername || 'Not connected',
+                  followers: u?.twitterFollowers ? `${u.twitterFollowers}` : 'Not connected',
                 };
               }
               return plat;
@@ -942,14 +975,17 @@ export default function CreatorProfilePage() {
 
     updatePersonalInfoMutation.mutate(formData, {
       onSuccess: ({ data }) => {
-        const u = data?.user;
+        const u = data?.user || data;
+        if (u) {
+          updateUser(u);
+        }
         setProfile((prev) => ({
           ...prev,
-          name: `${u.firstName} ${u.lastName}`.trim(),
-          handle: u.username || '',
-          email: u.email,
-          bio: u.bio || '',
-          image: u.avatarUrl || prev.image,
+          name: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() || prev.name,
+          handle: u?.username || '',
+          email: u?.email || '',
+          bio: u?.bio || '',
+          image: u?.avatarUrl || prev.image,
         }));
         setIsEditProfileOpen(false);
       },
@@ -970,10 +1006,6 @@ export default function CreatorProfilePage() {
 
     if (uploadedFile) {
       finalImageUrl = URL.createObjectURL(uploadedFile);
-    } else if (socialMediaLink.trim()) {
-      // Use a random preset image so a beautiful preview is displayed
-      const randomPreset = PORTFOLIO_PRESETS[Math.floor(Math.random() * PORTFOLIO_PRESETS.length)];
-      finalImageUrl = randomPreset.url;
     } else {
       finalImageUrl =
         'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80'; // fallback
@@ -993,7 +1025,7 @@ export default function CreatorProfilePage() {
   };
 
   // Action: Delete Portfolio Item
-  const handleDeletePortfolioItem = (id: number) => {
+  const handleDeletePortfolioItem = (id: number | string) => {
     setPortfolio(portfolio.filter((item) => item.id !== id));
   };
 
@@ -1029,10 +1061,29 @@ export default function CreatorProfilePage() {
         {/* Left Side: Avatar & Core Information */}
         <div className="flex flex-col items-center md:flex-row md:items-center gap-5 text-center md:text-left z-10">
           {/* Avatar Ring */}
-          <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-700 shadow-xl shrink-0">
-            <Image src={profile.image} alt={profile.name} fill priority className="object-cover" />
+          <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0">
+            {profile.image ? (
+              <div className="w-full h-full rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-700 shadow-xl relative">
+                <Image
+                  src={profile.image}
+                  alt={profile.name}
+                  fill
+                  priority
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full rounded-full border-[3.5px] border-brand-pink bg-brand-pink-light flex items-center justify-center text-brand-pink text-3xl font-bold shadow-xl">
+                {profile.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2)}
+              </div>
+            )}
             {/* Small 'M' badge overlapping avatar */}
-            <div className="absolute bottom-0 right-0 w-6.5 h-6.5 rounded-full bg-brand-pink border-2 border-[#040039] flex items-center justify-center text-[10px] font-black text-white shadow-md">
+            <div className="absolute bottom-0 right-0 w-6.5 h-6.5 rounded-full bg-brand-pink border-2 border-[#040039] flex items-center justify-center text-[10px] font-black text-white shadow-md z-10">
               M
             </div>
           </div>
@@ -1233,7 +1284,7 @@ export default function CreatorProfilePage() {
               {profile.niches.map((niche) => (
                 <span
                   key={niche}
-                  className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[10px] px-3 py-1 rounded-full border border-[#7c3aed]/10"
+                  className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[10px] px-3 py-1 rounded-full border border-[#7c3aed]/10 whitespace-nowrap"
                 >
                   {niche}
                 </span>
@@ -1283,15 +1334,15 @@ export default function CreatorProfilePage() {
               <div className="w-9 h-9 rounded-full bg-brand-pink-light flex items-center justify-center shrink-0">
                 <Award size={18} className="text-brand-pink" />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[11px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                   Creator Niche:
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {profile.niches.map((niche) => (
                     <span
                       key={niche}
-                      className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[11px] px-3 py-1 rounded-full border border-[#7c3aed]/10"
+                      className="bg-[#f3f0ff] text-[#7c3aed] font-bold text-[11px] px-3 py-1 rounded-full border border-[#7c3aed]/10 whitespace-nowrap"
                     >
                       {niche}
                     </span>
@@ -1322,7 +1373,7 @@ export default function CreatorProfilePage() {
                 </button>
 
                 {/* Portfolio Cards */}
-                {portfolio.map((item) => (
+                {paginatedPortfolio.map((item) => (
                   <div
                     key={item.id}
                     className="relative aspect-square rounded-2xl overflow-hidden group shadow-sm bg-zinc-100"
@@ -1343,14 +1394,16 @@ export default function CreatorProfilePage() {
                     </span>
 
                     {/* Delete Item Overlay Button */}
-                    <button
-                      id={`btn-delete-portfolio-${item.id}`}
-                      onClick={() => handleDeletePortfolioItem(item.id)}
-                      className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px]"
-                      title="Delete Item"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    {typeof item.id === 'number' && (
+                      <button
+                        id={`btn-delete-portfolio-${item.id}`}
+                        onClick={() => handleDeletePortfolioItem(item.id)}
+                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px]"
+                        title="Delete Item"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1362,43 +1415,48 @@ export default function CreatorProfilePage() {
               id="portfolio-footer"
             >
               <span className="text-xs text-[#7a7a9a] font-light">
-                {portfolio.length} portfolio items
+                {activePortfolio.length} portfolio items
               </span>
 
               {/* Styled Pagination */}
-              <div className="flex items-center gap-1.5" id="pagination-controls">
-                <button
-                  className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
-                  disabled
-                >
-                  &lt;
-                </button>
-                <button className="w-8 h-8 rounded-lg bg-brand-pink text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                  1
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  2
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  3
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  4
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  5
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  6
-                </button>
-                <span className="text-xs text-[#9a99b0] px-1 font-semibold">..</span>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  14
-                </button>
-                <button className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] transition-colors cursor-pointer">
-                  &gt;
-                </button>
-              </div>
+              {totalPortfolioPages > 1 && (
+                <div className="flex items-center gap-1.5" id="pagination-controls">
+                  <button
+                    onClick={() => setPortfolioPage((prev) => Math.max(1, prev - 1))}
+                    disabled={safePortfolioPage === 1}
+                    className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
+                  >
+                    &lt;
+                  </button>
+                  {Array.from({ length: totalPortfolioPages }).map((_, idx) => {
+                    const pageNum = idx + 1;
+                    const isActive = pageNum === safePortfolioPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPortfolioPage(pageNum)}
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
+                          isActive
+                            ? 'bg-brand-pink text-white shadow-xs'
+                            : 'border border-[#e8e6f0] hover:bg-[#fcfbfd] text-[#7a7a9a]',
+                        )}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() =>
+                      setPortfolioPage((prev) => Math.min(totalPortfolioPages, prev + 1))
+                    }
+                    disabled={safePortfolioPage === totalPortfolioPages}
+                    className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
+                  >
+                    &gt;
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1410,35 +1468,43 @@ export default function CreatorProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center border-b border-[#e8e6f0]/60 pb-6">
               {/* Score Column */}
               <div className="flex items-center gap-6 justify-between md:justify-start md:col-span-2">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[44px] font-black text-[#1a1a2e] leading-none">4.9</span>
+                <div className="flex flex-col gap-1 text-left">
+                  <span className="text-[44px] font-black text-[#1a1a2e] leading-none">
+                    {averageRating}
+                  </span>
                   <div className="flex items-center gap-0.5 mt-1">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={14} className="fill-[#f59e0b] text-[#f59e0b]" />
+                      <Star
+                        key={i}
+                        size={14}
+                        className={cn(
+                          'text-[#f59e0b]',
+                          i < Math.round(Number(averageRating)) ? 'fill-[#f59e0b]' : 'fill-none',
+                        )}
+                      />
                     ))}
                   </div>
-                  <span className="text-[11px] text-[#7a7a9a] font-medium mt-1">17 reviews</span>
+                  <span className="text-[11px] text-[#7a7a9a] font-medium mt-1">
+                    {totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'}
+                  </span>
                 </div>
 
                 {/* Rating Progress Bars */}
                 <div className="flex flex-col gap-1.5 flex-1 max-w-[240px]">
-                  {[
-                    { stars: 5, pct: '85%' },
-                    { stars: 4, pct: '15%' },
-                    { stars: 3, pct: '5%' },
-                    { stars: 2, pct: '0%' },
-                    { stars: 1, pct: '0%' },
-                  ].map((row) => (
-                    <div key={row.stars} className="flex items-center gap-2">
-                      <span className="text-[10px] text-[#7a7a9a] font-bold w-2">{row.stars}</span>
-                      <div className="flex-1 h-1.5 bg-[#e8e6f0] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[#f59e0b] rounded-full"
-                          style={{ width: row.pct }}
-                        />
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const pct = getPercentage(stars);
+                    return (
+                      <div key={stars} className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#7a7a9a] font-bold w-2">{stars}</span>
+                        <div className="flex-1 h-1.5 bg-[#e8e6f0] rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#f59e0b] rounded-full"
+                            style={{ width: pct }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1462,45 +1528,60 @@ export default function CreatorProfilePage() {
 
             {/* Reviews List */}
             <div className="flex flex-col gap-4">
-              {MOCK_REVIEWS.map((rev) => (
-                <div
-                  key={rev.id}
-                  className="border border-[#e8e6f0] bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-xs"
-                  id={`review-card-${rev.id}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold',
-                          rev.logoBg,
-                        )}
-                      >
-                        {rev.logoText}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-[#1a1a2e]">{rev.brandName}</span>
-                        <span className="text-[10px] text-[#7a7a9a] font-medium mt-0.5">
-                          {rev.date}
-                        </span>
-                      </div>
-                    </div>
-                    {/* Stars review */}
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          size={12}
+              {activeReviews.length > 0 ? (
+                activeReviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="border border-[#e8e6f0] bg-white rounded-2xl p-5 flex flex-col gap-3 shadow-xs"
+                    id={`review-card-${rev.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div
                           className={cn(
-                            i < rev.rating ? 'fill-[#f59e0b] text-[#f59e0b]' : 'text-zinc-200',
+                            'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold',
+                            rev.logoBg,
                           )}
-                        />
-                      ))}
+                        >
+                          {rev.logoText}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-[#1a1a2e]">{rev.brandName}</span>
+                          <span className="text-[10px] text-[#7a7a9a] font-medium mt-0.5">
+                            {rev.date}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Stars review */}
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={12}
+                            className={cn(
+                              i < rev.rating ? 'fill-[#f59e0b] text-[#f59e0b]' : 'text-zinc-200',
+                            )}
+                          />
+                        ))}
+                      </div>
                     </div>
+                    <p className="text-xs leading-relaxed text-[#5a5a7a]">{rev.text}</p>
                   </div>
-                  <p className="text-xs leading-relaxed text-[#5a5a7a]">{rev.text}</p>
+                ))
+              ) : (
+                <div className="border border-dashed border-[#e8e6f0] rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3 select-none">
+                  <div className="w-10 h-10 rounded-full bg-[#f4f3f8] flex items-center justify-center text-[#7a7a9a]">
+                    <Star size={18} className="text-[#9a99b0]" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-bold text-[#1a1a2e]">No reviews yet</p>
+                    <p className="text-[10px] text-[#7a7a9a] max-w-[280px] font-light leading-relaxed">
+                      Completed campaigns that have been rated and reviewed by brand owners will be
+                      displayed here.
+                    </p>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -2465,7 +2546,10 @@ export default function CreatorProfilePage() {
                     Select Niches
                   </label>
                   <div className="flex flex-wrap gap-2.5 mt-1">
-                    {ALL_NICHES_INDUSTRIES.map((niche) => {
+                    {(allNiches && allNiches.length > 0
+                      ? allNiches.map((n) => n.name)
+                      : ALL_NICHES_INDUSTRIES
+                    ).map((niche) => {
                       const active = editNiches.includes(niche);
                       return (
                         <button

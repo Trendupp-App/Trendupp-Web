@@ -5,8 +5,10 @@ import Image from 'next/image';
 import { X, Clock, Shield, Check, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useCampaignPlatforms, useApplyCampaign } from '@/hooks/useCampaign';
 
-interface Campaign {
+export interface MappedCampaign {
+  id: string;
   title: string;
   brand: string;
   budget: string;
@@ -16,12 +18,19 @@ interface Campaign {
   image: string;
   niches?: string[];
   platforms?: string[];
+  campaignBrief?: string;
+  deliverables?: string[];
+  contentDirection?: string[];
+  contentGuidelines?: { dos: string[]; donts: string[] };
+  usageRights?: string;
+  successLooksLike?: string;
+  status?: string;
 }
 
 interface CampaignDetailsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  campaign: Campaign | null;
+  campaign: MappedCampaign | null;
 }
 
 type TabType = 'overview' | 'requirements' | 'timeline';
@@ -39,6 +48,28 @@ export default function CampaignDetailsDrawer({
   const [secondaryPlatform, setSecondaryPlatform] = useState('None');
   const [feeRequest, setFeeRequest] = useState('');
   const [comments, setComments] = useState('');
+
+  const { data: platformsList = [] } = useCampaignPlatforms();
+
+  const applyMutation = useApplyCampaign(() => {
+    setDrawerMode('success');
+  });
+
+  const getPlatformIdByName = (name: string) => {
+    if (name === 'None') return undefined;
+    const normalizedSelected = name.toLowerCase().trim();
+    const found = platformsList.find((p) => {
+      const pName = p.name.toLowerCase().trim();
+      return (
+        pName === normalizedSelected ||
+        pName.includes(normalizedSelected) ||
+        normalizedSelected.includes(pName) ||
+        (normalizedSelected === 'twitter' && pName.includes('twitter')) ||
+        (normalizedSelected === 'twitter' && pName.includes('x'))
+      );
+    });
+    return found?.id;
+  };
 
   // Lock scrolling when open
   useEffect(() => {
@@ -65,6 +96,25 @@ export default function CampaignDetailsDrawer({
   };
 
   const isFormValid = contentTitle.length >= 20 && feeRequest.trim() !== '';
+
+  const handleSubmit = () => {
+    if (!isFormValid || !campaign) return;
+    const primaryId = getPlatformIdByName(primaryPlatform);
+    const secondaryId = getPlatformIdByName(secondaryPlatform);
+    const fallbackId = platformsList[0]?.id || '';
+
+    applyMutation.mutate({
+      id: campaign.id,
+      payload: {
+        contentIdea: contentTitle,
+        pastWorkLink: workLink || undefined,
+        primaryPlatformId: primaryId || fallbackId,
+        secondaryPlatformId: secondaryId,
+        feeRequest: Number(feeRequest.replace(/[^0-9]/g, '')),
+        comments: comments || undefined,
+      },
+    });
+  };
 
   if (!campaign) return null;
 
@@ -224,76 +274,52 @@ export default function CampaignDetailsDrawer({
                     <div className="flex flex-col gap-2.5">
                       <h4 className="text-[13px] font-bold text-[#1a1a2e]">Campaign Brief</h4>
                       <p className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                        Zara Africa is launching its Summer style collection across West Africa. We
-                        want authentic creators to showcase our new arrivals in an aspirational but
-                        relatable way — think Lagos street style meets global fashion week energy.
+                        {campaign.campaignBrief || 'No brief provided.'}
                       </p>
                     </div>
 
                     {/* Deliverables */}
-                    <div className="flex flex-col gap-3">
-                      <h4 className="text-[13px] font-bold text-[#1a1a2e]">Deliverables</h4>
+                    {campaign.deliverables && campaign.deliverables.length > 0 && (
                       <div className="flex flex-col gap-3">
-                        <div className="flex gap-3 items-start">
-                          <div className="w-5 h-5 rounded-[4px] bg-[#d7176f] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                            1
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            1 x Instagram carousel post (5-8 slides) featuring the outfits
-                          </span>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                          <div className="w-5 h-5 rounded-[4px] bg-[#d7176f] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                            2
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            1 x Instagram Reel (30-60 seconds) styling tutorial
-                          </span>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                          <div className="w-5 h-5 rounded-[4px] bg-[#d7176f] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                            3
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            3 x Instagram Stories with product tags
-                          </span>
+                        <h4 className="text-[13px] font-bold text-[#1a1a2e]">Deliverables</h4>
+                        <div className="flex flex-col gap-3">
+                          {campaign.deliverables.map((item, index) => (
+                            <div key={index} className="flex gap-3 items-start">
+                              <div className="w-5 h-5 rounded-[4px] bg-[#d7176f] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                                {index + 1}
+                              </div>
+                              <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
+                                {item}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Content Direction */}
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[#d7176f] text-xs font-bold leading-none">➔</span>
-                        <h4 className="text-[13px] font-bold text-[#1a1a2e]">Content Direction</h4>
-                      </div>
+                    {campaign.contentDirection && campaign.contentDirection.length > 0 && (
                       <div className="flex flex-col gap-3">
-                        <div className="flex gap-3 items-start">
-                          <div className="w-5 h-5 rounded-[4px] bg-[#d7176f]/10 text-[#d7176f] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                            1
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            Dramatic before and after revealing the collection&apos;s impact.
-                          </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[#d7176f] text-xs font-bold leading-none">➔</span>
+                          <h4 className="text-[13px] font-bold text-[#1a1a2e]">
+                            Content Direction
+                          </h4>
                         </div>
-                        <div className="flex gap-3 items-start">
-                          <div className="w-5 h-5 rounded-[4px] bg-[#d7176f]/10 text-[#d7176f] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                            2
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            Incorporate the clothing styling seamlessly into your lifestyle routine.
-                          </span>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                          <div className="w-5 h-5 rounded-[4px] bg-[#d7176f]/10 text-[#d7176f] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                            3
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            Step-by-step guide to achieving an effortless, elegant look.
-                          </span>
+                        <div className="flex flex-col gap-3">
+                          {campaign.contentDirection.map((item, index) => (
+                            <div key={index} className="flex gap-3 items-start">
+                              <div className="w-5 h-5 rounded-[4px] bg-[#d7176f]/10 text-[#d7176f] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                                {index + 1}
+                              </div>
+                              <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
+                                {item}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Escrow Protected Card */}
                     <div className="border border-[#e8e6f0]/80 bg-white rounded-2xl p-4 flex gap-3.5 items-start mt-1">
@@ -331,66 +357,55 @@ export default function CampaignDetailsDrawer({
                 {activeTab === 'requirements' && (
                   <div className="flex flex-col gap-5">
                     {/* Content Guidelines */}
-                    <div className="flex flex-col gap-3.5">
-                      <h4 className="text-[13px] font-bold text-[#1a1a2e]">
-                        Content Guidelines (Brand Rules)
-                      </h4>
-                      <div className="flex flex-col gap-3">
-                        <div className="flex gap-2.5 items-start">
-                          <div className="w-4.5 h-4.5 rounded-full bg-[#00c37b]/10 text-[#00c37b] flex items-center justify-center shrink-0 mt-0.5">
-                            <Check size={11} className="stroke-[3]" />
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            Ensure high-visibility, natural or soft white lighting.
-                          </span>
-                        </div>
-                        <div className="flex gap-2.5 items-start">
-                          <div className="w-4.5 h-4.5 rounded-full bg-[#00c37b]/10 text-[#00c37b] flex items-center justify-center shrink-0 mt-0.5">
-                            <Check size={11} className="stroke-[3]" />
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            Tag @ZaraAfrica in the caption and on the video.
-                          </span>
-                        </div>
-                        <div className="flex gap-2.5 items-start">
-                          <div className="w-4.5 h-4.5 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
-                            <span className="text-[10px] font-bold">✕</span>
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            Do not feature or mention competitor clothing brands.
-                          </span>
-                        </div>
-                        <div className="flex gap-2.5 items-start">
-                          <div className="w-4.5 h-4.5 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
-                            <span className="text-[10px] font-bold">✕</span>
-                          </div>
-                          <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                            Avoid cluttered backgrounds; maintain an editorial aesthetic.
-                          </span>
+                    {campaign.contentGuidelines && (
+                      <div className="flex flex-col gap-3.5">
+                        <h4 className="text-[13px] font-bold text-[#1a1a2e]">
+                          Content Guidelines (Brand Rules)
+                        </h4>
+                        <div className="flex flex-col gap-3">
+                          {campaign.contentGuidelines.dos?.map((item, index) => (
+                            <div key={`do-${index}`} className="flex gap-2.5 items-start">
+                              <div className="w-4.5 h-4.5 rounded-full bg-[#00c37b]/10 text-[#00c37b] flex items-center justify-center shrink-0 mt-0.5">
+                                <Check size={11} className="stroke-[3]" />
+                              </div>
+                              <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
+                                {item}
+                              </span>
+                            </div>
+                          ))}
+                          {campaign.contentGuidelines.donts?.map((item, index) => (
+                            <div key={`dont-${index}`} className="flex gap-2.5 items-start">
+                              <div className="w-4.5 h-4.5 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
+                                <span className="text-[10px] font-bold">✕</span>
+                              </div>
+                              <span className="text-xs font-light text-[#5a5a7a] leading-relaxed">
+                                {item}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Usage Rights */}
-                    <div className="flex flex-col gap-2">
-                      <h4 className="text-[13px] font-bold text-[#1a1a2e]">Usage Rights</h4>
-                      <p className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                        By participating in this campaign, creators grant Zara Africa permission to
-                        repost and use campaign content across its digital platforms for marketing
-                        and promotional purposes.
-                      </p>
-                    </div>
+                    {campaign.usageRights && (
+                      <div className="flex flex-col gap-2">
+                        <h4 className="text-[13px] font-bold text-[#1a1a2e]">Usage Rights</h4>
+                        <p className="text-xs font-light text-[#5a5a7a] leading-relaxed">
+                          {campaign.usageRights}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Success Looks Like */}
-                    <div className="flex flex-col gap-2">
-                      <h4 className="text-[13px] font-bold text-[#1a1a2e]">Success Looks Like</h4>
-                      <p className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                        We are looking for content that feels authentic, relatable, visually
-                        appealing, and inspires women to explore the new Summer Style Collection. We
-                        are excited to collaborate with you and can&apos;t wait to see your
-                        creativity bring the Summer Style Collection to life.
-                      </p>
-                    </div>
+                    {campaign.successLooksLike && (
+                      <div className="flex flex-col gap-2">
+                        <h4 className="text-[13px] font-bold text-[#1a1a2e]">Success Looks Like</h4>
+                        <p className="text-xs font-light text-[#5a5a7a] leading-relaxed">
+                          {campaign.successLooksLike}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -481,12 +496,21 @@ export default function CampaignDetailsDrawer({
               </div>
 
               {/* Action apply button */}
-              <Button
-                onClick={() => setDrawerMode('apply')}
-                className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
-              >
-                Apply Now - 38h left →
-              </Button>
+              {campaign.status === 'live' ? (
+                <Button
+                  onClick={() => setDrawerMode('apply')}
+                  className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
+                >
+                  Apply Now - 38h left →
+                </Button>
+              ) : (
+                <Button
+                  disabled
+                  className="w-full bg-[#eaeaf0] text-[#7a7a9a] font-semibold text-[15px] py-6.5 rounded-xl transition-all select-none border-none shrink-0 mt-4 cursor-not-allowed"
+                >
+                  Apply Disabled (Campaign is {campaign.status || 'Pending approval'})
+                </Button>
+              )}
             </div>
           </>
         )}
@@ -701,20 +725,16 @@ export default function CampaignDetailsDrawer({
 
               {/* Submit application */}
               <Button
-                onClick={() => {
-                  if (isFormValid) {
-                    setDrawerMode('success');
-                  }
-                }}
-                disabled={!isFormValid}
+                onClick={handleSubmit}
+                disabled={!isFormValid || applyMutation.isPending}
                 className={cn(
                   'w-full text-white font-semibold text-[15px] py-6.5 rounded-xl transition-all select-none border-none shrink-0 mt-2 flex items-center justify-center gap-1.5 shadow-md',
-                  isFormValid
+                  isFormValid && !applyMutation.isPending
                     ? 'bg-brand-pink hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] cursor-pointer'
                     : 'bg-zinc-200 hover:bg-zinc-200 text-zinc-400 cursor-not-allowed shadow-none',
                 )}
               >
-                Submit Application
+                {applyMutation.isPending ? 'Submitting...' : 'Submit Application'}
               </Button>
             </div>
           </>

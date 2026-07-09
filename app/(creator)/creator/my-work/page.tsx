@@ -8,133 +8,103 @@ import SubmitProofModal from '@/components/dashboard/my-work/SubmitProofModal';
 import CampaignFilterModal, {
   FilterState,
 } from '@/components/creator-dashboard/CampaignFilterModal';
+import RaiseDisputeModal from '@/components/dashboard/my-work/RaiseDisputeModal';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useMyApplications,
+  useSubmitContentDraft,
+  useSubmitProofOfPosting,
+} from '@/hooks/useCampaign';
+import { toast } from 'sonner';
+import { CampaignApplicationDto, Campaign } from '@/types/campaign';
 
-const INITIAL_CAMPAIGNS: WorkCampaign[] = [
-  {
-    id: 1,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
-    daysLeft: '5d 14h',
-    status: 'In progress',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines:
-      'Create your content off-platform, then return to submit the link for brand review. Keep your content within the brief guidelines. Submit content within the next 3-5 days.',
+interface SubmissionItem {
+  id?: string;
+  status: string;
+  revisionFeedback?: string;
+}
+
+function mapAppToWorkCampaign(app: CampaignApplicationDto): WorkCampaign {
+  const campaign = app.campaign || ({} as Campaign);
+  const brandName = campaign.brand?.username || 'Unknown Brand';
+  const platformName = app.primaryPlatform?.name || 'Instagram';
+
+  // Calculate status
+  let status: WorkCampaign['status'] = 'Pending';
+  let revisionComment = '';
+
+  if (app.status === 'pending') {
+    status = 'Pending';
+  } else if (app.status === 'rejected') {
+    status = 'Declined';
+  } else if (app.status === 'accepted') {
+    const submissions = (app.submissions || []) as SubmissionItem[];
+    if (submissions.length === 0) {
+      status = 'In progress';
+    } else {
+      const latest = submissions[submissions.length - 1];
+      if (latest.status === 'in_progress') {
+        status = 'In progress';
+      } else if (latest.status === 'awaiting_review') {
+        status = 'Under review';
+      } else if (latest.status === 'revision_requested') {
+        status = 'Revision requested';
+        revisionComment = latest.revisionFeedback || 'Please check guidelines and deliverables.';
+      } else if (latest.status === 'live') {
+        status = 'Payment released';
+      }
+    }
+  }
+
+  // Calculate days left
+  let daysLeft = '0d';
+  let daysLeftNumber = 0;
+  if (campaign.timeline) {
+    const diff = new Date(campaign.timeline).getTime() - Date.now();
+    if (diff > 0) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      daysLeft = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+      daysLeftNumber = days;
+    }
+  }
+
+  const latestSubmission = app.submissions?.[app.submissions.length - 1] as
+    | SubmissionItem
+    | undefined;
+
+  return {
+    id: app.id,
+    campaignId: campaign.id,
+    submissionId: latestSubmission?.id,
+    title: campaign.title || 'Untitled Campaign',
+    brand: brandName,
+    budgetMinMax: `₦${(campaign.totalBudget || 0).toLocaleString()}`,
+    budgetString: `₦${(campaign.totalBudget || 0).toLocaleString()}`,
+    daysLeft,
+    daysLeftNumber,
+    status,
+    platform: platformName,
+    tier: campaign.creatorCategory?.name || 'Nano',
+    guidelines: campaign.campaignBrief || 'No guidelines provided',
     image:
+      campaign.coverImage ||
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 2,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
-    daysLeft: '4d 12h',
-    status: 'Under review',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines:
-      "The brand has up to 48 hours to review your submission. You'll receive a push notification with their decision.",
-    image:
-      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 3,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
-    daysLeft: '3d 8h',
-    status: 'Revision requested',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines: 'Please adjust lighting and duration.',
-    revisionComment:
-      'The video needs to clearly show the front camera quality. Please reshoot the selfie segment with better lighting. Duration should be exactly 45 seconds.',
-    image:
-      'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 4,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
-    daysLeft: '2d 6h',
-    status: 'Approved',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines:
-      'Publish your content on YouTube, then come back to submit proof of posting. The post must stay live for 24 hours before payment is released.',
-    image:
-      'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 5,
-    title: 'Summer Style Collection 2026',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
-    daysLeft: '4d',
-    status: 'Selected',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines: 'Awaiting your acceptance of this offer.',
-    image:
-      'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 6,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
-    daysLeft: '6d',
-    status: 'Pending',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines: 'Awaiting brand decision.',
-    image:
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 7,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦300K',
-    budgetString: '₦150,000 – 300,000',
-    daysLeft: '0d',
-    status: 'Declined',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines: 'Sorry you have not been selected.',
-    image:
-      'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 8,
-    title: 'Summer Style Collection 2025',
-    brand: 'Zara Africa',
-    budgetMinMax: '₦150K–₦250K',
-    budgetString: '₦150,000 – 250,000',
-    daysLeft: '0d',
-    status: 'Payment released',
-    platform: 'Instagram',
-    tier: 'Micro',
-    guidelines: 'Payment released.',
-    actualAmount: 250000,
-    escrowReleaseDate: 'June 28, 2026',
-    image:
-      'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
-  },
-];
+    niches: campaign.creatorNiche?.name ? [campaign.creatorNiche.name] : [],
+    goal: campaign.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
+    createdAt: app.createdAt,
+    budgetMax: campaign.totalBudget || 0,
+    actualAmount: app.feeRequest,
+    revisionComment,
+  };
+}
 
 type PrimaryTab = 'Active' | 'Applied' | 'Done';
 
 export default function MyWorkPage() {
-  const [campaigns, setCampaigns] = useState<WorkCampaign[]>(INITIAL_CAMPAIGNS);
+  const queryClient = useQueryClient();
+  const { data: myApps = [], isLoading } = useMyApplications();
+
   const [activeTab, setActiveTab] = useState<PrimaryTab>('Active');
   const [activeSubFilter, setActiveSubFilter] = useState<string>('All');
 
@@ -145,6 +115,9 @@ export default function MyWorkPage() {
   // Submit proof modal states
   const [submitProofCampaign, setSubmitProofCampaign] = useState<WorkCampaign | null>(null);
 
+  // Raise dispute modal states
+  const [disputeCampaign, setDisputeCampaign] = useState<WorkCampaign | null>(null);
+
   // Filter modal states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -154,45 +127,75 @@ export default function MyWorkPage() {
     campaignGoal: null,
   });
 
+  const submitDraft = useSubmitContentDraft(() => {
+    queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+  });
+
+  const submitProof = useSubmitProofOfPosting(() => {
+    queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+  });
+
+  const campaigns = myApps.map(mapAppToWorkCampaign);
+
   // Handle link submission (moves campaign to "Under Review")
-  const handleSubmitLink = (_link: string) => {
-    if (submitLinkCampaign) {
-      setCampaigns((prev) =>
-        prev.map((c) => (c.id === submitLinkCampaign.id ? { ...c, status: 'Under review' } : c)),
+  const handleSubmitLink = (link: string) => {
+    if (!submitLinkCampaign) return;
+
+    if (submitLinkCampaign.campaignId && submitLinkCampaign.id) {
+      submitDraft.mutate(
+        {
+          id: submitLinkCampaign.campaignId,
+          appId: submitLinkCampaign.id,
+          payload: { draftLink: link },
+        },
+        {
+          onSuccess: () => {
+            setSubmitLinkCampaign(null);
+          },
+        },
       );
+    } else {
+      toast.success('Mock Content draft link submitted successfully! (Staging Fallback)');
       setSubmitLinkCampaign(null);
     }
   };
 
   // Handle proof submission (moves campaign to "Payment Released")
-  const handleSubmitProof = (_link: string) => {
-    if (submitProofCampaign) {
-      setCampaigns((prev) =>
-        prev.map((c) =>
-          c.id === submitProofCampaign.id
-            ? {
-                ...c,
-                status: 'Payment released',
-                actualAmount: 250000,
-                escrowReleaseDate: 'June 28, 2026',
-              }
-            : c,
-        ),
+  const handleSubmitProof = (link: string) => {
+    if (!submitProofCampaign) return;
+
+    if (submitProofCampaign.campaignId && submitProofCampaign.submissionId) {
+      const platformKey = submitProofCampaign.platform.toLowerCase();
+      const normalisedKey = platformKey === 'x' ? 'twitter' : platformKey;
+
+      submitProof.mutate(
+        {
+          id: submitProofCampaign.campaignId,
+          submissionId: submitProofCampaign.submissionId,
+          payload: {
+            liveLink: {
+              [normalisedKey]: link,
+            },
+          },
+        },
+        {
+          onSuccess: () => {
+            setSubmitProofCampaign(null);
+          },
+        },
       );
+    } else {
+      toast.success('Mock Proof of posting submitted successfully! (Staging Fallback)');
       setSubmitProofCampaign(null);
     }
   };
 
   const handleAcceptOffer = (campaign: WorkCampaign) => {
-    setCampaigns((prev) =>
-      prev.map((c) => (c.id === campaign.id ? { ...c, status: 'In progress' } : c)),
-    );
+    toast.success(`Offer for "${campaign.title}" accepted!`);
   };
 
   const handleDeclineOffer = (campaign: WorkCampaign) => {
-    setCampaigns((prev) =>
-      prev.map((c) => (c.id === campaign.id ? { ...c, status: 'Declined' } : c)),
-    );
+    toast.success(`Offer for "${campaign.title}" declined!`);
   };
 
   // Compute counts dynamically
@@ -225,42 +228,90 @@ export default function MyWorkPage() {
     },
   };
 
-  // Filter campaigns depending on tab and sub-pill selection
-  const filteredCampaigns = campaigns.filter((c) => {
-    // Platform and niche checks from filter modal
-    if (filters.platforms.length > 0 && !filters.platforms.includes(c.platform)) {
-      return false;
-    }
+  // Filter campaigns depending on tab, sub-pill selection, and filter modal selections
+  const filteredCampaigns = campaigns
+    .filter((c) => {
+      // 1. Platform check
+      if (filters.platforms.length > 0 && !filters.platforms.includes(c.platform)) {
+        return false;
+      }
 
-    if (activeTab === 'Active') {
-      const isActive = ['In progress', 'Under review', 'Revision requested', 'Approved'].includes(
-        c.status,
-      );
-      if (!isActive) return false;
+      // 2. Niche check
+      if (filters.niches.length > 0) {
+        const hasMatchingNiche = c.niches?.some((n) => filters.niches.includes(n));
+        if (!hasMatchingNiche) return false;
+      }
 
-      if (activeSubFilter === 'In Progress') return c.status === 'In progress';
-      if (activeSubFilter === 'Pending Approval') return c.status === 'Under review';
-      if (activeSubFilter === 'Revision') return c.status === 'Revision requested';
-      if (activeSubFilter === 'Approved') return c.status === 'Approved';
+      // 3. Campaign Goal check
+      if (filters.campaignGoal && c.goal !== filters.campaignGoal) {
+        return false;
+      }
+
+      // 4. Tab and Sub-pill checks
+      if (activeTab === 'Active') {
+        const isActive = ['In progress', 'Under review', 'Revision requested', 'Approved'].includes(
+          c.status,
+        );
+        if (!isActive) return false;
+
+        if (activeSubFilter === 'In Progress') return c.status === 'In progress';
+        if (activeSubFilter === 'Pending Approval') return c.status === 'Under review';
+        if (activeSubFilter === 'Revision') return c.status === 'Revision requested';
+        if (activeSubFilter === 'Approved') return c.status === 'Approved';
+        return true;
+      }
+
+      if (activeTab === 'Applied') {
+        const isApplied = ['Selected', 'Pending', 'Declined'].includes(c.status);
+        if (!isApplied) return false;
+
+        if (activeSubFilter === 'Accepted') return c.status === 'Selected';
+        if (activeSubFilter === 'Pending') return c.status === 'Pending';
+        if (activeSubFilter === 'Rejected') return c.status === 'Declined';
+        return true;
+      }
+
+      if (activeTab === 'Done') {
+        return c.status === 'Payment released';
+      }
+
       return true;
-    }
+    })
+    .sort((a, b) => {
+      // 5. Sort filters
+      if (filters.sortBy === 'Newest') {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      }
+      if (filters.sortBy === 'Closing Soon') {
+        const daysA = a.daysLeftNumber ?? 999999;
+        const daysB = b.daysLeftNumber ?? 999999;
+        return daysA - daysB;
+      }
+      if (filters.sortBy === 'Highest Budget') {
+        const budgetA = a.budgetMax ?? 0;
+        const budgetB = b.budgetMax ?? 0;
+        return budgetB - budgetA;
+      }
+      return 0;
+    });
 
-    if (activeTab === 'Applied') {
-      const isApplied = ['Selected', 'Pending', 'Declined'].includes(c.status);
-      if (!isApplied) return false;
-
-      if (activeSubFilter === 'Accepted') return c.status === 'Selected';
-      if (activeSubFilter === 'Pending') return c.status === 'Pending';
-      if (activeSubFilter === 'Rejected') return c.status === 'Declined';
-      return true;
-    }
-
-    if (activeTab === 'Done') {
-      return c.status === 'Payment released';
-    }
-
-    return true;
-  });
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-6 w-full pb-12 select-none animate-pulse">
+        <div className="flex flex-col gap-1">
+          <div className="h-8 w-32 bg-gray-200 rounded-md"></div>
+          <div className="h-4 w-48 bg-gray-100 rounded-md mt-1"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="h-80 bg-gray-50 border border-gray-100 rounded-[32px]"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full pb-12 select-none">
@@ -322,6 +373,10 @@ export default function MyWorkPage() {
           setSelectedCampaign(null);
           setSubmitProofCampaign(c);
         }}
+        onRaiseDispute={(c) => {
+          setSelectedCampaign(null);
+          setDisputeCampaign(c);
+        }}
       />
 
       {/* Submit Draft Link Modal */}
@@ -338,6 +393,13 @@ export default function MyWorkPage() {
         campaign={submitProofCampaign}
         onClose={() => setSubmitProofCampaign(null)}
         onSubmit={handleSubmitProof}
+      />
+
+      {/* Raise Dispute Modal */}
+      <RaiseDisputeModal
+        isOpen={!!disputeCampaign}
+        campaign={disputeCampaign}
+        onClose={() => setDisputeCampaign(null)}
       />
 
       {/* Side Filters Modal Drawer */}

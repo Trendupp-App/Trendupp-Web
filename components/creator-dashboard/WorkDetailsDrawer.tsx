@@ -12,6 +12,7 @@ interface WorkDetailsDrawerProps {
   campaign: WorkCampaign | null;
   onSubmitLink?: (campaign: WorkCampaign) => void;
   onSubmitProof?: (campaign: WorkCampaign) => void;
+  onRaiseDispute?: (campaign: WorkCampaign) => void;
 }
 
 type DrawerTab = 'Overview' | 'Requirements' | 'Timeline' | 'Deliverables';
@@ -22,6 +23,7 @@ export default function WorkDetailsDrawer({
   campaign,
   onSubmitLink,
   onSubmitProof,
+  onRaiseDispute,
 }: WorkDetailsDrawerProps) {
   const [activeTab, setActiveTab] = useState<DrawerTab>('Overview');
 
@@ -531,16 +533,15 @@ export default function WorkDetailsDrawer({
             </div>
           )}
           {/* Floating Chat/Message Icon (Bottom Right of white scrollable content area) */}
-          <button
-            onClick={() => {
-              onClose();
-              window.location.href = '/creator/messages';
-            }}
-            className="absolute bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            aria-label="Chat with Trendupp Support"
-          >
-            <MessageCircle size={20} className="fill-current text-white" />
-          </button>
+          {campaign.status !== 'Payment released' && (
+            <button
+              onClick={() => onRaiseDispute?.(campaign)}
+              className="absolute bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              aria-label="Raise a campaign dispute"
+            >
+              <MessageCircle size={20} className="fill-current text-white" />
+            </button>
+          )}
         </div>
       </div>
     </div>
