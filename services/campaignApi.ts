@@ -83,6 +83,8 @@ export const campaignApi = {
       headers: { 'Content-Type': undefined },
     });
   },
+  applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
+    apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
 
   getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
@@ -102,6 +104,8 @@ export const campaignApi = {
 
   getApplication: (id: string) =>
     apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),
+
+  getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
 
   reviewApplication: (campaignId: string, appId: string, status: 'accepted' | 'rejected') =>
     apiClient.patch<{
@@ -128,6 +132,21 @@ export const campaignApi = {
 
   createReview: (payload: CreateReviewPayload) =>
     apiClient.post<{ message: string }>('/campaigns/reviews', payload),
+
+  submitContentDraft: (id: string, appId: string, payload: SubmitContentDraftPayload) =>
+    apiClient.post<SubmitContentDraftResponse>(
+      `/campaigns/${id}/applications/${appId}/draft`,
+      payload,
+    ),
+
+  submitProofOfPosting: (id: string, submissionId: string, payload: SubmitLiveLinkPayload) =>
+    apiClient.post<SubmitLiveLinkResponse>(
+      `/campaigns/${id}/submissions/${submissionId}/live`,
+      payload,
+    ),
+
+  getCreatorReviews: (creatorId: string) =>
+    apiClient.get<{ reviews: BackendReview[] }>(`/campaigns/reviews/creator/${creatorId}`),
 };
 
 export interface BackendReview {

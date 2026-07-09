@@ -44,8 +44,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, accessToken, hasHydrated } = useAuthStore();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
@@ -57,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!hasHydrated) return <PageLoader />;
 
-  if (!isMounted || !accessToken || !user) return <PageLoader />;
+  if (!accessToken || !user) return <PageLoader />;
 
   const isBrand = user?.role === 'brand';
   const headerTitle = resolveTitle(pathname, isBrand);
