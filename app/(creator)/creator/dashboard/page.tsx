@@ -104,7 +104,16 @@ export default function CreatorDashboardPage() {
           {isProfileCompleted ? (
             <BannerCarousel />
           ) : (
-            <CompletenessCard percentage={user?.onboardingPercentage || 0} />
+            <CompletenessCard
+              percentage={user?.onboardingPercentage || 0}
+              onCompleteClick={() => {
+                if (isProfileCompleted) {
+                  router.push('/creator/profile');
+                } else {
+                  router.push('/onboard?type=creator');
+                }
+              }}
+            />
           )}
         </div>
 
