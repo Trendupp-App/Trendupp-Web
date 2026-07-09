@@ -159,6 +159,18 @@ export interface CreateCampaignPayload {
   coverImage?: File;
 }
 
+export interface PatchCampaignStep1Payload {
+  currentStep: 1;
+  title: string;
+  goal: CampaignGoal;
+  totalBudget: number;
+  creatorCategoryId: string;
+  creatorNicheId: string;
+  preferredPlatformIds: string[];
+  timeline: string;
+  coverImage?: File;
+}
+
 export interface PatchCampaignStep2Payload {
   currentStep: 2;
   campaignBrief: string;
@@ -179,6 +191,7 @@ export interface PatchCampaignStep4Payload {
 }
 
 export type PatchCampaignPayload =
+  | PatchCampaignStep1Payload
   | PatchCampaignStep2Payload
   | PatchCampaignStep3Payload
   | PatchCampaignStep4Payload;
@@ -211,27 +224,19 @@ export interface SubmitCampaignResponse {
     paymentBreakdown: PaymentBreakdown;
   };
   payment: {
+    id: string;
     campaignId: string;
     amount: number;
-    paymentStatus: 'unpaid';
+    totalAmount: number;
+    paymentStatus: 'pending';
+    paymentReference: string;
+    escrowId: string;
+    paymentUrl: string;
+    transactionRef: string;
+    provider: string;
+    escrowStatus: string;
   };
 }
-
-// export interface SubmitCampaignResponse {
-//   message: string;
-//   campaign: {
-//     id: string;
-//     title: string;
-//     totalBudget: number;
-//     status: 'submitted';
-//     currentStep: 5;
-//   };
-//   payment: {
-//     campaignId: string;
-//     amount: number;
-//     paymentStatus: 'unpaid';
-//   };
-// }
 
 export interface PayCampaignPayload {
   paymentReference: string;

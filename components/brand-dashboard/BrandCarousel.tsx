@@ -16,8 +16,8 @@ const BANNER_SLIDES: BannerSlide[] = [
     imageSrc: '/dashboard/banner1.svg',
     imageAlt: 'Trendupp influencer marketing platform',
   },
-  { id: '2', imageSrc: '/dashboard/banner1.svg', imageAlt: 'Connect with top creators' },
-  { id: '3', imageSrc: '/dashboard/banner1.svg', imageAlt: 'Launch your next campaign' },
+  { id: '2', imageSrc: '/dashboard/b2.webp', imageAlt: 'Connect with top creators' },
+  { id: '3', imageSrc: '/dashboard/b3.webp', imageAlt: 'Launch your next campaign' },
 ];
 
 interface BrandBannerCarouselProps {

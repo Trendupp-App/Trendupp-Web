@@ -20,7 +20,6 @@ interface StepDetailsProps {
   defaultValues?: Partial<Step1Input>;
   onNext: (data: Step1Values) => void;
   onBack: () => void;
-  onSaveDraft?: (data: Step1Input) => void;
   isLoading?: boolean;
 }
 
@@ -28,7 +27,6 @@ export default function StepDetails({
   defaultValues,
   onNext,
   onBack,
-  onSaveDraft,
   isLoading,
 }: StepDetailsProps) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -228,7 +226,6 @@ export default function StepDetails({
 
       <StepFooter
         onBack={onBack}
-        onSaveDraft={onSaveDraft ? () => onSaveDraft(getValues()) : undefined}
         onContinue={handleSubmit(handleSubmitWithFile)}
         continueDisabled={false}
         isLoading={isLoading}

@@ -3,15 +3,17 @@ import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { campaignApi } from '@/services/campaignApi';
 import type {
+  ApplyCampaignPayload,
+  CampaignApplicationDto,
   CreateCampaignPayload,
   PatchCampaignPayload,
-  PayCampaignPayload,
   PaymentBreakdown,
-  ApplyCampaignPayload,
   SubmitContentDraftPayload,
   SubmitLiveLinkPayload,
-  CampaignApplicationDto,
 } from '@/types/campaign';
+import type { VetDraftPayload } from '@/types/submissions';
+import type { CreateDisputePayload } from '@/types/dispute';
+import type { CreateReviewPayload } from '@/types/review';
 
 export function useCampaignPlatforms() {
   return useQuery({
@@ -56,35 +58,26 @@ export function usePatchCampaign(onSuccess?: () => void) {
   });
 }
 
-export function useSubmitCampaign(onSuccess: (breakdown: PaymentBreakdown) => void) {
+export function useSubmitCampaign(
+  onSuccess: (breakdown: PaymentBreakdown, paymentUrl: string) => void,
+) {
   return useMutation({
     mutationFn: (id: string) => campaignApi.submitCampaign(id),
     onSuccess: ({ data }) => {
       toast.success(data.message ?? 'Campaign submitted', { duration: 900 });
-      const bd = data.campaign.paymentBreakdown; // use the server-computed breakdown directly
-      onSuccess({
-        campaignBudget: bd.campaignBudget,
-        trenduppFee: bd.trenduppFee,
-        vat: bd.vat,
-        totalToPay: bd.totalToPay,
-      });
+      const bd = data.campaign.paymentBreakdown;
+      onSuccess(
+        {
+          campaignBudget: bd.campaignBudget,
+          trenduppFee: bd.trenduppFee,
+          vat: bd.vat,
+          totalToPay: bd.totalToPay,
+        },
+        data.payment.paymentUrl,
+      );
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit campaign');
-    },
-  });
-}
-
-export function usePayCampaign(onSuccess: (campaignTitle?: string) => void) {
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: PayCampaignPayload }) =>
-      campaignApi.payCampaign(id, payload),
-    onSuccess: ({ data }) => {
-      toast.success('Payment confirmed! Campaign is now live 🎉', { duration: 1500 });
-      onSuccess(data.campaign.title);
-    },
-    onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Payment failed, please try again');
     },
   });
 }
@@ -95,6 +88,44 @@ export function useCampaign(id: string | null) {
     queryFn: () => campaignApi.getCampaign(id!).then((r) => r.data),
     enabled: !!id,
     staleTime: 0,
+  });
+}
+
+export function useApplyCampaign(onSuccess: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: ApplyCampaignPayload }) =>
+      campaignApi.applyCampaign(id, payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Application submitted successfully! 🚀', { duration: 1500 });
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign'] });
+      queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+      onSuccess();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit application, please try again');
+    },
+  });
+}
+
+export function useMyApplications(enabled: boolean = true) {
+  return useQuery<CampaignApplicationDto[]>({
+    queryKey: ['my-applications'],
+    queryFn: () =>
+      campaignApi.getMyApplications().then((r) => {
+        const data = r.data as
+          | { applications?: CampaignApplicationDto[] }
+          | CampaignApplicationDto[]
+          | undefined;
+        return data && 'applications' in data && Array.isArray(data.applications)
+          ? data.applications
+          : Array.isArray(data)
+            ? data
+            : [];
+      }),
+    staleTime: 1000 * 30,
+    enabled,
   });
 }
 
@@ -136,60 +167,72 @@ export function useReviewApplication(
   });
 }
 
-export function useCampaigns(
-  params?: {
-    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
-    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
-    platforms?: string[];
-    niches?: string[];
-    nicheIds?: string[];
-    goal?: string;
-  },
-  enabled: boolean = true,
-) {
+export function useSubmissions(campaignId: string | null, enabled: boolean = true) {
   return useQuery({
-    queryKey: ['campaigns', params],
-    queryFn: () => campaignApi.getCampaigns(params).then((r) => r.data.data),
-    staleTime: 1000 * 30,
-    enabled,
+    queryKey: ['campaign-submissions', campaignId],
+    queryFn: () => campaignApi.getSubmissions(campaignId!).then((r) => r.data.submissions),
+    enabled: !!campaignId && enabled,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
-export function useApplyCampaign(onSuccess: () => void) {
+export function useVetDraft(campaignId: string) {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: ApplyCampaignPayload }) =>
-      campaignApi.applyCampaign(id, payload),
+    mutationFn: ({ submissionId, ...payload }: VetDraftPayload & { submissionId: string }) =>
+      campaignApi.vetDraft(campaignId, submissionId, payload),
     onSuccess: ({ data }) => {
-      toast.success(data.message ?? 'Application submitted successfully! 🚀', { duration: 1500 });
-      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
-      queryClient.invalidateQueries({ queryKey: ['campaign'] });
-      queryClient.invalidateQueries({ queryKey: ['my-applications'] });
-      onSuccess();
+      toast.success(data.message ?? 'Draft reviewed', { duration: 900 });
+      queryClient.invalidateQueries({ queryKey: ['campaign-submissions', campaignId] });
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not submit application, please try again');
+      toast.error(err?.response?.data?.message ?? 'Could not review draft');
     },
   });
 }
 
-export function useMyApplications(enabled: boolean = true) {
-  return useQuery<CampaignApplicationDto[]>({
-    queryKey: ['my-applications'],
-    queryFn: () =>
-      campaignApi.getMyApplications().then((r) => {
-        const data = r.data as
-          | { applications?: CampaignApplicationDto[] }
-          | CampaignApplicationDto[]
-          | undefined;
-        return data && 'applications' in data && Array.isArray(data.applications)
-          ? data.applications
-          : Array.isArray(data)
-            ? data
-            : [];
-      }),
-    staleTime: 1000 * 30,
-    enabled,
+export function useRaiseDispute(onSuccess?: () => void) {
+  return useMutation({
+    mutationFn: (payload: CreateDisputePayload) => campaignApi.raiseDispute(payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Dispute raised — our team will review this.', {
+        duration: 1500,
+      });
+      onSuccess?.();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not raise dispute');
+    },
+  });
+}
+
+export function useApproveLivePost(campaignId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (submissionId: string) => campaignApi.approveLivePost(campaignId, submissionId),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Live post approved', { duration: 900 });
+      queryClient.invalidateQueries({ queryKey: ['campaign-submissions', campaignId] });
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not approve live post');
+    },
+  });
+}
+
+export function useCreateReview(onSuccess?: () => void) {
+  return useMutation({
+    mutationFn: (payload: CreateReviewPayload) => campaignApi.createReview(payload),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Review submitted', { duration: 1200 });
+      onSuccess?.();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit review');
+    },
   });
 }
 
@@ -243,5 +286,24 @@ export function useCreatorReviews(creatorId: string | null) {
     queryFn: () => campaignApi.getCreatorReviews(creatorId!).then((r) => r.data.reviews),
     enabled: !!creatorId,
     staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useCampaigns(
+  params?: {
+    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
+    platforms?: string[];
+    niches?: string[];
+    nicheIds?: string[];
+    goal?: string;
+  },
+  enabled: boolean = true,
+) {
+  return useQuery({
+    queryKey: ['campaigns', params],
+    queryFn: () => campaignApi.getCampaigns(params).then((r) => r.data.data),
+    staleTime: 1000 * 30,
+    enabled,
   });
 }

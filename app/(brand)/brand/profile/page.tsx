@@ -46,9 +46,6 @@ export default function BrandProfilePage() {
         {/* Industries */}
         {industries.length > 0 && (
           <div className="bg-white border border-[#e8e6f0] rounded-xl px-4 py-4 flex items-start gap-4">
-            <div className="w-9 h-9 rounded-xl bg-brand-pink/10 flex items-center justify-center shrink-0">
-              <span className="text-brand-pink text-sm">🏷</span>
-            </div>
             <div className="flex flex-col gap-2">
               <p className="text-xs font-semibold text-[#9a99b0] uppercase tracking-wider">
                 Industry

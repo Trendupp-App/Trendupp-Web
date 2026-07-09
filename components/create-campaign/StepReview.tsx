@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { Pencil } from 'lucide-react';
 import StepFooter from './StepFooter';
 import { type Step1Values } from '@/lib/validations/createCampaignSchemas';
 import type { Step2Values } from '@/lib/validations/createCampaignSchemas';
@@ -13,15 +14,33 @@ interface StepReviewProps {
   step3: Step3Values;
   onNext: () => void;
   onBack: () => void;
-  onSaveDraft?: () => void;
+  onEdit: (step: 1 | 2 | 3) => void;
   isLoading?: boolean;
 }
 
-function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
+function ReviewSection({
+  title,
+  onEdit,
+  children,
+}: {
+  title: string;
+  onEdit?: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <div className="border border-[#e8e6f0] rounded-lg overflow-hidden">
-      <div className="px-4 py-3 bg-[#faf9fc] border-b border-[#e8e6f0]">
+      <div className="px-4 py-3 bg-[#faf9fc] border-b border-[#e8e6f0] flex items-center justify-center gap-4">
         <h3 className="text-sm font-medium text-[#1a1a2e]">{title}</h3>
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="flex items-center gap-1.5 text-xs font-medium text-brand-pink hover:text-brand-pink/80 transition-colors cursor-pointer"
+          >
+            <Pencil size={13} />
+            Edit
+          </button>
+        )}
       </div>
       <div className="px-4 py-4 flex flex-col gap-3">{children}</div>
     </div>
@@ -61,10 +80,9 @@ export default function StepReview({
   step3,
   onNext,
   onBack,
-  onSaveDraft,
+  onEdit,
   isLoading,
 }: StepReviewProps) {
-  // Resolve IDs → human-readable names
   const { data: creatorCategories = [] } = useCreatorCategories();
   const { data: platforms = [] } = useCampaignPlatforms();
 
@@ -84,7 +102,7 @@ export default function StepReview({
       )}
 
       {/* Section 1: Campaign details */}
-      <ReviewSection title="Campaign details">
+      <ReviewSection title="Campaign details" onEdit={() => onEdit(1)}>
         <ReviewRow label="Title" value={step1.title} />
         <ReviewRow label="Goal" value={step1.goal} />
         <ReviewRow
@@ -96,7 +114,7 @@ export default function StepReview({
       </ReviewSection>
 
       {/* Section 2: Campaign brief */}
-      <ReviewSection title="Campaign brief">
+      <ReviewSection title="Campaign brief" onEdit={() => onEdit(2)}>
         <div className="flex flex-col gap-1">
           <span className="text-sm text-[#9a99b0] font-light">Brief</span>
           <p className="text-sm text-[#1a1a2e] font-light leading-relaxed">{step2.brief}</p>
@@ -108,7 +126,7 @@ export default function StepReview({
       </ReviewSection>
 
       {/* Section 3: Success */}
-      <ReviewSection title="Success criteria">
+      <ReviewSection title="Success criteria" onEdit={() => onEdit(3)}>
         <div className="flex flex-col gap-1">
           <span className="text-sm text-[#9a99b0] font-light">What success looks like</span>
           <p className="text-sm text-[#1a1a2e] font-light leading-relaxed">
@@ -123,7 +141,6 @@ export default function StepReview({
 
       <StepFooter
         onBack={onBack}
-        onSaveDraft={onSaveDraft}
         onContinue={onNext}
         continueLabel="Continue to payment"
         isLoading={isLoading}

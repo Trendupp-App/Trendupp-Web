@@ -121,7 +121,6 @@ export default function StepPayment({ breakdown, onBack, onPay, isLoading }: Ste
           continueLabel={`Pay ${fmt(breakdown.totalToPay)}`}
           continueDisabled={!canPay}
           isLoading={isLoading}
-          hideSaveDraft
         />
       </div>
 

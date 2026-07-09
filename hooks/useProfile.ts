@@ -246,3 +246,12 @@ export function useCreatorProfile(id: string | null) {
     staleTime: 1000 * 60,
   });
 }
+
+export function useBrandProfile(id: string | null) {
+  return useQuery({
+    queryKey: ['brand-profile', id],
+    queryFn: () => usersApi.getExploreBrandProfile(id!).then((r) => r.data),
+    enabled: !!id,
+    staleTime: 1000 * 60,
+  });
+}
