@@ -124,7 +124,7 @@ export function useMyApplications(enabled: boolean = true) {
             ? data
             : [];
       }),
-    staleTime: 1000 * 30,
+    staleTime: 0,
     enabled,
   });
 }

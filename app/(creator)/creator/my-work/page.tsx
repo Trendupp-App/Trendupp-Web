@@ -1,10 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import WorkTabs from '@/components/dashboard/my-work/WorkTabs';
 import WorkCampaignCard, { WorkCampaign } from '@/components/creator-dashboard/WorkCampaignCard';
 import WorkDetailsDrawer from '@/components/creator-dashboard/WorkDetailsDrawer';
 import SubmitContentModal from '@/components/dashboard/my-work/SubmitContentModal';
-import SubmitProofModal from '@/components/dashboard/my-work/SubmitProofModal';
+import SubmitProofModal, {
+  type LiveLinkEntry,
+} from '@/components/dashboard/my-work/SubmitProofModal';
 import CampaignFilterModal, {
   FilterState,
 } from '@/components/creator-dashboard/CampaignFilterModal';
@@ -21,15 +23,13 @@ import { CampaignApplicationDto, Campaign } from '@/types/campaign';
 interface SubmissionItem {
   id?: string;
   status: string;
-  revisionFeedback?: string;
+  brandFeedback?: string;
 }
-
 function mapAppToWorkCampaign(app: CampaignApplicationDto): WorkCampaign {
   const campaign = app.campaign || ({} as Campaign);
   const brandName = campaign.brand?.username || 'Unknown Brand';
   const platformName = app.primaryPlatform?.name || 'Instagram';
 
-  // Calculate status
   let status: WorkCampaign['status'] = 'Pending';
   let revisionComment = '';
 
@@ -45,18 +45,24 @@ function mapAppToWorkCampaign(app: CampaignApplicationDto): WorkCampaign {
       const latest = submissions[submissions.length - 1];
       if (latest.status === 'in_progress') {
         status = 'In progress';
-      } else if (latest.status === 'awaiting_review') {
+      } else if (latest.status === 'pending_approval') {
         status = 'Under review';
-      } else if (latest.status === 'revision_requested') {
+      } else if (latest.status === 'request_revision') {
         status = 'Revision requested';
-        revisionComment = latest.revisionFeedback || 'Please check guidelines and deliverables.';
-      } else if (latest.status === 'live') {
+        revisionComment = latest.brandFeedback || 'Please check guidelines and deliverables.';
+      } else if (latest.status === 'revision-sent') {
+        status = 'Under review';
+      } else if (latest.status === 'approved') {
+        status = 'Approved';
+      } else if (
+        latest.status === 'livelink_available' ||
+        latest.status === 'completed' ||
+        latest.status === 'done'
+      ) {
         status = 'Payment released';
       }
     }
   }
-
-  // Calculate days left
   let daysLeft = '0d';
   let daysLeftNumber = 0;
   if (campaign.timeline) {
@@ -103,7 +109,7 @@ type PrimaryTab = 'Active' | 'Applied' | 'Done';
 
 export default function MyWorkPage() {
   const queryClient = useQueryClient();
-  const { data: myApps = [], isLoading } = useMyApplications();
+  const { data: myApps = [], isLoading, refetch } = useMyApplications();
 
   const [activeTab, setActiveTab] = useState<PrimaryTab>('Active');
   const [activeSubFilter, setActiveSubFilter] = useState<string>('All');
@@ -135,6 +141,10 @@ export default function MyWorkPage() {
     queryClient.invalidateQueries({ queryKey: ['my-applications'] });
   });
 
+  useEffect(() => {
+    refetch();
+  }, [activeTab, refetch]);
+
   const campaigns = myApps.map(mapAppToWorkCampaign);
 
   // Handle link submission (moves campaign to "Under Review")
@@ -160,23 +170,20 @@ export default function MyWorkPage() {
     }
   };
 
-  // Handle proof submission (moves campaign to "Payment Released")
-  const handleSubmitProof = (link: string) => {
+  const handleSubmitProof = (entries: LiveLinkEntry[]) => {
     if (!submitProofCampaign) return;
 
     if (submitProofCampaign.campaignId && submitProofCampaign.submissionId) {
-      const platformKey = submitProofCampaign.platform.toLowerCase();
-      const normalisedKey = platformKey === 'x' ? 'twitter' : platformKey;
+      const liveLink = entries.reduce<Record<string, string>>((acc, entry) => {
+        acc[entry.platform] = entry.link;
+        return acc;
+      }, {});
 
       submitProof.mutate(
         {
           id: submitProofCampaign.campaignId,
           submissionId: submitProofCampaign.submissionId,
-          payload: {
-            liveLink: {
-              [normalisedKey]: link,
-            },
-          },
+          payload: { liveLink },
         },
         {
           onSuccess: () => {
@@ -189,7 +196,6 @@ export default function MyWorkPage() {
       setSubmitProofCampaign(null);
     }
   };
-
   const handleAcceptOffer = (campaign: WorkCampaign) => {
     toast.success(`Offer for "${campaign.title}" accepted!`);
   };

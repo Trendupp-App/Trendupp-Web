@@ -50,14 +50,14 @@ export default function FeedbackModal({
               onClick={action.onClick}
               disabled={action.loading}
               className={cn(
-                'w-full py-3 rounded-xl text-sm transition-colors',
+                'w-full py-1 rounded-xl text-xs transition-colors',
                 action.variant === 'primary'
                   ? 'bg-brand-pink cursor-pointer text-white font-medium hover:bg-brand-pink/90'
                   : 'border border-[#e8e6f0] text-[#1a1a2e] font-light hover:bg-[#faf9fc]',
                 action.loading && 'opacity-70 cursor-not-allowed',
               )}
             >
-              {action.loading && <Loader2 size={16} className="animate-spin" />}
+              {action.loading && <Loader2 size={14} className="animate-spin" />}
               {action.label}
             </button>
           ))}
