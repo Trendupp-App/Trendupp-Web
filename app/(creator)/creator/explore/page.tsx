@@ -6,7 +6,9 @@ import BrandCard from '@/components/creator-dashboard/BrandCard';
 import BrandProfileDrawer from '@/components/creator-dashboard/BrandProfileDrawer';
 import CreatorCard from '@/components/creator-dashboard/CreatorCard';
 import CreatorProfileDrawer from '@/components/creator-dashboard/CreatorProfileDrawer';
-import CampaignDetailsDrawer from '@/components/creator-dashboard/CampaignDetailsDrawer';
+import CampaignDetailsDrawer, {
+  MappedCampaign,
+} from '@/components/creator-dashboard/CampaignDetailsDrawer';
 import CampaignFilterModal, {
   FilterState,
 } from '@/components/creator-dashboard/CampaignFilterModal';
@@ -15,14 +17,10 @@ import { cn } from '@/lib/utils';
 type MainTab = 'campaigns' | 'brands' | 'creators';
 type CampaignFilter = 'all' | 'live' | 'past' | 'social impact';
 
-import {
-  Campaign,
-  Brand,
-  Creator,
-  MOCK_CAMPAIGNS,
-  MOCK_BRANDS,
-  MOCK_CREATORS,
-} from '@/constants/mockData';
+import { Brand, Creator, MOCK_BRANDS, MOCK_CREATORS } from '@/constants/mockData';
+import { useCampaigns } from '@/hooks/useCampaign';
+import { Campaign } from '@/types/campaign';
+import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
 
 const MAIN_TABS = [
   { id: 'campaigns', label: 'Campaigns' },
@@ -70,7 +68,7 @@ export default function ExplorePage() {
   const [activeBrandFilter, setActiveBrandFilter] = useState<string>('All');
   const [activeCreatorFilter, setActiveCreatorFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
 
@@ -84,8 +82,73 @@ export default function ExplorePage() {
     campaignGoal: null,
   });
 
+  // Fetch campaigns from backend
+  const { data: liveCampaigns = [], isLoading } = useCampaigns({
+    status:
+      activeCampaignFilter === 'all'
+        ? undefined
+        : activeCampaignFilter === 'live'
+          ? 'live'
+          : 'completed',
+    sortBy:
+      campaignFilters.sortBy === 'Newest'
+        ? 'newest'
+        : campaignFilters.sortBy === 'Highest Budget'
+          ? 'highest_budget'
+          : 'closing_soon',
+    platforms: campaignFilters.platforms.length > 0 ? campaignFilters.platforms : undefined,
+    niches: campaignFilters.niches.length > 0 ? campaignFilters.niches : undefined,
+    goal: campaignFilters.campaignGoal || undefined,
+  });
+
+  const getDaysLeft = (timelineDate: string) => {
+    const diffTime = new Date(timelineDate).getTime() - new Date().getTime();
+    if (diffTime <= 0) return 'Closed';
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays > 0) return `${diffDays}d left`;
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    return `${diffHours}h left`;
+  };
+
+  const mappedCampaigns = liveCampaigns.map((c: Campaign) => ({
+    id: c.id,
+    title: c.title,
+    brand: c.brand?.username || 'Unknown Brand',
+    budget: `₦${c.totalBudget.toLocaleString()}`,
+    budgetMin: c.totalBudget,
+    budgetMax: c.totalBudget,
+    daysLeft: getDaysLeft(c.timeline || ''),
+    daysLeftNumber: Math.max(
+      0,
+      Math.floor(
+        (new Date(c.timeline || '').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    ),
+    tier: c.creatorCategory?.name || 'Nano',
+    appliedCount: c.applicationsCount?.total || 0,
+    image:
+      c.coverImage ||
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
+    platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
+    status: (c.status === 'active' || c.status === 'live'
+      ? 'live'
+      : c.status === 'completed'
+        ? 'past'
+        : c.status) as string,
+    isSocialImpact: false,
+    goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
+    createdAt: c.createdAt,
+    campaignBrief: c.campaignBrief || 'No brief provided.',
+    deliverables: c.deliverables || [],
+    contentDirection: c.contentDirection || [],
+    contentGuidelines: c.contentGuidelines || { dos: [], donts: [] },
+    usageRights: c.usageRights || '',
+    successLooksLike: c.successLooksLike || '',
+  }));
+
   // Filter campaigns
-  const filteredCampaigns = MOCK_CAMPAIGNS.filter((campaign) => {
+  const filteredCampaigns = mappedCampaigns.filter((campaign) => {
     const matchesSearch =
       campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       campaign.brand.toLowerCase().includes(searchQuery.toLowerCase());
@@ -96,7 +159,7 @@ export default function ExplorePage() {
     if (activeCampaignFilter === 'social impact' && !campaign.isSocialImpact) return false;
 
     if (campaignFilters.platforms.length > 0) {
-      const hasMatchingPlatform = campaign.platforms?.some((p) => {
+      const hasMatchingPlatform = campaign.platforms?.some((p: string) => {
         const normalized = p === 'X (Twitter)' ? 'X' : p;
         return campaignFilters.platforms.includes(normalized);
       });
@@ -105,7 +168,9 @@ export default function ExplorePage() {
 
     // Niche filter
     if (campaignFilters.niches.length > 0) {
-      const hasMatchingNiche = campaign.niches?.some((n) => campaignFilters.niches.includes(n));
+      const hasMatchingNiche = campaign.niches?.some((n: string) =>
+        campaignFilters.niches.includes(n),
+      );
       if (!hasMatchingNiche) return false;
     }
 
@@ -181,26 +246,28 @@ export default function ExplorePage() {
       {/* Mobile Title & Filters Row */}
       <div className="flex md:hidden items-center justify-between mb-4 w-full shrink-0">
         <h1 className="text-2xl font-bold text-[#1a1a2e] tracking-tight">Explore</h1>
-        <button
-          onClick={() => {
-            setFilterModalKey((prev) => prev + 1);
-            setIsFilterModalOpen(true);
-          }}
-          className="py-1.5 px-3 bg-[#e8e6f0]/50 hover:bg-[#e8e6f0]/80 rounded-full flex items-center gap-1.5 text-xs font-semibold text-[#1a1a2e] focus:outline-none border-none cursor-pointer transition-colors"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-3.5 h-3.5 text-[#1a1a2e]"
+        {activeTab === 'campaigns' && (
+          <button
+            onClick={() => {
+              setFilterModalKey((prev) => prev + 1);
+              setIsFilterModalOpen(true);
+            }}
+            className="py-1.5 px-3 bg-[#e8e6f0]/50 hover:bg-[#e8e6f0]/80 rounded-full flex items-center gap-1.5 text-xs font-semibold text-[#1a1a2e] focus:outline-none border-none cursor-pointer transition-colors"
           >
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-          </svg>
-          <span>Filters</span>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-3.5 h-3.5 text-[#1a1a2e]"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <span>Filters</span>
+          </button>
+        )}
       </div>
 
       {/* Mobile Search Bar */}
@@ -255,26 +322,28 @@ export default function ExplorePage() {
             className="w-full h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl pl-11 pr-4 text-xs font-light text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 placeholder-[#9a99b0] shadow-sm"
           />
         </div>
-        <button
-          onClick={() => {
-            setFilterModalKey((prev) => prev + 1);
-            setIsFilterModalOpen(true);
-          }}
-          className="h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl px-5 flex items-center gap-2 text-xs font-semibold text-[#1a1a2e] hover:bg-[#fcfbfd] transition-colors shadow-sm focus:outline-none cursor-pointer"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-4 h-4 text-[#1a1a2e]"
+        {activeTab === 'campaigns' && (
+          <button
+            onClick={() => {
+              setFilterModalKey((prev) => prev + 1);
+              setIsFilterModalOpen(true);
+            }}
+            className="h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl px-5 flex items-center gap-2 text-xs font-semibold text-[#1a1a2e] hover:bg-[#fcfbfd] transition-colors shadow-sm focus:outline-none cursor-pointer"
           >
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-          </svg>
-          <span>Filter</span>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4 text-[#1a1a2e]"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <span>Filter</span>
+          </button>
+        )}
       </div>
 
       {/* ── Main Tabs: Campaigns | Brands | Creators ── */}
@@ -361,7 +430,9 @@ export default function ExplorePage() {
       {/* ── Campaigns Grid ── */}
       {activeTab === 'campaigns' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-          {sortedCampaigns.length > 0 ? (
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => <CampaignCardSkeleton key={i} />)
+          ) : sortedCampaigns.length > 0 ? (
             sortedCampaigns.map((campaign) => (
               <div
                 key={campaign.id}
@@ -376,6 +447,7 @@ export default function ExplorePage() {
                   tier={campaign.tier}
                   appliedCount={campaign.appliedCount}
                   image={campaign.image}
+                  status={campaign.status}
                 />
               </div>
             ))
@@ -443,7 +515,11 @@ export default function ExplorePage() {
       <CampaignDetailsDrawer
         isOpen={!!selectedCampaign}
         onClose={() => setSelectedCampaign(null)}
-        campaign={selectedCampaign}
+        campaign={
+          selectedCampaign
+            ? mappedCampaigns.find((c) => c.id === selectedCampaign.id) || selectedCampaign
+            : null
+        }
       />
 
       {/* ── Brand Profile Drawer ── */}

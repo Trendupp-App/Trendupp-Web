@@ -17,6 +17,33 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+function formatValidationErrorMessage(message: unknown): string {
+  if (!message) return '';
+
+  if (Array.isArray(message)) {
+    return message.map((msg) => formatSingleMessage(String(msg))).join('. ');
+  }
+
+  if (typeof message === 'string') {
+    return formatSingleMessage(message);
+  }
+
+  return String(message);
+}
+
+function formatSingleMessage(msg: string): string {
+  let formatted = msg.replace(/\b([a-z]+)((?:[A-Z][a-z]*)+)\b/g, (match) => {
+    const words = match
+      .replace(/([A-Z])/g, ' $1')
+      .toLowerCase()
+      .trim();
+    return words;
+  });
+
+  formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  return formatted;
+}
+
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -25,6 +52,11 @@ apiClient.interceptors.response.use(
       useAuthStore.getState().clearSession();
       // window.location.href = '/signin';
     }
+
+    if (error.response?.data?.message) {
+      error.response.data.message = formatValidationErrorMessage(error.response.data.message);
+    }
+
     return Promise.reject(error);
   },
 );

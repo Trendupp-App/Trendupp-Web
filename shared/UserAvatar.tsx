@@ -15,7 +15,19 @@ interface UserAvatarProps {
 export default function UserAvatar({ avatarUrl, initials, className, size = 36 }: UserAvatarProps) {
   const [imgError, setImgError] = useState(false);
 
-  const showImage = avatarUrl && !imgError;
+  const getFullImageUrl = (url: string | null | undefined) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://trendupp-server.onrender.com';
+    const base = apiBase.replace(/\/api\/v1\/?$/, '');
+    return `${base}/${cleanUrl}`;
+  };
+
+  const resolvedUrl = getFullImageUrl(avatarUrl);
+  const showImage = !!resolvedUrl && !imgError;
 
   return (
     <div
@@ -27,7 +39,7 @@ export default function UserAvatar({ avatarUrl, initials, className, size = 36 }
     >
       {showImage ? (
         <Image
-          src={avatarUrl}
+          src={resolvedUrl}
           alt="User avatar"
           fill
           className="object-cover"

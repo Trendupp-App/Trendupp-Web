@@ -13,6 +13,7 @@ interface CampaignCardProps {
   appliedCount: number;
   image: string;
   hideApplied?: boolean;
+  status?: string;
 }
 
 export default function CampaignCard({
@@ -24,6 +25,7 @@ export default function CampaignCard({
   appliedCount,
   image,
   hideApplied = false,
+  status,
 }: CampaignCardProps) {
   const isClosed = daysLeft.toLowerCase() === 'closed';
 
@@ -76,8 +78,17 @@ export default function CampaignCard({
             {tier}
           </div>
         ) : (
-          <div className="absolute bottom-3 right-3 bg-[#e6f9f1] text-[#00c37b] text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm z-10">
-            Live
+          <div
+            className={cn(
+              'absolute bottom-3 right-3 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm z-10 capitalize select-none',
+              status === 'live'
+                ? 'bg-[#e6f9f1] text-[#00c37b]'
+                : status === 'submitted'
+                  ? 'bg-[#eff6ff] text-[#2563eb]'
+                  : 'bg-[#fef3c7] text-[#d97706]',
+            )}
+          >
+            {status || 'Live'}
           </div>
         )}
       </div>

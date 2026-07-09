@@ -9,6 +9,12 @@ import type {
   PatchCampaignResponse,
   SubmitCampaignResponse,
   CampaignApplicationDto,
+  ApplyCampaignPayload,
+  ApplyCampaignResponse,
+  SubmitContentDraftPayload,
+  SubmitContentDraftResponse,
+  SubmitLiveLinkPayload,
+  SubmitLiveLinkResponse,
 } from '@/types/campaign';
 import { CampaignSubmission, VetDraftPayload } from '@/types/submissions';
 import type { CreateDisputePayload } from '@/types/dispute';
@@ -81,6 +87,15 @@ export const campaignApi = {
   getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
+  getCampaigns: (params?: {
+    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
+    platforms?: string[];
+    niches?: string[];
+    nicheIds?: string[];
+    goal?: string;
+  }) => apiClient.get<{ data: Campaign[] }>('/campaigns', { params }),
+
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
 
   submitCampaign: (id: string) => apiClient.post<SubmitCampaignResponse>(`/campaigns/${id}/submit`),
@@ -114,3 +129,22 @@ export const campaignApi = {
   createReview: (payload: CreateReviewPayload) =>
     apiClient.post<{ message: string }>('/campaigns/reviews', payload),
 };
+
+export interface BackendReview {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt?: string;
+  campaign?: {
+    id: string;
+    title: string;
+    brand?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      companyName?: string | null;
+      avatarUrl?: string | null;
+    };
+  };
+}

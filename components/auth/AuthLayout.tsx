@@ -16,8 +16,6 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
-const SLIDES = 3;
-
 export default function AuthLayout({
   // imageSrc,
   // imageAlt,
