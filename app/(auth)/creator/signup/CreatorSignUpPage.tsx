@@ -18,6 +18,7 @@ import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 import Link from 'next/link';
+import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
 
 const DRAFT_KEY = 'creator-signup-draft';
 
@@ -88,7 +89,7 @@ export default function CreatorSignupPage() {
     }
 
     try {
-      await signup.mutateAsync({
+      const res = await signup.mutateAsync({
         email: values.email,
         password: values.password,
         firstName: values.firstName,
@@ -98,8 +99,15 @@ export default function CreatorSignupPage() {
         acceptedTerms: values.terms,
         acceptedPromotions: values.acceptedPromotions,
       });
+      const otp = isOtpAutofillEnabled() ? extractOtpFromMessage(res.data?.message) : null;
+
       setTimeout(() => {
-        router.push(`/verify-email?email=${encodeURIComponent(values.email)}&type=creator`);
+        const query = new URLSearchParams({
+          email: values.email,
+          type: 'creator',
+          ...(otp ? { otp } : {}),
+        });
+        router.push(`/verify-email?${query.toString()}`);
       }, 500);
     } catch {}
   }
@@ -282,7 +290,13 @@ export default function CreatorSignupPage() {
                         <Checkbox
                           id="terms"
                           checked={!!field.value}
-                          onCheckedChange={(checked) => field.onChange(checked === true)}
+                          onCheckedChange={(checked) => {
+                            if (checked === true) {
+                              goToTerms();
+                              return;
+                            }
+                            field.onChange(false);
+                          }}
                           className="mt-0.5 border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
                         />
                       )}
@@ -332,7 +346,7 @@ export default function CreatorSignupPage() {
 
               <Button
                 type="submit"
-                disabled={signup.isPending || googlePending}
+                disabled={signup.isPending || googlePending || !termsAccepted}
                 className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
               >
                 {signup.isPending ? 'Creating account…' : 'Sign up'}

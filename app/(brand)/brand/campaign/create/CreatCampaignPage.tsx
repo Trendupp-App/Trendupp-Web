@@ -214,7 +214,8 @@ export default function NewCampaignPage() {
 
   function handlePay() {
     if (!paymentUrl) return;
-    window.location.href = paymentUrl;
+    window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+    router.push('/brand/campaign');
   }
 
   if (isHydratingDraft) {
