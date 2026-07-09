@@ -128,9 +128,9 @@ const CREATOR_NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/creator/dashboard', icon: LayoutGrid },
   { label: 'Explore', href: '/creator/explore', icon: Compass },
   { label: 'News', href: '/creator/news', icon: TrendingUp },
-  { label: 'My work', href: '/creator/my-work', icon: Briefcase },
+  { label: 'My Work', href: '/creator/my-work', icon: Briefcase },
   { label: 'Payout', href: '/creator/payout', icon: Wallet },
-  { label: 'My profile', href: '/creator/profile', icon: User },
+  { label: 'My Profile', href: '/creator/profile', icon: User },
 ];
 
 const BRAND_NAV_ITEMS: NavItem[] = [
@@ -139,7 +139,7 @@ const BRAND_NAV_ITEMS: NavItem[] = [
   { label: 'Explore', href: '/brand/explore', icon: Compass },
   { label: 'News', href: '/brand/news', icon: TrendingUp },
   { label: 'Payout', href: '/brand/payout', icon: Wallet },
-  { label: 'My profile', href: '/brand/profile', icon: User },
+  { label: 'My Profile', href: '/brand/profile', icon: User },
 ];
 
 export default function Sidebar() {

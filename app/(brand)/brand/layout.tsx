@@ -14,9 +14,9 @@ const CREATOR_TITLES: Record<string, string> = {
   '/creator/dashboard': 'Dashboard',
   '/creator/explore': 'Campaign',
   '/creator/news': 'News',
-  '/creator/my-work': 'My work',
+  '/creator/my-work': 'My Work',
   '/creator/payout': 'Payout',
-  '/creator/profile': 'My profile',
+  '/creator/profile': 'My Profile',
 };
 
 const BRAND_TITLES: Record<string, string> = {
@@ -25,7 +25,7 @@ const BRAND_TITLES: Record<string, string> = {
   '/brand/explore': 'Explore',
   '/brand/news': 'News',
   '/brand/payout': 'Payout',
-  '/brand/profile': 'My profile',
+  '/brand/profile': 'My Profile',
 };
 
 function resolveTitle(pathname: string, isBrand: boolean): string {

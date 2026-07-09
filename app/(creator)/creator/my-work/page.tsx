@@ -323,7 +323,7 @@ export default function MyWorkPage() {
     <div className="flex flex-col gap-6 w-full pb-12 select-none">
       {/* Page Title & Subtitle */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-bold text-[#1a1a2e]">My work</h1>
+        <h1 className="text-[28px] font-bold text-[#1a1a2e]">My Work</h1>
         <p className="text-sm font-light text-[#7a7a9a]">
           Track your active campaigns and earnings
         </p>
