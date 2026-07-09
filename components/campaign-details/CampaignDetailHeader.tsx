@@ -18,7 +18,7 @@ export default function CampaignDetailHeader({ campaign }: CampaignDetailHeaderP
         className="flex cursor-pointer items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors mb-4"
       >
         <ArrowLeft size={16} />
-        Back to campaign
+        Back to campaigns
       </button>
 
       <div className="relative w-full h-64 rounded-2xl overflow-hidden mb-5">

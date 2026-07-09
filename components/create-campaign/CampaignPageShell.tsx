@@ -34,7 +34,7 @@ export default function CampaignPageShell({
           className="flex items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors mb-6"
         >
           <ArrowLeft size={16} />
-          {currentStep === 1 ? 'Back to campaign' : 'Back'}
+          {currentStep === 1 ? 'Back to campaigns' : 'Back'}
         </button>
 
         {/* Title */}
