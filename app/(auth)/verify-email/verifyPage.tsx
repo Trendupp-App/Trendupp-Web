@@ -17,6 +17,7 @@ export default function VerifyPage() {
   const type = params.get('type') ?? 'creator';
   const verifyOtp = useVerifyOtp();
   const resendOtp = useResendOtp();
+  const prefillOtp = params.get('otp') ?? '';
 
   async function handleSubmit() {
     if (otp.length < 6) return;
@@ -56,7 +57,7 @@ export default function VerifyPage() {
             Enter your 6 digit security code
           </p>
 
-          <OtpInput onChange={setOtp} />
+          <OtpInput onChange={setOtp} initialValue={prefillOtp} />
 
           <Button
             onClick={handleSubmit}

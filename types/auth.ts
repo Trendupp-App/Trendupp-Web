@@ -37,6 +37,7 @@ export interface AuthUser {
 export interface AuthResponse {
   accessToken: string;
   user: AuthUser;
+  message: string;
 }
 
 export interface MessageResponse {
