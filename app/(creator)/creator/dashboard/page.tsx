@@ -70,6 +70,7 @@ export default function CreatorDashboardPage() {
     isSocialImpact: false,
     goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
     createdAt: c.createdAt,
+    timeline: c.timeline,
     campaignBrief: c.campaignBrief || 'No brief provided.',
     deliverables: c.deliverables || [],
     contentDirection: c.contentDirection || [],
