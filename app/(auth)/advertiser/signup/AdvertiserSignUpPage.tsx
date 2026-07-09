@@ -21,6 +21,8 @@ import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 import Link from 'next/link';
+import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
+
 const DRAFT_KEY = 'advertiser-signup-draft';
 
 export default function AdvertiserSignupPage() {
@@ -84,7 +86,7 @@ export default function AdvertiserSignupPage() {
     const creatorRole = roles?.find((r) => r.name === 'brand');
     if (!creatorRole) return toast.error('Could not load roles');
 
-    await signup.mutateAsync({
+    const res = await signup.mutateAsync({
       email: values.email,
       password: values.password,
       brandName: values.brandName,
@@ -93,8 +95,15 @@ export default function AdvertiserSignupPage() {
       acceptedPromotions: values.acceptedPromotions,
     });
 
+    const otp = isOtpAutofillEnabled() ? extractOtpFromMessage(res?.data?.message) : null;
+
     setTimeout(() => {
-      router.push(`/verify-email?email=${encodeURIComponent(values.email)}&type=brand`);
+      const query = new URLSearchParams({
+        email: values.email,
+        type: 'creator',
+        ...(otp ? { otp } : {}),
+      });
+      router.push(`/verify-email?${query.toString()}`);
     }, 500);
   }
 
@@ -246,7 +255,13 @@ export default function AdvertiserSignupPage() {
                       <Checkbox
                         id="terms"
                         checked={!!field.value}
-                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        onCheckedChange={(checked) => {
+                          if (checked === true) {
+                            goToTerms();
+                            return;
+                          }
+                          field.onChange(false);
+                        }}
                         className="mt-0.5 border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
                       />
                     )}
@@ -294,7 +309,7 @@ export default function AdvertiserSignupPage() {
 
             <Button
               type="submit"
-              disabled={signup.isPending || googlePending}
+              disabled={signup.isPending || googlePending || !termsAccepted}
               className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
               {signup.isPending ? 'Creating account…' : 'Sign up'}
