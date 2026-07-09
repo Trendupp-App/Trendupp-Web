@@ -618,7 +618,7 @@ export default function CampaignDetailsDrawer({
               </div>
 
               {/* Action apply button */}
-              {campaign.status === 'live' ? (
+              {campaign.status === 'live' && campaign.daysLeft.toLowerCase() !== 'closed' ? (
                 <Button
                   onClick={() => setDrawerMode('apply')}
                   className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
@@ -635,7 +635,9 @@ export default function CampaignDetailsDrawer({
                   disabled
                   className="w-full bg-[#eaeaf0] text-[#7a7a9a] font-semibold text-[15px] py-6.5 rounded-xl transition-all select-none border-none shrink-0 mt-4 cursor-not-allowed"
                 >
-                  {campaign.status === 'past' || campaign.status === 'completed'
+                  {campaign.status === 'past' ||
+                  campaign.status === 'completed' ||
+                  campaign.daysLeft.toLowerCase() === 'closed'
                     ? 'Campaign Closed'
                     : `Apply Disabled (Campaign is ${campaign.status || 'Pending approval'})`}
                 </Button>
