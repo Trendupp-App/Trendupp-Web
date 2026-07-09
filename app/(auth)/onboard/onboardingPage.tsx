@@ -134,9 +134,16 @@ export default function OnboardingPage() {
   const draft = readOnboardingDraft<OnboardingData>(user?.id);
   const serverResumeIndex = getResumeStepIndex(steps, user?.onboardingStepsCompleted, isAdvertiser);
 
-  const [stepIndex, setStepIndex] = useState(() =>
-    Math.max(draft?.stepIndex ?? 0, serverResumeIndex),
-  );
+  const [stepIndex, setStepIndex] = useState(() => {
+    const isFullyComplete = user?.onboardingPercentage === 100;
+    const maxIndex = isFullyComplete ? steps.length - 1 : steps.length - 2;
+
+    const draftIndex = draft?.stepIndex ?? 0;
+    // Only trust draft index if it does not bypass the server's incomplete status
+    const resolvedIndex = draftIndex <= serverResumeIndex ? draftIndex : serverResumeIndex;
+
+    return Math.min(resolvedIndex, maxIndex);
+  });
 
   const [data, setData] = useState<OnboardingData>(() => ({
     username: user?.username ?? undefined,
