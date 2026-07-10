@@ -7,6 +7,7 @@ import SubmitContentModal from '@/components/dashboard/my-work/SubmitContentModa
 import SubmitProofModal, {
   type LiveLinkEntry,
 } from '@/components/dashboard/my-work/SubmitProofModal';
+import CampaignStatusSheet from '@/components/creator-dashboard/CampaignStatusSheet';
 import CampaignFilterModal, {
   FilterState,
 } from '@/components/creator-dashboard/CampaignFilterModal';
@@ -19,17 +20,25 @@ import {
 } from '@/hooks/useCampaign';
 import { toast } from 'sonner';
 import { CampaignApplicationDto, Campaign } from '@/types/campaign';
+import { useBrandNames } from '@/hooks/useBrandNames';
 
 interface SubmissionItem {
   id?: string;
   status: string;
   brandFeedback?: string;
+  draftLink?: string | null;
+  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string }> | null;
 }
-function mapAppToWorkCampaign(app: CampaignApplicationDto): WorkCampaign {
+function mapAppToWorkCampaign(
+  app: CampaignApplicationDto,
+  brandNameById: Record<string, string> = {},
+): WorkCampaign {
   const campaign = app.campaign || ({} as Campaign);
-  const brandName = campaign.brand?.username || 'Unknown Brand';
+  const brandName =
+    campaign.brand?.username ||
+    (campaign.brandId && brandNameById[campaign.brandId]) ||
+    'Unknown Brand';
   const platformName = app.primaryPlatform?.name || 'Instagram';
-
   let status: WorkCampaign['status'] = 'Pending';
   let revisionComment = '';
 
@@ -102,6 +111,16 @@ function mapAppToWorkCampaign(app: CampaignApplicationDto): WorkCampaign {
     budgetMax: campaign.totalBudget || 0,
     actualAmount: app.feeRequest,
     revisionComment,
+    deliverables: campaign.deliverables || [],
+    contentDirection: campaign.contentDirection || [],
+    contentDos: campaign.contentGuidelines?.dos || [],
+    contentDonts: campaign.contentGuidelines?.donts || [],
+    usageRights: campaign.usageRights || 'No usage rights specified.',
+    successLooksLike: campaign.successLooksLike || 'No success criteria specified.',
+    draftLink: latestSubmission?.draftLink ?? null,
+    liveLink: latestSubmission?.liveLink ?? null,
+    contentIdea: app.contentIdea,
+    applicationsCount: campaign.applicationsCount?.total ?? 0,
   };
 }
 
@@ -113,7 +132,8 @@ export default function MyWorkPage() {
 
   const [activeTab, setActiveTab] = useState<PrimaryTab>('Active');
   const [activeSubFilter, setActiveSubFilter] = useState<string>('All');
-
+  const [statusSheetCampaign, setStatusSheetCampaign] = useState<WorkCampaign | null>(null);
+  const [isStatusSheetOpen, setIsStatusSheetOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<WorkCampaign | null>(null);
 
   // Submit content modal states
@@ -145,7 +165,10 @@ export default function MyWorkPage() {
     refetch();
   }, [activeTab, refetch]);
 
-  const campaigns = myApps.map(mapAppToWorkCampaign);
+  const brandIds = myApps.map((app) => app.campaign?.brandId);
+  const { nameById: brandNameById } = useBrandNames(brandIds);
+
+  const campaigns = myApps.map((app) => mapAppToWorkCampaign(app, brandNameById));
 
   // Handle link submission (moves campaign to "Under Review")
   const handleSubmitLink = (link: string) => {
@@ -349,12 +372,11 @@ export default function MyWorkPage() {
             <WorkCampaignCard
               key={campaign.id}
               campaign={campaign}
-              onShowMoreInfo={(c) => setSelectedCampaign(c)}
-              onSubmitLink={(c) => setSubmitLinkCampaign(c)}
-              onSubmitProof={(c) => setSubmitProofCampaign(c)}
-              onAcceptOffer={handleAcceptOffer}
-              onDeclineOffer={handleDeclineOffer}
-              isSelected={selectedCampaign?.id === campaign.id}
+              onOpenStatusSheet={(c) => {
+                setStatusSheetCampaign(c);
+                setIsStatusSheetOpen(true);
+              }}
+              isSelected={statusSheetCampaign?.id === campaign.id}
             />
           ))}
         </div>
@@ -365,6 +387,30 @@ export default function MyWorkPage() {
           </span>
         </div>
       )}
+
+      <CampaignStatusSheet
+        campaign={statusSheetCampaign}
+        open={isStatusSheetOpen}
+        onOpenChange={setIsStatusSheetOpen}
+        onSubmitLink={(c) => {
+          setIsStatusSheetOpen(false);
+          setSubmitLinkCampaign(c);
+        }}
+        onSubmitProof={(c) => {
+          setIsStatusSheetOpen(false);
+          setSubmitProofCampaign(c);
+        }}
+        onAcceptOffer={handleAcceptOffer}
+        onDeclineOffer={handleDeclineOffer}
+        onRaiseDispute={(c) => {
+          setIsStatusSheetOpen(false);
+          setDisputeCampaign(c);
+        }}
+        onViewBrief={(c) => {
+          setIsStatusSheetOpen(false);
+          setSelectedCampaign(c);
+        }}
+      />
 
       {/* Campaign Details slide-out drawer */}
       <WorkDetailsDrawer
@@ -378,10 +424,6 @@ export default function MyWorkPage() {
         onSubmitProof={(c) => {
           setSelectedCampaign(null);
           setSubmitProofCampaign(c);
-        }}
-        onRaiseDispute={(c) => {
-          setSelectedCampaign(null);
-          setDisputeCampaign(c);
         }}
       />
 

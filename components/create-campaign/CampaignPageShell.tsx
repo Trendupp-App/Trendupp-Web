@@ -3,7 +3,6 @@
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CampaignStepper from './CampaignStepper';
-
 interface CampaignPageShellProps {
   currentStep: number;
   onBack?: () => void;
@@ -30,11 +29,11 @@ export default function CampaignPageShell({
       <div className="max-w-[900px] mx-auto px-6 py-8">
         {/* Back link */}
         <button
-          onClick={handleBack}
-          className="flex items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors mb-6"
+          onClick={() => router.replace('/brand/campaign')}
+          className="flex cursor-pointer items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors mb-6"
         >
           <ArrowLeft size={16} />
-          {currentStep === 1 ? 'Back to campaign' : 'Back'}
+          {'Back to campaign'}
         </button>
 
         {/* Title */}

@@ -147,6 +147,8 @@ export const campaignApi = {
 
   getCreatorReviews: (creatorId: string) =>
     apiClient.get<{ reviews: BackendReview[] }>(`/campaigns/reviews/creator/${creatorId}`),
+
+  deleteDraftCampaign: (id: string) => apiClient.delete<{ message: string }>(`/campaigns/${id}`),
 };
 
 export interface BackendReview {

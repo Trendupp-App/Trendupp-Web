@@ -3,14 +3,16 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { FolderOpen, Plus } from 'lucide-react';
+import { FolderOpen, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import DraftCampaignCard from '@/components/create-campaign/CampaignDraftCard';
 import DraftCampaignCardSkeleton from '@/components/skeletons/DraftCardSkeleton';
 import CampaignCard from '@/components/create-campaign/CampaignCard';
 import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
-import { useMyCampaigns } from '@/hooks/useCampaign';
-import { DUMMY_ACTIVE_CAMPAIGNS, DUMMY_COMPLETED_CAMPAIGNS } from '@/dummy/campaign';
+import { useMyCampaigns, useDeleteDraftCampaign } from '@/hooks/useCampaign';
+import { DUMMY_COMPLETED_CAMPAIGNS } from '@/dummy/campaign';
+import FeedbackModal from '@/shared/FeedBackModal';
+
 type MainTab = 'draft' | 'live' | 'active' | 'completed';
 type ActiveSubTab = 'in_progress' | 'content_review' | 'revision' | 'live_content' | 'all';
 
@@ -46,6 +48,8 @@ export default function BrandCampaignsPage() {
   }, [searchParams, manualTab]);
 
   const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('all');
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const deleteDraft = useDeleteDraftCampaign(() => setPendingDeleteId(null));
 
   function handleTabClick(tab: MainTab) {
     setManualTab(tab);
@@ -103,10 +107,15 @@ export default function BrandCampaignsPage() {
     active: activeCampaigns.length,
     completed: completedCampaigns.length,
   };
-
   function handleDeleteDraft(id: string) {
-    console.log('Delete draft campaign with id:', id);
+    setPendingDeleteId(id);
   }
+
+  function handleConfirmDelete() {
+    if (!pendingDeleteId) return;
+    deleteDraft.mutate(pendingDeleteId);
+  }
+  const pendingDeleteCampaign = allDraftTabCampaigns.find((c) => c.id === pendingDeleteId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -252,6 +261,32 @@ export default function BrandCampaignsPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Confirm draft deletion */}
+      {pendingDeleteId && (
+        <FeedbackModal
+          icon={Trash2}
+          iconColor="text-red-500"
+          message={
+            <>
+              Delete{' '}
+              <span className="font-semibold">
+                {pendingDeleteCampaign?.title ?? 'this draft campaign'}
+              </span>
+              ? This action is permanent and can&apos;t be undone.
+            </>
+          }
+          actions={[
+            { label: 'cancel', onClick: () => setPendingDeleteId(null) },
+            {
+              label: 'delete',
+              variant: 'primary',
+              onClick: handleConfirmDelete,
+              loading: deleteDraft.isPending,
+            },
+          ]}
+        />
       )}
     </div>
   );
