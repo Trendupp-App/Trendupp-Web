@@ -18,7 +18,7 @@ import CampaignFilterPillRow, {
 import CampaignsGrid from '@/components/creator-dashboard/explore/CampaignsGrid';
 import BrandsList from '@/components/creator-dashboard/explore/BrandList';
 import CreatorsList from '@/components/creator-dashboard/explore/CreatorList';
-
+import ExploreSearchAndFilter from '@/components/creator-dashboard/explore/ExploreSearchAndFilter';
 import { useExploreCampaigns } from '@/hooks/useExploreCampaign';
 import { useExploreCreators, useExploreBrands } from '@/hooks/useExplore';
 import { useNiches, useIndustries } from '@/hooks/useOnboardingQueries';
@@ -98,26 +98,21 @@ export default function ExplorePage() {
         <h1 className="text-2xl font-bold text-[#1a1a2e] tracking-tight">Explore</h1>
       </div>
 
-      <div className="hidden md:flex items-center gap-3 mb-5 shrink-0">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-[320px] h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl px-4 text-xs font-light text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 shadow-sm"
-        />
-        {activeTab === 'campaigns' && (
-          <button
-            onClick={() => {
-              setFilterModalKey((prev) => prev + 1);
-              setIsFilterModalOpen(true);
-            }}
-            className="h-10 bg-white border border-[#e8e6f0]/80 rounded-2xl px-5 text-xs font-semibold text-[#1a1a2e] shadow-sm cursor-pointer"
-          >
-            Filter
-          </button>
-        )}
+      <div className="flex flex-col gap-1 mb-1 shrink-0">
+        <h1 className="text-xl md:text-2xl font-bold text-[#1a1a2e] tracking-tight">
+          {activeTab === 'campaigns' ? 'Campaigns' : activeTab === 'brands' ? 'Brands' : 'Creators'}
+        </h1>
       </div>
+
+      <ExploreSearchAndFilter
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        showFilterButton={activeTab === 'campaigns'}
+        onFilterClick={() => {
+          setFilterModalKey((prev) => prev + 1);
+          setIsFilterModalOpen(true);
+        }}
+      />
 
       <MainTabs active={activeTab} onChange={handleTabChange} />
 

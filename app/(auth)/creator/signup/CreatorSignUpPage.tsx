@@ -19,7 +19,8 @@ import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 import Link from 'next/link';
 import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
-
+import { useUsernameAvailability } from '@/hooks/useAuthMutations';
+import { UsernameAvailabilityHint } from '@/shared/UsernameAvailabilityHint';
 const DRAFT_KEY = 'creator-signup-draft';
 
 export default function CreatorSignupPage() {
@@ -48,6 +49,8 @@ export default function CreatorSignupPage() {
   });
 
   const termsAccepted = useWatch({ control, name: 'terms' });
+  const usernameValue = useWatch({ control, name: 'username' }) ?? '';
+  const usernameCheck = useUsernameAvailability(usernameValue);
 
   useEffect(() => {
     const draftRaw = sessionStorage.getItem(DRAFT_KEY);
@@ -85,6 +88,10 @@ export default function CreatorSignupPage() {
 
     if (!creatorRole) {
       toast.error('Could not load roles. Please refresh and try again.');
+      return;
+    }
+    if (usernameCheck.isTaken) {
+      toast.error('That username is already taken. Please choose another.');
       return;
     }
 
@@ -209,8 +216,15 @@ export default function CreatorSignupPage() {
                     className={`pl-9 ${inputCls}`}
                   />
                 </div>
-                {errors.username && (
+                {errors.username ? (
                   <p className="text-[11px] text-red-400">{errors.username.message}</p>
+                ) : (
+                  <UsernameAvailabilityHint
+                    value={usernameValue}
+                    isChecking={usernameCheck.isChecking}
+                    isTaken={usernameCheck.isTaken}
+                    isAvailable={usernameCheck.isAvailable}
+                  />
                 )}
               </div>
 
@@ -346,7 +360,9 @@ export default function CreatorSignupPage() {
 
               <Button
                 type="submit"
-                disabled={signup.isPending || googlePending || !termsAccepted}
+                disabled={
+                  signup.isPending || googlePending || !termsAccepted || usernameCheck.isTaken
+                }
                 className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
               >
                 {signup.isPending ? 'Creating account…' : 'Sign up'}

@@ -16,7 +16,6 @@ export interface MappedExploreCampaign {
   niches: string[];
   platforms: string[];
   status: string;
-  isSocialImpact: boolean;
   goal: 'Content Creation' | 'Amplification';
   createdAt?: string;
   campaignBrief: string;
@@ -28,12 +27,14 @@ export interface MappedExploreCampaign {
 }
 
 export function getDaysLeft(timelineDate: string): string {
-  const diffTime = new Date(timelineDate).getTime() - new Date().getTime();
+  const ts = Date.parse(timelineDate);
+  if (Number.isNaN(ts)) return 'Closed';
+  const diffTime = ts - Date.now();
   if (diffTime <= 0) return 'Closed';
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   if (diffDays > 0) return `${diffDays}d left`;
   const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-  return `${diffHours}h left`;
+  return `${Math.max(0, diffHours)}h left`;
 }
 
 export function mapCampaign(c: Campaign): MappedExploreCampaign {
@@ -45,12 +46,12 @@ export function mapCampaign(c: Campaign): MappedExploreCampaign {
     budgetMin: c.totalBudget,
     budgetMax: c.totalBudget,
     daysLeft: getDaysLeft(c.timeline || ''),
-    daysLeftNumber: Math.max(
-      0,
-      Math.floor(
-        (new Date(c.timeline || '').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
-      ),
-    ),
+    daysLeftNumber: (() => {
+      const ts = Date.parse(c.timeline ?? '');
+      return Number.isNaN(ts)
+        ? 0
+        : Math.max(0, Math.floor((ts - Date.now()) / (1000 * 60 * 60 * 24)));
+    })(),
     tier: c.creatorCategory?.name || 'Nano',
     appliedCount: c.applicationsCount?.total || 0,
     image:
@@ -64,7 +65,6 @@ export function mapCampaign(c: Campaign): MappedExploreCampaign {
         : c.status === 'completed'
           ? 'past'
           : c.status,
-    isSocialImpact: false,
     goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
     createdAt: c.createdAt,
     campaignBrief: c.campaignBrief || 'No brief provided.',
@@ -84,7 +84,7 @@ export function filterCampaigns(
     filters,
   }: {
     searchQuery: string;
-    statusFilter: 'all' | 'live' | 'past' | 'social impact';
+    statusFilter: 'all' | 'live' | 'past';
     filters: FilterState;
   },
 ): MappedExploreCampaign[] {
@@ -96,8 +96,6 @@ export function filterCampaigns(
 
     if (statusFilter === 'live' && campaign.status !== 'live') return false;
     if (statusFilter === 'past' && campaign.status !== 'past') return false;
-    if (statusFilter === 'social impact' && !campaign.isSocialImpact) return false;
-
     if (filters.platforms.length > 0) {
       const hasMatchingPlatform = campaign.platforms.some((p) => {
         const normalized = p === 'X (Twitter)' ? 'X' : p;

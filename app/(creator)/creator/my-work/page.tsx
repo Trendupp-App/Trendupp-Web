@@ -39,9 +39,6 @@ function mapAppToWorkCampaign(
     (campaign.brandId && brandNameById[campaign.brandId]) ||
     'Unknown Brand';
   const platformName = app.primaryPlatform?.name || 'Instagram';
-
-  console.log('c data', campaign);
-
   let status: WorkCampaign['status'] = 'Pending';
   let revisionComment = '';
 
@@ -380,14 +377,6 @@ export default function MyWorkPage() {
                 setIsStatusSheetOpen(true);
               }}
               isSelected={statusSheetCampaign?.id === campaign.id}
-              // key={campaign.id}
-              // campaign={campaign}
-              // onShowMoreInfo={(c) => setSelectedCampaign(c)}
-              // onSubmitLink={(c) => setSubmitLinkCampaign(c)}
-              // onSubmitProof={(c) => setSubmitProofCampaign(c)}
-              // onAcceptOffer={handleAcceptOffer}
-              // onDeclineOffer={handleDeclineOffer}
-              // isSelected={selectedCampaign?.id === campaign.id}
             />
           ))}
         </div>
@@ -436,21 +425,6 @@ export default function MyWorkPage() {
           setSelectedCampaign(null);
           setSubmitProofCampaign(c);
         }}
-        // isOpen={!!selectedCampaign}
-        // onClose={() => setSelectedCampaign(null)}
-        // campaign={selectedCampaign}
-        // onSubmitLink={(c) => {
-        //   setSelectedCampaign(null);
-        //   setSubmitLinkCampaign(c);
-        // }}
-        // onSubmitProof={(c) => {
-        //   setSelectedCampaign(null);
-        //   setSubmitProofCampaign(c);
-        // }}
-        // onRaiseDispute={(c) => {
-        //   setSelectedCampaign(null);
-        //   setDisputeCampaign(c);
-        // }}
       />
 
       {/* Submit Draft Link Modal */}

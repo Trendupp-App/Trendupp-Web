@@ -2,7 +2,7 @@ import { useCampaigns } from '@/hooks/useCampaign';
 import { mapCampaign, filterCampaigns, sortCampaigns } from '@/lib/campaignMappers';
 import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
 
-type CampaignStatusFilter = 'all' | 'live' | 'past' | 'social impact';
+type CampaignStatusFilter = 'all' | 'live' | 'past';
 
 export function useExploreCampaigns({
   statusFilter,

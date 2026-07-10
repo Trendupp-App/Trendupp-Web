@@ -61,7 +61,10 @@ export default function WorkDetailsDrawer({
         {/* Close button */}
         <div className="flex justify-end p-4 pb-0">
           <button
-            onClick={onClose}
+            onClick={() => {
+              setActiveTab('overview');
+              onClose();
+            }}
             className="text-[#9a99b0] hover:text-[#1a1a2e] transition-colors cursor-pointer"
           >
             <X size={20} />
@@ -96,7 +99,7 @@ export default function WorkDetailsDrawer({
           </div>
 
           {/* Stats row */}
-          <div className="border border-[#e8e6f0] rounded-2xl grid grid-cols-4 divide-x divide-[#e8e6f0]">
+          <div className="border border-[#e8e6f0] rounded-2xl grid grid-cols-3 divide-x divide-[#e8e6f0]">
             <div className="flex flex-col gap-0.5 p-3.5">
               <span className="text-[10px] text-[#9a99b0]">Budget</span>
               <span className="text-sm font-bold text-brand-pink">{campaign.budgetString}</span>

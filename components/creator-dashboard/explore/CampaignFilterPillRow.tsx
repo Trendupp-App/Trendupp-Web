@@ -2,13 +2,12 @@
 
 import { cn } from '@/lib/utils';
 
-export type CampaignStatusFilter = 'all' | 'live' | 'past' | 'social impact';
+export type CampaignStatusFilter = 'all' | 'live' | 'past';
 
 const FILTERS: { id: CampaignStatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'live', label: 'Live' },
   { id: 'past', label: 'Past' },
-  { id: 'social impact', label: 'Social Impact' },
 ];
 
 export default function CampaignFilterPillRow({
@@ -25,7 +24,7 @@ export default function CampaignFilterPillRow({
           key={filter.id}
           onClick={() => onChange(filter.id)}
           className={cn(
-            'px-4 py-1.5 text-xs font-semibold rounded-full border transition-all whitespace-nowrap shrink-0',
+            'px-4 py-1.5 text-xs cursor-pointer font-semibold rounded-full border transition-all whitespace-nowrap shrink-0',
             active === filter.id
               ? 'bg-[#040039] text-white border-[#040039] shadow-sm'
               : 'bg-white text-[#7a7a9a] border-[#e8e6f0]/70 hover:border-[#040039]/20',
