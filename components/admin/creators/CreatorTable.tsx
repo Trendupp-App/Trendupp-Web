@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, ChevronDown } from 'lucide-react';
 import { FaTiktok, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/shared/UserAvatar';
@@ -118,6 +118,7 @@ export default function CreatorTable() {
   const [selectedTier, setSelectedTier] = useState('');
   const [selectedNiche, setSelectedNiche] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
 
   const filtered = MOCK_CREATORS.filter((c) => {
@@ -131,6 +132,7 @@ export default function CreatorTable() {
     if (selectedTier && c.tier !== selectedTier) return false;
     if (selectedNiche && !c.niche.includes(selectedNiche)) return false;
     if (selectedStatus && c.status !== selectedStatus) return false;
+    if (selectedCountry && c.country !== selectedCountry) return false;
     return true;
   });
 
@@ -168,43 +170,57 @@ export default function CreatorTable() {
           />
         </div>
 
-        {/* Tier dropdown */}
-        <select
-          value={selectedTier}
-          onChange={(e) => setSelectedTier(e.target.value)}
-          className="h-9 px-3 rounded-xl bg-[#f4f3f6] text-xs font-semibold text-[#1a1a2e] border-none focus:outline-none cursor-pointer"
-        >
-          <option value="">Tier</option>
-          <option value="Mega">Mega</option>
-          <option value="Macro">Macro</option>
-          <option value="Micro">Micro</option>
-          <option value="Nano">Nano</option>
-        </select>
-
-        {/* Niche dropdown */}
-        <select
-          value={selectedNiche}
-          onChange={(e) => setSelectedNiche(e.target.value)}
-          className="h-9 px-3 rounded-xl bg-[#f4f3f6] text-xs font-semibold text-[#1a1a2e] border-none focus:outline-none cursor-pointer"
-        >
-          <option value="">Niche</option>
-          <option value="Fashion">Fashion</option>
-          <option value="Tech">Tech</option>
-          <option value="Beauty">Beauty</option>
-          <option value="Lifestyle">Lifestyle</option>
-        </select>
-
-        {/* Status dropdown */}
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="h-9 px-3 rounded-xl bg-[#f4f3f6] text-xs font-semibold text-[#1a1a2e] border-none focus:outline-none cursor-pointer"
-        >
-          <option value="">Status</option>
-          <option value="Active">Active</option>
-          <option value="Pending">Pending</option>
-          <option value="Suspended">Suspended</option>
-        </select>
+        {/* Filter dropdowns */}
+        {[
+          {
+            value: selectedTier,
+            onChange: setSelectedTier,
+            label: 'Tier',
+            options: ['Mega', 'Macro', 'Micro', 'Nano'],
+          },
+          {
+            value: selectedNiche,
+            onChange: setSelectedNiche,
+            label: 'Niche',
+            options: ['Fashion', 'Tech', 'Beauty', 'Lifestyle'],
+          },
+          {
+            value: selectedStatus,
+            onChange: setSelectedStatus,
+            label: 'Status',
+            options: ['Active', 'Pending', 'Suspended'],
+          },
+          {
+            value: selectedCountry,
+            onChange: setSelectedCountry,
+            label: 'Country',
+            options: [
+              'Lagos, Nigeria',
+              'Abuja, Nigeria',
+              'Enugu, Nigeria',
+              'Port Harcourt, Nigeria',
+            ],
+          },
+        ].map(({ value, onChange, label, options }) => (
+          <div key={label} className="relative">
+            <select
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="h-10 pl-4 pr-9 rounded-xl bg-white border border-[#e8e6f0] text-xs font-semibold text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 cursor-pointer appearance-none shadow-sm"
+            >
+              <option value="">{label}</option>
+              {options.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={13}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9a99b0] pointer-events-none"
+            />
+          </div>
+        ))}
       </div>
 
       {/* Table */}
@@ -310,9 +326,9 @@ export default function CreatorTable() {
                 <td className="py-3 text-right pr-2">
                   <button
                     onClick={() => setSelectedCreatorId(c.id)}
-                    className="p-1.5 rounded-lg border border-[#e8e6f0] hover:bg-[#f4f3f6] text-[#5a5a7a] transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full border border-[#e8e6f0] bg-white hover:bg-[#f4f3f6] text-xs font-semibold text-[#5a5a7a] shadow-sm transition-all cursor-pointer"
                   >
-                    <Eye size={12} />
+                    View <Eye size={12} className="shrink-0" />
                   </button>
                 </td>
               </tr>
