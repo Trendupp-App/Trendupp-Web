@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils';
 import UserAvatar from '@/shared/UserAvatar';
 import { AdminStatusBadge } from '../AdminStatusBadge';
 import CreatorActionModal from './CreatorActionModal';
+import NoteModal from './NoteModal';
+import SuccessModal from './SuccessModal';
 
 interface CreatorProfileDrawerProps {
   isOpen: boolean;
@@ -187,6 +189,16 @@ export default function CreatorProfileDrawer({
   const [activeAction, setActiveAction] = useState<
     'suspend' | 'suspendCampaign' | 'reactivate' | 'delete' | 'changeTier' | null
   >(null);
+
+  /* Note Modal states */
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [noteModalTitle, setNoteModalTitle] = useState('Add note');
+  const [noteInitialValue, setNoteInitialValue] = useState('');
+
+  /* Success Modal states */
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState('');
+  const [successModalMessage, setSuccessModalMessage] = useState('');
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
@@ -449,7 +461,14 @@ export default function CreatorProfileDrawer({
                   <h4 className="text-sm font-bold text-[#1a1a2e]">Internal Notes</h4>
                   <p className="text-[11px] text-[#9a99b0] mt-0.5">Not visible to creator</p>
                 </div>
-                <button className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-brand-pink text-white text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer">
+                <button
+                  onClick={() => {
+                    setNoteModalTitle('Add note');
+                    setNoteInitialValue('');
+                    setIsNoteModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-brand-pink text-white text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer"
+                >
                   <Plus size={13} /> Add Note
                 </button>
               </div>
@@ -466,7 +485,14 @@ export default function CreatorProfileDrawer({
                         <span className="text-[10px] text-[#9a99b0] ml-2">{n.date}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="p-1 rounded-lg hover:bg-[#f4f3f6] text-[#9a99b0] hover:text-[#5a5a7a] transition-colors cursor-pointer">
+                        <button
+                          onClick={() => {
+                            setNoteModalTitle('Edit note');
+                            setNoteInitialValue(n.text);
+                            setIsNoteModalOpen(true);
+                          }}
+                          className="p-1 rounded-lg hover:bg-[#f4f3f6] text-[#9a99b0] hover:text-[#5a5a7a] transition-colors cursor-pointer"
+                        >
                           <Pencil size={12} />
                         </button>
                         <button className="p-1 rounded-lg hover:bg-[#fef2f2] text-[#9a99b0] hover:text-[#dc2626] transition-colors cursor-pointer">
@@ -534,7 +560,49 @@ export default function CreatorProfileDrawer({
       </div>
 
       {/* Action confirmation Modal */}
-      <CreatorActionModal action={activeAction} onClose={() => setActiveAction(null)} />
+      <CreatorActionModal
+        action={activeAction}
+        onClose={() => setActiveAction(null)}
+        onConfirm={() => {
+          if (activeAction === 'changeTier') {
+            setSuccessModalTitle('Creator tier changed successfully');
+            setSuccessModalMessage(
+              'You have successfully changed the creator tier to another tier',
+            );
+          } else if (activeAction === 'suspend') {
+            setSuccessModalTitle('Account Suspended');
+            setSuccessModalMessage('You have successfully suspended this creator account');
+          } else if (activeAction === 'delete') {
+            setSuccessModalTitle('Account Deleted');
+            setSuccessModalMessage('You have successfully deleted this creator account');
+          } else {
+            setSuccessModalTitle('Action Successful');
+            setSuccessModalMessage('The requested action completed successfully');
+          }
+          setIsSuccessModalOpen(true);
+          setActiveAction(null);
+        }}
+      />
+
+      {/* Note Modal (Add/Edit) */}
+      <NoteModal
+        isOpen={isNoteModalOpen}
+        onClose={() => setIsNoteModalOpen(false)}
+        initialValue={noteInitialValue}
+        title={noteModalTitle}
+        onSave={(value) => {
+          // Simply mock saving for frontend demonstration
+          console.log('Saved note:', value);
+        }}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title={successModalTitle}
+        message={successModalMessage}
+      />
     </div>
   );
 }

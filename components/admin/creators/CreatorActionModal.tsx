@@ -9,6 +9,7 @@ type ActionType = 'suspend' | 'suspendCampaign' | 'reactivate' | 'delete' | 'cha
 interface CreatorActionModalProps {
   action: ActionType | null;
   onClose: () => void;
+  onConfirm?: () => void;
 }
 
 const CONFIG: Record<
@@ -75,7 +76,11 @@ const CONFIG: Record<
   },
 };
 
-export default function CreatorActionModal({ action, onClose }: CreatorActionModalProps) {
+export default function CreatorActionModal({
+  action,
+  onClose,
+  onConfirm,
+}: CreatorActionModalProps) {
   const [inputValue, setInputValue] = useState('');
 
   if (!action) return null;
@@ -208,6 +213,7 @@ export default function CreatorActionModal({ action, onClose }: CreatorActionMod
           </button>
           <button
             disabled={!canSubmit}
+            onClick={onConfirm}
             className={cn(
               'h-10 rounded-2xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center flex-1',
               cfg.confirmClass,

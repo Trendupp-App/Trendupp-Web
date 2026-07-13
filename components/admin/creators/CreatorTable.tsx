@@ -117,8 +117,11 @@ export default function CreatorTable() {
   const [search, setSearch] = useState('');
   const [selectedTier, setSelectedTier] = useState('');
   const [selectedNiche, setSelectedNiche] = useState('');
+  const [selectedGender, setSelectedGender] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'Week' | 'Month' | 'Year'>('Week');
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
 
   const filtered = MOCK_CREATORS.filter((c) => {
@@ -157,70 +160,102 @@ export default function CreatorTable() {
       </div>
 
       {/* Filters Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Search */}
-        <div className="relative flex items-center min-w-[240px] flex-1 max-w-sm">
-          <Search size={14} className="absolute left-3.5 text-[#9a99b0]" />
-          <input
-            type="text"
-            placeholder="Search by name or username..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full bg-white border border-[#e8e6f0] rounded-xl pl-9 pr-4 text-xs text-[#1a1a2e] placeholder-[#9a99b0] focus:outline-none focus:ring-1 focus:ring-brand-pink/30"
-          />
-        </div>
-
-        {/* Filter dropdowns */}
-        {[
-          {
-            value: selectedTier,
-            onChange: setSelectedTier,
-            label: 'Tier',
-            options: ['Mega', 'Macro', 'Micro', 'Nano'],
-          },
-          {
-            value: selectedNiche,
-            onChange: setSelectedNiche,
-            label: 'Niche',
-            options: ['Fashion', 'Tech', 'Beauty', 'Lifestyle'],
-          },
-          {
-            value: selectedStatus,
-            onChange: setSelectedStatus,
-            label: 'Status',
-            options: ['Active', 'Pending', 'Suspended'],
-          },
-          {
-            value: selectedCountry,
-            onChange: setSelectedCountry,
-            label: 'Country',
-            options: [
-              'Lagos, Nigeria',
-              'Abuja, Nigeria',
-              'Enugu, Nigeria',
-              'Port Harcourt, Nigeria',
-            ],
-          },
-        ].map(({ value, onChange, label, options }) => (
-          <div key={label} className="relative">
-            <select
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              className="h-9 pl-4 pr-9 rounded-xl bg-white border border-[#e8e6f0] text-xs font-semibold text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 cursor-pointer appearance-none"
-            >
-              <option value="">{label}</option>
-              {options.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={13}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9a99b0] pointer-events-none"
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+          {/* Search */}
+          <div className="relative flex items-center min-w-[240px] flex-1 max-w-sm">
+            <Search size={14} className="absolute left-3.5 text-[#9a99b0]" />
+            <input
+              type="text"
+              placeholder="Search by name or username..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-9 w-full bg-white border border-[#e8e6f0] rounded-xl pl-9 pr-4 text-xs text-[#1a1a2e] placeholder-[#9a99b0] focus:outline-none focus:ring-1 focus:ring-brand-pink/30"
             />
           </div>
-        ))}
+
+          {/* Filter dropdowns */}
+          {[
+            {
+              value: selectedTier,
+              onChange: setSelectedTier,
+              label: 'Tier',
+              options: ['Mega', 'Macro', 'Micro', 'Nano'],
+            },
+            {
+              value: selectedNiche,
+              onChange: setSelectedNiche,
+              label: 'Niche',
+              options: ['Fashion', 'Tech', 'Beauty', 'Lifestyle'],
+            },
+            {
+              value: selectedGender,
+              onChange: setSelectedGender,
+              label: 'Gender',
+              options: ['Male', 'Female'],
+            },
+            {
+              value: selectedStatus,
+              onChange: setSelectedStatus,
+              label: 'Status',
+              options: ['Active', 'Pending', 'Suspended'],
+            },
+            {
+              value: selectedCountry,
+              onChange: setSelectedCountry,
+              label: 'Country',
+              options: [
+                'Lagos, Nigeria',
+                'Abuja, Nigeria',
+                'Enugu, Nigeria',
+                'Port Harcourt, Nigeria',
+              ],
+            },
+            {
+              value: selectedYear,
+              onChange: setSelectedYear,
+              label: 'Year',
+              options: ['2026', '2025', '2024'],
+            },
+          ].map(({ value, onChange, label, options }) => (
+            <div key={label} className="relative">
+              <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="h-9 pl-4 pr-9 rounded-xl bg-white border border-[#e8e6f0] text-xs font-semibold text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 cursor-pointer appearance-none"
+              >
+                <option value="">{label}</option>
+                {options.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={13}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9a99b0] pointer-events-none"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Timeframe Switcher */}
+        <div className="flex items-center bg-[#f4f3f6] rounded-xl p-0.5 border border-[#e8e6f0]/60 shrink-0">
+          {(['Week', 'Month', 'Year'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setSelectedTimeframe(t)}
+              className={cn(
+                'px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer',
+                selectedTimeframe === t
+                  ? 'bg-white text-brand-pink shadow-sm'
+                  : 'text-[#7a7a9a] hover:text-[#1a1a2e]',
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
