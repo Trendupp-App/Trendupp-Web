@@ -17,6 +17,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import UserAvatar from './UserAvatar';
+import FeedbackModal from '@/shared/FeedBackModal';
+import { useState } from 'react';
 
 interface NavItem {
   label: string;
@@ -45,8 +47,7 @@ const BRAND_NAV_ITEMS: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, clearSession } = useAuthStore();
-
-  console.log('Sidebar user:', user);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isBrand = user?.role === 'brand';
   const navItems = isBrand ? BRAND_NAV_ITEMS : CREATOR_NAV_ITEMS;
@@ -61,7 +62,7 @@ export default function Sidebar() {
   const roleLabel = isBrand ? 'Brand' : 'Creator';
 
   return (
-    <aside className="w-[260px] h-screen bg-[#fef2f6] border-r border-[#fae2ec] flex flex-col justify-between py-6 px-4 shrink-0">
+    <aside className="w-[260px] h-screen bg-[#fef2f6] border-r border-[#fae2ec] flex flex-col overflow-hidden py-6 px-4 shrink-0">
       <div className="flex flex-col">
         {/* Logo */}
         <div className="px-3 mb-6">
@@ -114,8 +115,8 @@ export default function Sidebar() {
 
       {/* Logout */}
       <button
-        onClick={clearSession}
-        className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm text-[#7a7a9a] hover:bg-white/60 hover:text-red-500 rounded-xl transition-all duration-200 group w-full text-left"
+        onClick={() => setShowLogoutConfirm(true)}
+        className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm text-[#7a7a9a] hover:bg-white/60 hover:text-red-500 rounded-xl transition-all duration-200 group w-full mt-3 text-left"
       >
         <LogOut
           size={18}
@@ -123,6 +124,21 @@ export default function Sidebar() {
         />
         Logout
       </button>
+      {showLogoutConfirm && (
+        <FeedbackModal
+          icon={LogOut}
+          iconColor="text-red-500"
+          message={<>Are you sure you want to log out of your account?</>}
+          actions={[
+            { label: 'cancel', onClick: () => setShowLogoutConfirm(false) },
+            {
+              label: 'log out',
+              variant: 'primary',
+              onClick: clearSession,
+            },
+          ]}
+        />
+      )}
     </aside>
   );
 }

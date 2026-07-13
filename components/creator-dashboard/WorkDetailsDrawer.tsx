@@ -1,546 +1,432 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import {
+  X,
+  Clock,
+  ExternalLink,
+  Check,
+  XCircle,
+  Info,
+  ShieldCheck,
+  CheckCircle2,
+  MessageCircle,
+} from 'lucide-react';
 import Image from 'next/image';
-import { X, Clock, Check, ChevronLeft, AlertCircle, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { WorkCampaign } from './WorkCampaignCard';
+import type { WorkCampaign } from './WorkCampaignCard';
+
+type DrawerTab = 'overview' | 'requirement' | 'timeline' | 'deliverables';
+
+const TABS: { id: DrawerTab; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'requirement', label: 'Requirement' },
+  { id: 'timeline', label: 'Timeline' },
+  { id: 'deliverables', label: 'Deliverables' },
+];
 
 interface WorkDetailsDrawerProps {
+  campaign: WorkCampaign | null;
   isOpen: boolean;
   onClose: () => void;
-  campaign: WorkCampaign | null;
   onSubmitLink?: (campaign: WorkCampaign) => void;
   onSubmitProof?: (campaign: WorkCampaign) => void;
   onRaiseDispute?: (campaign: WorkCampaign) => void;
 }
 
-type DrawerTab = 'Overview' | 'Requirements' | 'Timeline' | 'Deliverables';
-
 export default function WorkDetailsDrawer({
+  campaign,
   isOpen,
   onClose,
-  campaign,
   onSubmitLink,
   onSubmitProof,
   onRaiseDispute,
 }: WorkDetailsDrawerProps) {
-  const [activeTab, setActiveTab] = useState<DrawerTab>('Overview');
+  const [activeTab, setActiveTab] = useState<DrawerTab>('overview');
 
-  // Lock scrolling when the drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  if (!isOpen || !campaign) return null;
 
-  useEffect(() => {
-    if (!isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveTab('Overview');
-    }
-  }, [isOpen]);
+  const hasDraft = !!campaign.draftLink;
+  const hasRevision = campaign.status === 'Revision requested' && !!campaign.revisionComment;
+  const isPastRevision = campaign.status === 'Approved' || campaign.status === 'Payment released';
+  const wasRevised = hasRevision || (isPastRevision && !!campaign.revisionComment);
+  const isApproved = campaign.status === 'Approved' || campaign.status === 'Payment released';
+  const hasLiveLink = campaign.liveLink && Object.keys(campaign.liveLink).length > 0;
 
-  if (!campaign) return null;
-
-  const tabs: DrawerTab[] = ['Overview', 'Requirements', 'Timeline', 'Deliverables'];
+  console.log('Campaign', campaign);
 
   return (
-    <div
-      className={cn(
-        'fixed inset-0 z-50 flex justify-end transition-opacity duration-300',
-        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-      )}
-    >
-      {/* Backdrop with soft blur */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
-        onClick={onClose}
-      />
-
-      {/* Slide-out Drawer Panel with Premium Expo Easing */}
-      <div
-        className={cn(
-          'w-full max-w-[560px] h-full bg-white relative z-10 flex flex-col shadow-2xl transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto auth-scrollbar pb-6 border-0 border-none select-none',
-          isOpen ? 'translate-x-0' : 'translate-x-full',
-        )}
-        style={{ border: 'none' }}
-      >
-        {/* Floating Back Chevron Button (Top Left of image) */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 left-4 z-20 bg-black/30 hover:bg-black/55 text-white p-2 rounded-full transition-colors focus:outline-none cursor-pointer"
-          aria-label="Back"
-        >
-          <ChevronLeft size={20} />
-        </button>
-
-        {/* Hero Banner Area */}
-        <div className="relative w-full h-[220px] shrink-0">
-          <Image
-            src={campaign.image}
-            alt={campaign.title}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 560px) 100vw, 560px"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
-
-          {/* Overlay Content */}
-          <div className="absolute bottom-5 left-6 right-6 flex items-end justify-between gap-4">
-            <div className="flex flex-col min-w-0">
-              <h2 className="text-white text-lg font-bold leading-tight truncate">
-                {campaign.title}
-              </h2>
-              <span className="text-xs text-white/90 font-light mt-1.5 flex items-center gap-1 leading-none">
-                {campaign.brand}
-              </span>
-            </div>
-
-            <span className="bg-[#2563eb] text-white text-[10px] font-bold px-3 py-1.5 rounded-full leading-none uppercase tracking-wider shrink-0 shadow-lg border border-blue-400/20">
-              {campaign.status === 'Payment released' ? 'Closed' : campaign.status}
-            </span>
-          </div>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
+      <div className="w-full sm:max-w-[520px] h-full bg-white overflow-y-auto">
+        {/* Close button */}
+        <div className="flex justify-end p-4 pb-0">
+          <button
+            onClick={() => {
+              setActiveTab('overview');
+              onClose();
+            }}
+            className="text-[#9a99b0] hover:text-[#1a1a2e] transition-colors cursor-pointer"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Clean Stats Row with bottom border */}
-        <div className="grid grid-cols-3 py-4 border-b border-[#e8e6f0]/60 text-center select-none shrink-0 bg-[#faf9fc]/40 px-6">
-          {/* Fee column */}
-          <div className="flex flex-col gap-1 items-center justify-center">
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-extrabold text-brand-pink bg-brand-pink-light w-4.5 h-4.5 rounded-full flex items-center justify-center leading-none">
-                ₦
-              </span>
-              <span className="text-[13px] font-extrabold text-[#1a1a2e]">
-                ₦{(campaign.actualAmount ?? 180000).toLocaleString()}
+        <div className="px-5 pb-8 flex flex-col gap-5">
+          {/* Cover image */}
+          <div className="relative w-full h-[180px] rounded-2xl overflow-hidden bg-zinc-100">
+            <Image
+              src={campaign.image}
+              alt={campaign.title}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+              <div>
+                <p className="text-lg font-bold text-white">{campaign.title}</p>
+                <p className="flex items-center gap-1.5 text-xs text-white/80 mt-0.5">
+                  {campaign.brand}
+                  <span>•</span>
+                  <Clock size={12} />
+                  {campaign.daysLeft} left
+                </p>
+              </div>
+              <span className="bg-white/90 text-[#4f46e5] text-[11px] font-semibold px-3 py-1 rounded-full shrink-0">
+                {campaign.tier}
               </span>
             </div>
-            <span className="text-[9px] text-[#9a99b0] font-bold uppercase tracking-wider mt-0.5">
-              Your Fee
-            </span>
           </div>
 
-          {/* Platform column */}
-          <div className="flex flex-col gap-1 items-center justify-center">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold text-brand-pink bg-brand-pink-light px-2 py-0.5 rounded-md leading-none">
-                {campaign.platform}
-              </span>
+          {/* Stats row */}
+          <div className="border border-[#e8e6f0] rounded-2xl grid grid-cols-3 divide-x divide-[#e8e6f0]">
+            <div className="flex flex-col gap-0.5 p-3.5">
+              <span className="text-[10px] text-[#9a99b0]">Budget</span>
+              <span className="text-sm font-bold text-brand-pink">{campaign.budgetString}</span>
             </div>
-            <span className="text-[9px] text-[#9a99b0] font-bold uppercase tracking-wider mt-0.5">
-              Platform
-            </span>
-          </div>
-
-          {/* Time Left column */}
-          <div className="flex flex-col gap-1 items-center justify-center">
-            <div className="flex items-center gap-1.5">
-              <Clock size={13} className="text-brand-pink" />
-              <span className="text-[13px] font-extrabold text-[#1a1a2e]">{campaign.daysLeft}</span>
+            <div className="flex flex-col gap-0.5 p-3.5">
+              <span className="text-[10px] text-[#9a99b0]">Platform</span>
+              <span className="text-sm font-bold text-[#1a1a2e]">{campaign.platform}</span>
             </div>
-            <span className="text-[9px] text-[#9a99b0] font-bold uppercase tracking-wider mt-0.5">
-              Time Left
-            </span>
+            {/* <div className="flex flex-col gap-0.5 p-3.5">
+              <span className="text-[10px] text-[#9a99b0]">Niche</span>
+              <span className="text-sm font-bold text-[#1a1a2e]">{campaign.niches[0] ?? '—'}</span>
+            </div> */}
+            <div className="flex flex-col gap-0.5 p-3.5">
+              <span className="text-[10px] text-[#9a99b0]">Applied</span>
+              <span className="text-sm font-bold text-[#1a1a2e]">{campaign.applicationsCount}</span>
+            </div>
           </div>
-        </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-[#e8e6f0]/60 px-6 mt-4 shrink-0 bg-white">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                'flex-1 text-center pb-2.5 text-xs font-bold transition-all border-b-2 focus:outline-none cursor-pointer',
-                activeTab === tab
-                  ? 'border-brand-pink text-brand-pink'
-                  : 'border-transparent text-[#7a7a9a] hover:text-[#5a5a7a]',
-              )}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+          {/* Tabs */}
+          <div className="bg-[#f4f3f6] rounded-xl p-1 grid grid-cols-4 gap-1">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer',
+                  activeTab === tab.id
+                    ? 'bg-white text-brand-pink shadow-sm'
+                    : 'text-[#7a7a9a] hover:text-[#1a1a2e]',
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-        {/* Tab Contents */}
-        <div className="px-6 py-6 flex-1 overflow-y-auto">
-          {/* 1. Overview */}
-          {activeTab === 'Overview' && (
-            <div className="flex flex-col gap-6 text-left">
-              {/* About Brief */}
-              <div className="flex flex-col gap-2.5">
-                <h3 className="text-xs font-extrabold text-[#1a1a2e] uppercase tracking-wider">
-                  About Campaign Brief
-                </h3>
-                <p className="text-xs font-light text-[#5a5a7a] leading-relaxed">
-                  Zara Africa is launching its Summer 2026 collection across West Africa. We want
-                  authentic creators to showcase our new arrivals in an aspirational but relatable
-                  way — think Lagos street style meets global fashion week energy.
+          {/* ── Overview tab ── */}
+          {activeTab === 'overview' && (
+            <div className="flex flex-col gap-4">
+              <div className="bg-[#f4f3f6] rounded-2xl p-4 flex flex-col gap-1.5">
+                <p className="text-xs text-[#1a1a2e]">
+                  <span className="font-bold">Campaign title:</span> {campaign.title}
+                </p>
+                <p className="text-xs text-[#1a1a2e]">
+                  <span className="font-bold">Brand:</span> {campaign.brand}
                 </p>
               </div>
 
-              {/* Deliverables with pink circle indexes */}
-              <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-extrabold text-[#1a1a2e] uppercase tracking-wider">
-                  Deliverables
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fcecf3] text-brand-pink flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      1
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      1 x Instagram carousel post (5-8 slides) featuring the outfits
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fcecf3] text-brand-pink flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      2
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      1 x Instagram Reel (30-60 seconds) styling tutorial
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fcecf3] text-brand-pink flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      3
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      3 x Instagram Stories with product tags
-                    </span>
-                  </div>
+              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2">
+                <h4 className="text-sm font-bold text-[#1a1a2e]">Campaign Brief</h4>
+                <p className="text-xs text-[#4a4a6a] leading-relaxed">
+                  {campaign.guidelines || 'No brief provided.'}
+                </p>
+              </div>
+
+              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2">
+                <h4 className="text-sm font-bold text-[#1a1a2e]">Deliverables</h4>
+                {campaign.deliverables.length > 0 ? (
+                  <ul className="flex flex-col gap-2">
+                    {campaign.deliverables.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-xs text-[#4a4a6a]">
+                        <span className="w-4 h-4 rounded-full bg-brand-pink-light text-brand-pink text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-[#9a99b0] italic">No deliverables specified.</p>
+                )}
+              </div>
+
+              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2">
+                <h4 className="text-sm font-bold text-[#1a1a2e]">Content Direction</h4>
+                {campaign.contentDirection.length > 0 ? (
+                  <ul className="flex flex-col gap-2">
+                    {campaign.contentDirection.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-xs text-[#4a4a6a]">
+                        <span className="w-4 h-4 rounded-full bg-brand-pink-light text-brand-pink text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-[#9a99b0] italic">No content direction specified.</p>
+                )}
+              </div>
+
+              <div className="bg-[#fff0f5] rounded-2xl p-4 flex items-start gap-3">
+                <ShieldCheck size={18} className="text-brand-pink shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-brand-pink">Escrow Protected</p>
+                  <p className="text-xs text-[#7a7a9a] mt-0.5 leading-relaxed">
+                    Brand payment confirmed in escrow before you receive the campaign. No work
+                    before payment is secured.
+                  </p>
                 </div>
               </div>
 
-              {/* Content Direction outline card */}
-              <div className="border border-brand-pink/30 rounded-2xl p-4 flex flex-col gap-3.5 bg-white text-left">
-                <span className="text-xs font-bold text-brand-pink flex items-center gap-1.5">
-                  ➔ Content Direction
-                </span>
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fcecf3] text-brand-pink flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      1
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      Dramatic before and after revealing the collection&apos;s impact.
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fcecf3] text-brand-pink flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      2
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      Incorporate the hair styling seamlessly into your beauty routine.
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fcecf3] text-brand-pink flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      3
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      Step-by-step guide to achieving an effortless, elegant look.
-                    </span>
-                  </div>
+              <div className="bg-[#f3f0ff] rounded-2xl p-4 flex items-start gap-3">
+                <Clock size={18} className="text-[#4f46e5] shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-[#4f46e5]">48-Hour Application Window</p>
+                  <p className="text-xs text-[#7a7a9a] mt-0.5 leading-relaxed">
+                    This campaign accepts applications for 48 hours only. After the window closes,
+                    the brand selects creators. Results are sent within 48 hours of closing.
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 2. Requirements */}
-          {activeTab === 'Requirements' && (
-            <div className="flex flex-col gap-6 text-left">
-              {/* Content Guidelines */}
-              <div className="flex flex-col gap-3">
-                <h3 className="text-xs font-extrabold text-[#1a1a2e] uppercase tracking-wider">
+          {/* ── Requirement tab ── */}
+          {activeTab === 'requirement' && (
+            <div className="flex flex-col gap-4">
+              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2.5">
+                <h4 className="text-sm font-bold text-[#1a1a2e]">
                   Content Guidelines (Brand Rules)
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#f0fdf4] border border-[#dcfce7] text-[#16a34a] flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} strokeWidth={3} />
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      Ensure high-visibility, natural or soft white lighting.
-                    </span>
+                </h4>
+                {campaign.contentDos.length === 0 && campaign.contentDonts.length === 0 ? (
+                  <p className="text-xs text-[#9a99b0] italic">No specific guidelines provided.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {campaign.contentDos.map((item, idx) => (
+                      <div key={`do-${idx}`} className="flex items-center gap-2">
+                        <Check size={15} className="text-emerald-500 shrink-0" />
+                        <span className="text-xs text-[#4a4a6a]">{item}</span>
+                      </div>
+                    ))}
+                    {campaign.contentDonts.map((item, idx) => (
+                      <div key={`dont-${idx}`} className="flex items-center gap-2">
+                        <XCircle size={15} className="text-red-500 shrink-0" />
+                        <span className="text-xs text-[#4a4a6a]">{item}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#f0fdf4] border border-[#dcfce7] text-[#16a34a] flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} strokeWidth={3} />
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      Tag @ZaraAfrica in the caption and on the video.
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fef2f2] border border-[#fee2e2] text-[#dc2626] flex items-center justify-center shrink-0 mt-0.5">
-                      <X size={11} strokeWidth={3} />
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      Do not feature or mention competitor hair brands.
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#fef2f2] border border-[#fee2e2] text-[#dc2626] flex items-center justify-center shrink-0 mt-0.5">
-                      <X size={11} strokeWidth={3} />
-                    </div>
-                    <span className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                      Avoid cluttered backgrounds; maintain an editorial aesthetic.
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
 
-              {/* Usage Rights amber card */}
-              <div className="border border-amber-500/20 bg-amber-50/20 rounded-2xl p-4 flex flex-col gap-2 text-left">
-                <span className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
-                  <AlertCircle size={14} />
-                  Usage Rights
-                </span>
-                <p className="text-[11px] text-[#7a7a9a] leading-relaxed">
-                  By participating in this campaign, creators grant Zara Africa permission to repost
-                  and use campaign content across its digital platforms for marketing and
-                  promotional purposes.
-                </p>
+              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2">
+                <h4 className="text-sm font-bold text-[#1a1a2e]">Usage Rights</h4>
+                <p className="text-xs text-[#4a4a6a] leading-relaxed">{campaign.usageRights}</p>
               </div>
 
-              {/* Success Looks Like */}
-              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2 text-left bg-[#fcfcfd]">
-                <span className="text-xs font-bold text-[#1a1a2e] flex items-center gap-1.5">
-                  <span className="text-brand-pink text-sm">♥</span> Success Looks Like
-                </span>
-                <p className="text-[11px] text-[#5a5a7a] leading-relaxed">
-                  We are looking for content that feels authentic, relatable, visually appealing,
-                  and inspires women to explore the new SWW Hair Collection. We are excited to
-                  collaborate with you and can&apos;t wait to see your creativity bring the SWW Hair
-                  Collection to life.
+              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2">
+                <h4 className="text-sm font-bold text-[#1a1a2e]">Success Looks Like</h4>
+                <p className="text-xs text-[#4a4a6a] leading-relaxed">
+                  {campaign.successLooksLike}
                 </p>
               </div>
             </div>
           )}
 
-          {/* 3. Timeline */}
-          {activeTab === 'Timeline' && (
-            <div className="flex flex-col gap-5 text-left">
-              <h3 className="text-xs font-extrabold text-[#1a1a2e] uppercase tracking-wider">
-                Campaign Timeline
-              </h3>
-
-              <div className="relative pl-7 ml-3 flex flex-col gap-6 py-2">
-                {/* Vertical Lines */}
-                <div className="absolute left-[9px] top-4 bottom-4 w-[2px] bg-[#e8e6f0]" />
-                <div className="absolute left-[9px] top-4 h-[28px] w-[2px] bg-[#16a34a]" />
-
-                {/* Step 1 */}
-                <div className="relative">
-                  <span className="absolute -left-[23px] top-0.5 w-[20px] h-[20px] rounded-full bg-[#dcfce7] border border-[#dcfce7] text-[#16a34a] flex items-center justify-center shadow-sm">
-                    <Check size={11} strokeWidth={3} />
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-[#1a1a2e]">Brief issued</span>
-                    <span className="text-[10px] font-light text-[#7a7a9a]">May 28, 2026</span>
+          {/* ── Timeline tab (kept static, low priority) ── */}
+          {activeTab === 'timeline' && (
+            <div className="flex flex-col gap-4">
+              <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-4">
+                {[
+                  { label: 'Application accepted', date: 'May 28, 2026', done: true },
+                  { label: 'Content submitted', date: 'June 1, 2026', done: true },
+                  { label: 'Brand review', date: 'June 3, 2026', done: true },
+                  { label: 'Content approved', date: 'June 5, 2026', done: false },
+                  { label: 'Payment released', date: 'Pending', done: false },
+                ].map((step, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        'w-2.5 h-2.5 rounded-full shrink-0',
+                        step.done ? 'bg-emerald-500' : 'bg-[#e8e6f0]',
+                      )}
+                    />
+                    <div className="flex-1 flex items-center justify-between">
+                      <span className="text-xs text-[#1a1a2e] font-medium">{step.label}</span>
+                      <span className="text-[11px] text-[#9a99b0]">{step.date}</span>
+                    </div>
                   </div>
-                </div>
-
-                {/* Step 2 */}
-                <div className="relative">
-                  <span className="absolute -left-[23px] top-0.5 w-[20px] h-[20px] rounded-full bg-[#dcfce7] border border-[#dcfce7] text-[#16a34a] flex items-center justify-center shadow-sm">
-                    <Check size={11} strokeWidth={3} />
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-[#1a1a2e]">Escrow confirmed</span>
-                    <span className="text-[10px] font-light text-[#7a7a9a]">May 30, 2026</span>
-                  </div>
-                </div>
-
-                {/* Step 3 */}
-                <div className="relative">
-                  <span className="absolute -left-[23px] top-0.5 w-[20px] h-[20px] rounded-full bg-[#f4f3f6] text-[#9a99b0] flex items-center justify-center shadow-sm">
-                    <Clock size={11} />
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-[#5a5a7a]">
-                      Content submission deadline
-                    </span>
-                    <span className="text-[10px] font-light text-[#9a99b0]">June 5, 2026</span>
-                  </div>
-                </div>
-
-                {/* Step 4 */}
-                <div className="relative">
-                  <span className="absolute -left-[23px] top-0.5 w-[20px] h-[20px] rounded-full bg-[#f4f3f6] text-[#9a99b0] flex items-center justify-center shadow-sm">
-                    <Clock size={11} />
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-[#5a5a7a]">Brand review (48h)</span>
-                    <span className="text-[10px] font-light text-[#9a99b0]">June 7, 2026</span>
-                  </div>
-                </div>
-
-                {/* Step 5 */}
-                <div className="relative">
-                  <span className="absolute -left-[23px] top-0.5 w-[20px] h-[20px] rounded-full bg-[#f4f3f6] text-[#9a99b0] flex items-center justify-center shadow-sm">
-                    <Clock size={11} />
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-[#5a5a7a]">Post live deadline</span>
-                    <span className="text-[10px] font-light text-[#9a99b0]">June 10, 2026</span>
-                  </div>
-                </div>
-
-                {/* Step 6 */}
-                <div className="relative">
-                  <span className="absolute -left-[23px] top-0.5 w-[20px] h-[20px] rounded-full bg-[#f4f3f6] text-[#9a99b0] flex items-center justify-center shadow-sm">
-                    <Clock size={11} />
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-[#5a5a7a]">Payment release</span>
-                    <span className="text-[10px] font-light text-[#9a99b0]">June 11, 2026</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* 4. Deliverables */}
-          {activeTab === 'Deliverables' && (
-            <div className="flex flex-col gap-4 text-left">
-              {/* always show Brand Reply */}
-              <div className="border border-dashed border-[#2563eb]/60 rounded-2xl p-4 flex flex-col gap-1.5 bg-[#f8faff] text-left">
-                <span className="text-xs font-bold text-[#2563eb]">Brand Reply</span>
-                <p className="text-[11px] text-[#5a5a7a] font-light leading-relaxed italic">
-                  &quot;Shot at Lekki beach during golden hour. Used trending audio. Caption ideas
-                  included in the doc.&quot;
-                </p>
-              </div>
-
-              {/* always show Content Guidelines Reminder */}
-              <div className="bg-[#f3f0ff] border border-[#e9e3ff] rounded-2xl p-4 flex flex-col gap-1.5 text-left">
-                <span className="text-xs font-bold text-[#6b21a8]">
-                  Content Guidelines Reminder
-                </span>
-                <p className="text-[11px] text-[#5a5a7a] font-light leading-relaxed">
+          {/* ── Deliverables tab — progressive stack built from real fields ── */}
+          {activeTab === 'deliverables' && (
+            <div className="flex flex-col gap-4">
+              <div className="bg-[#f3f0ff] rounded-2xl p-4">
+                <p className="text-xs font-bold text-[#4f46e5] mb-1">Content Guidelines Reminder</p>
+                <p className="text-xs text-[#5a5a8a] leading-relaxed">
                   Create your content off-platform, then return to submit the link for brand review.
                   Keep your content within the brief guidelines. Submit content within the next 3-5
-                  days.
+                  days
                 </p>
               </div>
 
-              {/* conditionally show Content Link (if Under review, Revision requested, Approved, Payment released) */}
-              {['Under review', 'Revision requested', 'Approved', 'Payment released'].includes(
-                campaign.status,
-              ) && (
-                <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-1.5 text-left bg-white shadow-sm">
-                  <span className="text-xs font-bold text-[#1a1a2e]">Content Link</span>
+              {/* Original content link — shown once a draft exists */}
+              {hasDraft && (
+                <div className="border border-[#e8e6f0] rounded-2xl p-4">
+                  <p className="text-[10px] font-semibold text-[#9a99b0] mb-1">CONTENT LINK</p>
+
                   <a
-                    href="https://drive.google.com/file/d/amara-summer-style-reel"
+                    href={campaign.draftLink!}
                     target="_blank"
-                    rel="noreferrer"
-                    className="text-[11.5px] text-[#2563eb] hover:underline flex items-center gap-1 font-medium"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
                   >
-                    drive.google.com/file/d/amara-summer-style-reel
-                    <span className="text-[10px]">↗</span>
+                    {campaign.draftLink}
+                    <ExternalLink size={13} className="shrink-0" />
                   </a>
-                  <p className="text-[11px] text-[#7a7a9a] font-light leading-relaxed mt-0.5">
-                    &quot;Shot at Lekki beach during golden hour. Used trending audio. Caption ideas
-                    included in the doc.&quot;
-                  </p>
+                  {campaign.contentIdea && (
+                    <p className="text-xs text-[#9a99b0] mt-1">
+                      &quot;{campaign.contentIdea}&quot;
+                    </p>
+                  )}
                 </div>
               )}
 
-              {/* conditionally show Brand Revision Request (if Revision requested) */}
-              {campaign.status === 'Revision requested' && (
-                <div className="border border-amber-500/20 bg-amber-50/20 rounded-2xl p-4 flex flex-col gap-1.5 text-left">
-                  <span className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
-                    <AlertCircle size={14} />
+              {/* Brand revision request — only while awaiting/after a revision */}
+              {wasRevised && campaign.revisionComment && (
+                <div className="bg-[#fffbf0] border border-amber-300 rounded-2xl p-4">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-amber-600 mb-1">
+                    <Info size={13} />
                     Brand Revision Request
-                  </span>
-                  <p className="text-[11px] text-[#7a7a9a] font-light leading-relaxed italic">
-                    &quot;
-                    {campaign.revisionComment ??
-                      'The video needs to clearly show the front camera quality. Please reshoot the selfie segment with better lighting. Duration should be exactly 45 seconds.'}
-                    &quot;
+                  </p>
+                  <p className="text-xs text-[#7a5c00] leading-relaxed">
+                    &quot;{campaign.revisionComment}&quot;
                   </p>
                 </div>
               )}
 
-              {/* conditionally show Content Approved! (if Approved, Payment released) */}
-              {['Approved', 'Payment released'].includes(campaign.status) && (
-                <div className="bg-[#fff0f5] border border-[#fcecf3] rounded-2xl p-4 flex flex-col gap-1.5 text-left">
-                  <span className="text-xs font-bold text-brand-pink">✔ Content Approved!</span>
-                  <p className="text-[11px] text-[#7a7a9a] font-light leading-relaxed">
-                    Publish your content on <span className="font-bold">YouTube</span>, then come
-                    back to submit proof of posting. The post must stay live for{' '}
+              {/* Revised content — shown once brand has requested a revision AND
+                  the submission has moved past that stage (i.e. resubmitted) */}
+              {wasRevised && isPastRevision && hasDraft && (
+                <div className="bg-[#f5f3ff] border border-indigo-300 rounded-2xl p-4">
+                  <p className="text-xs font-bold text-indigo-600 mb-1">Revised Content</p>
+
+                  <a
+                    href={campaign.draftLink!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                  >
+                    {campaign.draftLink}
+                    <ExternalLink size={13} className="shrink-0" />
+                  </a>
+                </div>
+              )}
+
+              {/* Content approved banner */}
+              {isApproved && (
+                <div className="bg-[#fce7f3] rounded-2xl p-4">
+                  <p className="text-sm font-bold text-brand-pink mb-1">Content Approved</p>
+                  <p className="text-xs text-[#7a5c6a] leading-relaxed">
+                    Publish your content on <span className="font-bold">{campaign.platform}</span>,
+                    then come back to submit proof of posting. The post must stay live for{' '}
                     <span className="font-bold">24 hours</span> before payment is released.
                   </p>
                 </div>
               )}
 
-              {/* conditionally show Live Content (if Payment released) */}
-              {campaign.status === 'Payment released' && (
-                <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2.5 text-left bg-white shadow-sm">
-                  <span className="text-xs font-bold text-[#1a1a2e]">Live Content</span>
-                  <a
-                    href="https://youtube.com/shorts/Rh_Iz9giGkE"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11.5px] text-[#2563eb] hover:underline flex items-center gap-1 font-medium"
-                  >
-                    https://youtube.com/shorts/Rh_Iz9giGkE?...
-                    <span className="text-[10px]">↗</span>
-                  </a>
-                  <div className="flex">
-                    <span className="text-[10px] font-bold text-[#16a34a] bg-[#dcfce7] px-2.5 py-1 rounded-full flex items-center gap-1 leading-none">
-                      ✔ Post live
+              {/* Live content links */}
+              {hasLiveLink && (
+                <div className="border border-[#e8e6f0] rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] font-semibold text-[#9a99b0]">LIVE CONTENT</p>
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                      <CheckCircle2 size={12} />
+                      Post live
                     </span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(campaign.liveLink!).map(([platform, entry]) => (
+                      <div key={platform} className="flex flex-col gap-0.5">
+                        <span className="text-[10px] text-[#9a99b0] capitalize">{platform}</span>
+                        <a
+                          href={entry.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                        >
+                          {entry.url}
+                          <ExternalLink size={13} className="shrink-0" />
+                        </a>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* bottom action button wrapper */}
+              {/* Actions */}
               {campaign.status === 'In progress' && (
                 <button
                   onClick={() => onSubmitLink?.(campaign)}
-                  className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs py-3.5 rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer mt-4"
+                  className="w-full bg-brand-pink text-white text-xs font-semibold py-3 rounded-2xl hover:bg-brand-pink/90 transition-colors cursor-pointer"
                 >
-                  Submit content link
+                  Submit content
                 </button>
               )}
 
               {campaign.status === 'Revision requested' && (
                 <button
                   onClick={() => onSubmitLink?.(campaign)}
-                  className="w-full border border-[#2563eb] bg-[#f8faff] hover:bg-[#eff4ff] text-[#2563eb] font-bold text-xs py-3.5 rounded-2xl transition-all active:scale-95 cursor-pointer mt-4"
+                  className="w-full border border-amber-500/80 bg-amber-50/50 hover:bg-amber-50 text-amber-700 text-xs font-bold py-3 rounded-2xl transition-all cursor-pointer"
                 >
                   Submit revised content
                 </button>
               )}
 
-              {campaign.status === 'Approved' && (
+              {isApproved && !hasLiveLink && (
                 <button
                   onClick={() => onSubmitProof?.(campaign)}
-                  className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-bold text-xs py-3.5 rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer mt-4"
+                  className="w-full bg-brand-pink text-white text-xs font-semibold py-3 rounded-2xl hover:bg-brand-pink/90 transition-colors cursor-pointer"
                 >
                   Submit Proof of Posting
                 </button>
               )}
+              {campaign.status !== 'Payment released' && (
+                <button
+                  onClick={() => onRaiseDispute?.(campaign)}
+                  className="absolute bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  aria-label="Raise a campaign dispute"
+                >
+                  <MessageCircle size={20} className="fill-current text-white" />
+                </button>
+              )}
             </div>
-          )}
-          {/* Floating Chat/Message Icon (Bottom Right of white scrollable content area) */}
-          {campaign.status !== 'Payment released' && (
-            <button
-              onClick={() => onRaiseDispute?.(campaign)}
-              className="absolute bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
-              aria-label="Raise a campaign dispute"
-            >
-              <MessageCircle size={20} className="fill-current text-white" />
-            </button>
           )}
         </div>
       </div>

@@ -2,23 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Users, TrendingUp, BarChart2 } from 'lucide-react';
+import { Users, Star, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useTopPerformers } from '@/hooks/useProfile';
+import type { TopPerformerCreator } from '@/types/creator';
 
 type CreatorTier = 'Nano' | 'Micro' | 'Macro' | 'Mega';
-
-interface TopCreator {
-  id: string;
-  name: string;
-  username: string;
-  avatarUrl?: string;
-  tier: CreatorTier;
-  niche: string;
-  followers: string;
-  reach: string;
-  engagement: string;
-}
 
 const TIER_STYLES: Record<CreatorTier, string> = {
   Nano: 'text-pink-500 border-pink-300',
@@ -27,47 +17,38 @@ const TIER_STYLES: Record<CreatorTier, string> = {
   Mega: 'text-amber-500 border-amber-300',
 };
 
-const DUMMY_CREATORS: TopCreator[] = [
-  {
-    id: '1',
-    name: 'Tolu Fashola',
-    username: '@tolufolachamp',
-    tier: 'Mega',
-    niche: 'Lifestyle',
-    followers: '284K',
-    reach: '1.2M',
-    engagement: '8.4%',
-    avatarUrl: '/dashboard/avatar1.jpg',
-  },
-  {
-    id: '2',
-    name: 'Adaeze Obi',
-    username: '@adaezeCreates',
-    tier: 'Micro',
-    niche: 'Entertainment',
-    followers: '67K',
-    reach: '520K',
-    engagement: '5.2%',
-    avatarUrl: '/dashboard/avatar1.jpg',
-  },
-  {
-    id: '3',
-    name: 'Tolu Fashola',
-    username: '@adaezeCreates',
-    tier: 'Nano',
-    niche: 'Lifestyle',
-    followers: '284K',
-    reach: '1.2M',
-    engagement: '8.4%',
-    avatarUrl: '/dashboard/avatar1.jpg',
-  },
-];
+function fmtCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return `${n}`;
+}
+
+function tierStyleKey(assignedTier: string | null): CreatorTier | null {
+  if (!assignedTier) return null;
+  const stripped = assignedTier.replace(' Creator', '').trim();
+  return (['Nano', 'Micro', 'Macro', 'Mega'] as const).includes(stripped as CreatorTier)
+    ? (stripped as CreatorTier)
+    : null;
+}
+
+function totalFollowers(c: TopPerformerCreator): number {
+  return (
+    (c.instagramFollowers ?? 0) +
+    (c.twitterFollowers ?? 0) +
+    (c.tiktokFollowers ?? 0) +
+    (c.youtubeFollowers ?? 0)
+  );
+}
 
 interface CreatorCardProps {
-  creator: TopCreator;
+  creator: TopPerformerCreator;
 }
 
 function CreatorCard({ creator }: CreatorCardProps) {
+  const name = `${creator.firstName} ${creator.lastName}`.trim() || creator.username || 'Creator';
+  const initials = name.slice(0, 1).toUpperCase();
+  const styleKey = tierStyleKey(creator.assignedTier);
+
   return (
     <div className="flex-1 min-w-[200px] bg-white border border-[#f0eef8] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
       <div className="flex items-center gap-2.5">
@@ -75,34 +56,37 @@ function CreatorCard({ creator }: CreatorCardProps) {
           {creator.avatarUrl ? (
             <Image
               src={creator.avatarUrl}
-              alt={creator.name}
+              alt={name}
               width={40}
               height={40}
               className="object-cover w-full h-full"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-sm font-semibold text-[#7a7a9a]">
-              {creator.name[0]}
+              {initials}
             </div>
           )}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-[#1a1a2e] truncate">{creator.name}</p>
-          <p className="text-[11px] text-[#9a99b0] truncate">{creator.username}</p>
+          <p className="text-sm font-semibold text-[#1a1a2e] truncate">{name}</p>
+          <p className="text-[11px] text-[#9a99b0] truncate">
+            {creator.username ? `@${creator.username}` : '—'}
+          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            'text-[11px] font-semibold px-2 py-0.5 rounded-full border',
-            TIER_STYLES[creator.tier],
-          )}
-        >
-          {creator.tier}
-        </span>
-        <span className="text-[11px] text-[#9a99b0]">{creator.niche}</span>
-      </div>
+      {creator.assignedTier && (
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              'text-[11px] font-semibold px-2 py-0.5 rounded-full border',
+              styleKey ? TIER_STYLES[styleKey] : 'text-[#9a99b0] border-[#e8e6f0]',
+            )}
+          >
+            {creator.assignedTier}
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5 pt-1 border-t border-[#f5f4fb]">
         <div className="flex items-center justify-between">
@@ -110,34 +94,33 @@ function CreatorCard({ creator }: CreatorCardProps) {
             <Users size={11} />
             Followers
           </div>
-          <span className="text-[11px] font-semibold text-[#1a1a2e]">{creator.followers}</span>
+          <span className="text-[11px] font-semibold text-[#1a1a2e]">
+            {fmtCount(totalFollowers(creator))}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-[11px] text-[#9a99b0]">
-            <TrendingUp size={11} />
-            Reach
+            <Star size={11} />
+            Rating
           </div>
-          <span className="text-[11px] font-semibold text-[#1a1a2e]">{creator.reach}</span>
+          <span className="text-[11px] font-semibold text-[#1a1a2e]">
+            {creator.avgRating ? creator.avgRating.toFixed(1) : 'New'}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-[11px] text-[#9a99b0]">
-            <BarChart2 size={11} />
-            Engagement
+            <MessageSquare size={11} />
+            Reviews
           </div>
-          <span className="text-[11px] font-semibold text-[#1a1a2e]">{creator.engagement}</span>
+          <span className="text-[11px] font-semibold text-[#1a1a2e]">{creator.totalReviews}</span>
         </div>
       </div>
     </div>
   );
 }
 
-interface TopCreatorsCarouselProps {
-  creators?: TopCreator[];
-}
-
-export default function TopCreatorsSection({
-  creators = DUMMY_CREATORS,
-}: TopCreatorsCarouselProps) {
+export default function TopCreatorsSection() {
+  const { data: creators = [], isLoading, isError } = useTopPerformers();
   const [page, setPage] = useState(0);
   const perPage = 3;
   const totalPages = Math.ceil(creators.length / perPage);
@@ -160,27 +143,45 @@ export default function TopCreatorsSection({
         </Link>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-        {visible.map((c) => (
-          <CreatorCard key={c.id} creator={c} />
-        ))}
-      </div>
-
-      {/* Dots */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-1.5 pt-1">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
+      {isLoading ? (
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
               key={i}
-              onClick={() => setPage(i)}
-              className={cn(
-                'rounded-full transition-all duration-300',
-                i === page ? 'w-4 h-1.5 bg-brand-pink' : 'w-1.5 h-1.5 bg-[#e0ddef]',
-              )}
-              aria-label={`Page ${i + 1}`}
+              className="flex-1 min-w-[200px] h-[168px] bg-gray-50 border border-gray-100 rounded-2xl animate-pulse"
             />
           ))}
         </div>
+      ) : isError ? (
+        <div className="py-8 text-center text-xs text-[#9a99b0]">
+          Couldn&apos;t load top creators. Please try again.
+        </div>
+      ) : creators.length === 0 ? (
+        <div className="py-8 text-center text-xs text-[#9a99b0]">No creators to show yet.</div>
+      ) : (
+        <>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            {visible.map((c) => (
+              <CreatorCard key={c.id} creator={c} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-1.5 pt-1">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i)}
+                  className={cn(
+                    'rounded-full transition-all duration-300',
+                    i === page ? 'w-4 h-1.5 bg-brand-pink' : 'w-1.5 h-1.5 bg-[#e0ddef]',
+                  )}
+                  aria-label={`Page ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

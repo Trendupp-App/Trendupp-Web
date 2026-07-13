@@ -124,7 +124,7 @@ export function useMyApplications(enabled: boolean = true) {
             ? data
             : [];
       }),
-    staleTime: 1000 * 30,
+    staleTime: 0,
     enabled,
   });
 }
@@ -305,5 +305,23 @@ export function useCampaigns(
     queryFn: () => campaignApi.getCampaigns(params).then((r) => r.data.data),
     staleTime: 1000 * 30,
     enabled,
+  });
+}
+
+export function useDeleteDraftCampaign(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => campaignApi.deleteDraftCampaign(id),
+    onSuccess: ({ data }) => {
+      toast.success(data.message ?? 'Draft campaign deleted', { duration: 900 });
+      queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
+      onSuccess?.();
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(
+        err?.response?.data?.message ??
+          'Could not delete draft. It may no longer be in draft status.',
+      );
+    },
   });
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Camera, Building2 } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,7 +36,7 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
   const selectedCountryId =
     userSelectedCountryId ?? countries.find((c) => c.name === defaultValues?.country)?.id;
   const { data: states = [] } = useStates(selectedCountryId);
-
+  const user = useAuthStore((s) => s.user);
   const { mutate: updateProfile, isPending } = useUpdateProfile();
 
   const {
@@ -47,11 +47,19 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues ?? {},
+    defaultValues: {
+      ...defaultValues,
+      brandName: defaultValues?.brandName ?? user?.username ?? '',
+    },
   });
 
   const logo = useWatch({ control, name: 'logo' });
   const country = useWatch({ control, name: 'country' });
+  useEffect(() => {
+    if (!defaultValues?.brandName && user?.username) {
+      setValue('brandName', user.username);
+    }
+  }, [user?.username, defaultValues?.brandName, setValue]);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

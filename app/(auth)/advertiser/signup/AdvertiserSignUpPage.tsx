@@ -22,7 +22,8 @@ import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 import Link from 'next/link';
 import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
-
+import { useUsernameAvailability } from '@/hooks/useAuthMutations';
+import { UsernameAvailabilityHint } from '@/shared/UsernameAvailabilityHint';
 const DRAFT_KEY = 'advertiser-signup-draft';
 
 export default function AdvertiserSignupPage() {
@@ -51,6 +52,8 @@ export default function AdvertiserSignupPage() {
   });
 
   const termsAccepted = useWatch({ control, name: 'terms' });
+  const brandNameValue = useWatch({ control, name: 'brandName' }) ?? '';
+  const brandNameCheck = useUsernameAvailability(brandNameValue);
   useEffect(() => {
     const draftRaw = sessionStorage.getItem(DRAFT_KEY);
     let restored = false;
@@ -85,6 +88,10 @@ export default function AdvertiserSignupPage() {
   async function onSubmit(values: AdvertiserSignupValues) {
     const creatorRole = roles?.find((r) => r.name === 'brand');
     if (!creatorRole) return toast.error('Could not load roles');
+    if (brandNameCheck.isTaken) {
+      toast.error('That brand name is already taken. Please choose another.');
+      return;
+    }
 
     const res = await signup.mutateAsync({
       email: values.email,
@@ -100,7 +107,7 @@ export default function AdvertiserSignupPage() {
     setTimeout(() => {
       const query = new URLSearchParams({
         email: values.email,
-        type: 'creator',
+        type: 'brand',
         ...(otp ? { otp } : {}),
       });
       router.push(`/verify-email?${query.toString()}`);
@@ -172,8 +179,15 @@ export default function AdvertiserSignupPage() {
                     className={`pl-9 ${inputCls}`}
                   />
                 </div>
-                {errors.brandName && (
+                {errors.brandName ? (
                   <p className="text-[11px] text-red-400">{errors.brandName.message}</p>
+                ) : (
+                  <UsernameAvailabilityHint
+                    value={brandNameValue}
+                    isChecking={brandNameCheck.isChecking}
+                    isTaken={brandNameCheck.isTaken}
+                    isAvailable={brandNameCheck.isAvailable}
+                  />
                 )}
               </div>
             </div>
@@ -309,7 +323,9 @@ export default function AdvertiserSignupPage() {
 
             <Button
               type="submit"
-              disabled={signup.isPending || googlePending || !termsAccepted}
+              disabled={
+                signup.isPending || googlePending || !termsAccepted || brandNameCheck.isTaken
+              }
               className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
             >
               {signup.isPending ? 'Creating account…' : 'Sign up'}

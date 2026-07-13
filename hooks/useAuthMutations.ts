@@ -5,6 +5,7 @@ import { AuthUser, useAuthStore } from '@/store/authStore';
 import { AxiosError } from 'axios';
 import { signIn } from 'next-auth/react';
 import { mapUserProfileToAuthUser } from '@/lib/mapUserProfile';
+import { useDebouncedValue } from './useDebounceValue';
 
 async function hydrateFullProfile(userId: string, updateUser: (patch: Partial<AuthUser>) => void) {
   try {
@@ -182,4 +183,25 @@ export function useInstagramAuth() {
   });
 
   return { exchangeInstagramToken };
+}
+
+export function useUsernameAvailability(rawValue: string) {
+  const value = rawValue.trim();
+  const debounced = useDebouncedValue(value, 450);
+  const isCheckable = debounced.length >= 3;
+
+  const query = useQuery({
+    queryKey: ['username-check', debounced.toLowerCase()],
+    queryFn: () => authApi.checkUsername(debounced).then((r) => r.data),
+    enabled: isCheckable,
+    staleTime: 1000 * 30,
+    retry: false,
+  });
+
+  return {
+    ...query,
+    isChecking: isCheckable && query.isFetching,
+    isTaken: query.data?.isAvailable === false,
+    isAvailable: query.data?.isAvailable === true,
+  };
 }
