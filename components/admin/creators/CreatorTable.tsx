@@ -6,6 +6,7 @@ import { FaTiktok, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/shared/UserAvatar';
 import { AdminStatusBadge } from '../AdminStatusBadge';
+import CreatorProfileDrawer from './CreatorProfileDrawer';
 
 interface CreatorItem {
   id: string;
@@ -117,6 +118,7 @@ export default function CreatorTable() {
   const [selectedTier, setSelectedTier] = useState('');
   const [selectedNiche, setSelectedNiche] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
 
   const filtered = MOCK_CREATORS.filter((c) => {
     if (activeTab !== 'All' && c.status !== activeTab) return false;
@@ -306,7 +308,10 @@ export default function CreatorTable() {
                 </td>
                 <td className="py-3 text-[#9a99b0] whitespace-nowrap">{c.dateJoined}</td>
                 <td className="py-3 text-right pr-2">
-                  <button className="p-1.5 rounded-lg border border-[#e8e6f0] hover:bg-[#f4f3f6] text-[#5a5a7a] transition-all cursor-pointer">
+                  <button
+                    onClick={() => setSelectedCreatorId(c.id)}
+                    className="p-1.5 rounded-lg border border-[#e8e6f0] hover:bg-[#f4f3f6] text-[#5a5a7a] transition-all cursor-pointer"
+                  >
                     <Eye size={12} />
                   </button>
                 </td>
@@ -315,6 +320,12 @@ export default function CreatorTable() {
           </tbody>
         </table>
       </div>
+
+      <CreatorProfileDrawer
+        isOpen={selectedCreatorId !== null}
+        onClose={() => setSelectedCreatorId(null)}
+        creatorId={selectedCreatorId}
+      />
     </section>
   );
 }
