@@ -15,12 +15,12 @@ interface BrandActionModalProps {
 const CONFIG = {
   suspend: {
     title: 'Suspend Account',
-    warning: 'This action will restrict platform access immediately until a re-review.',
+    warning: 'The brand will lose platform access immediately upon suspension.',
     warningColor: 'bg-[#fff7ed] border-[#fde68a] text-[#92400e]',
-    inputLabel: 'Reason for Suspension *',
-    inputPlaceholder: 'Search for the reason for this action...',
-    confirmText: 'Continue Suspend',
-    confirmClass: 'bg-[#ea580c] hover:bg-[#c2410c] text-white',
+    inputLabel: 'Reason for suspension *',
+    inputPlaceholder: 'Describe the reason for this action...',
+    confirmText: 'Confirm Suspend',
+    confirmClass: 'bg-brand-pink text-white hover:opacity-90',
   },
   reactivate: {
     title: 'Reactivate Account',
@@ -33,13 +33,14 @@ const CONFIG = {
   },
   delete: {
     title: 'Delete Account',
-    warning: 'This is irreversible. All brand campaigns, data, and history will be deleted.',
+    warning:
+      'This is irreversible. All brand data, campaigns, and history will be permanently deleted.',
     warningColor: 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]',
     inputLabel: 'Type DELETE to confirm',
     inputPlaceholder: 'DELETE',
     confirmText: 'Permanently Delete',
     confirmClass:
-      'bg-[#dc2626] hover:bg-[#b91c1c] text-white disabled:opacity-40 disabled:cursor-not-allowed',
+      'bg-brand-pink text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed',
   },
 };
 
