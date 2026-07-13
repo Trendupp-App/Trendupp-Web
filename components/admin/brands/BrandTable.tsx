@@ -5,6 +5,7 @@ import { Search, Eye, ChevronDown } from 'lucide-react';
 import { FaTiktok, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 import { AdminStatusBadge } from '../AdminStatusBadge';
+import BrandProfileDrawer from './BrandProfileDrawer';
 
 const PepsiLogo = () => (
   <svg viewBox="0 0 100 100" className="w-7 h-7 rounded-full overflow-hidden shadow-sm shrink-0">
@@ -140,6 +141,7 @@ export default function BrandTable() {
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedTimeframe, setSelectedTimeframe] = useState<'Week' | 'Month' | 'Year'>('Week');
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
 
   const filtered = MOCK_BRANDS.filter((b) => {
     if (activeTab !== 'All' && b.status !== activeTab) return false;
@@ -337,7 +339,10 @@ export default function BrandTable() {
                 <td className="py-3.5 font-bold text-[#1a1a2e]">{b.campaigns}</td>
                 <td className="py-3.5 font-medium text-[#9a99b0]">{b.joined}</td>
                 <td className="py-3.5 text-right pr-2">
-                  <button className="p-1.5 hover:bg-[#f4f3f6] rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 text-[10px] font-bold text-brand-pink">
+                  <button
+                    onClick={() => setSelectedBrandId(b.id)}
+                    className="p-1.5 hover:bg-[#f4f3f6] rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 text-[10px] font-bold text-brand-pink"
+                  >
                     <Eye size={12} /> View
                   </button>
                 </td>
@@ -346,6 +351,15 @@ export default function BrandTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Brand Profile Drawer */}
+      {selectedBrandId && (
+        <BrandProfileDrawer
+          isOpen={selectedBrandId !== null}
+          onClose={() => setSelectedBrandId(null)}
+          brandId={selectedBrandId}
+        />
+      )}
     </section>
   );
 }
