@@ -12,7 +12,7 @@ const PUBLIC_ADMIN_PATHS = ['/admin/signin'];
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
   '/admin/users/creators': 'Creators',
-  '/admin/users/brands': 'Brands',
+  '/admin/users/brands': 'Brand',
   '/admin/campaigns': 'Campaigns',
   '/admin/disputes': 'Chat & Disputes',
   '/admin/support': 'Support Tickets',

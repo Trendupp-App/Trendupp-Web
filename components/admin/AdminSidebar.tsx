@@ -43,7 +43,7 @@ const NAV: NavGroup[] = [
     section: 'USERS',
     items: [
       { label: 'Creators', href: '/admin/users/creators', icon: Users },
-      { label: 'Brands', href: '/admin/users/brands', icon: Building2 },
+      { label: 'Advertisers', href: '/admin/users/brands', icon: Building2 },
     ],
   },
   {
