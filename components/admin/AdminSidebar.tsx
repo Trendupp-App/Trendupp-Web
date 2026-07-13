@@ -88,7 +88,11 @@ const NAV: NavGroup[] = [
   },
 ];
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  onNotificationClick?: () => void;
+}
+
+export default function AdminSidebar({ onNotificationClick }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -119,10 +123,20 @@ export default function AdminSidebar() {
               </p>
               {items.map(({ label, href, icon: Icon }) => {
                 const active = pathname === href || pathname.startsWith(href + '/');
+                const isNotifications = label === 'Notifications';
+
+                const handleClick = (e: React.MouseEvent) => {
+                  if (isNotifications && onNotificationClick) {
+                    e.preventDefault();
+                    onNotificationClick();
+                  }
+                };
+
                 return (
                   <Link
                     key={href}
                     href={href}
+                    onClick={handleClick}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group',
                       active

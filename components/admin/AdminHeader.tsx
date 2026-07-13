@@ -5,9 +5,13 @@ import UserAvatar from '@/shared/UserAvatar';
 
 interface AdminHeaderProps {
   title?: string;
+  onNotificationClick?: () => void;
 }
 
-export default function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
+export default function AdminHeader({
+  title = 'Dashboard',
+  onNotificationClick,
+}: AdminHeaderProps) {
   return (
     <header className="h-[60px] bg-white border-b border-[#e8e6f0]/60 flex items-center justify-between px-6 shrink-0 select-none">
       {/* Page title */}
@@ -27,6 +31,7 @@ export default function AdminHeader({ title = 'Dashboard' }: AdminHeaderProps) {
 
         {/* Bell */}
         <button
+          onClick={onNotificationClick}
           className="relative p-2 rounded-full hover:bg-[#f4f3f6] transition-colors"
           aria-label="Notifications"
         >

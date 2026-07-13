@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import StreamChatProvider from '@/lib/providers/StreamChatProvider';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
+import AdminNotificationDrawer from '@/components/admin/AdminNotificationDrawer';
 
 const PUBLIC_ADMIN_PATHS = ['/admin/signin'];
 
@@ -24,6 +26,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const isPublic = PUBLIC_ADMIN_PATHS.some((p) => pathname.startsWith(p));
 
   if (isPublic) return <>{children}</>;
@@ -32,11 +35,15 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#faf9fc]">
-      <AdminSidebar />
+      <AdminSidebar onNotificationClick={() => setIsNotificationOpen(true)} />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <AdminHeader title={title} />
+        <AdminHeader title={title} onNotificationClick={() => setIsNotificationOpen(true)} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+      <AdminNotificationDrawer
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
     </div>
   );
 }
