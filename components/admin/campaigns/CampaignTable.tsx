@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   Search,
   Eye,
@@ -317,9 +318,12 @@ export default function CampaignTable({ selectedStatus, onSelectStatus }: Campai
                 <td className="py-3.5 text-[#5a5a7a]">{c.endDate}</td>
                 <td className="py-3.5 text-[#9a99b0]">{c.created}</td>
                 <td className="py-3.5 text-right pr-2">
-                  <button className="p-1.5 hover:bg-[#f4f3f6] rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 text-[10px] font-bold text-brand-pink">
+                  <Link
+                    href={`/admin/campaigns/${c.id}`}
+                    className="p-1.5 hover:bg-[#f4f3f6] rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 text-[10px] font-bold text-brand-pink"
+                  >
                     <Eye size={12} /> View
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}
