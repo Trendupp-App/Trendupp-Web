@@ -166,7 +166,7 @@ export default function CreatorTable() {
             placeholder="Search by name or username..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full bg-[#f4f3f6] rounded-full pl-9.5 pr-4 text-xs text-[#1a1a2e] placeholder-[#9a99b0] focus:outline-none border-none"
+            className="h-9 w-full bg-white border border-[#e8e6f0] rounded-xl pl-9 pr-4 text-xs text-[#1a1a2e] placeholder-[#9a99b0] focus:outline-none focus:ring-1 focus:ring-brand-pink/30"
           />
         </div>
 
@@ -206,7 +206,7 @@ export default function CreatorTable() {
             <select
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              className="h-10 pl-4 pr-9 rounded-xl bg-white border border-[#e8e6f0] text-xs font-semibold text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 cursor-pointer appearance-none shadow-sm"
+              className="h-9 pl-4 pr-9 rounded-xl bg-white border border-[#e8e6f0] text-xs font-semibold text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 cursor-pointer appearance-none"
             >
               <option value="">{label}</option>
               {options.map((o) => (
@@ -326,7 +326,7 @@ export default function CreatorTable() {
                 <td className="py-3 text-right pr-2">
                   <button
                     onClick={() => setSelectedCreatorId(c.id)}
-                    className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full border border-[#e8e6f0] bg-white hover:bg-[#f4f3f6] text-xs font-semibold text-[#5a5a7a] shadow-sm transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full border border-[#e8e6f0] bg-white hover:bg-[#f4f3f6] text-xs font-semibold text-[#5a5a7a] transition-all cursor-pointer"
                   >
                     View <Eye size={12} className="shrink-0" />
                   </button>
