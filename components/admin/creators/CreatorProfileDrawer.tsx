@@ -585,24 +585,28 @@ export default function CreatorProfileDrawer({
       />
 
       {/* Note Modal (Add/Edit) */}
-      <NoteModal
-        isOpen={isNoteModalOpen}
-        onClose={() => setIsNoteModalOpen(false)}
-        initialValue={noteInitialValue}
-        title={noteModalTitle}
-        onSave={(value) => {
-          // Simply mock saving for frontend demonstration
-          console.log('Saved note:', value);
-        }}
-      />
+      {isNoteModalOpen && (
+        <NoteModal
+          isOpen={isNoteModalOpen}
+          onClose={() => setIsNoteModalOpen(false)}
+          initialValue={noteInitialValue}
+          title={noteModalTitle}
+          onSave={(value) => {
+            // Simply mock saving for frontend demonstration
+            console.log('Saved note:', value);
+          }}
+        />
+      )}
 
       {/* Success Modal */}
-      <SuccessModal
-        isOpen={isSuccessModalOpen}
-        onClose={() => setIsSuccessModalOpen(false)}
-        title={successModalTitle}
-        message={successModalMessage}
-      />
+      {isSuccessModalOpen && (
+        <SuccessModal
+          isOpen={isSuccessModalOpen}
+          onClose={() => setIsSuccessModalOpen(false)}
+          title={successModalTitle}
+          message={successModalMessage}
+        />
+      )}
     </div>
   );
 }
