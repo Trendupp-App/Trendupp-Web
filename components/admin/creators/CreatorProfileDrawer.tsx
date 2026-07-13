@@ -23,6 +23,7 @@ import { FaTiktok, FaInstagram } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/shared/UserAvatar';
 import { AdminStatusBadge } from '../AdminStatusBadge';
+import CreatorActionModal from './CreatorActionModal';
 
 interface CreatorProfileDrawerProps {
   isOpen: boolean;
@@ -91,6 +92,7 @@ const NOTES = [
 const ACTIONS = [
   {
     label: 'Suspend Account',
+    actionType: 'suspend' as const,
     desc: 'Temporarily restrict creator access to the platform.',
     icon: Ban,
     color: 'text-[#ea580c]',
@@ -100,6 +102,7 @@ const ACTIONS = [
   },
   {
     label: 'Suspend Campaign Access',
+    actionType: 'suspendCampaign' as const,
     desc: 'Restrict creator from accessing or participating in any campaigns.',
     icon: ShieldOff,
     color: 'text-[#ea580c]',
@@ -109,6 +112,7 @@ const ACTIONS = [
   },
   {
     label: 'Reactivate Account',
+    actionType: 'reactivate' as const,
     desc: 'Restore creator access, if currently suspended.',
     icon: ShieldCheck,
     color: 'text-[#16a34a]',
@@ -118,6 +122,7 @@ const ACTIONS = [
   },
   {
     label: 'Delete Account',
+    actionType: 'delete' as const,
     desc: 'Permanently remove creator account. This cannot be undone.',
     icon: Trash2,
     color: 'text-[#dc2626]',
@@ -128,6 +133,7 @@ const ACTIONS = [
   },
   {
     label: 'Change Creator Tier',
+    actionType: 'changeTier' as const,
     desc: "Manually update the creator's tier classification.",
     icon: Layers,
     color: 'text-[#2f63eb]',
@@ -178,6 +184,9 @@ export default function CreatorProfileDrawer({
   creatorId,
 }: CreatorProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState<TabType>('Overview');
+  const [activeAction, setActiveAction] = useState<
+    'suspend' | 'suspendCampaign' | 'reactivate' | 'delete' | 'changeTier' | null
+  >(null);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
@@ -488,6 +497,7 @@ export default function CreatorProfileDrawer({
                   return (
                     <button
                       key={i}
+                      onClick={() => setActiveAction(a.actionType)}
                       className={cn(
                         'flex items-center gap-4 w-full text-left px-5 py-4 rounded-2xl border transition-all hover:brightness-95 cursor-pointer',
                         a.bg,
@@ -522,6 +532,9 @@ export default function CreatorProfileDrawer({
           )}
         </div>
       </div>
+
+      {/* Action confirmation Modal */}
+      <CreatorActionModal action={activeAction} onClose={() => setActiveAction(null)} />
     </div>
   );
 }
