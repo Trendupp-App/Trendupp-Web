@@ -2,7 +2,7 @@ import { OnboardingStepsCompleted } from '@/types/Onboarding';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type UserRole = 'creator' | 'brand' | 'super_admin';
+export type UserRole = 'creator' | 'brand';
 
 export interface AuthUser {
   id: string;

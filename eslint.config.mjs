@@ -16,7 +16,6 @@ const eslintConfig = defineConfig([
     'test-results/**',
     'node_modules/**',
     'next-env.d.ts',
-    'scratch/**',
   ]),
 ]);
 
