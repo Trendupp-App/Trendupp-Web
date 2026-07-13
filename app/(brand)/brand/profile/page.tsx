@@ -88,12 +88,8 @@ export default function BrandProfilePage() {
             <SettingsList onOpen={(id) => setOpenSheet(id as SheetType)} />
             <p className="text-xs text-[#9a99b0] text-center">
               Trendupp v1.0.0 ·{' '}
-              <a href="#" className="text-brand-pink hover:underline">
-                Terms
-              </a>
-              {' · '}
-              <a href="#" className="text-brand-pink hover:underline">
-                Privacy
+              <a href="/terms" className="text-brand-pink hover:underline">
+                Terms and Privacy
               </a>
             </p>
           </div>

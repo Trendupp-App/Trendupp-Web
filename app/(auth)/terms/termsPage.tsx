@@ -1,11 +1,9 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Swap this for your real shared logo import if you have one, e.g.
-// import { TrenduppLogo } from '@/components/shared/TrenduppLogo';
 function TrenduppLogo() {
   return (
     <svg
@@ -61,15 +59,9 @@ function TrenduppLogo() {
 
 export default function TermsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnTo = searchParams.get('returnTo') || '/signin';
 
   function handleBack() {
     router.back();
-  }
-
-  function handleAccept() {
-    router.push(`${returnTo}?termsAccepted=1`);
   }
 
   return (
@@ -169,27 +161,6 @@ export default function TermsPage() {
               </ol>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Bottom action bar */}
-      <div className="sticky bottom-0 z-10 bg-white border-t border-[#f0eef8]">
-        <div className="max-w-[700px] mx-auto w-full px-6 py-4 flex items-center justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleBack}
-            className="rounded-md h-11 px-6 text-sm font-light border-[#e8e6f0]"
-          >
-            Decline
-          </Button>
-          <Button
-            type="button"
-            onClick={handleAccept}
-            className="rounded-md h-11 px-6 text-sm font-light bg-brand-pink text-white shadow-lg shadow-brand-pink-light"
-          >
-            I Accept & Continue
-          </Button>
         </div>
       </div>
     </div>
