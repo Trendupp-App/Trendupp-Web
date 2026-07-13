@@ -49,7 +49,7 @@ const NAV: NavGroup[] = [
   {
     section: 'CAMPAIGNS',
     items: [
-      { label: 'Commercial', href: '/admin/campaigns', icon: ShoppingBag },
+      { label: 'Paid', href: '/admin/campaigns', icon: ShoppingBag },
       { label: 'Social Impact', href: '/admin/campaigns/social', icon: Globe },
     ],
   },
