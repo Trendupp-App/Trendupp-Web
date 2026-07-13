@@ -41,6 +41,7 @@ export default function CreatorDashboardPage() {
     return `${diffHours}h left`;
   };
 
+  const nowTime = new Date().getTime();
   const mappedCampaigns = liveCampaigns.map((c: Campaign) => ({
     id: c.id,
     title: c.title,
@@ -51,9 +52,7 @@ export default function CreatorDashboardPage() {
     daysLeft: getDaysLeft(c.timeline || ''),
     daysLeftNumber: Math.max(
       0,
-      Math.floor(
-        (new Date(c.timeline || '').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
-      ),
+      Math.floor((new Date(c.timeline || '').getTime() - nowTime) / (1000 * 60 * 60 * 24)),
     ),
     tier: c.creatorCategory?.name || 'Nano',
     appliedCount: c.applicationsCount?.total || 0,
@@ -62,14 +61,15 @@ export default function CreatorDashboardPage() {
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
     niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
     platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
-    status: (c.status === 'active' || c.status === 'live'
-      ? 'live'
-      : c.status === 'completed'
-        ? 'past'
+    status: (c.status === 'completed' || (c.timeline && new Date(c.timeline).getTime() < nowTime)
+      ? 'past'
+      : c.status === 'active' || c.status === 'live'
+        ? 'live'
         : c.status) as string,
     isSocialImpact: false,
     goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
     createdAt: c.createdAt,
+    timeline: c.timeline,
     campaignBrief: c.campaignBrief || 'No brief provided.',
     deliverables: c.deliverables || [],
     contentDirection: c.contentDirection || [],
@@ -104,7 +104,16 @@ export default function CreatorDashboardPage() {
           {isProfileCompleted ? (
             <BannerCarousel />
           ) : (
-            <CompletenessCard percentage={user?.onboardingPercentage || 0} />
+            <CompletenessCard
+              percentage={user?.onboardingPercentage || 0}
+              onCompleteClick={() => {
+                if (isProfileCompleted) {
+                  router.push('/creator/profile');
+                } else {
+                  router.push('/onboard?type=creator');
+                }
+              }}
+            />
           )}
         </div>
 

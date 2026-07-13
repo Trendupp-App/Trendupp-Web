@@ -40,9 +40,9 @@ export default function ProfileCompletenessCard({
 
       <button
         onClick={() => router.push('/onboard')}
-        className="w-fit px-5 py-2.5 cursor-pointer rounded-xl border border-[#e0ddef] text-sm font-medium text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors"
+        className="w-fit bg-white hover:bg-[#faf9fc] text-[#1a1a2e] border border-[#e0ddef] font-semibold text-xs sm:text-sm py-2.5 px-6 rounded-full transition-all duration-200 active:scale-[0.98] cursor-pointer"
       >
-        Complete profile
+        Complete Profile
       </button>
     </div>
   );
