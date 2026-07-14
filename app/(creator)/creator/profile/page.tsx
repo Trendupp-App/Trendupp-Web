@@ -1702,6 +1702,13 @@ export default function CreatorProfilePage() {
             </div>
           </div>
         )}
+
+        <p className="text-xs text-[#9a99b0] text-center">
+          Trendupp v1.0.0 ·{' '}
+          <a href="/terms" className="text-brand-pink hover:underline">
+            Terms and Privacy
+          </a>
+        </p>
       </div>
 
       {/* ── 4. ADD PORTFOLIO ITEM DIALOG MODAL ── */}
