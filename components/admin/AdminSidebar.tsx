@@ -122,7 +122,12 @@ export default function AdminSidebar({ onNotificationClick }: AdminSidebarProps)
                 {section}
               </p>
               {items.map(({ label, href, icon: Icon }) => {
-                const active = pathname === href || pathname.startsWith(href + '/');
+                const active =
+                  href === '/admin/campaigns'
+                    ? pathname === href ||
+                      (pathname.startsWith(href + '/') &&
+                        !pathname.startsWith('/admin/campaigns/social'))
+                    : pathname === href || pathname.startsWith(href + '/');
                 const isNotifications = label === 'Notifications';
 
                 const handleClick = (e: React.MouseEvent) => {
