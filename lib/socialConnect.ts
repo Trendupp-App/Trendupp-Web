@@ -74,16 +74,6 @@ export function isOAuthConfigured(platform: SocialPlatformId): boolean {
   return Boolean(OAUTH_CONFIG[platform].clientId);
 }
 
-/**
- * Dev-only shortcut: the backend honors `mock_*` codes outside production,
- * so the full connect round-trip can be tested without platform apps.
- */
-export function isMockConnectAvailable(): boolean {
-  return (
-    process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ENABLE_MOCK_SOCIALS === 'true'
-  );
-}
-
 export function readSocialConnectPending(): SocialConnectPending | null {
   if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem(PENDING_KEY);

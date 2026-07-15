@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { socialsApi, type SocialPlatformId } from '@/services/socialsApi';
-import { syncAuthStoreFromSocials, isMockConnectAvailable } from '@/lib/socialConnect';
+import { syncAuthStoreFromSocials } from '@/lib/socialConnect';
 
 const SOCIALS_QUERY_KEY = ['socials'] as const;
 
@@ -15,35 +15,6 @@ export function useSocialConnections() {
   return useQuery({
     queryKey: SOCIALS_QUERY_KEY,
     queryFn: async () => (await socialsApi.list()).data,
-  });
-}
-
-/**
- * Dev-only: connect with a backend mock code (no platform app needed).
- * Real OAuth connects happen via beginSocialConnect() + the callback pages.
- */
-export function useMockConnectSocial() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (platform: SocialPlatformId) => {
-      if (!isMockConnectAvailable()) {
-        throw new Error('Mock connect is not available in production');
-      }
-      const { data } = await socialsApi.connect(platform, {
-        code: `mock_${crypto.randomUUID().slice(0, 8)}`,
-        redirectUri: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback/${platform}`,
-      });
-      return data;
-    },
-    onSuccess: (data) => {
-      syncAuthStoreFromSocials(data);
-      void queryClient.invalidateQueries({ queryKey: SOCIALS_QUERY_KEY });
-      toast.success(`${data.message} — you are now a ${data.tier}`);
-    },
-    onError: (err: ApiError) => {
-      toast.error(err?.response?.data?.message ?? 'Could not connect this account');
-    },
   });
 }
 

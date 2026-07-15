@@ -6,12 +6,8 @@ import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PLATFORMS } from '@/shared/SocialsConnectUI';
-import {
-  useSocialConnections,
-  useMockConnectSocial,
-  useDisconnectSocial,
-} from '@/hooks/useSocials';
-import { beginSocialConnect, isOAuthConfigured, isMockConnectAvailable } from '@/lib/socialConnect';
+import { useSocialConnections, useDisconnectSocial } from '@/hooks/useSocials';
+import { beginSocialConnect, isOAuthConfigured } from '@/lib/socialConnect';
 import type { SocialPlatformId, SocialConnectionView } from '@/services/socialsApi';
 
 /** The web PLATFORMS list uses id 'x' for Twitter; the backend uses 'twitter'. */
@@ -50,7 +46,6 @@ export default function SocialsOAuthConnect({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: connections, isLoading } = useSocialConnections();
-  const mockConnect = useMockConnectSocial();
   const disconnect = useDisconnectSocial();
   const [redirectingTo, setRedirectingTo] = useState<SocialPlatformId | null>(null);
 
@@ -62,27 +57,22 @@ export default function SocialsOAuthConnect({
   }, [connectedCount]);
 
   async function handleConnect(card: SocialConnectionView) {
+    if (!isOAuthConfigured(card.platform)) {
+      toast.error(`${card.label} connection is not available yet`);
+      return;
+    }
+
     // The OAuth redirect leaves the page — remember where to come back to.
     const query = searchParams.toString();
     const returnTo = query ? `${pathname}?${query}` : pathname;
 
-    if (isOAuthConfigured(card.platform)) {
-      setRedirectingTo(card.platform);
-      try {
-        await beginSocialConnect(card.platform, returnTo);
-      } catch {
-        setRedirectingTo(null);
-        toast.error(`Could not start the ${card.label} connection`);
-      }
-      return;
+    setRedirectingTo(card.platform);
+    try {
+      await beginSocialConnect(card.platform, returnTo);
+    } catch {
+      setRedirectingTo(null);
+      toast.error(`Could not start the ${card.label} connection`);
     }
-
-    if (isMockConnectAvailable()) {
-      mockConnect.mutate(card.platform);
-      return;
-    }
-
-    toast.error(`${card.label} connection is not available yet`);
   }
 
   if (isLoading) {
@@ -142,35 +132,24 @@ export default function SocialsOAuthConnect({
                 Disconnect
               </button>
             </div>
+          ) : isOAuthConfigured(card.platform) ? (
+            <button
+              type="button"
+              disabled={redirectingTo === card.platform}
+              onClick={() => void handleConnect(card)}
+              className="flex items-center gap-1"
+            >
+              <span className="text-sm font-light cursor-pointer text-brand-pink border border-brand-pink/30 rounded-full px-4 py-1 hover:bg-brand-pink/5 transition-colors flex items-center gap-1.5">
+                {redirectingTo === card.platform && (
+                  <RefreshCw size={12} className="animate-spin" />
+                )}
+                Connect
+              </span>
+            </button>
           ) : (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={redirectingTo === card.platform || mockConnect.isPending}
-                onClick={() => void handleConnect(card)}
-                className="flex items-center gap-1"
-              >
-                <span className="text-sm font-light cursor-pointer text-brand-pink border border-brand-pink/30 rounded-full px-4 py-1 hover:bg-brand-pink/5 transition-colors flex items-center gap-1.5">
-                  {(redirectingTo === card.platform ||
-                    (mockConnect.isPending && mockConnect.variables === card.platform)) && (
-                    <RefreshCw size={12} className="animate-spin" />
-                  )}
-                  Connect
-                </span>
-              </button>
-              {isMockConnectAvailable() && isOAuthConfigured(card.platform) && (
-                // Dev-only: exercise the full backend round-trip without the
-                // platform consent screen (backend honors mock codes outside prod).
-                <button
-                  type="button"
-                  disabled={mockConnect.isPending}
-                  onClick={() => mockConnect.mutate(card.platform)}
-                  className="text-[10px] cursor-pointer text-[#9a99b0] underline underline-offset-2 hover:text-[#1a1a2e]"
-                >
-                  test
-                </button>
-              )}
-            </div>
+            <span className="text-xs text-[#9a99b0] border border-[#e8e6f0] rounded-full px-3 py-1">
+              Coming soon
+            </span>
           )}
         </div>
       ))}
