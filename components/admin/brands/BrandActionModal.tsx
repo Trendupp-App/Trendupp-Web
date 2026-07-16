@@ -58,7 +58,7 @@ export default function BrandActionModal({ action, onClose, onConfirm }: BrandAc
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-[10vh] overflow-y-auto pb-6">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={handleClose} />
       <div className="relative z-10 w-full max-w-[380px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#e8e6f0]/40">
