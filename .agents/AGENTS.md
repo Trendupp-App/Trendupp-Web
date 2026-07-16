@@ -9,12 +9,12 @@ These rules must be followed without exception by all AI coding assistants pair 
 > [!IMPORTANT]
 > To prevent branch confusion and messy PR history, follow these strict branch guidelines:
 
-- **Primary Integration Branch:** The primary branch for all creator dashboard, explore, and profile features is **`feature/creator-dashboard`**.
-- **Pushes & PRs:** All pushes to the remote repository and pull requests (PRs) must be made from the **`feature/creator-dashboard`** branch targeting **`develop`**. Never push or create pull requests from temporary feature branches directly to the remote repository.
+- **Primary Integration Branch:** The primary branch for all admin dashboard, explore, and profile features is **`feature/admin-dashboard`**.
+- **Pushes & PRs:** All pushes to the remote repository and pull requests (PRs) must be made from the **`feature/admin-dashboard`** branch targeting **`develop`**. Never push or create pull requests from temporary feature branches directly to the remote repository.
 - **Temporary Branch Flow:**
   - If working on a separate sub-task (e.g., `feature/profile-integration`), complete the work on that local branch.
-  - Once the feature is complete and verified, **checkout `feature/creator-dashboard` and merge the sub-task branch into it**.
-  - Perform final verification checks on `feature/creator-dashboard` and push it to the remote repository.
+  - Once the feature is complete and verified, **checkout `feature/admin-dashboard` and merge the sub-task branch into it**.
+  - Perform final verification checks on `feature/admin-dashboard` and push it to the remote repository.
 
 ---
 
