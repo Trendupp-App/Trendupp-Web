@@ -25,6 +25,8 @@ export interface MappedCampaign {
   usageRights?: string;
   successLooksLike?: string;
   status?: string;
+  createdAt?: string;
+  timeline?: string;
 }
 
 interface CampaignDetailsDrawerProps {
@@ -42,6 +44,14 @@ export default function CampaignDetailsDrawer({
 }: CampaignDetailsDrawerProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [drawerMode, setDrawerMode] = useState<'details' | 'apply' | 'success'>('details');
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    setCurrentDate(isOpen ? new Date() : null);
+  }
+
   const [contentTitle, setContentTitle] = useState('');
   const [workLink, setWorkLink] = useState('');
   const [primaryPlatform, setPrimaryPlatform] = useState('Instagram');
@@ -116,6 +126,82 @@ export default function CampaignDetailsDrawer({
     });
   };
 
+  const formatDate = (date?: Date | string | null) => {
+    if (!date) return '';
+    try {
+      const d = date instanceof Date ? date : new Date(date);
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    } catch {
+      return '';
+    }
+  };
+
+  const getTimelineDates = () => {
+    if (!campaign)
+      return {
+        briefIssued: '',
+        escrowConfirmed: '',
+        contentDeadline: '',
+        brandReview: '',
+        postLive: '',
+        paymentRelease: '',
+      };
+    const created = campaign.createdAt ? new Date(campaign.createdAt) : new Date();
+    const deadline = campaign.timeline
+      ? new Date(campaign.timeline)
+      : new Date(created.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    const diff = deadline.getTime() - created.getTime();
+    const stepDuration = diff / 5;
+
+    return {
+      briefIssued: formatDate(created),
+      escrowConfirmed: formatDate(new Date(created.getTime() + stepDuration * 0.5)),
+      contentDeadline: formatDate(new Date(created.getTime() + stepDuration * 2)),
+      brandReview: formatDate(new Date(created.getTime() + stepDuration * 3)),
+      postLive: formatDate(new Date(created.getTime() + stepDuration * 4.5)),
+      paymentRelease: formatDate(deadline),
+    };
+  };
+
+  const timelineDates = getTimelineDates();
+
+  const isTimelineStepCompleted = (stepIndex: number) => {
+    if (!campaign) return false;
+    if (campaign.status === 'past' || campaign.status === 'completed') return true;
+    if (stepIndex <= 2) return true; // Brief & Escrow are always completed for live campaigns
+    if (!currentDate) return false;
+
+    const created = campaign.createdAt ? new Date(campaign.createdAt) : new Date();
+    const deadline = campaign.timeline
+      ? new Date(campaign.timeline)
+      : new Date(created.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const diff = deadline.getTime() - created.getTime();
+    const stepDuration = diff / 5;
+
+    let stepTime = created.getTime();
+    if (stepIndex === 3) stepTime = created.getTime() + stepDuration * 2;
+    if (stepIndex === 4) stepTime = created.getTime() + stepDuration * 3;
+    if (stepIndex === 5) stepTime = created.getTime() + stepDuration * 4.5;
+    if (stepIndex === 6) stepTime = deadline.getTime();
+
+    return currentDate.getTime() > stepTime;
+  };
+
   if (!campaign) return null;
 
   return (
@@ -162,7 +248,7 @@ export default function CampaignDetailsDrawer({
                     <span>•</span>
                     <span className="flex items-center gap-1">
                       <Clock size={11} className="text-white/75" />
-                      {campaign.daysLeft} left
+                      {campaign.daysLeft}
                     </span>
                   </p>
                 </div>
@@ -415,78 +501,114 @@ export default function CampaignDetailsDrawer({
                     <div className="flex flex-col gap-6 pl-8 ml-3 border-l border-[#e8e6f0]/75 relative select-none">
                       {/* Step 1 */}
                       <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                          <Check size={10} className="stroke-[3]" />
-                        </div>
+                        {isTimelineStepCompleted(1) ? (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
+                            <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5">
                           <h4 className="text-xs font-bold text-[#1a1a2e]">Brief issued</h4>
                           <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            May 28, 2026
+                            {timelineDates.briefIssued}
                           </span>
                         </div>
                       </div>
 
                       {/* Step 2 */}
                       <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                          <Check size={10} className="stroke-[3]" />
-                        </div>
+                        {isTimelineStepCompleted(2) ? (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
+                            <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5">
                           <h4 className="text-xs font-bold text-[#1a1a2e]">Escrow confirmed</h4>
                           <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            May 30, 2026
+                            {timelineDates.escrowConfirmed}
                           </span>
                         </div>
                       </div>
 
                       {/* Step 3 */}
                       <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
+                        {isTimelineStepCompleted(3) ? (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
+                            <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5">
                           <h4 className="text-xs font-bold text-[#1a1a2e]">Content deadline</h4>
                           <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 5, 2026
+                            {timelineDates.contentDeadline}
                           </span>
                         </div>
                       </div>
 
                       {/* Step 4 */}
                       <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
+                        {isTimelineStepCompleted(4) ? (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
+                            <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5">
                           <h4 className="text-xs font-bold text-[#1a1a2e]">Brand review (48h)</h4>
                           <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 7, 2026
+                            {timelineDates.brandReview}
                           </span>
                         </div>
                       </div>
 
                       {/* Step 5 */}
                       <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
+                        {isTimelineStepCompleted(5) ? (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
+                            <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5">
                           <h4 className="text-xs font-bold text-[#1a1a2e]">Post live deadline</h4>
                           <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 10, 2026
+                            {timelineDates.postLive}
                           </span>
                         </div>
                       </div>
 
                       {/* Step 6 */}
                       <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
+                        {isTimelineStepCompleted(6) ? (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
+                            <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5">
                           <h4 className="text-xs font-bold text-[#1a1a2e]">Payment release</h4>
                           <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 11, 2026
+                            {timelineDates.paymentRelease}
                           </span>
                         </div>
                       </div>
@@ -496,19 +618,28 @@ export default function CampaignDetailsDrawer({
               </div>
 
               {/* Action apply button */}
-              {campaign.status === 'live' ? (
+              {campaign.status === 'live' && campaign.daysLeft.toLowerCase() !== 'closed' ? (
                 <Button
                   onClick={() => setDrawerMode('apply')}
                   className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
                 >
-                  Apply Now - 38h left →
+                  Apply Now -{' '}
+                  {campaign.daysLeft.toLowerCase().includes('left') ||
+                  campaign.daysLeft.toLowerCase() === 'closed'
+                    ? campaign.daysLeft
+                    : `${campaign.daysLeft} left`}{' '}
+                  →
                 </Button>
               ) : (
                 <Button
                   disabled
                   className="w-full bg-[#eaeaf0] text-[#7a7a9a] font-semibold text-[15px] py-6.5 rounded-xl transition-all select-none border-none shrink-0 mt-4 cursor-not-allowed"
                 >
-                  Apply Disabled (Campaign is {campaign.status || 'Pending approval'})
+                  {campaign.status === 'past' ||
+                  campaign.status === 'completed' ||
+                  campaign.daysLeft.toLowerCase() === 'closed'
+                    ? 'Campaign Closed'
+                    : `Apply Disabled (Campaign is ${campaign.status || 'Pending approval'})`}
                 </Button>
               )}
             </div>
@@ -541,7 +672,12 @@ export default function CampaignDetailsDrawer({
               {/* Top right deadline pill */}
               <div className="py-1 px-2.5 bg-red-50 text-red-500 border border-red-100 rounded-full flex items-center gap-1 text-[10px] font-bold shrink-0">
                 <Clock size={11} className="stroke-[2.5]" />
-                <span>1d 14h left</span>
+                <span>
+                  {campaign.daysLeft.toLowerCase().includes('left') ||
+                  campaign.daysLeft.toLowerCase() === 'closed'
+                    ? campaign.daysLeft
+                    : `${campaign.daysLeft} left`}
+                </span>
               </div>
             </div>
 

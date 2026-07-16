@@ -16,10 +16,10 @@ interface WorkTabsProps {
     done: number;
     activeSub: {
       All: number;
-      'In Progress': number;
-      'Pending Approval': number;
+      'In progress': number;
+      'Content review': number;
       Revision: number;
-      Approved: number;
+      'Live content': number;
     };
     appliedSub: {
       All: number;
@@ -41,10 +41,10 @@ export default function WorkTabs({
 }: WorkTabsProps) {
   const activeSubPills = [
     { label: 'All', count: counts.activeSub.All },
-    { label: 'In Progress', count: counts.activeSub['In Progress'] },
-    { label: 'Pending Approval', count: counts.activeSub['Pending Approval'] },
+    { label: 'In progress', count: counts.activeSub['In progress'] },
+    { label: 'Content review', count: counts.activeSub['Content review'] },
     { label: 'Revision', count: counts.activeSub.Revision },
-    { label: 'Approved', count: counts.activeSub.Approved },
+    { label: 'Live content', count: counts.activeSub['Live content'] },
   ];
 
   const appliedSubPills = [
@@ -111,13 +111,13 @@ export default function WorkTabs({
                 key={pill.label}
                 onClick={() => onSubFilterChange(pill.label)}
                 className={cn(
-                  'px-4 py-2 h-9 text-xs font-semibold rounded-full border transition-all whitespace-nowrap focus:outline-none cursor-pointer flex items-center justify-center',
+                  'px-4 py-2 h-9 text-xs font-medium rounded-full border transition-all whitespace-nowrap focus:outline-none cursor-pointer flex items-center justify-center',
                   activeSubFilter === pill.label
                     ? 'bg-brand-pink text-white border-brand-pink shadow-[0_2px_8px_rgba(215,23,111,0.15)]'
                     : 'bg-white text-[#7a7a9a] border-[#e8e6f0]/70 hover:border-brand-pink/30 hover:text-brand-pink',
                 )}
               >
-                {pill.label} ({pill.count})
+                {pill.label}
               </button>
             ))}
 
@@ -127,13 +127,13 @@ export default function WorkTabs({
                 key={pill.label}
                 onClick={() => onSubFilterChange(pill.label)}
                 className={cn(
-                  'px-4 py-2 h-9 text-xs font-semibold rounded-full border transition-all whitespace-nowrap focus:outline-none cursor-pointer flex items-center justify-center',
+                  'px-4 py-2 h-9 text-xs font-medium rounded-full border transition-all whitespace-nowrap focus:outline-none cursor-pointer flex items-center justify-center',
                   activeSubFilter === pill.label
                     ? 'bg-brand-pink text-white border-brand-pink shadow-[0_2px_8px_rgba(215,23,111,0.15)]'
                     : 'bg-white text-[#7a7a9a] border-[#e8e6f0]/70 hover:border-brand-pink/30 hover:text-brand-pink',
                 )}
               >
-                {pill.label} ({pill.count})
+                {pill.label}
               </button>
             ))}
         </div>

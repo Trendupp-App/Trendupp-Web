@@ -14,7 +14,7 @@ export default function CompletenessCard({
       <div className="flex flex-col gap-3.5">
         {/* Title */}
         <h3 className="text-base sm:text-lg lg:text-xl font-bold text-[#1a1a2e] leading-snug">
-          You profile is {percentage}% complete
+          Your profile is {percentage}% complete
         </h3>
 
         {/* Custom Progress Bar */}
@@ -34,9 +34,9 @@ export default function CompletenessCard({
       {/* Action button */}
       <button
         onClick={onCompleteClick}
-        className="w-fit bg-[#f4f3ff] hover:bg-[#eae9ff] text-[#4c49d8] font-bold text-xs sm:text-sm py-2.5 px-6 rounded-xl transition-all duration-200 active:scale-[0.98]"
+        className="w-fit bg-white hover:bg-[#faf9fc] text-[#1a1a2e] border border-[#e0ddef] font-semibold text-xs sm:text-sm py-2.5 px-6 rounded-full transition-all duration-200 active:scale-[0.98] cursor-pointer"
       >
-        Complete profile
+        Complete Profile
       </button>
     </div>
   );
