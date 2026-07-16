@@ -127,7 +127,11 @@ export default function AdminSidebar({ onNotificationClick }: AdminSidebarProps)
                     ? pathname === href ||
                       (pathname.startsWith(href + '/') &&
                         !pathname.startsWith('/admin/campaigns/social'))
-                    : pathname === href || pathname.startsWith(href + '/');
+                    : href === '/admin/reports'
+                      ? pathname === href ||
+                        (pathname.startsWith(href + '/') &&
+                          !pathname.startsWith('/admin/reports/audit'))
+                      : pathname === href || pathname.startsWith(href + '/');
                 const isNotifications = label === 'Notifications';
 
                 const handleClick = (e: React.MouseEvent) => {
