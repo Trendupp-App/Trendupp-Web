@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Share2, Bookmark, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Share2, Bookmark } from 'lucide-react';
+import { Portal } from '@/components/ui/portal';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { NewsArticle } from '@/app/(creator)/creator/news/mockNewsData';
@@ -50,7 +51,7 @@ export default function NewsDetailsDrawer({ isOpen, onClose, article }: NewsDeta
   };
 
   return (
-    <>
+    <Portal>
       {/* Backdrop with soft blur */}
       <div
         className={cn(
@@ -250,6 +251,6 @@ export default function NewsDetailsDrawer({ isOpen, onClose, article }: NewsDeta
           </div>
         </div>
       </div>
-    </>
+    </Portal>
   );
 }
