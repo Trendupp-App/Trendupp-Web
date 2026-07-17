@@ -255,3 +255,10 @@ export function useBrandProfile(id: string | null) {
     staleTime: 1000 * 60,
   });
 }
+export function useTopPerformers() {
+  return useQuery({
+    queryKey: ['top-performers'],
+    queryFn: () => usersApi.getTopPerformers().then((r) => r.data),
+    staleTime: 1000 * 60 * 5,
+  });
+}

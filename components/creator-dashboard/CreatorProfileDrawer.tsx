@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Portal } from '@/components/ui/portal';
 
 interface PortfolioItem {
   id: number;
@@ -201,379 +202,425 @@ export default function CreatorProfileDrawer({
   const visibleItems = portfolio.slice(0, visiblePortfolio);
 
   return (
-    <div
-      className={cn(
-        'fixed inset-0 z-50 transition-all duration-300',
-        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-      )}
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
-        onClick={onClose}
-      />
-
-      {/* Drawer panel */}
+    <Portal>
       <div
         className={cn(
-          'absolute bottom-0 left-0 right-0',
-          'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-[500px]',
-          'bg-white rounded-none',
-          'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
-          'transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
-          'border-0 border-none flex flex-col gap-0',
-          isOpen
-            ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
-            : 'translate-y-full md:translate-x-full md:translate-y-0',
+          'fixed inset-0 z-50 transition-all duration-300',
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         )}
-        style={{ border: 'none' }}
       >
-        {/* ── FULL-BLEED NAVY HERO HEADER ── */}
-        <div className="relative bg-[#040039] bg-gradient-to-b from-[#09052f] to-[#120d3d] pt-12 pb-8 px-5 flex flex-col items-center text-center select-none shrink-0 w-full">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-6 text-white/75 hover:text-white transition-colors focus:outline-none z-20 cursor-pointer p-1.5 border-none bg-transparent"
-            aria-label="Close creator drawer"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-4 h-4"
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
+          onClick={onClose}
+        />
+
+        {/* Drawer panel */}
+        <div
+          className={cn(
+            'absolute bottom-0 left-0 right-0',
+            'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-[500px]',
+            'bg-white rounded-none',
+            'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
+            'transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+            'border-0 border-none flex flex-col gap-0',
+            isOpen
+              ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
+              : 'translate-y-full md:translate-x-full md:translate-y-0',
+          )}
+          style={{ border: 'none' }}
+        >
+          {/* ── FULL-BLEED NAVY HERO HEADER ── */}
+          <div className="relative bg-[#040039] bg-gradient-to-b from-[#09052f] to-[#120d3d] pt-12 pb-8 px-5 flex flex-col items-center text-center select-none shrink-0 w-full">
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-6 text-white/75 hover:text-white transition-colors focus:outline-none z-20 cursor-pointer p-1.5 border-none bg-transparent"
+              aria-label="Close creator drawer"
             >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-
-          {/* Centered Avatar with tier badge */}
-          <div className="relative mt-4 mb-4 shrink-0">
-            <div className="w-24 h-24 rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-300 shadow-xl relative">
-              <Image
-                src={creator.image}
-                alt={creator.name}
-                fill
-                className="object-cover"
-                sizes="96px"
-              />
-            </div>
-            {/* Small tier badge on bottom right */}
-            <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand-pink border-2 border-[#09052f] flex items-center justify-center text-white text-[11px] font-bold shadow-md select-none">
-              {creator.tier ? creator.tier[0].toUpperCase() : 'M'}
-            </div>
-          </div>
-
-          {/* Name + Rating Badge Row */}
-          <div className="flex items-center gap-2 mt-1">
-            <h2 className="text-white text-[20px] font-bold leading-tight">{creator.name}</h2>
-            <div className="flex items-center gap-1 bg-white/15 rounded-full px-2.5 py-0.5">
-              <span className="text-amber-400 text-xs">★</span>
-              <span className="text-white text-xs font-semibold">{creator.rating}</span>
-            </div>
-          </div>
-
-          {/* Handle */}
-          <p className="text-white/50 text-[13px] mt-1.5">@{creator.handle}</p>
-
-          {/* Badge pill — "Impact Advocate" style with gear icon */}
-          {creator.badge && (
-            <div className="mt-3 px-4 py-1.5 bg-white border border-brand-pink rounded-full flex items-center gap-2 shadow-sm">
-              <span className="text-brand-pink text-xs font-bold">{creator.badge}</span>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#d7176f"
-                strokeWidth="2.2"
+                stroke="currentColor"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="w-3.5 h-3.5 animate-spin-slow"
+                className="w-4 h-4"
               >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
-            </div>
-          )}
+            </button>
 
-          {/* Location */}
-          {creator.location && (
-            <div className="flex items-center gap-1 mt-3">
-              <MapPin size={12} className="text-white/40" />
-              <span className="text-white/50 text-[12px]">{creator.location}</span>
+            {/* Centered Avatar with tier badge */}
+            <div className="relative mt-4 mb-4 shrink-0">
+              <div className="w-24 h-24 rounded-full border-[3.5px] border-brand-pink overflow-hidden bg-zinc-300 shadow-xl relative">
+                <Image
+                  src={creator.image}
+                  alt={creator.name}
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                />
+              </div>
+              {/* Small tier badge on bottom right */}
+              <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand-pink border-2 border-[#09052f] flex items-center justify-center text-white text-[11px] font-bold shadow-md select-none">
+                {creator.tier ? creator.tier[0].toUpperCase() : 'M'}
+              </div>
             </div>
-          )}
 
-          {/* 4-Column Stats row */}
-          <div className="w-full bg-white/10 rounded-[18px] flex items-stretch divide-x divide-white/10 overflow-hidden shrink-0 mt-5">
-            {/* Engagement */}
-            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
-              <span className="text-white text-[16px] font-bold leading-none">
-                {creator.engagement ?? '7.2%'}
-              </span>
-              <span className="text-white/50 text-[10px] font-light leading-none">Engagement</span>
+            {/* Name + Rating Badge Row */}
+            <div className="flex items-center gap-2 mt-1">
+              <h2 className="text-white text-[20px] font-bold leading-tight">{creator.name}</h2>
+              <div className="flex items-center gap-1 bg-white/15 rounded-full px-2.5 py-0.5">
+                <span className="text-amber-400 text-xs">★</span>
+                <span className="text-white text-xs font-semibold">{creator.rating}</span>
+              </div>
             </div>
-            {/* Followers */}
-            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
-              <span className="text-white text-[16px] font-bold leading-none">
-                {creator.followers ?? creator.reach ?? '128K'}
-              </span>
-              <span className="text-white/50 text-[10px] font-light leading-none">Followers</span>
-            </div>
-            {/* Campaigns */}
-            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
-              <span className="text-white text-[16px] font-bold leading-none">
-                {creator.campaignCount}
-              </span>
-              <span className="text-white/50 text-[10px] font-light leading-none">Campaigns</span>
-            </div>
-            {/* Earned */}
-            <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
-              <span className="text-white text-[16px] font-bold leading-none">
-                {creator.earned ?? '1.2M'}
-              </span>
-              <span className="text-white/50 text-[10px] font-light leading-none">Earned</span>
+
+            {/* Handle */}
+            <p className="text-white/50 text-[13px] mt-1.5">@{creator.handle}</p>
+
+            {/* Badge pill — "Impact Advocate" style with gear icon */}
+            {creator.badge && (
+              <div className="mt-3 px-4 py-1.5 bg-white border border-brand-pink rounded-full flex items-center gap-2 shadow-sm">
+                <span className="text-brand-pink text-xs font-bold">{creator.badge}</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#d7176f"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-3.5 h-3.5 animate-spin-slow"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </div>
+            )}
+
+            {/* Location */}
+            {creator.location && (
+              <div className="flex items-center gap-1 mt-3">
+                <MapPin size={12} className="text-white/40" />
+                <span className="text-white/50 text-[12px]">{creator.location}</span>
+              </div>
+            )}
+
+            {/* 4-Column Stats row */}
+            <div className="w-full bg-white/10 rounded-[18px] flex items-stretch divide-x divide-white/10 overflow-hidden shrink-0 mt-5">
+              {/* Engagement */}
+              <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+                <span className="text-white text-[16px] font-bold leading-none">
+                  {creator.engagement ?? '7.2%'}
+                </span>
+                <span className="text-white/50 text-[10px] font-light leading-none">
+                  Engagement
+                </span>
+              </div>
+              {/* Followers */}
+              <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+                <span className="text-white text-[16px] font-bold leading-none">
+                  {creator.followers ?? creator.reach ?? '128K'}
+                </span>
+                <span className="text-white/50 text-[10px] font-light leading-none">Followers</span>
+              </div>
+              {/* Campaigns */}
+              <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+                <span className="text-white text-[16px] font-bold leading-none">
+                  {creator.campaignCount}
+                </span>
+                <span className="text-white/50 text-[10px] font-light leading-none">Campaigns</span>
+              </div>
+              {/* Earned */}
+              <div className="flex-1 flex flex-col items-center justify-center py-3.5 gap-1">
+                <span className="text-white text-[16px] font-bold leading-none">
+                  {creator.earned ?? '1.2M'}
+                </span>
+                <span className="text-white/50 text-[10px] font-light leading-none">Earned</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* ── TABS: Portfolio | Reviews ── */}
-        <div className="bg-white border-b border-[#e8e6f0]/50 flex w-full text-[13px] font-medium text-[#9a99b0] shrink-0">
-          {(['portfolio', 'reviews'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                'flex-1 text-center py-3.5 capitalize transition-all focus:outline-none cursor-pointer',
-                activeTab === tab
-                  ? 'text-brand-pink font-semibold border-b-2 border-brand-pink'
-                  : 'hover:text-[#5a5a7a]',
-              )}
-            >
-              {tab === 'portfolio' ? 'Portfolio' : 'Reviews'}
-            </button>
-          ))}
-        </div>
+          {/* ── TABS: Portfolio | Reviews ── */}
+          <div className="bg-white border-b border-[#e8e6f0]/50 flex w-full text-[13px] font-medium text-[#9a99b0] shrink-0">
+            {(['portfolio', 'reviews'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'flex-1 text-center py-3.5 capitalize transition-all focus:outline-none cursor-pointer',
+                  activeTab === tab
+                    ? 'text-brand-pink font-semibold border-b-2 border-brand-pink'
+                    : 'hover:text-[#5a5a7a]',
+                )}
+              >
+                {tab === 'portfolio' ? 'Portfolio' : 'Reviews'}
+              </button>
+            ))}
+          </div>
 
-        {/* ── CONTENT BODY ── */}
-        <div className="px-6 py-6 flex flex-col gap-6">
-          {activeTab === 'portfolio' && (
-            <>
-              {/* ── BIO ── */}
-              <div>
-                <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-2.5">Bio</h3>
-                <div className="flex flex-col gap-3">
-                  <div className="bg-white rounded-2xl px-4 py-3.5 shadow-sm border border-[#e8e6f0]/60 w-full">
-                    <p className="text-[12px] text-[#5a5a7a] font-light leading-relaxed whitespace-pre-line">
-                      {displayBio}
-                      {isTruncated && (
-                        <>
-                          <span className="text-[#5a5a7a]">...</span>
-                          <button
-                            onClick={() => setShowFullBio(true)}
-                            className="text-brand-pink font-semibold ml-1 focus:outline-none cursor-pointer"
-                          >
-                            See More
-                          </button>
-                        </>
-                      )}
-                    </p>
-                  </div>
-
-                  {/* Creator Niche card */}
-                  {creator.niches && creator.niches.length > 0 && (
-                    <div className="bg-white rounded-2xl p-4 flex items-center gap-3.5 shadow-sm border border-[#e8e6f0]/60 w-full">
-                      <NicheIcon />
-                      <div className="flex flex-col gap-2 min-w-0">
-                        <span className="text-[11px] font-medium text-[#7a7a9a] leading-none">
-                          Creator Niche
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {creator.niches.map((niche) => (
-                            <span
-                              key={niche}
-                              className="text-[11px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-3.5 py-1.5 rounded-full leading-none"
+          {/* ── CONTENT BODY ── */}
+          <div className="px-6 py-6 flex flex-col gap-6">
+            {activeTab === 'portfolio' && (
+              <>
+                {/* ── BIO ── */}
+                <div>
+                  <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-2.5">Bio</h3>
+                  <div className="flex flex-col gap-3">
+                    <div className="bg-white rounded-2xl px-4 py-3.5 shadow-sm border border-[#e8e6f0]/60 w-full">
+                      <p className="text-[12px] text-[#5a5a7a] font-light leading-relaxed whitespace-pre-line">
+                        {displayBio}
+                        {isTruncated && (
+                          <>
+                            <span className="text-[#5a5a7a]">...</span>
+                            <button
+                              onClick={() => setShowFullBio(true)}
+                              className="text-brand-pink font-semibold ml-1 focus:outline-none cursor-pointer"
                             >
-                              {niche}
-                            </span>
-                          ))}
+                              See More
+                            </button>
+                          </>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Creator Niche card */}
+                    {creator.niches && creator.niches.length > 0 && (
+                      <div className="bg-white rounded-2xl p-4 flex items-center gap-3.5 shadow-sm border border-[#e8e6f0]/60 w-full">
+                        <NicheIcon />
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <span className="text-[11px] font-medium text-[#7a7a9a] leading-none">
+                            Creator Niche
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {creator.niches.map((niche) => (
+                              <span
+                                key={niche}
+                                className="text-[11px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-3.5 py-1.5 rounded-full leading-none"
+                              >
+                                {niche}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* ── PLATFORMS ── */}
-              {creator.platforms && creator.platforms.length > 0 && (
-                <div className="w-full flex flex-col gap-2.5">
-                  <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-0.5">Platforms</h3>
-                  {creator.platforms.map((platform) => (
-                    <div
-                      key={platform.name}
-                      className="bg-white rounded-[20px] p-5 flex flex-col border border-[#e8e6f0]/60 shadow-sm w-full"
-                    >
-                      {/* Header Row */}
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3">
-                          <PlatformIcon icon={platform.icon} />
-                          <div className="flex flex-col">
-                            <span className="text-[13px] font-bold text-[#1a1a2e] leading-tight">
-                              {platform.name}
+                {/* ── PLATFORMS ── */}
+                {creator.platforms && creator.platforms.length > 0 && (
+                  <div className="w-full flex flex-col gap-2.5">
+                    <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-0.5">Platforms</h3>
+                    {creator.platforms.map((platform) => (
+                      <div
+                        key={platform.name}
+                        className="bg-white rounded-[20px] p-5 flex flex-col border border-[#e8e6f0]/60 shadow-sm w-full"
+                      >
+                        {/* Header Row */}
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-3">
+                            <PlatformIcon icon={platform.icon} />
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-bold text-[#1a1a2e] leading-tight">
+                                {platform.name}
+                              </span>
+                              <span className="text-[11px] text-[#9a99b0] font-light leading-tight mt-0.5">
+                                @{platform.handle}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Stats Row */}
+                        <div className="grid grid-cols-3 gap-2 mt-3.5">
+                          <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                            <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                              Followers
                             </span>
-                            <span className="text-[11px] text-[#9a99b0] font-light leading-tight mt-0.5">
-                              @{platform.handle}
+                            <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                              {platform.followers ?? '72k'}
+                            </span>
+                          </div>
+                          <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                            <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                              Total likes
+                            </span>
+                            <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                              {platform.totalLikes ?? '140K'}
+                            </span>
+                          </div>
+                          <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                            <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                              Avg. reach
+                            </span>
+                            <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                              {platform.avgReach ?? '140K'}
                             </span>
                           </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                )}
 
-                      {/* Stats Row */}
-                      <div className="grid grid-cols-3 gap-2 mt-3.5">
-                        <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
-                          <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                            Followers
-                          </span>
-                          <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                            {platform.followers ?? '72k'}
-                          </span>
+                {/* ── PORTFOLIO GRID ── */}
+                {portfolio.length > 0 && (
+                  <div className="pb-8 w-full flex flex-col gap-3">
+                    <h3 className="text-[14px] font-bold text-[#1a1a2e]">Portfolio</h3>
+                    <div className="grid grid-cols-3 gap-2 w-full">
+                      {visibleItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="relative aspect-square rounded-[20px] overflow-hidden bg-zinc-200 cursor-pointer group w-full"
+                        >
+                          <Image
+                            src={item.image}
+                            alt={item.brandName}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            sizes="33vw"
+                          />
+                          {/* Simple overlay text on bottom left */}
+                          <div className="absolute bottom-3 left-3 text-[11px] text-white font-bold leading-none z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                            {item.brandName}
+                          </div>
                         </div>
-                        <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
-                          <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                            Total likes
-                          </span>
-                          <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                            {platform.totalLikes ?? '140K'}
-                          </span>
-                        </div>
-                        <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
-                          <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                            Avg. reach
-                          </span>
-                          <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                            {platform.avgReach ?? '140K'}
-                          </span>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
 
-              {/* ── PORTFOLIO GRID ── */}
-              {portfolio.length > 0 && (
-                <div className="pb-8 w-full flex flex-col gap-3">
-                  <h3 className="text-[14px] font-bold text-[#1a1a2e]">Portfolio</h3>
-                  <div className="grid grid-cols-3 gap-2 w-full">
-                    {visibleItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="relative aspect-square rounded-[20px] overflow-hidden bg-zinc-200 cursor-pointer group w-full"
+                    {/* Load More button */}
+                    {visiblePortfolio < portfolio.length && (
+                      <button
+                        onClick={() => setVisiblePortfolio((p) => p + 6)}
+                        className="w-full mt-2 py-4 text-[13px] font-semibold text-[#1a1a2e] bg-[#f4f2fa] rounded-[18px] hover:bg-[#eae8f2] transition-colors focus:outline-none cursor-pointer border-none"
                       >
-                        <Image
-                          src={item.image}
-                          alt={item.brandName}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          sizes="33vw"
-                        />
-                        {/* Simple overlay text on bottom left */}
-                        <div className="absolute bottom-3 left-3 text-[11px] text-white font-bold leading-none z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                          {item.brandName}
+                        Load More
+                      </button>
+                    )}
+
+                    {/* Show Load More even when all portfolio items are shown if there are >= 4 */}
+                    {visiblePortfolio >= portfolio.length && portfolio.length >= 1 && (
+                      <button className="w-full mt-2 py-4 text-[13px] font-semibold text-[#7a7a9a] bg-[#f4f2fa]/70 rounded-[18px] focus:outline-none cursor-default border-none">
+                        Load More
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ── REVIEWS TAB ── */}
+            {activeTab === 'reviews' && (
+              <div className="bg-white -mx-6 -my-6 px-6 py-6 flex flex-col gap-6 min-h-[600px]">
+                {/* Rating Summary Section (No card, directly on white bg) */}
+                <div className="flex items-center justify-start gap-8">
+                  {/* Left side: big score & stars */}
+                  <div className="flex flex-col items-start leading-none shrink-0">
+                    <span className="text-[42px] font-bold text-[#1a1a2e] leading-none tracking-tight mb-1.5">
+                      {creator.rating.toFixed(1)}
+                    </span>
+                    {/* Rating Stars row */}
+                    <div className="flex items-center gap-0.5 mb-2 text-[#f59e0b] text-[13px] leading-none">
+                      <span>★</span>
+                      <span>★</span>
+                      <span>★</span>
+                      <span>★</span>
+                      <span>★</span>
+                    </div>
+                    <span className="text-[12px] text-[#9a99b0] font-light leading-none">
+                      17 reviews
+                    </span>
+                  </div>
+
+                  {/* Right side: Star progress bars */}
+                  <div className="flex flex-col gap-[3.5px] flex-1 max-w-[210px]">
+                    {[
+                      { star: 5, pct: 78 },
+                      { star: 4, pct: 15 },
+                      { star: 3, pct: 7 },
+                      { star: 2, pct: 0 },
+                      { star: 1, pct: 0 },
+                    ].map((row) => (
+                      <div
+                        key={row.star}
+                        className="flex items-center gap-2.5 text-[11px] text-[#9a99b0] font-light w-full"
+                      >
+                        <span className="w-2 text-right leading-none shrink-0">{row.star}</span>
+                        <div className="flex-1 h-[5px] rounded-full bg-[#eceaf4] overflow-hidden relative">
+                          {row.pct > 0 && (
+                            <div
+                              className="absolute top-0 bottom-0 left-0 bg-[#f59e0b] rounded-full"
+                              style={{ width: `${row.pct}%` }}
+                            />
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  {/* Load More button */}
-                  {visiblePortfolio < portfolio.length && (
-                    <button
-                      onClick={() => setVisiblePortfolio((p) => p + 6)}
-                      className="w-full mt-2 py-4 text-[13px] font-semibold text-[#1a1a2e] bg-[#f4f2fa] rounded-[18px] hover:bg-[#eae8f2] transition-colors focus:outline-none cursor-pointer border-none"
-                    >
-                      Load More
-                    </button>
-                  )}
-
-                  {/* Show Load More even when all portfolio items are shown if there are >= 4 */}
-                  {visiblePortfolio >= portfolio.length && portfolio.length >= 1 && (
-                    <button className="w-full mt-2 py-4 text-[13px] font-semibold text-[#7a7a9a] bg-[#f4f2fa]/70 rounded-[18px] focus:outline-none cursor-default border-none">
-                      Load More
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── REVIEWS TAB ── */}
-          {activeTab === 'reviews' && (
-            <div className="bg-white -mx-6 -my-6 px-6 py-6 flex flex-col gap-6 min-h-[600px]">
-              {/* Rating Summary Section (No card, directly on white bg) */}
-              <div className="flex items-center justify-start gap-8">
-                {/* Left side: big score & stars */}
-                <div className="flex flex-col items-start leading-none shrink-0">
-                  <span className="text-[42px] font-bold text-[#1a1a2e] leading-none tracking-tight mb-1.5">
-                    {creator.rating.toFixed(1)}
-                  </span>
-                  {/* Rating Stars row */}
-                  <div className="flex items-center gap-0.5 mb-2 text-[#f59e0b] text-[13px] leading-none">
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                  </div>
-                  <span className="text-[12px] text-[#9a99b0] font-light leading-none">
-                    17 reviews
-                  </span>
                 </div>
 
-                {/* Right side: Star progress bars */}
-                <div className="flex flex-col gap-[3.5px] flex-1 max-w-[210px]">
-                  {[
-                    { star: 5, pct: 78 },
-                    { star: 4, pct: 15 },
-                    { star: 3, pct: 7 },
-                    { star: 2, pct: 0 },
-                    { star: 1, pct: 0 },
-                  ].map((row) => (
-                    <div
-                      key={row.star}
-                      className="flex items-center gap-2.5 text-[11px] text-[#9a99b0] font-light w-full"
-                    >
-                      <span className="w-2 text-right leading-none shrink-0">{row.star}</span>
-                      <div className="flex-1 h-[5px] rounded-full bg-[#eceaf4] overflow-hidden relative">
-                        {row.pct > 0 && (
+                {/* Individual reviews feed */}
+                <div className="flex flex-col gap-7 mt-2">
+                  {(() => {
+                    const reviewsToRender =
+                      creator.reviews && creator.reviews.length > 0
+                        ? creator.reviews
+                        : DEFAULT_REVIEWS;
+                    return reviewsToRender.map((review) => {
+                      const isCard = review.brandName === 'Nestlé Nigeria';
+
+                      if (isCard) {
+                        return (
                           <div
-                            className="absolute top-0 bottom-0 left-0 bg-[#f59e0b] rounded-full"
-                            style={{ width: `${row.pct}%` }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                            key={review.id}
+                            className="bg-white rounded-2xl p-4 border border-[#e8e6f0]/45 shadow-sm flex flex-col gap-3"
+                          >
+                            {/* Review Header */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {/* Circle Avatar Initials */}
+                                <div
+                                  className={cn(
+                                    'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-base shrink-0',
+                                    review.logoBg,
+                                  )}
+                                >
+                                  {review.logoText}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[14px] font-bold text-[#1a1a2e] leading-tight">
+                                    {review.brandName}
+                                  </span>
+                                  <span className="text-[11px] text-[#9a99b0] font-light leading-none mt-0.5">
+                                    {review.date}
+                                  </span>
+                                </div>
+                              </div>
 
-              {/* Individual reviews feed */}
-              <div className="flex flex-col gap-7 mt-2">
-                {(() => {
-                  const reviewsToRender =
-                    creator.reviews && creator.reviews.length > 0
-                      ? creator.reviews
-                      : DEFAULT_REVIEWS;
-                  return reviewsToRender.map((review) => {
-                    const isCard = review.brandName === 'Nestlé Nigeria';
+                              {/* Stars row */}
+                              <div className="flex items-center gap-0.5 text-[14px]">
+                                {Array.from({ length: review.rating }).map((_, i) => (
+                                  <span key={i} className="text-amber-500">
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
 
-                    if (isCard) {
+                            {/* Review Text */}
+                            <p className="text-[13px] text-[#5a5a7a] font-light leading-relaxed">
+                              {review.text}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      // Default non-card view (direct on white bg)
                       return (
-                        <div
-                          key={review.id}
-                          className="bg-white rounded-2xl p-4 border border-[#e8e6f0]/45 shadow-sm flex flex-col gap-3"
-                        >
+                        <div key={review.id} className="flex flex-col gap-3">
                           {/* Review Header */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -612,56 +659,14 @@ export default function CreatorProfileDrawer({
                           </p>
                         </div>
                       );
-                    }
-
-                    // Default non-card view (direct on white bg)
-                    return (
-                      <div key={review.id} className="flex flex-col gap-3">
-                        {/* Review Header */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {/* Circle Avatar Initials */}
-                            <div
-                              className={cn(
-                                'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-base shrink-0',
-                                review.logoBg,
-                              )}
-                            >
-                              {review.logoText}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[14px] font-bold text-[#1a1a2e] leading-tight">
-                                {review.brandName}
-                              </span>
-                              <span className="text-[11px] text-[#9a99b0] font-light leading-none mt-0.5">
-                                {review.date}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Stars row */}
-                          <div className="flex items-center gap-0.5 text-[14px]">
-                            {Array.from({ length: review.rating }).map((_, i) => (
-                              <span key={i} className="text-amber-500">
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Review Text */}
-                        <p className="text-[13px] text-[#5a5a7a] font-light leading-relaxed">
-                          {review.text}
-                        </p>
-                      </div>
-                    );
-                  });
-                })()}
+                    });
+                  })()}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 }

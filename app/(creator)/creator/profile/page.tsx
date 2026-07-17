@@ -1101,18 +1101,6 @@ export default function CreatorProfilePage() {
             </div>
             <p className="text-white/50 text-xs font-light">@{profile.handle}</p>
 
-            {/* Impact Advocate Badge */}
-            <div className="flex items-center justify-center md:justify-start mt-2">
-              <div className="inline-flex items-center gap-1.5 bg-white rounded-full pl-4 pr-1.5 py-1.5 shadow-sm border border-brand-pink-light">
-                <span className="text-brand-pink text-xs font-bold tracking-tight uppercase">
-                  {profile.badge}
-                </span>
-                <div className="w-5 h-5 rounded-full bg-brand-pink flex items-center justify-center text-white shadow-sm">
-                  <Award size={10} className="stroke-white" />
-                </div>
-              </div>
-            </div>
-
             {/* Location Tag */}
             <div className="flex items-center justify-center md:justify-start gap-1 text-white/50 text-[11px] font-light mt-2.5">
               <MapPin size={11} className="text-white/40" />
@@ -1714,6 +1702,13 @@ export default function CreatorProfilePage() {
             </div>
           </div>
         )}
+
+        <p className="text-xs text-[#9a99b0] text-center">
+          Trendupp v1.0.0 ·{' '}
+          <a href="/terms" className="text-brand-pink hover:underline">
+            Terms and Privacy
+          </a>
+        </p>
       </div>
 
       {/* ── 4. ADD PORTFOLIO ITEM DIALOG MODAL ── */}

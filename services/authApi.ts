@@ -65,6 +65,10 @@ export interface InstagramAuthPayload {
   acceptedTerms: boolean;
   acceptedPromotions: boolean;
 }
+export interface UsernameCheckResponse {
+  username: string;
+  isAvailable: boolean;
+}
 
 export const authApi = {
   getRoles: () =>
@@ -91,4 +95,9 @@ export const authApi = {
     apiClient.post<AuthResponse>('/auth/instagram', data),
 
   getUserProfile: (userId: string) => apiClient.get<RawUserProfile>(`/users/${userId}`),
+
+  checkUsername: (username: string) =>
+    apiClient.get<UsernameCheckResponse>('/auth/username/check', {
+      params: { username },
+    }),
 };

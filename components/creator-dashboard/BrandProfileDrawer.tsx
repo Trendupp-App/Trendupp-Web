@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Globe, MapPin } from 'lucide-react';
+import { Portal } from '@/components/ui/portal';
 
 interface CompletedCampaign {
   id: number;
@@ -145,265 +146,268 @@ export default function BrandProfileDrawer({ isOpen, onClose, brand }: BrandProf
   const visibleItems = completedCampaigns.slice(0, visibleCampaigns);
 
   return (
-    <div
-      className={cn(
-        'fixed inset-0 z-50 transition-all duration-300',
-        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-      )}
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
-        onClick={onClose}
-      />
-
-      {/* Drawer panel */}
+    <Portal>
       <div
         className={cn(
-          'absolute bottom-0 left-0 right-0',
-          'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-[560px]',
-          'bg-white rounded-none',
-          'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
-          'transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
-          'flex flex-col gap-0 border-0 border-none',
-          isOpen
-            ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
-            : 'translate-y-full md:translate-x-full md:translate-y-0',
+          'fixed inset-0 z-50 transition-all duration-300',
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         )}
-        style={{ border: 'none' }}
       >
-        {/* ── FULL-BLEED NAVY HERO HEADER ── */}
-        <div className="relative w-full bg-gradient-to-b from-[#09052f] to-[#120d3d] px-6 pt-12 pb-10 flex flex-col items-center text-center select-none shrink-0">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-6 text-white/75 hover:text-white transition-colors focus:outline-none z-20 cursor-pointer p-1.5"
-            aria-label="Close brand drawer"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-4 h-4"
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-[3px] transition-all duration-300 ease-out"
+          onClick={onClose}
+        />
+
+        {/* Drawer panel */}
+        <div
+          className={cn(
+            'absolute bottom-0 left-0 right-0',
+            'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-[560px]',
+            'bg-white rounded-none',
+            'overflow-y-auto auth-scrollbar max-h-[96vh] md:max-h-full',
+            'transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+            'flex flex-col gap-0 border-0 border-none',
+            isOpen
+              ? 'translate-y-0 md:translate-x-0 md:translate-y-0'
+              : 'translate-y-full md:translate-x-full md:translate-y-0',
+          )}
+          style={{ border: 'none' }}
+        >
+          {/* ── FULL-BLEED NAVY HERO HEADER ── */}
+          <div className="relative w-full bg-gradient-to-b from-[#09052f] to-[#120d3d] px-6 pt-12 pb-10 flex flex-col items-center text-center select-none shrink-0">
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-6 text-white/75 hover:text-white transition-colors focus:outline-none z-20 cursor-pointer p-1.5"
+              aria-label="Close brand drawer"
             >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-4 h-4"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
 
-          {/* Centered Avatar with gradient ring */}
-          <div className="mt-4 p-[3.5px] bg-gradient-to-tr from-[#d7176f] to-[#9d17d7] rounded-full shadow-lg relative w-24 h-24 shrink-0">
-            <div className="w-full h-full rounded-full overflow-hidden bg-white relative">
-              <Image
-                src={brand.image}
-                alt={brand.name}
-                fill
-                className="object-cover"
-                sizes="96px"
-              />
-            </div>
-          </div>
-
-          {/* Brand Name */}
-          <h2 className="text-white text-[20px] font-bold mt-4 tracking-tight leading-tight">
-            {brand.name}
-          </h2>
-
-          {/* Website with globe icon */}
-          {brand.website && (
-            <div className="flex items-center gap-1.5 mt-2.5 text-white/70 text-xs font-light">
-              <Globe className="w-3.5 h-3.5" />
-              <span>{brand.website}</span>
-            </div>
-          )}
-
-          {/* Location with map pin icon */}
-          {brand.location && (
-            <div className="flex items-center gap-1.5 mt-2 text-white/70 text-xs font-light">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>{brand.location}</span>
-            </div>
-          )}
-        </div>
-
-        {/* ── Drawer Body Content ── */}
-        <div className="px-6 py-6 flex flex-col gap-6">
-          {/* ── BIO ── */}
-          <div className="w-full">
-            <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-2.5">Bio</h3>
-            <div className="flex flex-col gap-3">
-              {/* Bio description card */}
-              <div className="bg-white border border-[#e8e6f0]/60 rounded-2xl p-4 shadow-sm w-full">
-                <p className="text-[12px] text-[#5a5a7a] font-light leading-relaxed">
-                  {displayBio}
-                  {isTruncated && (
-                    <>
-                      <span className="text-[#5a5a7a]">.....</span>
-                      <button
-                        onClick={() => setShowFullBio(true)}
-                        className="text-brand-pink font-semibold focus:outline-none ml-1 cursor-pointer"
-                      >
-                        See More
-                      </button>
-                    </>
-                  )}
-                </p>
+            {/* Centered Avatar with gradient ring */}
+            <div className="mt-4 p-[3.5px] bg-gradient-to-tr from-[#d7176f] to-[#9d17d7] rounded-full shadow-lg relative w-24 h-24 shrink-0">
+              <div className="w-full h-full rounded-full overflow-hidden bg-white relative">
+                <Image
+                  src={brand.image}
+                  alt={brand.name}
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                />
               </div>
-
-              {/* Industry card */}
-              {brand.industries && brand.industries.length > 0 && (
-                <div className="bg-white border border-[#e8e6f0]/60 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm w-full">
-                  {/* Pink award ribbon icon */}
-                  <div className="w-10 h-10 rounded-xl bg-[#fff0f5] flex items-center justify-center shrink-0">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#d7176f"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-5 h-5"
-                    >
-                      <circle cx="12" cy="8" r="6" />
-                      <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-                    </svg>
-                  </div>
-
-                  {/* Industry Label & Pills */}
-                  <div className="flex flex-col gap-2 min-w-0">
-                    <span className="text-[11px] font-medium text-[#7a7a9a] leading-none">
-                      Industry
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {brand.industries.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[11px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-3.5 py-1.5 rounded-full leading-none"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Brand Name */}
+            <h2 className="text-white text-[20px] font-bold mt-4 tracking-tight leading-tight">
+              {brand.name}
+            </h2>
+
+            {/* Website with globe icon */}
+            {brand.website && (
+              <div className="flex items-center gap-1.5 mt-2.5 text-white/70 text-xs font-light">
+                <Globe className="w-3.5 h-3.5" />
+                <span>{brand.website}</span>
+              </div>
+            )}
+
+            {/* Location with map pin icon */}
+            {brand.location && (
+              <div className="flex items-center gap-1.5 mt-2 text-white/70 text-xs font-light">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>{brand.location}</span>
+              </div>
+            )}
           </div>
 
-          {/* ── PLATFORMS ── */}
-          {brand.platforms && brand.platforms.length > 0 && (
-            <div className="w-full flex flex-col gap-2.5">
-              <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-0.5">Platforms</h3>
-              {brand.platforms.map((platform) => (
-                <div
-                  key={platform.name}
-                  className="bg-white rounded-[20px] p-5 flex flex-col border border-[#e8e6f0]/60 shadow-sm w-full"
-                >
-                  {/* Header Row */}
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <PlatformIcon icon={platform.icon} />
-                      <div className="flex flex-col">
-                        <span className="text-[13px] font-bold text-[#1a1a2e] leading-tight">
-                          {platform.name}
-                        </span>
-                        <span className="text-[11px] text-[#9a99b0] font-light leading-tight mt-0.5">
-                          @{platform.handle}
-                        </span>
+          {/* ── Drawer Body Content ── */}
+          <div className="px-6 py-6 flex flex-col gap-6">
+            {/* ── BIO ── */}
+            <div className="w-full">
+              <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-2.5">Bio</h3>
+              <div className="flex flex-col gap-3">
+                {/* Bio description card */}
+                <div className="bg-white border border-[#e8e6f0]/60 rounded-2xl p-4 shadow-sm w-full">
+                  <p className="text-[12px] text-[#5a5a7a] font-light leading-relaxed">
+                    {displayBio}
+                    {isTruncated && (
+                      <>
+                        <span className="text-[#5a5a7a]">.....</span>
+                        <button
+                          onClick={() => setShowFullBio(true)}
+                          className="text-brand-pink font-semibold focus:outline-none ml-1 cursor-pointer"
+                        >
+                          See More
+                        </button>
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                {/* Industry card */}
+                {brand.industries && brand.industries.length > 0 && (
+                  <div className="bg-white border border-[#e8e6f0]/60 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm w-full">
+                    {/* Pink award ribbon icon */}
+                    <div className="w-10 h-10 rounded-xl bg-[#fff0f5] flex items-center justify-center shrink-0">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#d7176f"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-5 h-5"
+                      >
+                        <circle cx="12" cy="8" r="6" />
+                        <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+                      </svg>
+                    </div>
+
+                    {/* Industry Label & Pills */}
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <span className="text-[11px] font-medium text-[#7a7a9a] leading-none">
+                        Industry
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {brand.industries.map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[11px] font-semibold text-[#7c3aed] bg-[#f5f3ff] px-3.5 py-1.5 rounded-full leading-none"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                    {/* Follower count in pink */}
-                    <span className="text-[13px] font-bold text-brand-pink">
-                      {platform.followers}
-                    </span>
                   </div>
-
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-3 gap-2 mt-3.5">
-                    <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
-                      <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                        Eng. Rate
-                      </span>
-                      <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                        {platform.engRate ?? '7.2%'}
-                      </span>
-                    </div>
-                    <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
-                      <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                        Total like
-                      </span>
-                      <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                        {platform.totalLikes ?? '140K'}
-                      </span>
-                    </div>
-                    <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
-                      <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
-                        Avg. Reach
-                      </span>
-                      <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
-                        {platform.avgReach ?? '140K'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          )}
 
-          {/* ── COMPLETED CAMPAIGNS ── */}
-          {completedCampaigns.length > 0 && (
-            <div className="pb-8 w-full flex flex-col gap-3">
-              <h3 className="text-[14px] font-bold text-[#1a1a2e]">
-                Completed Campaign ({completedCampaigns.length})
-              </h3>
-
-              {/* 3-column grid */}
-              <div className="grid grid-cols-3 gap-2 w-full">
-                {visibleItems.map((item) => (
+            {/* ── PLATFORMS ── */}
+            {brand.platforms && brand.platforms.length > 0 && (
+              <div className="w-full flex flex-col gap-2.5">
+                <h3 className="text-[14px] font-bold text-[#1a1a2e] mb-0.5">Platforms</h3>
+                {brand.platforms.map((platform) => (
                   <div
-                    key={item.id}
-                    className="relative aspect-square rounded-[20px] overflow-hidden bg-zinc-200 cursor-pointer group w-full"
+                    key={platform.name}
+                    className="bg-white rounded-[20px] p-5 flex flex-col border border-[#e8e6f0]/60 shadow-sm w-full"
                   >
-                    {/* Campaign image */}
-                    <Image
-                      src={item.image}
-                      alt={item.brandName}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="33vw"
-                    />
+                    {/* Header Row */}
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3">
+                        <PlatformIcon icon={platform.icon} />
+                        <div className="flex flex-col">
+                          <span className="text-[13px] font-bold text-[#1a1a2e] leading-tight">
+                            {platform.name}
+                          </span>
+                          <span className="text-[11px] text-[#9a99b0] font-light leading-tight mt-0.5">
+                            @{platform.handle}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Follower count in pink */}
+                      <span className="text-[13px] font-bold text-brand-pink">
+                        {platform.followers}
+                      </span>
+                    </div>
 
-                    {/* Simple overlay text on bottom left */}
-                    <div className="absolute bottom-3 left-3 text-[11px] text-white font-bold leading-none z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                      {item.brandName}
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-3 gap-2 mt-3.5">
+                      <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                        <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                          Eng. Rate
+                        </span>
+                        <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                          {platform.engRate ?? '7.2%'}
+                        </span>
+                      </div>
+                      <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                        <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                          Total like
+                        </span>
+                        <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                          {platform.totalLikes ?? '140K'}
+                        </span>
+                      </div>
+                      <div className="bg-[#f8f8fa] rounded-2xl p-3.5 flex flex-col gap-1.5">
+                        <span className="text-[10px] text-[#9a99b0] font-medium leading-none">
+                          Avg. Reach
+                        </span>
+                        <span className="text-[13px] font-bold text-[#1a1a2e] leading-none">
+                          {platform.avgReach ?? '140K'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
+            )}
 
-              {/* Load More button */}
-              {visibleCampaigns < completedCampaigns.length && (
-                <button
-                  onClick={() => setVisibleCampaigns((p) => p + 6)}
-                  className="w-full mt-2 py-4 text-[13px] font-semibold text-[#1a1a2e] bg-[#f4f2fa] rounded-[18px] hover:bg-[#eae8f2] transition-colors focus:outline-none cursor-pointer border-none"
-                >
-                  Load More
-                </button>
-              )}
+            {/* ── COMPLETED CAMPAIGNS ── */}
+            {completedCampaigns.length > 0 && (
+              <div className="pb-8 w-full flex flex-col gap-3">
+                <h3 className="text-[14px] font-bold text-[#1a1a2e]">
+                  Completed Campaign ({completedCampaigns.length})
+                </h3>
 
-              {/* Show Load More even when all campaigns are shown if there are >= 4 */}
-              {visibleCampaigns >= completedCampaigns.length && completedCampaigns.length >= 1 && (
-                <button className="w-full mt-2 py-4 text-[13px] font-semibold text-[#7a7a9a] bg-[#f4f2fa]/70 rounded-[18px] focus:outline-none cursor-default border-none">
-                  Load More
-                </button>
-              )}
-            </div>
-          )}
+                {/* 3-column grid */}
+                <div className="grid grid-cols-3 gap-2 w-full">
+                  {visibleItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="relative aspect-square rounded-[20px] overflow-hidden bg-zinc-200 cursor-pointer group w-full"
+                    >
+                      {/* Campaign image */}
+                      <Image
+                        src={item.image}
+                        alt={item.brandName}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="33vw"
+                      />
+
+                      {/* Simple overlay text on bottom left */}
+                      <div className="absolute bottom-3 left-3 text-[11px] text-white font-bold leading-none z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                        {item.brandName}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Load More button */}
+                {visibleCampaigns < completedCampaigns.length && (
+                  <button
+                    onClick={() => setVisibleCampaigns((p) => p + 6)}
+                    className="w-full mt-2 py-4 text-[13px] font-semibold text-[#1a1a2e] bg-[#f4f2fa] rounded-[18px] hover:bg-[#eae8f2] transition-colors focus:outline-none cursor-pointer border-none"
+                  >
+                    Load More
+                  </button>
+                )}
+
+                {/* Show Load More even when all campaigns are shown if there are >= 4 */}
+                {visibleCampaigns >= completedCampaigns.length &&
+                  completedCampaigns.length >= 1 && (
+                    <button className="w-full mt-2 py-4 text-[13px] font-semibold text-[#7a7a9a] bg-[#f4f2fa]/70 rounded-[18px] focus:outline-none cursor-default border-none">
+                      Load More
+                    </button>
+                  )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 }

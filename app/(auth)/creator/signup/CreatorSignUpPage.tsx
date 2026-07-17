@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Lock, Mail, User, UserCircle } from 'lucide-react';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,21 +14,28 @@ import { creatorSignupSchema, CreatorSignupValues } from '@/lib/validations/crea
 import { BackButton } from '@/shared/BackButton';
 import { useRoles, useSignup } from '@/hooks/useAuthMutations';
 import { toast } from 'sonner';
-import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
+import { GoogleSignInButton, type SocialSignInHandle } from '@/components/auth/GoogleSignInButton';
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 import Link from 'next/link';
-import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
+import TermsModal from '@/components/auth/TermsModal';
 
-const DRAFT_KEY = 'creator-signup-draft';
+import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
+import { useUsernameAvailability } from '@/hooks/useAuthMutations';
+import { UsernameAvailabilityHint } from '@/shared/UsernameAvailabilityHint';
+type PendingAction = 'email' | 'google' | 'tiktok' | 'instagram' | null;
 
 export default function CreatorSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const pendingActionRef = useRef<PendingAction>(null);
 
+  const googleRef = useRef<SocialSignInHandle>(null);
+  const tiktokRef = useRef<SocialSignInHandle>(null);
+  const instagramRef = useRef<SocialSignInHandle>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { data: roles } = useRoles();
   const signup = useSignup();
 
@@ -48,36 +55,13 @@ export default function CreatorSignupPage() {
   });
 
   const termsAccepted = useWatch({ control, name: 'terms' });
+  const acceptedPromotions = useWatch({ control, name: 'acceptedPromotions' });
+  const usernameValue = useWatch({ control, name: 'username' }) ?? '';
+  const usernameCheck = useUsernameAvailability(usernameValue);
 
-  useEffect(() => {
-    const draftRaw = sessionStorage.getItem(DRAFT_KEY);
-    let restored = false;
-
-    if (draftRaw) {
-      try {
-        const draft = JSON.parse(draftRaw) as Partial<CreatorSignupValues>;
-        Object.entries(draft).forEach(([key, value]) => {
-          setValue(key as keyof CreatorSignupValues, value as never);
-        });
-        restored = true;
-      } catch {}
-      sessionStorage.removeItem(DRAFT_KEY);
-    }
-
-    if (searchParams.get('termsAccepted') === '1') {
-      setValue('terms', true);
-      restored = true;
-    }
-
-    if (restored) {
-      router.replace('/creator/signup');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function goToTerms() {
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(getValues()));
-    router.push(`/terms?returnTo=${encodeURIComponent('/creator/signup')}`);
+  function requestTerms(action: PendingAction) {
+    pendingActionRef.current = action;
+    setShowTermsModal(true);
   }
 
   async function onSubmit(values: CreatorSignupValues) {
@@ -85,6 +69,10 @@ export default function CreatorSignupPage() {
 
     if (!creatorRole) {
       toast.error('Could not load roles. Please refresh and try again.');
+      return;
+    }
+    if (usernameCheck.isTaken) {
+      toast.error('That username is already taken. Please choose another.');
       return;
     }
 
@@ -111,7 +99,37 @@ export default function CreatorSignupPage() {
       }, 500);
     } catch {}
   }
+  function handleFormEvent(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!termsAccepted) {
+      requestTerms('email');
+      return;
+    }
+    void handleSubmit(onSubmit)();
+  }
 
+  function handleAgreeToTerms() {
+    setValue('terms', true, { shouldValidate: true });
+    setShowTermsModal(false);
+
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+
+    if (action === 'email') {
+      handleSubmit(onSubmit)();
+    } else if (action === 'google') {
+      googleRef.current?.trigger();
+    } else if (action === 'tiktok') {
+      tiktokRef.current?.trigger();
+    } else if (action === 'instagram') {
+      instagramRef.current?.trigger();
+    }
+  }
+
+  function handleCloseTermsModal() {
+    setShowTermsModal(false);
+    pendingActionRef.current = null;
+  }
   const inputCls =
     'border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink';
   const iconCls = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#9a99b0] pointer-events-none';
@@ -138,24 +156,28 @@ export default function CreatorSignupPage() {
             {/* Social */}
             <div className="flex items-center justify-center gap-3 mb-4">
               <GoogleSignInButton
+                ref={googleRef}
                 role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
                 acceptedTerms={!!termsAccepted}
-                acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
-                onRequireTerms={goToTerms}
+                acceptedPromotions={!!acceptedPromotions}
+                onRequireTerms={() => requestTerms('google')}
                 onPendingChange={setGooglePending}
+                onResumeTermsAccepted={() => setValue('terms', true, { shouldValidate: true })}
               />
 
               <TiktokSignInButton
+                ref={tiktokRef}
                 role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
                 acceptedTerms={!!termsAccepted}
-                acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
-                onRequireTerms={goToTerms}
+                acceptedPromotions={!!acceptedPromotions}
+                onRequireTerms={() => requestTerms('tiktok')}
               />
               <InstagramSignInButton
+                ref={instagramRef}
                 role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
                 acceptedTerms={!!termsAccepted}
-                acceptedPromotions={!!useWatch({ control, name: 'acceptedPromotions' })}
-                onRequireTerms={goToTerms}
+                acceptedPromotions={!!acceptedPromotions}
+                onRequireTerms={() => requestTerms('instagram')}
               />
             </div>
 
@@ -165,7 +187,7 @@ export default function CreatorSignupPage() {
               <div className="flex-1 h-px bg-[#e8e6f0]" />
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+            <form onSubmit={handleFormEvent} className="flex flex-col gap-3">
               {/* First / Last */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
@@ -209,8 +231,15 @@ export default function CreatorSignupPage() {
                     className={`pl-9 ${inputCls}`}
                   />
                 </div>
-                {errors.username && (
+                {errors.username ? (
                   <p className="text-[11px] text-red-400">{errors.username.message}</p>
+                ) : (
+                  <UsernameAvailabilityHint
+                    value={usernameValue}
+                    isChecking={usernameCheck.isChecking}
+                    isTaken={usernameCheck.isTaken}
+                    isAvailable={usernameCheck.isAvailable}
+                  />
                 )}
               </div>
 
@@ -292,12 +321,12 @@ export default function CreatorSignupPage() {
                           checked={!!field.value}
                           onCheckedChange={(checked) => {
                             if (checked === true) {
-                              goToTerms();
+                              requestTerms(null);
                               return;
                             }
                             field.onChange(false);
                           }}
-                          className="mt-0.5 border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
+                          className="mt-0.5 cursor-pointer border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
                         />
                       )}
                     />
@@ -308,7 +337,7 @@ export default function CreatorSignupPage() {
                       By registering you agree with our{' '}
                       <button
                         type="button"
-                        onClick={goToTerms}
+                        onClick={() => requestTerms(null)}
                         className="text-brand-pink cursor-pointer hover:underline"
                       >
                         Terms & Conditions
@@ -330,7 +359,7 @@ export default function CreatorSignupPage() {
                         id="promo"
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="mt-0.5 border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
+                        className="mt-0.5 cursor-pointer border-[#e8e6f0] data-[state=checked]:bg-brand-pink data-[state=checked]:border-brand-pink"
                       />
                     )}
                   />
@@ -346,7 +375,9 @@ export default function CreatorSignupPage() {
 
               <Button
                 type="submit"
-                disabled={signup.isPending || googlePending || !termsAccepted}
+                disabled={
+                  signup.isPending || googlePending || !termsAccepted || usernameCheck.isTaken
+                }
                 className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
               >
                 {signup.isPending ? 'Creating account…' : 'Sign up'}
@@ -361,6 +392,9 @@ export default function CreatorSignupPage() {
           </div>
         </div>
       </AuthLayout>
+      {showTermsModal && (
+        <TermsModal onAgree={handleAgreeToTerms} onClose={handleCloseTermsModal} />
+      )}
     </>
   );
 }

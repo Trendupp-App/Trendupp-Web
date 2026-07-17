@@ -456,9 +456,9 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
             </>
           }
           actions={[
-            { label: 'No, go back', onClick: () => setPendingApproval(null) },
+            { label: 'go back', onClick: () => setPendingApproval(null) },
             {
-              label: 'Yes, approve',
+              label: 'approve',
               variant: 'primary',
               onClick: handleConfirmApprove,
               loading: vetDraft.isPending,
@@ -500,9 +500,9 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
             </>
           }
           actions={[
-            { label: 'No, go back', onClick: () => setPendingLiveApproval(null) },
+            { label: 'go back', onClick: () => setPendingLiveApproval(null) },
             {
-              label: 'Yes, approve',
+              label: 'approve',
               variant: 'primary',
               onClick: handleConfirmLiveApproval,
               loading: approveLivePost.isPending,

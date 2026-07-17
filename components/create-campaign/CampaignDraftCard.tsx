@@ -76,7 +76,7 @@ export default function DraftCampaignCard({ campaign, onDelete }: DraftCampaignC
         {!isSubmitted && (
           <button
             onClick={() => onDelete(campaign.id)}
-            className="w-8 h-8 flex items-center justify-center border border-[#e8e6f0] rounded-lg text-[#c4c2d4] hover:text-red-400 hover:border-red-200 transition-colors"
+            className="w-8 h-8 flex cursor-pointer items-center justify-center border border-[#e8e6f0] rounded-lg text-[#c4c2d4] hover:text-red-400 hover:border-red-200 transition-colors"
           >
             <Trash2 size={14} />
           </button>
