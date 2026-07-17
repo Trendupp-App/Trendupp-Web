@@ -6,6 +6,11 @@ import { useInstagramAuth } from '@/hooks/useAuthMutations';
 import { toast } from 'sonner';
 import AuthLayout from '@/components/auth/AuthLayout';
 import VerifyLoader from '@/components/skeletons/verifyLoader';
+import {
+  readSocialConnectPending,
+  clearSocialConnectPending,
+  completeSocialConnect,
+} from '@/lib/socialConnect';
 
 const INSTAGRAM_PENDING_KEY = 'instagram_auth_pending';
 
@@ -26,6 +31,33 @@ export default function InstagramCallbackPage() {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
     const state = searchParams.get('state');
+
+    // This redirect URI is shared with the "connect socials" flow — a pending
+    // connect state means this callback links an account, not a sign-in.
+    const pendingConnect = readSocialConnectPending();
+    if (pendingConnect?.platform === 'instagram') {
+      if (hasExchanged.current) return;
+      clearSocialConnectPending();
+      const returnTo = pendingConnect.returnTo || '/';
+
+      if (error || !code) {
+        toast.error('Instagram connection was cancelled');
+        router.replace(returnTo);
+        return;
+      }
+
+      hasExchanged.current = true;
+      completeSocialConnect(code, pendingConnect)
+        .then((result) => {
+          toast.success(`${result.message} — you are now a ${result.tier}`);
+          router.replace(returnTo);
+        })
+        .catch((err: { response?: { data?: { message?: string } } }) => {
+          toast.error(err?.response?.data?.message ?? 'Could not connect your Instagram account');
+          router.replace(returnTo);
+        });
+      return;
+    }
 
     const isMobileApp = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
