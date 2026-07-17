@@ -2,9 +2,10 @@
 
 import { cn } from '@/lib/utils';
 
-export type ExploreTab = 'creators' | 'brands' | 'news';
+export type ExploreTab = 'campaigns' | 'creators' | 'brands' | 'news';
 
 const TABS: { id: ExploreTab; label: string }[] = [
+  { id: 'campaigns', label: 'Campaigns' },
   { id: 'creators', label: 'Creators' },
   { id: 'brands', label: 'Brands' },
   { id: 'news', label: 'News update' },

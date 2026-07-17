@@ -107,7 +107,7 @@ export default function CampaignDetailsDrawer({
       id: campaign.id,
       payload: {
         contentIdea: contentTitle,
-        pastWorkLink: workLink || undefined,
+        pastWorkLink: workLink.trim() ? [workLink.trim()] : undefined,
         primaryPlatformId: primaryId || fallbackId,
         secondaryPlatformId: secondaryId,
         feeRequest: Number(feeRequest.replace(/[^0-9]/g, '')),

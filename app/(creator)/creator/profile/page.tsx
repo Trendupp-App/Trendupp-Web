@@ -775,7 +775,7 @@ export default function CreatorProfilePage() {
   const [editPlatforms, setEditPlatforms] = useState<Platform[]>([]);
   const [editTab, setEditTab] = useState<'personal' | 'niche' | 'social'>('personal');
   const [confirmingPlatform, setConfirmingPlatform] = useState<Platform | null>(null);
-
+  const [avatarError, setAvatarError] = useState<string>('');
   // Action: Toggle Connected Platform
   const handleTogglePlatform = (idx: number) => {
     const platform = editPlatforms[idx];
@@ -834,6 +834,7 @@ export default function CreatorProfilePage() {
     setConfirmingPlatform(null);
     setEditAvatarFile(null);
     setEditAvatarPreview(profile.image);
+    setAvatarError('');
     setIsEditProfileOpen(true);
   };
 
@@ -2361,6 +2362,14 @@ export default function CreatorProfilePage() {
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           const file = e.target.files[0];
+                          const MAX_BYTES = 4.9 * 1024 * 1024;
+                          if (file.size > MAX_BYTES) {
+                            setAvatarError(
+                              `Image is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed size is 4.9MB.`,
+                            );
+                            e.target.value = '';
+                            return;
+                          }
                           setEditAvatarFile(file);
                           setEditAvatarPreview(URL.createObjectURL(file));
                         }
@@ -2370,6 +2379,11 @@ export default function CreatorProfilePage() {
                   <span className="text-[10px] text-[#7a7a9a] font-medium mt-2 text-center block">
                     Add a profile picture to stand out
                   </span>
+                  {avatarError && (
+                    <span className="text-[10px] text-red-500 font-semibold mt-1.5 text-center block max-w-[220px]">
+                      {avatarError}
+                    </span>
+                  )}
                 </div>
 
                 {/* Input Fields Grid */}

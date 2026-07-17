@@ -1,8 +1,10 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CampaignStepper from './CampaignStepper';
+import SampleBriefModal from './SampleBriefModal';
 interface CampaignPageShellProps {
   currentStep: number;
   onBack?: () => void;
@@ -15,6 +17,7 @@ export default function CampaignPageShell({
   children,
 }: CampaignPageShellProps) {
   const router = useRouter();
+  const [showSampleBrief, setShowSampleBrief] = useState(false);
 
   function handleBack() {
     if (onBack) {
@@ -37,7 +40,16 @@ export default function CampaignPageShell({
         </button>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-[#1a1a2e] mb-1">Create Campaign</h1>
+        <div className="flex items-start justify-between gap-4 mb-1">
+          <h1 className="text-2xl font-bold text-[#1a1a2e]">Create Campaign</h1>
+          <button
+            onClick={() => setShowSampleBrief(true)}
+            className="flex cursor-pointer items-center gap-1.5 text-sm text-brand-pink hover:text-brand-pink/80 transition-colors shrink-0 mt-1"
+          >
+            <FileText size={15} />
+            View sample brief
+          </button>
+        </div>
         <p className="text-sm text-[#9a99b0] mb-6">
           Fill in each section — you can save as draft and return anytime.
         </p>
@@ -48,6 +60,8 @@ export default function CampaignPageShell({
         {/* Step content */}
         {children}
       </div>
+
+      {showSampleBrief && <SampleBriefModal onClose={() => setShowSampleBrief(false)} />}
     </div>
   );
 }

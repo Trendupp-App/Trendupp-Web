@@ -6,7 +6,18 @@ export const schema = z.object({
   country: z.string().min(1, 'Select your country'),
   state: z.string().optional(),
   city: z.string().optional(),
-  website: z.string().url('Enter a valid URL').optional().or(z.literal('')),
+  website: z
+    .string()
+    .url('Enter a valid URL')
+    .optional()
+    .or(z.literal(''))
+    .refine((value) => {
+      if (!value) return true;
+
+      const regex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
+
+      return regex.test(value);
+    }, 'Enter a valid website'),
   monthlyBudget: z.string().min(1, 'Enter your monthly budget'),
   logo: z.string().optional(),
 });

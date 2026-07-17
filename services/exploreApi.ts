@@ -1,5 +1,5 @@
 import apiClient from '@/lib/apiClient';
-import type { ExploreCreator, ExploreBrand } from '@/types/explore';
+import type { ExploreCreator, ExploreBrand, ExploreSearchResponse } from '@/types/explore';
 
 export const exploreApi = {
   getCreators: (categoryId?: string) =>
@@ -12,6 +12,8 @@ export const exploreApi = {
       params: categoryId ? { category: categoryId } : undefined,
     }),
 
-  // TODO: wire once /users/explore/search is fixed on the backend
-  // search: (q: string) => apiClient.get('/users/explore/search', { params: { q } }),
+  search: (q: string) =>
+    apiClient.get<ExploreSearchResponse>('/users/explore/search', {
+      params: { q },
+    }),
 };

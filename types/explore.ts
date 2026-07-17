@@ -1,3 +1,5 @@
+import { Campaign } from './campaign';
+
 export interface ExploreCreator {
   id: string;
   firstName: string;
@@ -29,4 +31,20 @@ export interface ExploreBrand {
 export interface ExploreCategory {
   id: string;
   name: string;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}
+
+export interface ExploreSearchResponse {
+  campaigns: PaginatedResult<Campaign>;
+  creators: PaginatedResult<ExploreCreator>;
+  brands: PaginatedResult<ExploreBrand>;
 }

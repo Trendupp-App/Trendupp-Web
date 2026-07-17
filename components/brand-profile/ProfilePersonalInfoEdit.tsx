@@ -43,7 +43,7 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>();
-
+  const [avatarError, setAvatarError] = useState<string>('');
   const { data: countries = [], isLoading: loadingCountries } = useCountries();
   const selectedCountryId = userSelectedCountryId;
   const { data: states = [] } = useStates(selectedCountryId);
@@ -71,6 +71,15 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    const MAX_BYTES = 4.9 * 1024 * 1024; // 4.9MB
+
+    if (file.size > MAX_BYTES) {
+      setAvatarError(
+        `Image is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed size is 4.9MB.`,
+      );
+      e.target.value = ''; // allow re-selecting the same file to re-trigger validation
+      return;
+    }
     setAvatarFile(file);
     const reader = new FileReader();
     reader.onload = () => setValue('avatar', reader.result as string);
@@ -84,6 +93,7 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
   }
 
   function onSubmit(values: Values) {
+    if (avatarError) return;
     const countryId = values.country
       ? countries.find((c) => c.name === values.country)?.id
       : undefined;
@@ -132,6 +142,9 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
           />
         </div>
         <p className="text-xs text-[#9a99b0]">Add a profile picture to stand out</p>
+        {avatarError && (
+          <p className="text-[11px] text-red-400 text-center max-w-[220px] mt-1">{avatarError}</p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">

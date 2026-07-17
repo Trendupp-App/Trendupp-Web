@@ -56,6 +56,7 @@ const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
     cls: 'text-amber-600 border-amber-300 bg-amber-50',
   },
   completed: { label: 'Completed', cls: 'text-emerald-600 border-emerald-200 bg-emerald-50' },
+  done: { label: 'Completed', cls: 'text-emerald-600 border-emerald-200 bg-emerald-50' },
   approved: { label: 'Approved', cls: 'text-emerald-600 border-emerald-200 bg-emerald-50' },
   live: { label: 'Live', cls: 'text-emerald-600 border-emerald-200 bg-emerald-50' },
 };
@@ -245,7 +246,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
 
           const hasLiveLinks = LIVE_STATUSES.has(sub.status) && sub.liveLink;
           const liveLinkEntries = hasLiveLinks ? Object.entries(sub.liveLink!) : [];
-          const isCampaignComplete = sub.status === 'completed';
+          const isCampaignComplete = sub.status === 'completed' || sub.status === 'done';
 
           if (!hasDraft) {
             return (
@@ -439,6 +440,19 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
                   </button>
                 </div>
               )}
+
+              {/* Leave a review — once this creator's deliverable is fully complete */}
+              {sub.status === 'done' && (
+                <div className="pt-1">
+                  <button
+                    onClick={() => handleOpenReview(sub, creatorName)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 border border-[#e8e6f0] rounded-lg text-sm font-medium text-[#1a1a2e] hover:text-brand-pink hover:border-brand-pink hover:bg-[#faf9fc] transition-colors cursor-pointer"
+                  >
+                    <Star size={15} />
+                    Leave a review
+                  </button>
+                </div>
+              )}
             </div>
           );
         })
@@ -510,22 +524,6 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
           ]}
         />
       )}
-
-      {/* Leave a review — appears once the submission is fully complete */}
-      {submissions
-        ?.filter((s) => s.status === 'done')
-        .map((sub) => (
-          <button
-            key={sub.id}
-            onClick={() =>
-              handleOpenReview(sub, `${sub.creator.firstName} ${sub.creator.lastName}`.trim())
-            }
-            className="flex w-64 hover:text-brand-pink hover:border-brand-pink items-center justify-center gap-2 px-4 py-3 border border-[#e8e6f0] rounded-xl text-sm font-medium text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors cursor-pointer"
-          >
-            <Star size={15} />
-            Leave a review
-          </button>
-        ))}
 
       {/* Leave a review */}
       {pendingReview && (

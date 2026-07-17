@@ -6,6 +6,7 @@ import { AxiosError } from 'axios';
 import { signIn } from 'next-auth/react';
 import { mapUserProfileToAuthUser } from '@/lib/mapUserProfile';
 import { useDebouncedValue } from './useDebounceValue';
+import { useRouter } from 'next/navigation';
 
 async function hydrateFullProfile(userId: string, updateUser: (patch: Partial<AuthUser>) => void) {
   try {
@@ -108,6 +109,7 @@ export function useGoogleAuth() {
   const setSession = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
   const updateUser = useAuthStore((s) => s.updateUser);
+  const router = useRouter();
 
   const googleSignIn = async ({
     role,
@@ -133,6 +135,13 @@ export function useGoogleAuth() {
       setSession(data.accessToken, data.user);
       toast.success('Signed in with Google!');
       await hydrateFullProfile(data.user.id, updateUser);
+      const { user } = data;
+      if (user.onboardingPercentage < 100) {
+        const name = encodeURIComponent(user.firstName ?? '');
+        router.push(`/onboard?type=${user.role}&name=${name}`);
+      } else {
+        router.push(user.role === 'creator' ? '/creator/dashboard' : '/brand/dashboard');
+      }
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       clearSession();

@@ -12,8 +12,9 @@ export function mapCampaignToStep1(campaign: Campaign): Step1Input {
     title: campaign.title,
     goal: campaign.goal,
     budget: String(campaign.totalBudget),
-    creatorTier: campaign.creatorCategoryId,
-    creatorNicheId: campaign.creatorNicheId ?? '',
+    creatorTierIds: campaign.creatorCategoryId ? [campaign.creatorCategoryId] : [],
+    creatorNicheIds:
+      campaign.creatorNicheIds ?? (campaign.creatorNicheId ? [campaign.creatorNicheId] : []),
     platforms: campaign.preferredPlatformIds ?? campaign.preferredPlatforms?.map((p) => p.id) ?? [],
     timeline: campaign.timeline ? campaign.timeline.slice(0, 10) : '',
     coverImage: campaign.coverImage,
@@ -32,7 +33,7 @@ export function mapCampaignToStep2(campaign: Campaign): Step2Values {
 
 export function mapCampaignToStep3(campaign: Campaign): Step3Values {
   return {
-    successDescription: campaign.successLooksLike ?? '',
+    // successDescription: campaign.successLooksLike ?? '',
     usageRights: campaign.usageRights ?? '',
   };
 }

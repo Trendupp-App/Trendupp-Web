@@ -115,8 +115,9 @@ export default function NewCampaignPage() {
             title: data.title,
             goal: data.goal,
             totalBudget: Number(data.budget),
-            creatorCategoryId: data.creatorTier,
-            creatorNicheId: data.creatorNicheId,
+            // creatorCategoryIds: data.creatorTierIds,
+            creatorCategoryId: data.creatorTierIds[0],
+            creatorNicheIds: data.creatorNicheIds,
             preferredPlatformIds: data.platforms,
             timeline: new Date(data.timeline).toISOString(),
             coverImage: data._coverFile,
@@ -140,11 +141,13 @@ export default function NewCampaignPage() {
       title: data.title,
       goal: data.goal,
       totalBudget: Number(data.budget),
-      creatorCategoryId: data.creatorTier,
+      // creatorCategoryIds: data.creatorTierIds,
+      creatorCategoryId: data.creatorTierIds[0],
+      creatorNicheIds: data.creatorNicheIds,
       preferredPlatformIds: data.platforms,
-      creatorNicheId: data.creatorNicheId,
       timeline: new Date(data.timeline).toISOString(),
       coverImage: data._coverFile,
+      amplificationAsset: data.goal === 'Amplify Content' ? data.amplificationAsset : undefined,
     });
   }
 
@@ -189,7 +192,7 @@ export default function NewCampaignPage() {
         payload: {
           currentStep: 3,
           usageRights: data.usageRights,
-          successLooksLike: data.successDescription,
+          // successLooksLike: data.successDescription,
         },
       },
       {
