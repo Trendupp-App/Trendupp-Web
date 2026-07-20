@@ -86,8 +86,8 @@ export default function StepReview({
   const { data: creatorCategories = [] } = useCreatorCategories();
   const { data: platforms = [] } = useCampaignPlatforms();
 
-  const tierName =
-    creatorCategories.find((c) => c.id === step1.creatorTier)?.name ?? step1.creatorTier;
+  const selectedTierId = step1.creatorTierIds[0];
+  const tierName = creatorCategories.find((c) => c.id === selectedTierId)?.name ?? selectedTierId;
   const platformNames = step1.platforms
     .map((id) => platforms.find((p) => p.id === id)?.name ?? id)
     .join(', ');
@@ -127,12 +127,12 @@ export default function StepReview({
 
       {/* Section 3: Success */}
       <ReviewSection title="Success criteria" onEdit={() => onEdit(3)}>
-        <div className="flex flex-col gap-1">
+        {/* <div className="flex flex-col gap-1">
           <span className="text-sm text-[#9a99b0] font-light">What success looks like</span>
           <p className="text-sm text-[#1a1a2e] font-light leading-relaxed">
             {step3.successDescription}
           </p>
-        </div>
+        </div> */}
         <div className="flex flex-col gap-1">
           <span className="text-sm text-[#9a99b0] font-light">Usage rights</span>
           <p className="text-sm text-[#1a1a2e] font-light leading-relaxed">{step3.usageRights}</p>

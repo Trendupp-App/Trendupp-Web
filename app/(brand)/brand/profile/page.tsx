@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import ProfileHeroBanner from '@/components/brand-profile/ProfileHeroBanner';
-import SocialPlatformCards from '@/components/brand-profile/SocialPlatformCards';
+import SocialPlatformCards from '@/shared/SocialPlatformCards';
 import SettingsList from '@/components/brand-profile/SettingsList';
 import ReviewRequestsList from '@/components/brand-profile/ReviewRequestsList';
 import EditProfileSheet from '@/components/brand-profile/EditProfileSheet';

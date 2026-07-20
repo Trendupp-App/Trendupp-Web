@@ -1,5 +1,6 @@
 import apiClient from '@/lib/apiClient';
 import type { AuthUser } from '@/store/authStore';
+import type { CreatePortfolioItemResponse, GetPortfolioResponse } from '@/types/profile';
 
 export interface UpdatePersonalInfoResponse extends Partial<AuthUser> {
   message?: string;
@@ -27,9 +28,6 @@ export const profileApi = {
 
   updateNiches: (payload: UpdateProfileNichesPayload) =>
     apiClient.put<UpdateProfileNichesResponse>('/profile/niches', payload),
-
-  updateSocials: (payload: UpdateProfileSocialsPayload) =>
-    apiClient.patch<UpdateProfileSocialsResponse>('/profile/socials', payload),
 
   updatePayout: (payload: UpdateProfilePayoutPayload) =>
     apiClient.patch<UpdateProfilePayoutResponse>('/profile/payout', payload),
@@ -63,6 +61,15 @@ export const profileApi = {
     apiClient.post<SubmitSupportTicketResponse>('/profile/support-ticket', payload, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+
+  getPortfolio: () => apiClient.get<GetPortfolioResponse>('/portfolio'),
+
+  createPortfolioItem: (payload: FormData) =>
+    apiClient.post<CreatePortfolioItemResponse>('/portfolio', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  deletePortfolioItem: (id: string) => apiClient.delete<{ message?: string }>(`/portfolio/${id}`),
 };
 
 export interface SubmitSupportTicketResponse {
@@ -138,22 +145,6 @@ export interface UpdateProfilePayoutPayload {
 }
 
 export interface UpdateProfilePayoutResponse extends Partial<AuthUser> {
-  message?: string;
-  user?: Partial<AuthUser>;
-}
-
-export interface UpdateProfileSocialsPayload {
-  instagramUsername?: string | null;
-  instagramFollowers?: number | null;
-  tiktokUsername?: string | null;
-  tiktokFollowers?: number | null;
-  youtubeUsername?: string | null;
-  youtubeFollowers?: number | null;
-  twitterUsername?: string | null;
-  twitterFollowers?: number | null;
-}
-
-export interface UpdateProfileSocialsResponse extends Partial<AuthUser> {
   message?: string;
   user?: Partial<AuthUser>;
 }

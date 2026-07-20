@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'example.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'trendupp-s3-bucket.s3.eu-north-1.amazonaws.com',
         pathname: '/**',
       },

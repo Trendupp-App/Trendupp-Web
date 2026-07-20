@@ -28,11 +28,15 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
   }
 
   function toggle(id: string) {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]));
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((n) => n !== id);
+      if (prev.length >= 3) return prev;
+      return [...prev, id];
+    });
   }
 
   function handleNext() {
-    if (selectedIds.length < 3) return;
+    if (selectedIds.length < 1 || selectedIds.length > 3) return;
 
     updateIndustries(
       { industryIds: selectedIds },
@@ -45,16 +49,21 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
       <div className="flex flex-wrap gap-2 justify-center">
         {industries.map((industry) => {
           const active = selectedIds.includes(industry.id);
+          const disabled = !active && selectedIds.length >= 3;
+
           return (
             <button
               key={industry.id}
               type="button"
+              disabled={disabled}
               aria-pressed={active}
               onClick={() => toggle(industry.id)}
               className={`px-4 py-2 cursor-pointer rounded-full text-sm font-light border transition-all duration-150 ${
                 active
                   ? 'bg-brand-pink/10 border-brand-pink text-brand-pink'
-                  : 'bg-white border-[#e8e6f0] text-[#1a1a2e] hover:border-brand-pink/40'
+                  : disabled
+                    ? 'bg-white border-[#e8e6f0] text-[#c4c2d4] cursor-not-allowed'
+                    : 'bg-white border-[#e8e6f0] text-[#1a1a2e] hover:border-brand-pink/40'
               }`}
             >
               {industry.name}
@@ -63,16 +72,22 @@ export default function StepIndustry({ onNext, onSkip, defaultValues }: Props) {
         })}
       </div>
 
+      {selectedIds.length === 0 && (
+        <p className="text-[11px] text-[#9a99b0] text-center">Select 1 to 3 industries</p>
+      )}
       {selectedIds.length > 0 && selectedIds.length < 3 && (
         <p className="text-[11px] text-[#9a99b0] text-center">
-          Select {3 - selectedIds.length} more{' '}
+          You can select up to {3 - selectedIds.length} more{' '}
           {3 - selectedIds.length === 1 ? 'industry' : 'industries'}
         </p>
+      )}
+      {selectedIds.length === 3 && (
+        <p className="text-[11px] text-[#9a99b0] text-center">Maximum of 3 industries selected</p>
       )}
 
       <Button
         type="button"
-        disabled={selectedIds.length < 3 || isPending}
+        disabled={selectedIds.length < 1 || isPending}
         onClick={handleNext}
         className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-light text-white mt-2 disabled:bg-brand-pink/40"
       >

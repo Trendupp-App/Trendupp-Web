@@ -56,7 +56,7 @@ const CREATOR_STEP_META: Record<CreatorStepId, { title: string; subtitle: string
   },
   niche: {
     title: 'Niche',
-    subtitle: 'Choose a maximum 3 niches. Your tier will be set automatically.',
+    subtitle: 'Choose a minimum of 1 and a maximum of 3 Niches',
   },
   socials: {
     title: 'Connect your socials',
@@ -80,7 +80,7 @@ const ADVERTISER_STEP_META: Record<AdvertiserStepId, { title: string; subtitle: 
   },
   industry: {
     title: 'Industry',
-    subtitle: 'Choose at least 3 industries for your brand',
+    subtitle: 'Choose a minimum of 1, and a maximum of 3 industries for your brand',
   },
   representative: {
     title: 'Brand representative',

@@ -10,6 +10,8 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2, Plus } from 'lucide-react';
 import StepFooter from './StepFooter';
+import FieldLabel from './FieldLabel';
+import { FIELD_TOOLTIPS } from '@/lib/data/fieldTooltips';
 import { stepCampaignBriefSchema, type Step2Values } from '@/lib/validations/createCampaignSchemas';
 
 interface StepCampaignBriefProps {
@@ -21,6 +23,7 @@ interface StepCampaignBriefProps {
 
 function ListField<TFieldValues extends FieldValues>({
   label,
+  tooltip,
   placeholder,
   fields,
   append,
@@ -30,6 +33,7 @@ function ListField<TFieldValues extends FieldValues>({
   error,
 }: {
   label: string;
+  tooltip?: string;
   placeholder: string;
   fields: { id: string }[];
   append: () => void;
@@ -40,7 +44,7 @@ function ListField<TFieldValues extends FieldValues>({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-[#1a1a2e]">{label}</label>
+      <FieldLabel label={label} tooltip={tooltip} />
       <div className="flex flex-col gap-2">
         {fields.map((field, index) => (
           <div key={field.id} className="flex items-center gap-2">
@@ -108,7 +112,7 @@ export default function StepCampaignBrief({
     <form className="flex flex-col gap-6">
       {/* Campaign brief */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Campaign brief</label>
+        <FieldLabel label="Campaign brief" tooltip={FIELD_TOOLTIPS.campaignBrief} />
         <textarea
           {...register('brief')}
           rows={4}
@@ -120,6 +124,7 @@ export default function StepCampaignBrief({
 
       <ListField
         label="Deliverables"
+        tooltip={FIELD_TOOLTIPS.deliverables}
         placeholder="e.g. 1x Instagram Reel (30–60 seconds)"
         fields={deliverables.fields}
         append={() => deliverables.append({ value: '' })}
@@ -131,6 +136,7 @@ export default function StepCampaignBrief({
 
       <ListField
         label="Content direction"
+        tooltip={FIELD_TOOLTIPS.contentDirection}
         placeholder="e.g. Show yourself actively using the product outdoors"
         fields={contentDirection.fields}
         append={() => contentDirection.append({ value: '' })}
@@ -141,6 +147,7 @@ export default function StepCampaignBrief({
 
       <ListField
         label="Content guidelines - Do's"
+        tooltip={FIELD_TOOLTIPS.dos}
         placeholder="e.g. Use natural lighting throughout the video"
         fields={dos.fields}
         append={() => dos.append({ value: '' })}
@@ -151,6 +158,7 @@ export default function StepCampaignBrief({
 
       <ListField
         label="Content guidelines - Dont's"
+        tooltip={FIELD_TOOLTIPS.donts}
         placeholder="e.g. Do not feature or mention competitor products"
         fields={donts.fields}
         append={() => donts.append({ value: '' })}

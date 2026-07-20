@@ -42,6 +42,7 @@ export interface Campaign extends BaseEntity {
   contentType?: ContentType;
   duration?: number;
   creatorCategoryId: string;
+  creatorCategoryIds?: string[];
   preferredPlatformIds: string[];
   currentStep: number;
   status: CampaignStatus;
@@ -93,6 +94,9 @@ export interface Campaign extends BaseEntity {
   applicationsCount?: { total: number };
   applications?: CampaignApplicationDto[];
   subStatus?: CampaignSubStatus;
+  currency?: string;
+  creatorNicheIds?: string[];
+  amplificationAsset?: string | null;
 }
 
 export interface Platform {
@@ -129,7 +133,7 @@ export interface CampaignApplicationDto {
   campaignId: string;
   creatorId: string;
   contentIdea: string;
-  pastWorkLink: string;
+  pastWorkLink: string[];
   primaryPlatformId: string;
   secondaryPlatformId: string;
   feeRequest: number;
@@ -150,13 +154,14 @@ export interface CreateCampaignPayload {
   title: string;
   goal: CampaignGoal;
   totalBudget: number;
-  creatorCategoryId: string;
-  creatorNicheId: string;
+  creatorCategoryIds: string[];
+  creatorNicheIds: string[];
   timeline: string;
   preferredPlatformIds: string[];
   campaignBrief?: string;
   contentGuidelines?: ContentGuidelines;
   coverImage?: File;
+  amplificationAsset?: string;
 }
 
 export interface PatchCampaignStep1Payload {
@@ -164,11 +169,12 @@ export interface PatchCampaignStep1Payload {
   title: string;
   goal: CampaignGoal;
   totalBudget: number;
-  creatorCategoryId: string;
-  creatorNicheId: string;
+  creatorCategoryIds: string[];
+  creatorNicheIds: string[];
   preferredPlatformIds: string[];
   timeline: string;
   coverImage?: File;
+  amplificationAsset?: string;
 }
 
 export interface PatchCampaignStep2Payload {
@@ -182,7 +188,7 @@ export interface PatchCampaignStep2Payload {
 export interface PatchCampaignStep3Payload {
   currentStep: 3;
   usageRights: string;
-  successLooksLike: string;
+  // successLooksLike: string;
 }
 
 export interface PatchCampaignStep4Payload {
@@ -259,7 +265,7 @@ export interface PayCampaignResponse {
 
 export interface ApplyCampaignPayload {
   contentIdea: string;
-  pastWorkLink?: string;
+  pastWorkLink?: string[];
   primaryPlatformId: string;
   secondaryPlatformId?: string;
   feeRequest: number;
@@ -288,4 +294,13 @@ export interface SubmitLiveLinkPayload {
 export interface SubmitLiveLinkResponse {
   message?: string;
   submission?: unknown;
+}
+
+export interface ValidateSelectionResult {
+  isValid: boolean;
+  amountAvailable: number;
+  selectedTotal: number;
+  shortfall: number;
+  currency: string;
+  message: string;
 }

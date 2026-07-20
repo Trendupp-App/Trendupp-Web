@@ -16,6 +16,11 @@ import { CAMPAIGN_GOALS } from '@/types/campaign';
 import { useCampaignPlatforms, useCreatorCategories } from '@/hooks/useCampaign';
 import { ComboBox } from '@/shared/ComboBox';
 import { useNiches } from '@/hooks/useOnboardingQueries';
+import { MultiSelectDropdown } from '@/shared/MultiSelectDropDown';
+import { formatTierLabel } from '@/utils/Utilities';
+import FieldLabel from './FieldLabel';
+import { FIELD_TOOLTIPS } from '@/lib/data/fieldTooltips';
+
 interface StepDetailsProps {
   defaultValues?: Partial<Step1Input>;
   onNext: (data: Step1Values) => void;
@@ -48,14 +53,18 @@ export default function StepDetails({
     resolver: zodResolver(stepDetailsSchema),
     defaultValues: {
       platforms: [],
+      creatorTierIds: [],
+      creatorNicheIds: [],
       ...defaultValues,
     },
   });
 
   const selectedPlatforms = useWatch({ control, name: 'platforms' }) ?? [];
   const selectedGoal = useWatch({ control, name: 'goal' });
-  const selectedTier = useWatch({ control, name: 'creatorTier' });
-  const selectedNiche = useWatch({ control, name: 'creatorNicheId' });
+  const selectedTierIds = useWatch({ control, name: 'creatorTierIds' }) ?? [];
+  // const selectedTier = useWatch({ control, name: 'creatorTier' });
+  const selectedNicheIds = useWatch({ control, name: 'creatorNicheIds' }) ?? [];
+  // const selectedNiche = useWatch({ control, name: 'creatorNicheId' });
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -66,13 +75,13 @@ export default function StepDetails({
     setValue('coverImage', url);
   }
 
-  function togglePlatform(platformId: string) {
-    const current = getValues('platforms') ?? [];
-    const next = current.includes(platformId)
-      ? current.filter((p) => p !== platformId)
-      : [...current, platformId];
-    setValue('platforms', next, { shouldValidate: true });
-  }
+  // function togglePlatform(platformId: string) {
+  //   const current = getValues('platforms') ?? [];
+  //   const next = current.includes(platformId)
+  //     ? current.filter((p) => p !== platformId)
+  //     : [...current, platformId];
+  //   setValue('platforms', next, { shouldValidate: true });
+  // }
 
   function handleSubmitWithFile(data: Step1Values) {
     onNext({ ...data, _coverFile: coverFile ?? undefined } as Step1Values);
@@ -140,6 +149,21 @@ export default function StepDetails({
           emptyText="No goal found."
         />
         {errors.goal && <p className="text-[11px] text-red-400">{errors.goal.message}</p>}
+        {selectedGoal === 'Amplify Content' && (
+          <div className="flex flex-col gap-1.5 mt-2">
+            <label className="text-sm font-medium text-[#1a1a2e]">
+              Link to content for amplification
+            </label>
+            <input
+              {...register('amplificationAsset')}
+              placeholder="https://drive.google.com/..."
+              className={inputCls}
+            />
+            {errors.amplificationAsset && (
+              <p className="text-[11px] text-red-400">{errors.amplificationAsset.message}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Total budget */}
@@ -157,6 +181,22 @@ export default function StepDetails({
       {/* Creator tier — from API */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#1a1a2e]">Creator tier</label>
+        <MultiSelectDropdown
+          options={creatorCategories.map((cat) => ({
+            value: cat.id,
+            label: formatTierLabel(cat.name, cat.minFollowers, cat.maxFollowers),
+          }))}
+          selected={selectedTierIds}
+          onChange={(vals) => setValue('creatorTierIds', vals, { shouldValidate: true })}
+          placeholder="Select tier"
+          loading={categoriesLoading}
+        />
+        {errors.creatorTierIds && (
+          <p className="text-[11px] text-red-400">{errors.creatorTierIds.message}</p>
+        )}
+      </div>
+      {/* <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#1a1a2e]">Creator tier</label>
         <ComboBox
           options={creatorCategories.map((cat) => ({ value: cat.id, label: cat.name }))}
           value={selectedTier}
@@ -169,9 +209,24 @@ export default function StepDetails({
         {errors.creatorTier && (
           <p className="text-[11px] text-red-400">{errors.creatorTier.message}</p>
         )}
+      </div> */}
+
+      {/* Creator niche — multiselect */}
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel label="Creator niche" tooltip={FIELD_TOOLTIPS.creatorNiche} />
+        <MultiSelectDropdown
+          options={niches.map((n) => ({ value: n.id, label: n.name }))}
+          selected={selectedNicheIds}
+          onChange={(vals) => setValue('creatorNicheIds', vals, { shouldValidate: true })}
+          placeholder="Select niche"
+          loading={nichesLoading}
+        />
+        {errors.creatorNicheIds && (
+          <p className="text-[11px] text-red-400">{errors.creatorNicheIds.message}</p>
+        )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      {/* <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#1a1a2e]">Creator niche</label>
         <ComboBox
           options={niches.map((n) => ({ value: n.id, label: n.name }))}
@@ -185,9 +240,8 @@ export default function StepDetails({
         {errors.creatorNicheId && (
           <p className="text-[11px] text-red-400">{errors.creatorNicheId.message}</p>
         )}
-      </div>
+      </div> */}
 
-      {/* Timeline — NEW */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#1a1a2e]">Timeline</label>
         <input {...register('timeline')} type="date" className={inputCls} />
@@ -195,7 +249,18 @@ export default function StepDetails({
       </div>
 
       {/* Platform — from API */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel label="Platform" tooltip={FIELD_TOOLTIPS.platform} />
+        <MultiSelectDropdown
+          options={platforms.map((p) => ({ value: p.id, label: p.name }))}
+          selected={selectedPlatforms}
+          onChange={(vals) => setValue('platforms', vals, { shouldValidate: true })}
+          placeholder="Select platforms"
+          loading={platformsLoading}
+        />
+        {errors.platforms && <p className="text-[11px] text-red-400">{errors.platforms.message}</p>}
+      </div>
+      {/* <div className="flex flex-col gap-2">
         <label className="text-sm font-medium text-[#1a1a2e]">Platform</label>
         {platformsLoading ? (
           <p className="text-sm text-[#9a99b0]">Loading platforms…</p>
@@ -222,7 +287,7 @@ export default function StepDetails({
           </div>
         )}
         {errors.platforms && <p className="text-[11px] text-red-400">{errors.platforms.message}</p>}
-      </div>
+      </div> */}
 
       <StepFooter
         onBack={onBack}

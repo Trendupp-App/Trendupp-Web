@@ -2,8 +2,6 @@ import apiClient from '@/lib/apiClient';
 import type {
   UpdatePersonalInfoPayload,
   UpdatePersonalInfoResponse,
-  UpdateProfileSocialsPayload,
-  UpdateProfileSocialsResponse,
   NotificationSettings,
   NotificationSettingsResponse,
   SecuritySettings,
@@ -33,9 +31,6 @@ export const BrandProfileApi = {
       headers: { 'Content-Type': undefined },
     });
   },
-
-  updateSocials: (payload: UpdateProfileSocialsPayload) =>
-    apiClient.patch<UpdateProfileSocialsResponse>('/profile/socials', payload),
 
   updatePayout: (payload: UpdateProfilePayoutPayload) =>
     apiClient.patch<UpdateProfilePayoutResponse>('/profile/payout', payload),

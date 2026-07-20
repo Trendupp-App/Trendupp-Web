@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleCheck, CircleX, ArrowUpRight, XCircle, UserRound } from 'lucide-react';
+import { CheckCircle2, ArrowUpRight, XCircle, Clock, UserRound } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
@@ -15,8 +15,6 @@ interface ApplicationDetailSheetProps {
   applicationId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAccept: (application: CampaignApplicationDto) => void;
-  onReject: (application: CampaignApplicationDto) => void;
   onViewProfile: (application: CampaignApplicationDto) => void;
 }
 
@@ -24,8 +22,6 @@ export default function ApplicationDetailSheet({
   applicationId,
   open,
   onOpenChange,
-  onAccept,
-  onReject,
   onViewProfile,
 }: ApplicationDetailSheetProps) {
   const { data: application, isLoading, isError } = useApplication(open ? applicationId : null);
@@ -109,7 +105,7 @@ export default function ApplicationDetailSheet({
                   <span className="text-sm text-[#9a99b0]">Past work</span>
 
                   <a
-                    href={application.pastWorkLink || 'www.mywork.com'}
+                    href={application.pastWorkLink?.[0] || 'www.mywork.com'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm text-brand-pink hover:underline"
@@ -130,52 +126,29 @@ export default function ApplicationDetailSheet({
                 </div>
               )}
 
-              {/* Actions */}
+              {/* Status (info only — accept/reject happens from the applications list) */}
               {application.status === 'pending' && (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => onAccept(application)}
-                    className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                  >
-                    <CircleCheck className="size-4" />
-                    <p>Accept</p>
-                  </button>
-                  <button
-                    onClick={() => onReject(application)}
-                    className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors"
-                  >
-                    <CircleX className="size-4" />
-                    <p>Reject</p>
-                  </button>
+                <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-amber-50 border border-amber-100">
+                  <Clock size={16} className="text-amber-500 shrink-0" />
+                  <span className="text-sm font-medium text-amber-600">Awaiting your review</span>
                 </div>
               )}
 
               {application.status === 'rejected' && (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-red-50 border border-red-100">
-                    <XCircle size={16} className="text-red-500 shrink-0" />
-                    <span className="text-sm font-medium text-red-500">
-                      This application has been rejected
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => onAccept(application)}
-                    className="w-full cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                  >
-                    Accept anyway
-                  </button>
+                <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-red-50 border border-red-100">
+                  <XCircle size={16} className="text-red-500 shrink-0" />
+                  <span className="text-sm font-medium text-red-500">
+                    This application has been rejected
+                  </span>
                 </div>
               )}
 
               {application.status === 'accepted' && (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => onReject(application)}
-                    className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors"
-                  >
-                    <CircleX className="size-4" />
-                    <p>Reject</p>
-                  </button>
+                <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                  <span className="text-sm font-medium text-emerald-600">
+                    This application has been accepted
+                  </span>
                 </div>
               )}
             </div>

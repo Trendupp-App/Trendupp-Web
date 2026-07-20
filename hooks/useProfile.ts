@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import {
   profileApi,
-  UpdateProfileSocialsPayload,
   UpdateProfilePayoutPayload,
   NotificationSettings,
   SecuritySettings,
@@ -70,29 +69,6 @@ export function useUpdateProfileNiches() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update niches');
-    },
-  });
-}
-
-export function useUpdateProfileSocials() {
-  const updateUser = useAuthStore((s) => s.updateUser);
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: UpdateProfileSocialsPayload) => profileApi.updateSocials(payload),
-    onSuccess: ({ data }) => {
-      const u = data?.user || data;
-      // Sync global auth store
-      updateUser({
-        socialsConnected: u?.socialsConnected,
-        assignedTier: u?.assignedTier,
-      });
-      // Invalidate queries to refresh view
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success(data?.message ?? 'Social accounts updated successfully');
-    },
-    onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not update social connections');
     },
   });
 }
@@ -234,6 +210,44 @@ export function useSubmitSupportTicket() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit ticket');
+    },
+  });
+}
+
+export function usePortfolio() {
+  return useQuery({
+    queryKey: ['portfolio'],
+    queryFn: () => profileApi.getPortfolio().then((r) => r.data.items),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useCreatePortfolioItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: FormData) => profileApi.createPortfolioItem(payload),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      toast.success(data?.message ?? 'Portfolio item added successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not add portfolio item');
+    },
+  });
+}
+
+export function useDeletePortfolioItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => profileApi.deletePortfolioItem(id),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      toast.success(data?.message ?? 'Portfolio item deleted');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not delete portfolio item');
     },
   });
 }

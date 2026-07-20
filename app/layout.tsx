@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import QueryProvider from '@/lib/providers/QueryProvider';
 
 const slussen = localFont({
@@ -56,8 +57,10 @@ export default function RootLayout({
     <html lang="en" className={cn('h-full', 'antialiased', slussen.variable, 'font-sans')}>
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          {children}
-          <Toaster richColors />
+          <TooltipProvider delayDuration={200}>
+            {children}
+            <Toaster richColors />
+          </TooltipProvider>
         </QueryProvider>
       </body>
     </html>

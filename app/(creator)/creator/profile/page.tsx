@@ -9,7 +9,6 @@ import {
   Trash2,
   Edit2,
   LogOut,
-  Check,
   ArrowRight,
   Award,
   Search,
@@ -48,7 +47,6 @@ import {
   useUserDetail,
   useUpdatePersonalInfo,
   useUpdateProfileNiches,
-  useUpdateProfileSocials,
   useNotificationSettings,
   useUpdateNotificationSettings,
   useSecuritySettings,
@@ -58,8 +56,15 @@ import {
   useSupportTicketCategories,
   useSupportTickets,
   useSubmitSupportTicket,
+  usePortfolio,
+  useCreatePortfolioItem,
+  useDeletePortfolioItem,
   type SupportTicket,
 } from '@/hooks/useProfile';
+import type { PortfolioItemDto } from '@/types/profile';
+import SocialPlatformCards from '@/shared/SocialPlatformCards';
+import SocialsOAuthConnect from '@/shared/SocialsOAuthConnect';
+import { useSocialConnections } from '@/hooks/useSocials';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -70,26 +75,17 @@ interface Platform {
   connected: boolean;
 }
 
-interface PortfolioItem {
-  id: number | string;
-  image: string;
-  brandName: string;
-}
-
 interface CreatorProfile {
   name: string;
   handle: string;
   tier: string;
   rating: number;
-  campaignCount: number;
   image: string;
   location: string;
-  reach: string;
   earned: string;
   bio: string;
   niches: string[];
   badge: string;
-  platforms: Platform[];
   email?: string;
   nationality?: string;
 }
@@ -173,139 +169,20 @@ function PlatformIcon({ icon }: { icon: Platform['icon'] }) {
   return <TwitterIcon />;
 }
 
-function getPlatformConfirmIcon(name: string) {
-  if (name === 'Instagram') {
-    return (
-      <div
-        className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center"
-        style={{
-          background:
-            'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-        }}
-      >
-        <svg viewBox="0 0 24 24" fill="white" className="w-5.5 h-5.5">
-          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-        </svg>
-      </div>
-    );
-  }
-  if (name === 'TikTok') {
-    return (
-      <div className="w-12 h-12 rounded-full bg-black shrink-0 flex items-center justify-center">
-        <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
-          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.73a4.85 4.85 0 01-1.01-.04z" />
-        </svg>
-      </div>
-    );
-  }
-  if (name === 'YouTube') {
-    return (
-      <div className="w-12 h-12 rounded-full bg-[#FF0000] shrink-0 flex items-center justify-center">
-        <svg viewBox="0 0 24 24" fill="white" className="w-5.5 h-5.5">
-          <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-        </svg>
-      </div>
-    );
-  }
-  return (
-    <div className="w-12 h-12 rounded-full bg-[#1a1a2e] shrink-0 flex items-center justify-center">
-      <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    </div>
-  );
-}
-
-function getPlatformConfirmData(name: string) {
-  const dataMap: Record<string, { subtitle: string; reqLinkText: string; bullets: string[] }> = {
-    Instagram: {
-      subtitle: 'Connect your Instagram accounts',
-      reqLinkText: "Instagram's connection requirement",
-      bullets: [
-        'My Instagram account is linked to a Facebook page',
-        'I have a business or creator Instagram account',
-      ],
-    },
-    TikTok: {
-      subtitle: 'Connect your TikTok account',
-      reqLinkText: "TikTok's connection requirement",
-      bullets: [
-        'My TikTok account is set to public',
-        'I have a creator or business TikTok account',
-      ],
-    },
-    YouTube: {
-      subtitle: 'Connect your YouTube channel',
-      reqLinkText: "YouTube's connection requirement",
-      bullets: ['My YouTube channel is verified', 'I have at least one public video'],
-    },
-    'X (Twitter)': {
-      subtitle: 'Connect your X / Twitter account',
-      reqLinkText: "X / Twitter's connection requirement",
-      bullets: [
-        'My X / Twitter account is public',
-        'My account profile is complete with a bio and avatar',
-      ],
-    },
-  };
-  return (
-    dataMap[name] || {
-      subtitle: `Connect your ${name} account`,
-      reqLinkText: `${name}'s connection requirement`,
-      bullets: [
-        `My ${name} account meets connection requirements`,
-        `My account is public and active`,
-      ],
-    }
-  );
-}
-
 // ── MOCK DATA SEED ───────────────────────────────────────
 const INITIAL_PROFILE: CreatorProfile = {
   name: 'Teni Olu',
   handle: 'teniolu',
   tier: 'Micro Creator',
   rating: 4.9,
-  campaignCount: 14,
   image: '',
   location: 'Lagos, Nigeria',
-  reach: '72.4K',
   earned: '₦847K',
   bio: 'Fashion & lifestyle creator based in Lagos 🌟 | Helping brands tell authentic stories through style.',
   niches: ['Fashion', 'Lifestyle', 'Beauty'],
   badge: 'Impact Advocate',
   email: 'teniolu@gmail.com',
   nationality: 'Nigeria',
-  platforms: [
-    {
-      name: 'Instagram',
-      handle: 'teniolu',
-      followers: '72.4K',
-      icon: 'instagram',
-      connected: true,
-    },
-    {
-      name: 'YouTube',
-      handle: 'teniolu.vlogs',
-      followers: '8.9K',
-      icon: 'youtube',
-      connected: true,
-    },
-    {
-      name: 'TikTok',
-      handle: 'teniolu.creates',
-      followers: '31.2K',
-      icon: 'tiktok',
-      connected: true,
-    },
-    {
-      name: 'X (Twitter)',
-      handle: 'teniolu',
-      followers: 'Not connected',
-      icon: 'twitter',
-      connected: false,
-    },
-  ],
 };
 
 interface ReviewBrand {
@@ -344,23 +221,6 @@ const MOCK_FAQS = [
   },
 ];
 
-function parseFollowersCount(val: string | number): number {
-  if (typeof val === 'number') return val;
-  if (!val || val === 'Not connected') return 0;
-  const numStr = val.toUpperCase().replace('N/A', '').trim();
-  let multiplier = 1;
-  let parsed = numStr;
-  if (numStr.endsWith('K')) {
-    multiplier = 1000;
-    parsed = numStr.slice(0, -1);
-  } else if (numStr.endsWith('M')) {
-    multiplier = 1000000;
-    parsed = numStr.slice(0, -1);
-  }
-  const num = parseFloat(parsed);
-  return isNaN(num) ? 0 : Math.round(num * multiplier);
-}
-
 export default function CreatorProfilePage() {
   // Queries & Mutations
   const { user, updateUser } = useAuthStore();
@@ -382,16 +242,6 @@ export default function CreatorProfilePage() {
           user.niches && user.niches.length > 0
             ? user.niches.map((n) => n.name)
             : INITIAL_PROFILE.niches,
-        // Match connected platforms from user.socialsConnected
-        platforms: INITIAL_PROFILE.platforms.map((plat) => {
-          const key = plat.name.toLowerCase() as keyof typeof user.socialsConnected;
-          const isConnected = user.socialsConnected ? !!user.socialsConnected[key] : false;
-          return {
-            ...plat,
-            connected: isConnected,
-            handle: isConnected ? user.username || '' : '',
-          };
-        }),
       };
     }
     return INITIAL_PROFILE;
@@ -408,6 +258,21 @@ export default function CreatorProfilePage() {
   const { data: userDetail } = useUserDetail(user?.id || null);
   const { data: serverReviews } = useCreatorReviews(user?.id || null);
   const { data: myApps } = useMyApplications();
+  const { data: socialConnections } = useSocialConnections();
+
+  const completedCampaignsCount = myApps
+    ? myApps.filter((app) => app.status === 'accepted').length
+    : 0;
+
+  const totalReachFollowers = (socialConnections ?? [])
+    .filter((c) => c.connected)
+    .reduce((sum, c) => sum + c.followerCount, 0);
+  const reachDisplay =
+    totalReachFollowers > 0
+      ? new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(
+          totalReachFollowers,
+        )
+      : '0';
 
   const activeReviews = serverReviews
     ? serverReviews.map((rev) => {
@@ -505,25 +370,10 @@ export default function CreatorProfilePage() {
           image: activeUser.avatarUrl || INITIAL_PROFILE.image,
           location: location,
           rating: activeUser.avgRating || 0,
-          campaignCount: activeUser.totalReviews || 0,
           niches:
             activeUser.niches && activeUser.niches.length > 0
               ? activeUser.niches.map((n) => n.name)
               : INITIAL_PROFILE.niches,
-          platforms: INITIAL_PROFILE.platforms.map((plat) => {
-            const nameLower = plat.name.toLowerCase();
-            const key = (
-              nameLower === 'x (twitter)' ? 'twitter' : nameLower
-            ) as keyof typeof activeUser.socialsConnected;
-            const isConnected = activeUser.socialsConnected
-              ? !!activeUser.socialsConnected[key]
-              : false;
-            return {
-              ...plat,
-              connected: isConnected,
-              handle: isConnected ? activeUser.username || '' : '',
-            };
-          }),
         };
       });
       /* eslint-enable react-hooks/set-state-in-effect */
@@ -532,32 +382,11 @@ export default function CreatorProfilePage() {
 
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updateNichesMutation = useUpdateProfileNiches();
-  const updateSocialsMutation = useUpdateProfileSocials();
+  const createPortfolioItemMutation = useCreatePortfolioItem();
+  const deletePortfolioItemMutation = useDeletePortfolioItem();
 
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-
-  const completedCampaigns: PortfolioItem[] = myApps
-    ? myApps
-        .filter((app) => app.status === 'accepted')
-        .map((app) => {
-          const brandObj = app.campaign?.brand as
-            | { firstName?: string; lastName?: string; companyName?: string }
-            | undefined;
-          const brandName =
-            brandObj?.companyName ||
-            `${brandObj?.firstName || ''} ${brandObj?.lastName || ''}`.trim() ||
-            'Brand Partner';
-          return {
-            id: app.id,
-            image:
-              app.campaign?.coverImage ||
-              'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
-            brandName,
-          };
-        })
-    : [];
-
-  const activePortfolio = [...portfolio, ...completedCampaigns];
+  const { data: portfolioItems, isLoading: portfolioLoading } = usePortfolio();
+  const activePortfolio: PortfolioItemDto[] = portfolioItems ?? [];
 
   const [portfolioPage, setPortfolioPage] = useState(1);
   const PORTFOLIO_ITEMS_PER_PAGE = 6;
@@ -756,7 +585,7 @@ export default function CreatorProfilePage() {
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newBrandName, setNewBrandName] = useState('');
+  const [newPortfolioTitle, setNewPortfolioTitle] = useState('');
   const [socialMediaLink, setSocialMediaLink] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
@@ -772,46 +601,8 @@ export default function CreatorProfilePage() {
   const [editNationality, setEditNationality] = useState('Nigeria');
   const [editBio, setEditBio] = useState('');
   const [editNiches, setEditNiches] = useState<string[]>([]);
-  const [editPlatforms, setEditPlatforms] = useState<Platform[]>([]);
   const [editTab, setEditTab] = useState<'personal' | 'niche' | 'social'>('personal');
-  const [confirmingPlatform, setConfirmingPlatform] = useState<Platform | null>(null);
-
-  // Action: Toggle Connected Platform
-  const handleTogglePlatform = (idx: number) => {
-    const platform = editPlatforms[idx];
-    if (!platform.connected) {
-      setConfirmingPlatform(platform);
-    } else {
-      const updated = editPlatforms.map((plat, i) =>
-        i === idx ? { ...plat, connected: false, followers: 'Not connected' } : plat,
-      );
-      setEditPlatforms(updated);
-    }
-  };
-
-  // Action: Confirm Social Connection
-  const handleConfirmConnectPlatform = () => {
-    if (!confirmingPlatform) return;
-    const updated = editPlatforms.map((plat) => {
-      if (plat.name === confirmingPlatform.name) {
-        return {
-          ...plat,
-          connected: true,
-          followers:
-            plat.name === 'Instagram'
-              ? '12.4K'
-              : plat.name === 'TikTok'
-                ? '31.2K'
-                : plat.name === 'YouTube'
-                  ? '8.9K'
-                  : '5.0K',
-        };
-      }
-      return plat;
-    });
-    setEditPlatforms(updated);
-    setConfirmingPlatform(null);
-  };
+  const [avatarError, setAvatarError] = useState<string>('');
 
   // Action: Open Edit Profile Form Modal/Overlay
   const handleOpenEditProfile = () => {
@@ -829,11 +620,10 @@ export default function CreatorProfilePage() {
 
     setEditBio(profile.bio);
     setEditNiches(profile.niches);
-    setEditPlatforms(profile.platforms);
     setEditTab('personal');
-    setConfirmingPlatform(null);
     setEditAvatarFile(null);
     setEditAvatarPreview(profile.image);
+    setAvatarError('');
     setIsEditProfileOpen(true);
   };
 
@@ -859,89 +649,6 @@ export default function CreatorProfilePage() {
           },
         },
       );
-      return;
-    }
-
-    if (editTab === 'social') {
-      const instagramPlat = editPlatforms.find((p) => p.name === 'Instagram');
-      const tiktokPlat = editPlatforms.find((p) => p.name === 'TikTok');
-      const youtubePlat = editPlatforms.find((p) => p.name === 'YouTube');
-      const twitterPlat = editPlatforms.find((p) => p.name === 'X (Twitter)');
-
-      const payload = {
-        instagramUsername: instagramPlat?.connected
-          ? instagramPlat.handle === 'Not connected'
-            ? editHandle
-            : instagramPlat.handle
-          : null,
-        instagramFollowers: instagramPlat?.connected
-          ? parseFollowersCount(instagramPlat.followers)
-          : 0,
-        tiktokUsername: tiktokPlat?.connected
-          ? tiktokPlat.handle === 'Not connected'
-            ? editHandle
-            : tiktokPlat.handle
-          : null,
-        tiktokFollowers: tiktokPlat?.connected ? parseFollowersCount(tiktokPlat.followers) : 0,
-        youtubeUsername: youtubePlat?.connected
-          ? youtubePlat.handle === 'Not connected'
-            ? editHandle
-            : youtubePlat.handle
-          : null,
-        youtubeFollowers: youtubePlat?.connected ? parseFollowersCount(youtubePlat.followers) : 0,
-        twitterUsername: twitterPlat?.connected
-          ? twitterPlat.handle === 'Not connected'
-            ? editHandle
-            : twitterPlat.handle
-          : null,
-        twitterFollowers: twitterPlat?.connected ? parseFollowersCount(twitterPlat.followers) : 0,
-      };
-
-      updateSocialsMutation.mutate(payload, {
-        onSuccess: ({ data }) => {
-          const u = data?.user || data;
-          setProfile((prev) => ({
-            ...prev,
-            platforms: prev.platforms.map((plat) => {
-              const name = plat.name;
-              if (name === 'Instagram') {
-                return {
-                  ...plat,
-                  connected: !!u?.socialsConnected?.instagram,
-                  handle: u?.instagramUsername || 'Not connected',
-                  followers: u?.instagramFollowers ? `${u.instagramFollowers}` : 'Not connected',
-                };
-              }
-              if (name === 'TikTok') {
-                return {
-                  ...plat,
-                  connected: !!u?.socialsConnected?.tiktok,
-                  handle: u?.tiktokUsername || 'Not connected',
-                  followers: u?.tiktokFollowers ? `${u.tiktokFollowers}` : 'Not connected',
-                };
-              }
-              if (name === 'YouTube') {
-                return {
-                  ...plat,
-                  connected: !!u?.socialsConnected?.youtube,
-                  handle: u?.youtubeUsername || 'Not connected',
-                  followers: u?.youtubeFollowers ? `${u.youtubeFollowers}` : 'Not connected',
-                };
-              }
-              if (name === 'X (Twitter)') {
-                return {
-                  ...plat,
-                  connected: !!u?.socialsConnected?.twitter,
-                  handle: u?.twitterUsername || 'Not connected',
-                  followers: u?.twitterFollowers ? `${u.twitterFollowers}` : 'Not connected',
-                };
-              }
-              return plat;
-            }),
-          }));
-          setIsEditProfileOpen(false);
-        },
-      });
       return;
     }
 
@@ -1000,33 +707,26 @@ export default function CreatorProfilePage() {
   // Action: Add Portfolio Item
   const handleAddPortfolioItem = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBrandName.trim()) return;
+    if (!newPortfolioTitle.trim()) return;
 
-    let finalImageUrl = '';
+    const fd = new FormData();
+    fd.append('title', newPortfolioTitle.trim());
+    if (socialMediaLink.trim()) fd.append('link', socialMediaLink.trim());
+    if (uploadedFile) fd.append('coverImage', uploadedFile);
 
-    if (uploadedFile) {
-      finalImageUrl = URL.createObjectURL(uploadedFile);
-    } else {
-      finalImageUrl =
-        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80'; // fallback
-    }
-
-    const newItem: PortfolioItem = {
-      id: Date.now(),
-      brandName: newBrandName,
-      image: finalImageUrl,
-    };
-
-    setPortfolio([newItem, ...portfolio]);
-    setNewBrandName('');
-    setUploadedFile(null);
-    setSocialMediaLink('');
-    setIsAddModalOpen(false);
+    createPortfolioItemMutation.mutate(fd, {
+      onSuccess: () => {
+        setNewPortfolioTitle('');
+        setUploadedFile(null);
+        setSocialMediaLink('');
+        setIsAddModalOpen(false);
+      },
+    });
   };
 
   // Action: Delete Portfolio Item
-  const handleDeletePortfolioItem = (id: number | string) => {
-    setPortfolio(portfolio.filter((item) => item.id !== id));
+  const handleDeletePortfolioItem = (id: string) => {
+    deletePortfolioItemMutation.mutate(id);
   };
 
   return (
@@ -1129,13 +829,13 @@ export default function CreatorProfilePage() {
           {/* Stats Card inside Banner */}
           <div className="grid grid-cols-3 bg-[#14132a] border border-[#232142] rounded-2xl p-4 text-center divide-x divide-[#232142] shadow-inner">
             <div className="flex flex-col gap-0.5">
-              <span className="text-white text-base font-bold">{profile.reach}</span>
+              <span className="text-white text-base font-bold">{reachDisplay}</span>
               <span className="text-[#7a7a9a] text-[9px] font-semibold uppercase tracking-wider">
                 Followers
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-white text-base font-bold">{profile.campaignCount}</span>
+              <span className="text-white text-base font-bold">{completedCampaignsCount}</span>
               <span className="text-[#7a7a9a] text-[9px] font-semibold uppercase tracking-wider">
                 Campaigns
               </span>
@@ -1188,13 +888,13 @@ export default function CreatorProfilePage() {
           <span className="text-[10px] font-bold text-[#9a99b0] uppercase tracking-wider">
             Reach
           </span>
-          <span className="text-base font-bold text-[#1a1a2e]">{profile.reach}</span>
+          <span className="text-base font-bold text-[#1a1a2e]">{reachDisplay}</span>
         </div>
         <div className="flex flex-col gap-1 items-center justify-center">
           <span className="text-[10px] font-bold text-[#9a99b0] uppercase tracking-wider">
             Campaigns
           </span>
-          <span className="text-base font-bold text-[#1a1a2e]">{profile.campaignCount}</span>
+          <span className="text-base font-bold text-[#1a1a2e]">{completedCampaignsCount}</span>
         </div>
         <div className="flex flex-col gap-1 items-center justify-center">
           <span className="text-[10px] font-bold text-[#9a99b0] uppercase tracking-wider">
@@ -1209,40 +909,7 @@ export default function CreatorProfilePage() {
         <h3 className="text-xs font-bold text-[#7a7a9a] uppercase tracking-wider">
           Connected Platforms
         </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {profile.platforms.map((plat) => {
-            const isConnected = plat.connected;
-            return (
-              <div
-                key={plat.name}
-                id={`platform-card-${plat.name.toLowerCase().replace(/[\s()]+/g, '')}`}
-                className={cn(
-                  'border rounded-[24px] p-4 flex items-center justify-between bg-white transition-all shadow-xs relative overflow-hidden group',
-                  isConnected ? 'border-[#e8e6f0]/70' : 'border-[#e8e6f0]/50 opacity-60',
-                )}
-              >
-                <div className="flex items-center gap-3.5">
-                  <PlatformIcon icon={plat.icon} />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-[#1a1a2e]">{plat.name}</span>
-                    <span
-                      className={cn(
-                        'text-[10px] font-semibold mt-0.5',
-                        isConnected ? 'text-[#7a7a9a]' : 'text-[#9a99b0] italic',
-                      )}
-                    >
-                      {plat.followers}
-                    </span>
-                  </div>
-                </div>
-                {/* Connection active dot indicator */}
-                {isConnected && (
-                  <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse shrink-0" />
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <SocialPlatformCards />
       </div>
 
       {/* ── BIO & NICHES ROW ── */}
@@ -1368,32 +1035,39 @@ export default function CreatorProfilePage() {
                     id={`portfolio-item-${item.id}`}
                   >
                     <Image
-                      src={item.image}
-                      alt={item.brandName}
+                      src={
+                        item.coverImage ||
+                        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80'
+                      }
+                      alt={item.title}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Dark gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
-                    {/* Brand Name Text at Bottom */}
+                    {/* Title Text at Bottom */}
                     <span className="absolute bottom-3 left-4 text-xs font-bold text-white tracking-wide">
-                      {item.brandName}
+                      {item.title}
                     </span>
 
                     {/* Delete Item Overlay Button */}
-                    {typeof item.id === 'number' && (
-                      <button
-                        id={`btn-delete-portfolio-${item.id}`}
-                        onClick={() => handleDeletePortfolioItem(item.id)}
-                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px]"
-                        title="Delete Item"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    )}
+                    <button
+                      id={`btn-delete-portfolio-${item.id}`}
+                      onClick={() => handleDeletePortfolioItem(item.id)}
+                      disabled={deletePortfolioItemMutation.isPending}
+                      className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px] disabled:opacity-40"
+                      title="Delete Item"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 ))}
+                {!portfolioLoading && activePortfolio.length === 0 && (
+                  <div className="col-span-2 md:col-span-3 lg:col-span-4 flex items-center justify-center py-6 text-xs text-[#9a99b0] font-light">
+                    No portfolio items yet.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1721,20 +1395,20 @@ export default function CreatorProfilePage() {
           </DialogHeader>
 
           <form onSubmit={handleAddPortfolioItem} className="flex flex-col gap-5">
-            {/* Brand Name Input */}
+            {/* Title Input */}
             <div className="flex flex-col gap-1.5">
               <label
                 className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider"
                 htmlFor="input-modal-brand"
               >
-                Brand Name
+                Title
               </label>
               <input
                 id="input-modal-brand"
                 type="text"
-                placeholder="e.g. Pepsi, Nike, Canon"
-                value={newBrandName}
-                onChange={(e) => setNewBrandName(e.target.value)}
+                placeholder="e.g. Pepsi Summer Campaign"
+                value={newPortfolioTitle}
+                onChange={(e) => setNewPortfolioTitle(e.target.value)}
                 className="w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
                 required
               />
@@ -1813,16 +1487,17 @@ export default function CreatorProfilePage() {
               <button
                 type="submit"
                 id="btn-modal-add"
-                className="flex-1 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-98 transition-all"
+                disabled={createPortfolioItemMutation.isPending}
+                className="flex-1 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-98 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Add Item
+                {createPortfolioItemMutation.isPending ? 'Adding…' : 'Add Item'}
               </button>
               <button
                 type="button"
                 id="btn-modal-cancel"
                 onClick={() => {
                   setIsAddModalOpen(false);
-                  setNewBrandName('');
+                  setNewPortfolioTitle('');
                   setUploadedFile(null);
                   setSocialMediaLink('');
                 }}
@@ -2229,70 +1904,33 @@ export default function CreatorProfilePage() {
           <div className="flex items-center justify-between p-4 border-b border-[#e8e6f0] md:hidden shrink-0">
             <button
               type="button"
-              onClick={() => {
-                if (editTab === 'social' && confirmingPlatform) {
-                  setConfirmingPlatform(null);
-                } else {
-                  handleCancelSettings();
-                }
-              }}
+              onClick={handleCancelSettings}
               className="flex items-center gap-1 text-xs font-bold text-brand-pink hover:underline"
             >
               <ChevronLeft size={16} />
               <span>Back</span>
             </button>
             <h3 className="text-sm font-bold text-[#1a1a2e]">Edit Profile</h3>
-            <button
-              type="button"
-              disabled={
-                updatePersonalInfoMutation.isPending ||
-                updateNichesMutation.isPending ||
-                updateSocialsMutation.isPending
-              }
-              onClick={() => {
-                if (editTab === 'social' && confirmingPlatform) {
-                  // Connect and Save
-                  const updated = editPlatforms.map((plat) => {
-                    if (plat.name === confirmingPlatform.name) {
-                      return {
-                        ...plat,
-                        connected: true,
-                        followers:
-                          plat.name === 'Instagram'
-                            ? '12.4K'
-                            : plat.name === 'TikTok'
-                              ? '31.2K'
-                              : plat.name === 'YouTube'
-                                ? '8.9K'
-                                : '5.0K',
-                      };
-                    }
-                    return plat;
-                  });
-                  setProfile({
-                    ...profile,
-                    name: `${editFirstName.trim()} ${editLastName.trim()}`.trim(),
-                    handle: editHandle.trim(),
-                    email: editEmail.trim(),
-                    location: `${editState.trim()}, ${editCountry.trim()}`,
-                    nationality: editNationality.trim(),
-                    bio: editBio,
-                    niches: editNiches,
-                    platforms: updated,
-                  });
-                  setIsEditProfileOpen(false);
-                } else {
-                  handleSaveSettings();
-                }
-              }}
-              className="text-xs font-bold text-brand-pink hover:underline disabled:opacity-50"
-            >
-              {updatePersonalInfoMutation.isPending ||
-              updateNichesMutation.isPending ||
-              updateSocialsMutation.isPending
-                ? 'Saving...'
-                : 'Save'}
-            </button>
+            {editTab === 'social' ? (
+              <button
+                type="button"
+                onClick={handleCancelSettings}
+                className="text-xs font-bold text-brand-pink hover:underline"
+              >
+                Done
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={updatePersonalInfoMutation.isPending || updateNichesMutation.isPending}
+                onClick={() => handleSaveSettings()}
+                className="text-xs font-bold text-brand-pink hover:underline disabled:opacity-50"
+              >
+                {updatePersonalInfoMutation.isPending || updateNichesMutation.isPending
+                  ? 'Saving...'
+                  : 'Save'}
+              </button>
+            )}
           </div>
 
           {/* Desktop Header */}
@@ -2314,10 +1952,7 @@ export default function CreatorProfilePage() {
                 <button
                   key={tab}
                   type="button"
-                  onClick={() => {
-                    setEditTab(tab);
-                    setConfirmingPlatform(null);
-                  }}
+                  onClick={() => setEditTab(tab)}
                   className={cn(
                     'flex-1 py-2.5 text-xs font-semibold text-center cursor-pointer transition-all duration-200 capitalize',
                     editTab === tab
@@ -2361,6 +1996,14 @@ export default function CreatorProfilePage() {
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           const file = e.target.files[0];
+                          const MAX_BYTES = 4.9 * 1024 * 1024;
+                          if (file.size > MAX_BYTES) {
+                            setAvatarError(
+                              `Image is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed size is 4.9MB.`,
+                            );
+                            e.target.value = '';
+                            return;
+                          }
                           setEditAvatarFile(file);
                           setEditAvatarPreview(URL.createObjectURL(file));
                         }
@@ -2370,6 +2013,11 @@ export default function CreatorProfilePage() {
                   <span className="text-[10px] text-[#7a7a9a] font-medium mt-2 text-center block">
                     Add a profile picture to stand out
                   </span>
+                  {avatarError && (
+                    <span className="text-[10px] text-red-500 font-semibold mt-1.5 text-center block max-w-[220px]">
+                      {avatarError}
+                    </span>
+                  )}
                 </div>
 
                 {/* Input Fields Grid */}
@@ -2576,175 +2224,30 @@ export default function CreatorProfilePage() {
             {/* TAB 3: SOCIAL */}
             {editTab === 'social' && (
               <div className="flex flex-col gap-5">
-                {confirmingPlatform ? (
-                  <div className="flex flex-col gap-5">
-                    {/* Back link for desktop */}
-                    <button
-                      type="button"
-                      onClick={() => setConfirmingPlatform(null)}
-                      className="hidden md:flex items-center gap-1 text-xs font-semibold text-brand-pink hover:underline self-start cursor-pointer"
-                    >
-                      <ChevronLeft size={14} />
-                      <span>Back to platforms</span>
-                    </button>
-
-                    {/* Platform connection card */}
-                    <div className="w-full max-w-sm mx-auto border border-[#e8e6f0] rounded-2xl p-6 bg-white flex flex-col items-center text-center shadow-xs mt-2">
-                      <div className="mb-4">{getPlatformConfirmIcon(confirmingPlatform.name)}</div>
-                      <h4 className="text-sm font-bold text-[#1a1a2e]">
-                        {confirmingPlatform.name === 'X (Twitter)'
-                          ? 'X / Twitter'
-                          : confirmingPlatform.name}
-                      </h4>
-                      <p className="text-[10px] text-[#7a7a9a] font-light mt-0.5">
-                        {getPlatformConfirmData(confirmingPlatform.name).subtitle}
-                      </p>
-                    </div>
-
-                    {/* Description and link */}
-                    <div className="text-xs text-[#5a5a7a] font-semibold leading-relaxed mt-2">
-                      Before you proceed, please confirm your account meet{' '}
-                      <span className="text-blue-600 underline cursor-pointer hover:text-blue-700">
-                        {getPlatformConfirmData(confirmingPlatform.name).reqLinkText}
-                      </span>
-                    </div>
-
-                    {/* Bullets */}
-                    <ul className="flex flex-col gap-3 mt-1.5 pl-1">
-                      {getPlatformConfirmData(confirmingPlatform.name).bullets.map(
-                        (bullet, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-start gap-2.5 text-xs text-[#5a5a7a] font-light leading-relaxed"
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#7a7a9a] shrink-0 mt-1.5" />
-                            <span>{bullet}</span>
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col gap-1.5">
-                      <p className="text-xs text-[#7a7a9a] leading-relaxed font-light block md:hidden">
-                        Link your social platforms to get discovered by brands.
-                      </p>
-                      <p className="text-xs text-[#7a7a9a] leading-relaxed font-light hidden md:block">
-                        Link at least 1 and up to 3 of your accounts securely, to verify your social
-                        profile and tier
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      {editPlatforms.map((plat, idx) => {
-                        const reqText =
-                          plat.name === 'TikTok' || plat.name === 'Instagram'
-                            ? 'Min. 1,000+'
-                            : 'Min. 500+';
-                        const displayName = plat.name === 'X (Twitter)' ? 'X / Twitter' : plat.name;
-
-                        return (
-                          <div
-                            key={plat.name}
-                            className={cn(
-                              'flex items-center justify-between border rounded-2xl p-4 transition-all',
-                              plat.connected
-                                ? 'border-brand-pink-light/60 bg-[#fffbfe]/60 shadow-[0_2px_12px_rgba(215,23,111,0.01)]'
-                                : 'border-[#e8e6f0]/50 bg-white hover:shadow-[0_2px_12px_rgba(4,0,57,0.02)]',
-                            )}
-                          >
-                            <div className="flex items-center gap-3">
-                              <PlatformIcon icon={plat.icon} />
-                              <div className="flex flex-col">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-xs font-bold text-[#1a1a2e]">
-                                    {displayName}
-                                  </span>
-                                  {plat.connected && (
-                                    <span className="w-3.5 h-3.5 rounded-full bg-[#10b981] flex items-center justify-center text-white shrink-0">
-                                      <Check size={8} className="stroke-[3.5]" />
-                                    </span>
-                                  )}
-                                </div>
-                                {plat.connected ? (
-                                  <>
-                                    <span className="text-[10px] font-bold text-blue-600 mt-0.5">
-                                      @
-                                      {plat.handle === 'Not connected'
-                                        ? profile.handle
-                                        : plat.handle}
-                                    </span>
-                                    <span className="text-[10px] text-[#7a7a9a] font-light mt-0.5">
-                                      {plat.followers} followers
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span className="text-[10px] text-[#7a7a9a] font-medium mt-0.5">
-                                    {reqText}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col items-center gap-1">
-                              {plat.connected ? (
-                                <>
-                                  <span className="bg-[#e6fbf4] text-[#10b981] border border-[#10b981]/15 px-3 py-1 rounded-full text-[9px] font-bold">
-                                    Connected
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleTogglePlatform(idx)}
-                                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 underline cursor-pointer select-none"
-                                  >
-                                    Disconnect
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => handleTogglePlatform(idx)}
-                                  className="border border-brand-pink text-brand-pink bg-white hover:bg-brand-pink-light px-5 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer select-none"
-                                >
-                                  Connect
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-xs text-[#7a7a9a] leading-relaxed font-light block md:hidden">
+                    Link your social platforms to get discovered by brands.
+                  </p>
+                  <p className="text-xs text-[#7a7a9a] leading-relaxed font-light hidden md:block">
+                    Link at least 1 and up to 3 of your accounts securely, to verify your social
+                    profile and tier
+                  </p>
+                </div>
+                <SocialsOAuthConnect />
               </div>
             )}
           </div>
 
           {/* Sticky Save Button Footer */}
-          <div className="p-4 md:p-6 border-t border-[#e8e6f0] bg-white shrink-0 mt-auto">
-            {editTab === 'social' && confirmingPlatform ? (
+          {editTab !== 'social' && (
+            <div className="p-4 md:p-6 border-t border-[#e8e6f0] bg-white shrink-0 mt-auto">
               <button
                 type="button"
-                onClick={handleConfirmConnectPlatform}
-                className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center flex items-center justify-center gap-1"
-              >
-                <span className="block md:hidden">Continue &rarr;</span>
-                <span className="hidden md:block">Save</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={
-                  updatePersonalInfoMutation.isPending ||
-                  updateNichesMutation.isPending ||
-                  updateSocialsMutation.isPending
-                }
+                disabled={updatePersonalInfoMutation.isPending || updateNichesMutation.isPending}
                 onClick={() => handleSaveSettings()}
                 className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs text-center disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {updatePersonalInfoMutation.isPending ||
-                updateNichesMutation.isPending ||
-                updateSocialsMutation.isPending ? (
+                {updatePersonalInfoMutation.isPending || updateNichesMutation.isPending ? (
                   <>
                     <RotateCw className="animate-spin" size={14} />
                     Saving...
@@ -2753,8 +2256,8 @@ export default function CreatorProfilePage() {
                   'Save'
                 )}
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

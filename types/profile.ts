@@ -34,25 +34,6 @@ export interface UpdatePersonalInfoResponse {
   onboardingStepsCompleted: OnboardingStepsCompleted;
 }
 
-export interface UpdateProfileSocialsPayload {
-  instagramUsername?: string | null;
-  instagramFollowers?: number;
-  tiktokUsername?: string | null;
-  tiktokFollowers?: number;
-  youtubeUsername?: string | null;
-  youtubeFollowers?: number;
-  twitterUsername?: string | null;
-  twitterFollowers?: number;
-}
-
-export interface UpdateProfileSocialsResponse {
-  message: string;
-  user: {
-    socialsConnected: SocialsConnected;
-    assignedTier: string | null;
-  };
-}
-
 export interface NotificationSettings {
   newCampaigns: boolean;
   applicationUpdates: boolean;
@@ -215,6 +196,32 @@ export interface BrandProfileDto {
   tiktokFollowers?: number;
   youtubeUsername?: string | null;
   youtubeFollowers?: number;
+}
+
+export interface PortfolioItemDto {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  userId: string;
+  title: string;
+  link: string | null;
+  coverImage: string | null;
+}
+
+export interface GetPortfolioResponse {
+  items: PortfolioItemDto[];
+}
+
+export interface CreatePortfolioItemPayload {
+  title: string;
+  link?: string;
+  coverImage?: File;
+}
+
+export interface CreatePortfolioItemResponse {
+  message?: string;
+  item?: PortfolioItemDto;
 }
 
 export interface BrandCampaignSummary {

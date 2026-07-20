@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { SLIDE_DATA } from '@/constants/slide';
 import Stars from './Stars';
+import { AnimatePresence, motion } from 'motion/react';
 
 interface AuthLayoutProps {
   imageSrc: string;
@@ -16,23 +17,35 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AuthLayout({
-  // imageSrc,
-  // imageAlt,
-  // headlineTop,
-  // headlineBottom,
-  // tagline,
-  slideIndex = 0,
-  children,
-}: AuthLayoutProps) {
-  const [activeSlide, setActiveSlide] = useState(slideIndex);
+const slideVariants = {
+  enter: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? 24 : -24,
+    y: 12,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -24 : 24,
+    y: -12,
+  }),
+};
 
+export default function AuthLayout({ slideIndex = 0, children }: AuthLayoutProps) {
+  const [activeSlide, setActiveSlide] = useState(slideIndex);
+  const direction = 1;
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % SLIDE_DATA.length);
-    }, 1000);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
+  const slide = SLIDE_DATA[activeSlide];
+
   return (
     <div className="flex  h-screen bg-background">
       {/* ── Left panel ── */}
@@ -44,31 +57,41 @@ export default function AuthLayout({
 
         {/* Hero image — crossfades between slides */}
         <div className="relative -ml-6 h-[60vh] mt-4 w-full">
-          {SLIDE_DATA.map((slide, i) => (
-            <Image
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
               key={slide.src}
-              src={slide.src}
-              alt={slide.alt}
-              fill
-              className={cn(
-                'object-contain object-bottom transition-opacity duration-700',
-                i === activeSlide ? 'opacity-100' : 'opacity-0',
-                slide.imageClassName,
-              )}
-              priority={i === 0}
-            />
-          ))}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className={cn('absolute inset-0', slide.imageClassName)}
+            >
+              <Image
+                src={slide.src}
+                alt={slide.alt}
+                fill
+                className="object-contain object-bottom"
+                priority
+              />
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Bottom copy — fades between slides */}
         <div className="z-10 mt-8 ml-8">
           <div className="relative h-24 overflow-hidden">
-            {SLIDE_DATA.map((slide, i) => (
-              <div
-                key={i}
-                className={`absolute inset-0 transition-opacity duration-700 ${
-                  i === activeSlide ? 'opacity-100' : 'opacity-0'
-                }`}
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={slide.src}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0"
               >
                 <h2 className="text-[26px] font-extralight leading-tight text-[#1a1a2e] mb-2">
                   {slide.headlineTop}
@@ -78,19 +101,22 @@ export default function AuthLayout({
                 <p className="text-[13px] text-[#5a5a7a] leading-relaxed max-w-72">
                   {slide.tagline}
                 </p>
-              </div>
-            ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Slide dots */}
           <div className="flex items-center gap-1.5 mt-5" aria-hidden="true">
             {SLIDE_DATA.map((_, i) => (
-              <span
+              <motion.span
                 key={i}
+                layout
                 className={cn(
-                  'h-2 rounded-full transition-all duration-300',
-                  i === activeSlide ? 'w-5 bg-[#d91a6b]' : 'w-2 bg-[#c8c6d9]',
+                  'h-2 rounded-full',
+                  i === activeSlide ? 'bg-[#d91a6b]' : 'bg-[#c8c6d9]',
                 )}
+                animate={{ width: i === activeSlide ? 20 : 8 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
               />
             ))}
           </div>

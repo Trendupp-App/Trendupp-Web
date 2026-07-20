@@ -8,6 +8,7 @@ export interface FeedbackModalAction {
   onClick: () => void;
   variant?: 'primary' | 'secondary';
   loading?: boolean;
+  disabled?: boolean;
 }
 
 export interface FeedbackModalProps {
@@ -48,13 +49,13 @@ export default function FeedbackModal({
               type="button"
               key={action.label}
               onClick={action.onClick}
-              disabled={action.loading}
+              disabled={action.loading || action.disabled}
               className={cn(
                 'w-full py-3 rounded-xl text-xs transition-colors',
                 action.variant === 'primary'
                   ? 'bg-brand-pink cursor-pointer text-white font-medium hover:bg-brand-pink/90'
                   : 'border border-[#e8e6f0] text-[#1a1a2e] font-light hover:bg-[#faf9fc]',
-                action.loading && 'opacity-70 cursor-not-allowed',
+                (action.loading || action.disabled) && 'opacity-70 cursor-not-allowed',
               )}
             >
               {action.loading ? 'Loading...' : action.label}

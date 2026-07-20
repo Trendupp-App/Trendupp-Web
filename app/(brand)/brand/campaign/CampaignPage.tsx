@@ -23,12 +23,14 @@ const MAIN_TABS: { id: MainTab; label: string }[] = [
   { id: 'completed', label: 'Completed' },
 ];
 
+// Sub-tabs beyond "All" depend on `campaign.subStatus`, which the campaigns-list
+// endpoint doesn't return yet. Re-enable once backend adds it — see [[campaign-active-substatus]].
 const ACTIVE_SUB_TABS: { id: ActiveSubTab; label: string }[] = [
   { id: 'all', label: 'All' },
-  { id: 'in_progress', label: 'In progress' },
-  { id: 'content_review', label: 'Content review' },
-  { id: 'revision', label: 'Revision' },
-  { id: 'live_content', label: 'Live content' },
+  // { id: 'in_progress', label: 'In progress' },
+  // { id: 'content_review', label: 'Content review' },
+  // { id: 'revision', label: 'Revision' },
+  // { id: 'live_content', label: 'Live content' },
 ];
 
 const GRID_SKELETON_COUNT = 6;

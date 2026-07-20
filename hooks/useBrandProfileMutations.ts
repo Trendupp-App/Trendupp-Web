@@ -5,7 +5,6 @@ import { BrandProfileApi } from '@/services/BrandProfileApi';
 import { useAuthStore } from '@/store/authStore';
 import type {
   UpdatePersonalInfoPayload,
-  UpdateProfileSocialsPayload,
   NotificationSettings,
   SecuritySettings,
   ChangePasswordPayload,
@@ -34,20 +33,6 @@ export function useUpdatePersonalInfo() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update profile');
-    },
-  });
-}
-
-export function useUpdateProfileSocials() {
-  const updateUser = useAuthStore((s) => s.updateUser);
-  return useMutation({
-    mutationFn: (payload: UpdateProfileSocialsPayload) => BrandProfileApi.updateSocials(payload),
-    onSuccess: ({ data }) => {
-      updateUser({ socialsConnected: data?.user?.socialsConnected });
-      toast.success('Social accounts updated successfully');
-    },
-    onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not update socials');
     },
   });
 }

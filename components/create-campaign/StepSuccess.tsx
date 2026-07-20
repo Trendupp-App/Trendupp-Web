@@ -8,7 +8,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import StepFooter from './StepFooter';
 
 const schema = z.object({
-  successDescription: z.string().min(1, 'Please describe what success looks like'),
+  // successDescription: z.string().min(1, 'Please describe what success looks like'),
   usageRights: z.string().min(1, 'Please describe your usage rights'),
 });
 
@@ -45,7 +45,7 @@ export default function StepSuccess({
   } = useForm<Step3Values>({
     resolver: zodResolver(schema),
     defaultValues: {
-      successDescription: '',
+      // successDescription: '',
       usageRights: '',
       ...defaultValues,
     },
@@ -56,8 +56,7 @@ export default function StepSuccess({
 
   return (
     <form className="flex flex-col gap-6">
-      {/* What success looks like */}
-      <div className="flex flex-col gap-1.5">
+      {/* <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#1a1a2e]">What Success Looks Like</label>
         <p className="text-xs text-[#9a99b0]">
           Describe the KPIs, outcomes, or feeling you&apos;re optimizing for. This helps creators
@@ -72,7 +71,7 @@ export default function StepSuccess({
         {errors.successDescription && (
           <p className="text-[11px] text-red-400">{errors.successDescription.message}</p>
         )}
-      </div>
+      </div> */}
 
       {/* Usage rights */}
       <div className="flex flex-col gap-1.5">

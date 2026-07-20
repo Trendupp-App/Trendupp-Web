@@ -36,7 +36,7 @@ export interface CampaignSubmission {
 export interface SubmissionApplication {
   id: string;
   contentIdea: string;
-  pastWorkLink: string;
+  pastWorkLink: string[];
   primaryPlatformId: string;
   secondaryPlatformId: string | null;
   feeRequest: number;

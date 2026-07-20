@@ -71,14 +71,22 @@ const STATUS_CONFIG: Record<
 
 interface CampaignCardProps {
   campaign: Campaign;
+  onViewDetails?: (campaign: Campaign) => void;
 }
 
-export default function CampaignCard({ campaign }: CampaignCardProps) {
+export default function CampaignCard({ campaign, onViewDetails }: CampaignCardProps) {
   const router = useRouter();
   // const config = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.live;
   const displayStatus = campaign.subStatus ?? campaign.status;
   const config = STATUS_CONFIG[displayStatus] ?? STATUS_CONFIG.live;
 
+  function handleClick() {
+    if (onViewDetails) {
+      onViewDetails(campaign);
+    } else {
+      router.push(`/brand/campaign/${campaign.id}`);
+    }
+  }
   return (
     <div className="bg-white border border-[#e8e6f0] rounded-2xl overflow-hidden flex flex-col">
       {/* Cover image */}
@@ -135,10 +143,10 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
         </div>
 
         <button
-          onClick={() => router.push(`/brand/campaign/${campaign.id}`)}
+          onClick={handleClick}
           className="w-full mt-1 cursor-pointer py-2.5 border border-[#e8e6f0] rounded-xl text-xs text-[#1a1a2e] font-light hover:bg-[#faf9fc] transition-colors"
         >
-          {config.ctaLabel}
+          {onViewDetails ? 'View details' : config.ctaLabel}
         </button>
       </div>
     </div>

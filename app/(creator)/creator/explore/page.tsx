@@ -20,15 +20,16 @@ import BrandsList from '@/components/creator-dashboard/explore/BrandList';
 import CreatorsList from '@/components/creator-dashboard/explore/CreatorList';
 import ExploreSearchAndFilter from '@/components/creator-dashboard/explore/ExploreSearchAndFilter';
 import { useExploreCampaigns } from '@/hooks/useExploreCampaign';
-import { useExploreCreators, useExploreBrands } from '@/hooks/useExplore';
+import { useExploreCreators, useExploreBrands, useExploreSearch } from '@/hooks/useExplore';
 import { useNiches, useIndustries } from '@/hooks/useOnboardingQueries';
-import type { ExploreCreator, ExploreBrand } from '@/types/explore';
+import { mapCampaign } from '@/lib/campaignMappers';
 
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState<MainTab>('campaigns');
   const [activeCampaignFilter, setActiveCampaignFilter] = useState<CampaignStatusFilter>('all');
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const isSearching = searchQuery.trim().length > 0;
 
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export default function ExplorePage() {
     campaignGoal: null,
   });
 
-  const { campaigns: sortedCampaigns, isLoading: campaignsLoading } = useExploreCampaigns({
+  const { campaigns: sortedCampaigns, isLoading: campaignsLoadingRaw } = useExploreCampaigns({
     statusFilter: activeCampaignFilter,
     searchQuery,
     filters: campaignFilters,
@@ -58,26 +59,41 @@ export default function ExplorePage() {
     data: creators = [],
     isLoading: creatorsLoading,
     isError: creatorsError,
-  } = useExploreCreators(activeTab === 'creators' ? activeCategoryId : null);
+  } = useExploreCreators(
+    activeTab === 'creators' ? activeCategoryId : null,
+    !isSearching && activeTab === 'creators',
+  );
 
   const {
     data: brands = [],
     isLoading: brandsLoading,
     isError: brandsError,
-  } = useExploreBrands(activeTab === 'brands' ? activeCategoryId : null);
+  } = useExploreBrands(
+    activeTab === 'brands' ? activeCategoryId : null,
+    !isSearching && activeTab === 'brands',
+  );
 
-  const filteredBrands = brands.filter((brand: ExploreBrand) => {
-    const name = brand.username || `${brand.firstName} ${brand.lastName}`;
-    return name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const {
+    data: searchResults,
+    isLoading: searchLoading,
+    isError: searchError,
+  } = useExploreSearch(searchQuery, isSearching);
 
-  const filteredCreators = creators.filter((creator: ExploreCreator) => {
-    const name = `${creator.firstName} ${creator.lastName}`;
-    return (
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      creator.username?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  const searchCampaigns = (searchResults?.campaigns.data ?? []).map(mapCampaign);
+  const searchCreators = searchResults?.creators.data ?? [];
+  const searchBrands = searchResults?.brands.data ?? [];
+
+  const displayedCampaigns = isSearching ? searchCampaigns : sortedCampaigns;
+  const displayedCreators = isSearching ? searchCreators : creators;
+  const displayedBrands = isSearching ? searchBrands : brands;
+
+  const campaignsLoading = isSearching ? searchLoading : campaignsLoadingRaw;
+  const creatorsLoadingFinal = isSearching ? searchLoading : creatorsLoading;
+  const brandsLoadingFinal = isSearching ? searchLoading : brandsLoading;
+  const creatorsErrorFinal = isSearching ? searchError : creatorsError;
+  const brandsErrorFinal = isSearching ? searchError : brandsError;
+
+  const showTabChrome = !isSearching;
 
   function handleTabChange(tab: MainTab) {
     setActiveTab(tab);
@@ -86,10 +102,10 @@ export default function ExplorePage() {
 
   const countLabel =
     activeTab === 'campaigns'
-      ? `${sortedCampaigns.length} campaign${sortedCampaigns.length !== 1 ? 's' : ''}`
+      ? `${displayedCampaigns.length} campaign${displayedCampaigns.length !== 1 ? 's' : ''}`
       : activeTab === 'brands'
-        ? `${filteredBrands.length} brand${filteredBrands.length !== 1 ? 's' : ''}`
-        : `${filteredCreators.length} creator${filteredCreators.length !== 1 ? 's' : ''}`;
+        ? `${displayedBrands.length} brand${displayedBrands.length !== 1 ? 's' : ''}`
+        : `${displayedCreators.length} creator${displayedCreators.length !== 1 ? 's' : ''}`;
 
   return (
     <div className="flex flex-col gap-0 w-full pb-16 select-none">
@@ -107,7 +123,7 @@ export default function ExplorePage() {
       <ExploreSearchAndFilter
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        showFilterButton={activeTab === 'campaigns'}
+        showFilterButton={showTabChrome && activeTab === 'campaigns'}
         onFilterClick={() => {
           setFilterModalKey((prev) => prev + 1);
           setIsFilterModalOpen(true);
@@ -116,17 +132,17 @@ export default function ExplorePage() {
 
       <MainTabs active={activeTab} onChange={handleTabChange} />
 
-      {activeTab === 'campaigns' && (
+      {showTabChrome && activeTab === 'campaigns' && (
         <CampaignFilterPillRow active={activeCampaignFilter} onChange={setActiveCampaignFilter} />
       )}
-      {activeTab === 'brands' && (
+      {showTabChrome && activeTab === 'brands' && (
         <CategoryPillRow
           categories={industries ?? []}
           activeId={activeCategoryId}
           onChange={setActiveCategoryId}
         />
       )}
-      {activeTab === 'creators' && (
+      {showTabChrome && activeTab === 'creators' && (
         <CategoryPillRow
           categories={niches ?? []}
           activeId={activeCategoryId}
@@ -138,16 +154,16 @@ export default function ExplorePage() {
 
       {activeTab === 'campaigns' && (
         <CampaignsGrid
-          campaigns={sortedCampaigns}
+          campaigns={displayedCampaigns}
           isLoading={campaignsLoading}
           onSelect={setSelectedCampaign}
         />
       )}
       {activeTab === 'brands' && (
         <BrandsList
-          brands={filteredBrands}
-          isLoading={brandsLoading}
-          isError={brandsError}
+          brands={displayedBrands}
+          isLoading={brandsLoadingFinal}
+          isError={brandsErrorFinal}
           onView={(b) => {
             setSelectedBrandId(b.id);
             setBrandSheetOpen(true);
@@ -156,9 +172,9 @@ export default function ExplorePage() {
       )}
       {activeTab === 'creators' && (
         <CreatorsList
-          creators={filteredCreators}
-          isLoading={creatorsLoading}
-          isError={creatorsError}
+          creators={displayedCreators}
+          isLoading={creatorsLoadingFinal}
+          isError={creatorsErrorFinal}
           onView={(c) => {
             setSelectedCreatorId(c.id);
             setCreatorSheetOpen(true);

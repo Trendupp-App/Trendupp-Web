@@ -150,19 +150,34 @@ export function useApplication(id: string | null) {
   });
 }
 
-export function useReviewApplication(
+export function useValidateSelection(campaignId: string) {
+  return useMutation({
+    mutationFn: (applicationIds: string[]) =>
+      campaignApi.validateSelection(campaignId, applicationIds).then((r) => r.data),
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not check budget for this selection');
+    },
+  });
+}
+
+export function useReviewApplicationsBatch(
   campaignId: string,
-  onSuccess: (appId: string, status: 'accepted' | 'rejected') => void,
+  onSuccess: (applicationIds: string[], status: 'accepted' | 'rejected') => void,
 ) {
   return useMutation({
-    mutationFn: ({ appId, status }: { appId: string; status: 'accepted' | 'rejected' }) =>
-      campaignApi.reviewApplication(campaignId, appId, status),
+    mutationFn: ({
+      applicationIds,
+      status,
+    }: {
+      applicationIds: string[];
+      status: 'accepted' | 'rejected';
+    }) => campaignApi.reviewApplicationsBatch(campaignId, applicationIds, status),
     onSuccess: ({ data }, variables) => {
       toast.success(data.message, { duration: 900 });
-      onSuccess(variables.appId, variables.status);
+      onSuccess(variables.applicationIds, variables.status);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not update application');
+      toast.error(err?.response?.data?.message ?? 'Could not update application(s)');
     },
   });
 }
