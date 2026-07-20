@@ -42,6 +42,7 @@ export interface Campaign extends BaseEntity {
   contentType?: ContentType;
   duration?: number;
   creatorCategoryId: string;
+  creatorCategoryIds?: string[];
   preferredPlatformIds: string[];
   currentStep: number;
   status: CampaignStatus;
@@ -153,10 +154,8 @@ export interface CreateCampaignPayload {
   title: string;
   goal: CampaignGoal;
   totalBudget: number;
-  creatorCategoryId: string;
-  // creatorCategoryIds: string[];
+  creatorCategoryIds: string[];
   creatorNicheIds: string[];
-  creatorNicheId?: string;
   timeline: string;
   preferredPlatformIds: string[];
   campaignBrief?: string;
@@ -170,10 +169,8 @@ export interface PatchCampaignStep1Payload {
   title: string;
   goal: CampaignGoal;
   totalBudget: number;
-  creatorCategoryId: string;
-  // creatorCategoryIds: string[];
+  creatorCategoryIds: string[];
   creatorNicheIds: string[];
-  creatorNicheId?: string;
   preferredPlatformIds: string[];
   timeline: string;
   coverImage?: File;

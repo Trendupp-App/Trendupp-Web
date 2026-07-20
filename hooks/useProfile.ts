@@ -238,6 +238,44 @@ export function useSubmitSupportTicket() {
   });
 }
 
+export function usePortfolio() {
+  return useQuery({
+    queryKey: ['portfolio'],
+    queryFn: () => profileApi.getPortfolio().then((r) => r.data.items),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useCreatePortfolioItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: FormData) => profileApi.createPortfolioItem(payload),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      toast.success(data?.message ?? 'Portfolio item added successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not add portfolio item');
+    },
+  });
+}
+
+export function useDeletePortfolioItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => profileApi.deletePortfolioItem(id),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      toast.success(data?.message ?? 'Portfolio item deleted');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not delete portfolio item');
+    },
+  });
+}
+
 export function useCreatorProfile(id: string | null) {
   return useQuery({
     queryKey: ['creator-profile', id],

@@ -12,7 +12,9 @@ export function mapCampaignToStep1(campaign: Campaign): Step1Input {
     title: campaign.title,
     goal: campaign.goal,
     budget: String(campaign.totalBudget),
-    creatorTierIds: campaign.creatorCategoryId ? [campaign.creatorCategoryId] : [],
+    creatorTierIds:
+      campaign.creatorCategoryIds ??
+      (campaign.creatorCategoryId ? [campaign.creatorCategoryId] : []),
     creatorNicheIds:
       campaign.creatorNicheIds ?? (campaign.creatorNicheId ? [campaign.creatorNicheId] : []),
     platforms: campaign.preferredPlatformIds ?? campaign.preferredPlatforms?.map((p) => p.id) ?? [],

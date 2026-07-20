@@ -58,8 +58,12 @@ import {
   useSupportTicketCategories,
   useSupportTickets,
   useSubmitSupportTicket,
+  usePortfolio,
+  useCreatePortfolioItem,
+  useDeletePortfolioItem,
   type SupportTicket,
 } from '@/hooks/useProfile';
+import type { PortfolioItemDto } from '@/types/profile';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -68,12 +72,6 @@ interface Platform {
   followers: string;
   icon: 'instagram' | 'tiktok' | 'youtube' | 'twitter';
   connected: boolean;
-}
-
-interface PortfolioItem {
-  id: number | string;
-  image: string;
-  brandName: string;
 }
 
 interface CreatorProfile {
@@ -533,31 +531,11 @@ export default function CreatorProfilePage() {
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updateNichesMutation = useUpdateProfileNiches();
   const updateSocialsMutation = useUpdateProfileSocials();
+  const createPortfolioItemMutation = useCreatePortfolioItem();
+  const deletePortfolioItemMutation = useDeletePortfolioItem();
 
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-
-  const completedCampaigns: PortfolioItem[] = myApps
-    ? myApps
-        .filter((app) => app.status === 'accepted')
-        .map((app) => {
-          const brandObj = app.campaign?.brand as
-            | { firstName?: string; lastName?: string; companyName?: string }
-            | undefined;
-          const brandName =
-            brandObj?.companyName ||
-            `${brandObj?.firstName || ''} ${brandObj?.lastName || ''}`.trim() ||
-            'Brand Partner';
-          return {
-            id: app.id,
-            image:
-              app.campaign?.coverImage ||
-              'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=400&q=80',
-            brandName,
-          };
-        })
-    : [];
-
-  const activePortfolio = [...portfolio, ...completedCampaigns];
+  const { data: portfolioItems, isLoading: portfolioLoading } = usePortfolio();
+  const activePortfolio: PortfolioItemDto[] = portfolioItems ?? [];
 
   const [portfolioPage, setPortfolioPage] = useState(1);
   const PORTFOLIO_ITEMS_PER_PAGE = 6;
@@ -756,7 +734,7 @@ export default function CreatorProfilePage() {
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newBrandName, setNewBrandName] = useState('');
+  const [newPortfolioTitle, setNewPortfolioTitle] = useState('');
   const [socialMediaLink, setSocialMediaLink] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
@@ -1001,33 +979,26 @@ export default function CreatorProfilePage() {
   // Action: Add Portfolio Item
   const handleAddPortfolioItem = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBrandName.trim()) return;
+    if (!newPortfolioTitle.trim()) return;
 
-    let finalImageUrl = '';
+    const fd = new FormData();
+    fd.append('title', newPortfolioTitle.trim());
+    if (socialMediaLink.trim()) fd.append('link', socialMediaLink.trim());
+    if (uploadedFile) fd.append('coverImage', uploadedFile);
 
-    if (uploadedFile) {
-      finalImageUrl = URL.createObjectURL(uploadedFile);
-    } else {
-      finalImageUrl =
-        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80'; // fallback
-    }
-
-    const newItem: PortfolioItem = {
-      id: Date.now(),
-      brandName: newBrandName,
-      image: finalImageUrl,
-    };
-
-    setPortfolio([newItem, ...portfolio]);
-    setNewBrandName('');
-    setUploadedFile(null);
-    setSocialMediaLink('');
-    setIsAddModalOpen(false);
+    createPortfolioItemMutation.mutate(fd, {
+      onSuccess: () => {
+        setNewPortfolioTitle('');
+        setUploadedFile(null);
+        setSocialMediaLink('');
+        setIsAddModalOpen(false);
+      },
+    });
   };
 
   // Action: Delete Portfolio Item
-  const handleDeletePortfolioItem = (id: number | string) => {
-    setPortfolio(portfolio.filter((item) => item.id !== id));
+  const handleDeletePortfolioItem = (id: string) => {
+    deletePortfolioItemMutation.mutate(id);
   };
 
   return (
@@ -1369,32 +1340,39 @@ export default function CreatorProfilePage() {
                     id={`portfolio-item-${item.id}`}
                   >
                     <Image
-                      src={item.image}
-                      alt={item.brandName}
+                      src={
+                        item.coverImage ||
+                        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80'
+                      }
+                      alt={item.title}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Dark gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
-                    {/* Brand Name Text at Bottom */}
+                    {/* Title Text at Bottom */}
                     <span className="absolute bottom-3 left-4 text-xs font-bold text-white tracking-wide">
-                      {item.brandName}
+                      {item.title}
                     </span>
 
                     {/* Delete Item Overlay Button */}
-                    {typeof item.id === 'number' && (
-                      <button
-                        id={`btn-delete-portfolio-${item.id}`}
-                        onClick={() => handleDeletePortfolioItem(item.id)}
-                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px]"
-                        title="Delete Item"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    )}
+                    <button
+                      id={`btn-delete-portfolio-${item.id}`}
+                      onClick={() => handleDeletePortfolioItem(item.id)}
+                      disabled={deletePortfolioItemMutation.isPending}
+                      className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px] disabled:opacity-40"
+                      title="Delete Item"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 ))}
+                {!portfolioLoading && activePortfolio.length === 0 && (
+                  <div className="col-span-2 md:col-span-3 lg:col-span-4 flex items-center justify-center py-6 text-xs text-[#9a99b0] font-light">
+                    No portfolio items yet.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1722,20 +1700,20 @@ export default function CreatorProfilePage() {
           </DialogHeader>
 
           <form onSubmit={handleAddPortfolioItem} className="flex flex-col gap-5">
-            {/* Brand Name Input */}
+            {/* Title Input */}
             <div className="flex flex-col gap-1.5">
               <label
                 className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider"
                 htmlFor="input-modal-brand"
               >
-                Brand Name
+                Title
               </label>
               <input
                 id="input-modal-brand"
                 type="text"
-                placeholder="e.g. Pepsi, Nike, Canon"
-                value={newBrandName}
-                onChange={(e) => setNewBrandName(e.target.value)}
+                placeholder="e.g. Pepsi Summer Campaign"
+                value={newPortfolioTitle}
+                onChange={(e) => setNewPortfolioTitle(e.target.value)}
                 className="w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
                 required
               />
@@ -1814,16 +1792,17 @@ export default function CreatorProfilePage() {
               <button
                 type="submit"
                 id="btn-modal-add"
-                className="flex-1 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-98 transition-all"
+                disabled={createPortfolioItemMutation.isPending}
+                className="flex-1 py-3 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-98 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Add Item
+                {createPortfolioItemMutation.isPending ? 'Adding…' : 'Add Item'}
               </button>
               <button
                 type="button"
                 id="btn-modal-cancel"
                 onClick={() => {
                   setIsAddModalOpen(false);
-                  setNewBrandName('');
+                  setNewPortfolioTitle('');
                   setUploadedFile(null);
                   setSocialMediaLink('');
                 }}

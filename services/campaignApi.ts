@@ -36,17 +36,17 @@ export const campaignApi = {
     appendIfDefined(fd, 'title', payload.title);
     appendIfDefined(fd, 'goal', payload.goal);
     appendIfDefined(fd, 'totalBudget', String(payload.totalBudget));
-    appendIfDefined(fd, 'creatorCategoryId', payload.creatorCategoryId);
-    // payload.creatorCategoryIds.forEach((id) => fd.append('creatorCategoryIds', id));
-    // payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds[]', id));
+    payload.creatorCategoryIds.forEach((id) => fd.append('creatorCategoryIds', id));
+    payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds', id));
     payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
-    appendIfDefined(fd, 'creatorNicheId', payload.creatorNicheId);
     appendIfDefined(fd, 'timeline', payload.timeline);
     appendIfDefined(fd, 'campaignBrief', payload.campaignBrief);
     appendIfDefined(fd, 'amplificationAsset', payload.amplificationAsset);
     if (payload.coverImage instanceof File) {
       fd.append('coverImage', payload.coverImage);
     }
+    console.log('createCampaign payload:', payload);
+    console.log('createCampaign FormData:', [...fd.entries()]);
     return apiClient.post<CreateCampaignResponse>('/campaigns', fd, {
       headers: { 'Content-Type': undefined },
     });
@@ -61,10 +61,8 @@ export const campaignApi = {
       appendIfDefined(fd, 'title', payload.title);
       appendIfDefined(fd, 'goal', payload.goal);
       appendIfDefined(fd, 'totalBudget', String(payload.totalBudget));
-      appendIfDefined(fd, 'creatorCategoryId', payload.creatorCategoryId);
-      appendIfDefined(fd, 'creatorNicheId', payload.creatorNicheId);
-      // payload.creatorCategoryIds.forEach((id) => fd.append('creatorCategoryIds', id));
-      // payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds[]', id));
+      payload.creatorCategoryIds.forEach((id) => fd.append('creatorCategoryIds', id));
+      payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds', id));
       payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
       appendIfDefined(fd, 'amplificationAsset', payload.amplificationAsset);
       appendIfDefined(fd, 'timeline', payload.timeline);

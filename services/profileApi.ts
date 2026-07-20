@@ -1,5 +1,6 @@
 import apiClient from '@/lib/apiClient';
 import type { AuthUser } from '@/store/authStore';
+import type { CreatePortfolioItemResponse, GetPortfolioResponse } from '@/types/profile';
 
 export interface UpdatePersonalInfoResponse extends Partial<AuthUser> {
   message?: string;
@@ -63,6 +64,15 @@ export const profileApi = {
     apiClient.post<SubmitSupportTicketResponse>('/profile/support-ticket', payload, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+
+  getPortfolio: () => apiClient.get<GetPortfolioResponse>('/portfolio'),
+
+  createPortfolioItem: (payload: FormData) =>
+    apiClient.post<CreatePortfolioItemResponse>('/portfolio', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  deletePortfolioItem: (id: string) => apiClient.delete<{ message?: string }>(`/portfolio/${id}`),
 };
 
 export interface SubmitSupportTicketResponse {

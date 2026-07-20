@@ -217,6 +217,32 @@ export interface BrandProfileDto {
   youtubeFollowers?: number;
 }
 
+export interface PortfolioItemDto {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  userId: string;
+  title: string;
+  link: string | null;
+  coverImage: string | null;
+}
+
+export interface GetPortfolioResponse {
+  items: PortfolioItemDto[];
+}
+
+export interface CreatePortfolioItemPayload {
+  title: string;
+  link?: string;
+  coverImage?: File;
+}
+
+export interface CreatePortfolioItemResponse {
+  message?: string;
+  item?: PortfolioItemDto;
+}
+
 export interface BrandCampaignSummary {
   id: string;
   title: string;
