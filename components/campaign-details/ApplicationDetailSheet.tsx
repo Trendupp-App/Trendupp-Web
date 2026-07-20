@@ -105,7 +105,7 @@ export default function ApplicationDetailSheet({
                   <span className="text-sm text-[#9a99b0]">Past work</span>
 
                   <a
-                    href={application.pastWorkLink || 'www.mywork.com'}
+                    href={application.pastWorkLink?.[0] || 'www.mywork.com'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm text-brand-pink hover:underline"

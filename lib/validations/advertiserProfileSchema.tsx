@@ -8,7 +8,6 @@ export const schema = z.object({
   city: z.string().optional(),
   website: z
     .string()
-    .url('Enter a valid URL')
     .optional()
     .or(z.literal(''))
     .refine((value) => {

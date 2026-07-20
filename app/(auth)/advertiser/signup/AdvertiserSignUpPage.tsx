@@ -181,7 +181,7 @@ export default function AdvertiserSignupPage() {
 
                 <InstagramSignInButton
                   ref={instagramRef}
-                  role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
+                  role={roles?.find((r) => r.name === 'brand')?.id ?? ''}
                   acceptedTerms={!!termsAccepted}
                   acceptedPromotions={!!acceptPromotions}
                   onRequireTerms={() => requestTerms('instagram')}
@@ -205,7 +205,7 @@ export default function AdvertiserSignupPage() {
                       <User size={15} className={iconCls} />
                       <Input
                         {...register('brandName')}
-                        placeholder="Enter last name"
+                        placeholder="Enter Brand Name"
                         className={`pl-9 ${inputCls}`}
                       />
                     </div>

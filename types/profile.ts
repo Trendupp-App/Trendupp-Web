@@ -34,25 +34,6 @@ export interface UpdatePersonalInfoResponse {
   onboardingStepsCompleted: OnboardingStepsCompleted;
 }
 
-export interface UpdateProfileSocialsPayload {
-  instagramUsername?: string | null;
-  instagramFollowers?: number;
-  tiktokUsername?: string | null;
-  tiktokFollowers?: number;
-  youtubeUsername?: string | null;
-  youtubeFollowers?: number;
-  twitterUsername?: string | null;
-  twitterFollowers?: number;
-}
-
-export interface UpdateProfileSocialsResponse {
-  message: string;
-  user: {
-    socialsConnected: SocialsConnected;
-    assignedTier: string | null;
-  };
-}
-
 export interface NotificationSettings {
   newCampaigns: boolean;
   applicationUpdates: boolean;

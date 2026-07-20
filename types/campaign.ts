@@ -133,7 +133,7 @@ export interface CampaignApplicationDto {
   campaignId: string;
   creatorId: string;
   contentIdea: string;
-  pastWorkLink: string;
+  pastWorkLink: string[];
   primaryPlatformId: string;
   secondaryPlatformId: string;
   feeRequest: number;

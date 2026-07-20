@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import {
   profileApi,
-  UpdateProfileSocialsPayload,
   UpdateProfilePayoutPayload,
   NotificationSettings,
   SecuritySettings,
@@ -70,29 +69,6 @@ export function useUpdateProfileNiches() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update niches');
-    },
-  });
-}
-
-export function useUpdateProfileSocials() {
-  const updateUser = useAuthStore((s) => s.updateUser);
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: UpdateProfileSocialsPayload) => profileApi.updateSocials(payload),
-    onSuccess: ({ data }) => {
-      const u = data?.user || data;
-      // Sync global auth store
-      updateUser({
-        socialsConnected: u?.socialsConnected,
-        assignedTier: u?.assignedTier,
-      });
-      // Invalidate queries to refresh view
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      toast.success(data?.message ?? 'Social accounts updated successfully');
-    },
-    onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not update social connections');
     },
   });
 }

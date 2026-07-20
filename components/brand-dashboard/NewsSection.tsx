@@ -2,110 +2,48 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useNewsList } from '@/hooks/useNews';
+import { formatRelativeTime } from '@/utils/Utilities';
+import type { NewsArticle } from '@/types/news';
 
-interface NewsArticle {
-  id: string;
-  title: string;
-  source: string;
-  timeAgo: string;
-  imageSrc?: string;
-  category: string;
-  href?: string;
-}
+const FALLBACK_COVER_IMAGE =
+  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80';
 
-const DUMMY_NEWS: NewsArticle[] = [
-  {
-    id: '1',
-    title: 'TikTok Nigeria launches creator fund — ₦500M available for Q3',
-    source: 'Trendupp Africa',
-    timeAgo: '2 hours ago',
-    category: 'Industry',
-    href: '/brand/news/tiktok-nigeria-creator-fund',
-    imageSrc: '/dashboard/img2.jpg',
-  },
-  {
-    id: '2',
-    title: 'Meta unveils new creator monetisation tools for African markets',
-    source: 'Trendupp Africa',
-    timeAgo: '5 hours ago',
-    category: 'Platform',
-    href: '/brand/news/meta-creator-tools',
-    imageSrc: '/dashboard/img2.jpg',
-  },
-  {
-    id: '3',
-    title: 'How micro-influencers are driving 3x ROI for Nigerian brands in 2025',
-    source: 'Trendupp Africa',
-    timeAgo: '1 day ago',
-    category: 'Insight',
-    href: '/brand/news/micro-influencer-roi',
-    imageSrc: '/dashboard/img2.jpg',
-  },
-];
-
-const CATEGORY_STYLES: Record<string, string> = {
-  Industry: 'bg-brand-pink text-white',
-  Platform: 'bg-purple-500 text-white',
-  Insight: 'bg-blue-500 text-white',
-};
-
-interface NewsCardProps {
-  article: NewsArticle;
-}
-
-function NewsCard({ article }: NewsCardProps) {
-  const categoryClass = CATEGORY_STYLES[article.category] ?? 'bg-gray-500 text-white';
-
+function NewsCard({ article }: { article: NewsArticle }) {
   return (
-    <a
-      href={article.href ?? '#'}
-      className="block group"
-      target={article.href?.startsWith('http') ? '_blank' : undefined}
-      rel={article.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
-    >
+    <div>
       <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-[#1a1a2e] mb-3">
-        {article.imageSrc && (
-          <Image
-            src={article.imageSrc}
-            alt={article.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        )}
-        <span
-          className={cn(
-            'absolute bottom-2.5 right-2.5 text-[11px] font-semibold px-2.5 py-1 rounded-full',
-            categoryClass,
-          )}
-        >
+        <Image
+          src={article.coverImage || FALLBACK_COVER_IMAGE}
+          alt={article.title}
+          fill
+          className="object-cover"
+        />
+        <span className="absolute bottom-2.5 right-2.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-brand-pink text-white">
           {article.category}
         </span>
       </div>
 
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-[#1a1a2e] leading-snug group-hover:text-brand-pink transition-colors">
-          {article.title}
-        </p>
-        <ExternalLink size={14} className="shrink-0 text-[#9a99b0] mt-0.5" />
-      </div>
+      <p className="text-sm font-semibold text-[#1a1a2e] leading-snug">{article.title}</p>
 
       <p className="text-xs text-brand-pink font-medium mt-1">
-        {article.source}
-        <span className="text-[#9a99b0] font-normal"> • {article.timeAgo}</span>
+        {article.author.firstName} {article.author.lastName}
+        <span className="text-[#9a99b0] font-normal">
+          {' '}
+          • {formatRelativeTime(article.publishedAt ?? article.createdAt)}
+        </span>
       </p>
-    </a>
+    </div>
   );
 }
 
-interface TopNewsSectionProps {
-  articles?: NewsArticle[];
-}
-
-export default function TopNewsSection({ articles = DUMMY_NEWS }: TopNewsSectionProps) {
+export default function TopNewsSection() {
   const [page, setPage] = useState(0);
+  const { data, isLoading } = useNewsList({ status: 'published', isTopNews: true, limit: 5 });
+  const articles = data?.data ?? [];
+  const activeArticle = articles[page];
 
   return (
     <div className="bg-white border border-[#f0eef8] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
@@ -119,22 +57,30 @@ export default function TopNewsSection({ articles = DUMMY_NEWS }: TopNewsSection
         </Link>
       </div>
 
-      <NewsCard article={articles[page]} />
+      {isLoading && <div className="aspect-[16/9] rounded-xl bg-[#f4f3f6] animate-pulse" />}
+
+      {!isLoading && !activeArticle && (
+        <p className="text-sm text-[#9a99b0] text-center py-6">No top news yet.</p>
+      )}
+
+      {!isLoading && activeArticle && <NewsCard article={activeArticle} />}
 
       {/* Dots */}
-      <div className="flex justify-center gap-1.5">
-        {articles.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setPage(i)}
-            className={cn(
-              'rounded-full transition-all duration-300',
-              i === page ? 'w-4 h-1.5 bg-brand-pink' : 'w-1.5 h-1.5 bg-[#e0ddef]',
-            )}
-            aria-label={`News item ${i + 1}`}
-          />
-        ))}
-      </div>
+      {articles.length > 1 && (
+        <div className="flex justify-center gap-1.5">
+          {articles.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              className={cn(
+                'rounded-full transition-all duration-300',
+                i === page ? 'w-4 h-1.5 bg-brand-pink' : 'w-1.5 h-1.5 bg-[#e0ddef]',
+              )}
+              aria-label={`News item ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -58,8 +58,11 @@ export default function ApplicationsTab({
 
   const { mutate: reviewApplicationsBatch, isPending: isReviewing } = useReviewApplicationsBatch(
     campaignId,
-    () => {
+    (applicationIds) => {
       queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      applicationIds.forEach((id) => {
+        queryClient.invalidateQueries({ queryKey: ['application', id] });
+      });
     },
   );
 

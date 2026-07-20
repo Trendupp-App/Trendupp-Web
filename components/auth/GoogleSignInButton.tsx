@@ -106,7 +106,7 @@ export const GoogleSignInButton = forwardRef<SocialSignInHandle, Props>(function
   ]);
 
   function handleClick(options?: { skipTermsCheck?: boolean }) {
-    if (disabled) return;
+    if (disabled || isExchanging || loading) return;
 
     if (!acceptedTerms && !options?.skipTermsCheck) {
       onRequireTerms?.();

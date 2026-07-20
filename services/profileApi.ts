@@ -29,9 +29,6 @@ export const profileApi = {
   updateNiches: (payload: UpdateProfileNichesPayload) =>
     apiClient.put<UpdateProfileNichesResponse>('/profile/niches', payload),
 
-  updateSocials: (payload: UpdateProfileSocialsPayload) =>
-    apiClient.patch<UpdateProfileSocialsResponse>('/profile/socials', payload),
-
   updatePayout: (payload: UpdateProfilePayoutPayload) =>
     apiClient.patch<UpdateProfilePayoutResponse>('/profile/payout', payload),
 
@@ -148,22 +145,6 @@ export interface UpdateProfilePayoutPayload {
 }
 
 export interface UpdateProfilePayoutResponse extends Partial<AuthUser> {
-  message?: string;
-  user?: Partial<AuthUser>;
-}
-
-export interface UpdateProfileSocialsPayload {
-  instagramUsername?: string | null;
-  instagramFollowers?: number | null;
-  tiktokUsername?: string | null;
-  tiktokFollowers?: number | null;
-  youtubeUsername?: string | null;
-  youtubeFollowers?: number | null;
-  twitterUsername?: string | null;
-  twitterFollowers?: number | null;
-}
-
-export interface UpdateProfileSocialsResponse extends Partial<AuthUser> {
   message?: string;
   user?: Partial<AuthUser>;
 }
