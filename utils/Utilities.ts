@@ -21,6 +21,18 @@ export function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: '$',
+  NGN: '₦',
+  GBP: '£',
+  EUR: '€',
+};
+
+export function formatCurrency(amount: number, currency = 'USD'): string {
+  const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] ?? `${currency.toUpperCase()} `;
+  return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export function estimateReadTime(html: string): string {
   const words = html
     .replace(/<[^>]*>/g, ' ')

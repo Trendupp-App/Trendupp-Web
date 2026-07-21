@@ -2,12 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { onboardingApi } from '@/services/onboardingApi';
 import { GetBanksParams } from '@/types/bank';
 
-export function useBanks(params: GetBanksParams) {
+export function useBanks(params: GetBanksParams, enabled = true) {
   return useQuery({
     queryKey: ['banks', params],
     queryFn: () => onboardingApi.getBanks(params).then((r) => r.data),
     staleTime: 1000 * 60 * 30,
     placeholderData: (prev) => prev,
+    enabled,
   });
 }
 

@@ -73,7 +73,7 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
 
       {/* Account Number */}
       <div className="flex flex-col gap-1">
-        <Label className="text-sm font-light text-[#1a1a2e]">Account number</Label>
+        <Label className="text-sm font-light text-[#1a1a2e]">Account Number</Label>
         <Input
           {...register('accountNumber')}
           placeholder="10 digit account number"
@@ -87,7 +87,7 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <Label className="text-sm font-light text-[#1a1a2e]">Account holder name</Label>
+        <Label className="text-sm font-light text-[#1a1a2e]">Account Holder Name</Label>
         <Input
           {...register('bankAccountName')}
           placeholder="Name on the bank account"

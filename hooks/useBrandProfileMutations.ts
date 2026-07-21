@@ -5,6 +5,7 @@ import { BrandProfileApi } from '@/services/BrandProfileApi';
 import { useAuthStore } from '@/store/authStore';
 import type {
   UpdatePersonalInfoPayload,
+  UpdateProfilePayoutPayload,
   NotificationSettings,
   SecuritySettings,
   ChangePasswordPayload,
@@ -33,6 +34,28 @@ export function useUpdatePersonalInfo() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not update profile');
+    },
+  });
+}
+
+export function useUpdatePayout() {
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: UpdateProfilePayoutPayload) => BrandProfileApi.updatePayout(payload),
+    onSuccess: ({ data }) => {
+      const u = data?.user || data;
+      updateUser({
+        bankName: u?.bankName,
+        bankAccountNumber: u?.bankAccountNumber,
+        bankAccountName: u?.bankAccountName,
+      });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success(data?.message ?? 'Payout details saved successfully');
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not save payout details');
     },
   });
 }

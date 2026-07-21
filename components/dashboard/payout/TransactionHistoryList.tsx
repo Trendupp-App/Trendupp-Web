@@ -1,52 +1,65 @@
 'use client';
 
+import { ArrowDownLeft, Clock, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-export interface Transaction {
-  id: string;
-  title: string;
-  brandOrDetails: string;
-  date: string;
-  amount: number;
-  type: 'credit' | 'debit';
-  status: 'available' | 'completed' | 'on_hold';
-}
+import { formatCurrency } from '@/utils/Utilities';
+import type { PayoutTransactionItem } from '@/types/payout';
 
 interface TransactionHistoryListProps {
-  transactions: Transaction[];
+  transactions: PayoutTransactionItem[];
+  currency?: string;
 }
 
-export default function TransactionHistoryList({ transactions }: TransactionHistoryListProps) {
-  const formatAmount = (amount: number, type: 'credit' | 'debit') => {
-    const formatted = amount.toLocaleString('en-US');
-    return type === 'credit' ? `+₦${formatted}` : `-₦${formatted}`;
+function getStatusBadge(status: string) {
+  const normalized = status.toLowerCase();
+  const styles: Record<string, string> = {
+    pending: 'text-[#eab308] bg-[#fef9c3]',
+    paid: 'text-[#00c37b] bg-[#00c37b]/10',
+    completed: 'text-[#00c37b] bg-[#00c37b]/10',
+    released: 'text-[#00c37b] bg-[#00c37b]/10',
+    failed: 'text-red-600 bg-red-50',
+    disputed: 'text-orange-600 bg-orange-50',
   };
 
-  const getStatusBadge = (status: Transaction['status']) => {
-    switch (status) {
-      case 'available':
-        return (
-          <span className="text-[9.5px] font-bold text-[#00c37b] bg-[#00c37b]/10 px-2 py-0.5 rounded-[4px] leading-none uppercase select-none">
-            available
-          </span>
-        );
-      case 'completed':
-        return (
-          <span className="text-[9.5px] font-bold text-[#7a7a9a] bg-[#f4f3f6] px-2 py-0.5 rounded-[4px] leading-none uppercase select-none">
-            completed
-          </span>
-        );
-      case 'on_hold':
-        return (
-          <span className="text-[9.5px] font-bold text-[#eab308] bg-[#fef9c3] px-2 py-0.5 rounded-[4px] leading-none uppercase select-none">
-            On hold
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
+  return (
+    <span
+      className={cn(
+        'text-[9.5px] font-bold px-2 py-0.5 rounded-[4px] leading-none uppercase select-none',
+        styles[normalized] ?? 'text-[#7a7a9a] bg-[#f4f3f6]',
+      )}
+    >
+      {normalized.replace(/_/g, ' ')}
+    </span>
+  );
+}
 
+function getStatusIcon(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized === 'failed' || normalized === 'disputed') {
+    return (
+      <div className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0">
+        <X size={16} className="stroke-[2.5]" />
+      </div>
+    );
+  }
+  if (normalized === 'pending') {
+    return (
+      <div className="w-9 h-9 rounded-full bg-[#fef9c3] text-[#eab308] flex items-center justify-center shrink-0">
+        <Clock size={16} className="stroke-[2.5]" />
+      </div>
+    );
+  }
+  return (
+    <div className="w-9 h-9 rounded-full bg-[#00c37b]/10 text-[#00c37b] flex items-center justify-center shrink-0">
+      <ArrowDownLeft size={16} className="stroke-[2.5]" />
+    </div>
+  );
+}
+
+export default function TransactionHistoryList({
+  transactions,
+  currency = 'USD',
+}: TransactionHistoryListProps) {
   return (
     <div className="flex flex-col gap-3.5 w-full select-none">
       {transactions.length === 0 ? (
@@ -61,59 +74,30 @@ export default function TransactionHistoryList({ transactions }: TransactionHist
           >
             {/* Left side: Icon & Title/Details */}
             <div className="flex items-center gap-3 min-w-0">
-              {tx.type === 'credit' ? (
-                <div className="w-9 h-9 rounded-full bg-[#00c37b]/10 text-[#00c37b] flex items-center justify-center shrink-0">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2.5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                    />
-                  </svg>
-                </div>
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2.5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 15.75l7.5-7.5 7.5 7.5"
-                    />
-                  </svg>
-                </div>
-              )}
+              {getStatusIcon(tx.status)}
 
               <div className="flex flex-col gap-0.5 min-w-0">
                 <h4 className="text-xs font-bold text-[#1a1a2e] leading-snug truncate">
-                  {tx.title}
+                  {tx.campaignTitle}
                 </h4>
                 <span className="text-[10px] font-light text-[#7a7a9a] leading-none truncate">
-                  {tx.brandOrDetails} • {tx.date}
+                  {tx.brandName ? `${tx.brandName} • ` : ''}
+                  {new Date(tx.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+                <span className="text-[10px] font-light text-[#9a99b0] leading-snug truncate mt-0.5">
+                  {tx.errorDetails || tx.statusDescription}
                 </span>
               </div>
             </div>
 
             {/* Right side: Amount & Status Badge */}
             <div className="flex flex-col items-end gap-1.5 shrink-0 text-right">
-              <span
-                className={cn(
-                  'text-xs font-bold leading-none',
-                  tx.type === 'credit' ? 'text-[#00c37b]' : 'text-red-500',
-                )}
-              >
-                {formatAmount(tx.amount, tx.type)}
+              <span className="text-xs font-bold leading-none text-[#1a1a2e]">
+                {formatCurrency(tx.amount, tx.currency ?? currency)}
               </span>
               {getStatusBadge(tx.status)}
             </div>

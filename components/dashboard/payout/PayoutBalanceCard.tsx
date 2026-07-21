@@ -4,23 +4,24 @@ import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/utils/Utilities';
 
 interface PayoutBalanceCardProps {
   availableBalance: number;
   hold30Day: number;
   totalEarned: number;
+  currency?: string;
 }
 
 export default function PayoutBalanceCard({
   availableBalance,
   hold30Day,
   totalEarned,
+  currency = 'USD',
 }: PayoutBalanceCardProps) {
   const [showBalance, setShowBalance] = useState(true);
 
-  const formatAmount = (amount: number) => {
-    return `₦${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-  };
+  const formatAmount = (amount: number) => formatCurrency(amount, currency);
 
   return (
     <div className="w-full bg-[#d7176f] text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_6px_24px_rgba(215,23,111,0.18)] select-none">

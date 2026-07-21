@@ -3,21 +3,16 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useUpdateProfilePayout } from '@/hooks/useProfile';
+import { usePayoutDashboard } from '@/hooks/usePayout';
 import { ArrowLeft } from 'lucide-react';
 import PayoutBalanceCard from '@/components/dashboard/payout/PayoutBalanceCard';
 import BankDetailsCard from '@/components/dashboard/payout/BankDetailsCard';
-import TransactionHistoryList, {
-  Transaction,
-} from '@/components/dashboard/payout/TransactionHistoryList';
-import EscrowReleaseList, { EscrowRelease } from '@/components/dashboard/payout/EscrowReleaseList';
+import TransactionHistoryList from '@/components/dashboard/payout/TransactionHistoryList';
+import EscrowReleaseList from '@/components/dashboard/payout/EscrowReleaseList';
 import BankChangeModal from '@/components/dashboard/payout/BankChangeModal';
 import { cn } from '@/lib/utils';
 
-// Mock Transaction History (matches mobile & desktop Figma mockups)
-const MOCK_TRANSACTIONS: Transaction[] = [];
-
-// Mock Escrow Release Data (matches mobile & desktop Figma mockups)
-const MOCK_ESCROW_RELEASES: EscrowRelease[] = [];
+const TRANSACTIONS_LIMIT = 20;
 
 export default function CreatorPayoutPage() {
   const { user } = useAuthStore();
@@ -25,6 +20,17 @@ export default function CreatorPayoutPage() {
 
   const [activeTab, setActiveTab] = useState<'transactions' | 'escrow'>('transactions');
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [transactionsPage, setTransactionsPage] = useState(1);
+
+  const { data, isLoading, isError } = usePayoutDashboard({
+    page: transactionsPage,
+    limit: TRANSACTIONS_LIMIT,
+  });
+
+  const summary = data?.summary;
+  const transactions = data?.transactions;
+  const escrow = data?.escrow;
+  const currency = summary?.currency ?? 'USD';
 
   // Fallbacks using store user details or empty defaults
   const bankName = user?.bankName || '';
@@ -65,7 +71,12 @@ export default function CreatorPayoutPage() {
         </p>
       </div>
 
-      <PayoutBalanceCard availableBalance={0.0} hold30Day={0.0} totalEarned={0.0} />
+      <PayoutBalanceCard
+        availableBalance={summary?.availableBalance ?? 0}
+        hold30Day={summary?.thirtyDayHold ?? 0}
+        totalEarned={summary?.totalEarned ?? 0}
+        currency={currency}
+      />
 
       {/* ── Tabs selector container ── */}
       <div className="bg-[#f4f3f6] rounded-2xl p-1 flex gap-1 w-full max-w-[340px] text-xs font-semibold text-[#7a7a9a]">
@@ -97,11 +108,77 @@ export default function CreatorPayoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full items-start">
         {/* Main List Section (col-span-2) */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          {activeTab === 'transactions' ? (
-            <TransactionHistoryList transactions={MOCK_TRANSACTIONS} />
-          ) : (
-            <EscrowReleaseList pendingReleases={MOCK_ESCROW_RELEASES} />
+          {isLoading && (
+            <div className="flex flex-col gap-3.5">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="h-[72px] bg-white border border-[#e8e6f0]/60 rounded-3xl animate-pulse"
+                />
+              ))}
+            </div>
           )}
+
+          {!isLoading && isError && (
+            <div className="text-center py-10 border border-dashed border-red-200 bg-red-50/40 rounded-3xl text-sm font-light text-red-500">
+              Could not load payout data. Please try again shortly.
+            </div>
+          )}
+
+          {!isLoading &&
+            !isError &&
+            (activeTab === 'transactions' ? (
+              <>
+                <TransactionHistoryList
+                  transactions={transactions?.items ?? []}
+                  currency={currency}
+                />
+                {transactions && transactions.pages > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 mt-2">
+                    <button
+                      onClick={() => setTransactionsPage((prev) => Math.max(1, prev - 1))}
+                      disabled={transactionsPage === 1}
+                      className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
+                    >
+                      &lt;
+                    </button>
+                    {Array.from({ length: transactions.pages }).map((_, idx) => {
+                      const pageNum = idx + 1;
+                      const isActive = pageNum === transactionsPage;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setTransactionsPage(pageNum)}
+                          className={cn(
+                            'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
+                            isActive
+                              ? 'bg-brand-pink text-white shadow-xs'
+                              : 'border border-[#e8e6f0] hover:bg-[#fcfbfd] text-[#7a7a9a]',
+                          )}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() =>
+                        setTransactionsPage((prev) => Math.min(transactions.pages, prev + 1))
+                      }
+                      disabled={transactionsPage === transactions.pages}
+                      className="w-8 h-8 rounded-lg border border-[#e8e6f0] hover:bg-[#fcfbfd] flex items-center justify-center text-xs font-semibold text-[#7a7a9a] disabled:opacity-40 transition-colors cursor-pointer"
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <EscrowReleaseList
+                pendingReleases={escrow?.items ?? []}
+                totalFundsYetToBeReleased={escrow?.totalFundsYetToBeReleased ?? 0}
+                currency={currency}
+              />
+            ))}
         </div>
 
         {/* Sidebar Section (col-span-1) */}

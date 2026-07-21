@@ -1,23 +1,20 @@
 'use client';
 
 import { Clock } from 'lucide-react';
-
-export interface EscrowRelease {
-  id: string;
-  title: string;
-  brand: string;
-  amount: number;
-  daysRemaining: number;
-  releaseDate: string;
-}
+import { formatCurrency } from '@/utils/Utilities';
+import type { PayoutEscrowItem } from '@/types/payout';
 
 interface EscrowReleaseListProps {
-  pendingReleases: EscrowRelease[];
+  pendingReleases: PayoutEscrowItem[];
+  totalFundsYetToBeReleased: number;
+  currency?: string;
 }
 
-export default function EscrowReleaseList({ pendingReleases }: EscrowReleaseListProps) {
-  const totalOutstanding = pendingReleases.reduce((sum, item) => sum + item.amount, 0);
-
+export default function EscrowReleaseList({
+  pendingReleases,
+  totalFundsYetToBeReleased,
+  currency = 'USD',
+}: EscrowReleaseListProps) {
   return (
     <div className="flex flex-col gap-5 w-full select-none">
       {/* 30-Day Security Hold warning */}
@@ -45,6 +42,11 @@ export default function EscrowReleaseList({ pendingReleases }: EscrowReleaseList
           pendingReleases.map((item) => {
             // Calculate progress percentage (assuming 30-day default hold window)
             const percent = Math.max(0, Math.min(100, ((30 - item.daysRemaining) / 30) * 100));
+            const releaseDateLabel = new Date(item.releaseDate).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            });
 
             return (
               <div
@@ -55,14 +57,16 @@ export default function EscrowReleaseList({ pendingReleases }: EscrowReleaseList
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <h4 className="text-xs font-bold text-[#1a1a2e] leading-snug truncate">
-                      {item.title}
+                      {item.campaignTitle}
                     </h4>
-                    <span className="text-[10px] font-light text-[#7a7a9a] leading-none truncate">
-                      {item.brand}
-                    </span>
+                    {item.brandName && (
+                      <span className="text-[10px] font-light text-[#7a7a9a] leading-none truncate">
+                        {item.brandName}
+                      </span>
+                    )}
                   </div>
                   <span className="text-xs font-bold text-[#1a1a2e] shrink-0 text-right leading-none mt-0.5">
-                    ₦{item.amount.toLocaleString('en-US')}
+                    {formatCurrency(item.amount, item.currency ?? currency)}
                   </span>
                 </div>
 
@@ -82,7 +86,7 @@ export default function EscrowReleaseList({ pendingReleases }: EscrowReleaseList
                   </span>
                   <span className="text-[#7a7a9a] font-light">
                     Access Payment:{' '}
-                    <span className="font-bold text-[#1a1a2e]">{item.releaseDate}</span>
+                    <span className="font-bold text-[#1a1a2e]">{releaseDateLabel}</span>
                   </span>
                 </div>
               </div>
@@ -98,7 +102,7 @@ export default function EscrowReleaseList({ pendingReleases }: EscrowReleaseList
             Total Outstanding Payment
           </span>
           <span className="text-xl font-extrabold text-[#d7176f] mt-0.5 leading-none">
-            ₦{totalOutstanding.toLocaleString('en-US')}
+            {formatCurrency(totalFundsYetToBeReleased, currency)}
           </span>
           <span className="text-[9.5px] font-light text-[#9a99b0] mt-1.5 leading-none">
             Across {pendingReleases.length}{' '}
