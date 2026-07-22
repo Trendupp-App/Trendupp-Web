@@ -18,9 +18,26 @@ function categoryStyles(category: string) {
   }
 }
 
-export default function NewsArticleCard({ article }: { article: NewsArticle }) {
+export default function NewsArticleCard({
+  article,
+  onClick,
+}: {
+  article: NewsArticle;
+  onClick: () => void;
+}) {
   return (
-    <div className="bg-white border border-[#e8e6f0] rounded-2xl overflow-hidden flex flex-col">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="bg-white border border-[#e8e6f0] rounded-2xl overflow-hidden flex flex-col cursor-pointer hover:shadow-sm transition-shadow"
+    >
       <div className="relative aspect-[16/10] bg-zinc-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

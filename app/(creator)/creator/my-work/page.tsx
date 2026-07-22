@@ -12,6 +12,7 @@ import CampaignFilterModal, {
   FilterState,
 } from '@/components/creator-dashboard/CampaignFilterModal';
 import RaiseDisputeModal from '@/components/dashboard/my-work/RaiseDisputeModal';
+import MyWorkPageSkeleton from '@/components/skeletons/MyWorkPageSkeleton';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useMyApplications,
@@ -327,19 +328,7 @@ export default function MyWorkPage() {
     });
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-6 w-full pb-12 select-none animate-pulse">
-        <div className="flex flex-col gap-1">
-          <div className="h-8 w-32 bg-gray-200 rounded-md"></div>
-          <div className="h-4 w-48 bg-gray-100 rounded-md mt-1"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="h-80 bg-gray-50 border border-gray-100 rounded-[32px]"></div>
-          ))}
-        </div>
-      </div>
-    );
+    return <MyWorkPageSkeleton />;
   }
 
   return (

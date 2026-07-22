@@ -1,7 +1,11 @@
-import type { PayoutTransaction } from '@/types/payout';
+import type { BrandTransactionItem } from '@/types/payout';
 import TransactionListItem from './TransactionListItem';
 
-export default function TransactionsTab({ transactions }: { transactions: PayoutTransaction[] }) {
+export default function TransactionsTab({
+  transactions,
+}: {
+  transactions: BrandTransactionItem[];
+}) {
   if (transactions.length === 0) {
     return <div className="py-16 text-center text-sm text-[#9a99b0]">No transactions yet.</div>;
   }

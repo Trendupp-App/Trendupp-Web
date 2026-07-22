@@ -9,6 +9,7 @@ import { BankCombobox } from '@/shared/BankComboBox';
 import { X, Check, Landmark, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { useBanks } from '@/hooks/useOnboardingQueries';
 
 interface BankChangeModalProps {
   isOpen: boolean;
@@ -54,6 +55,19 @@ export default function BankChangeModal({
     };
   }, []);
 
+  // The backend never sends back the bank's id, only its display name, so when a
+  // creator already has a bank on file we have to re-resolve its id by name — otherwise
+  // bankId stays empty and Continue silently no-ops unless they re-pick the bank.
+  const { data: matchedBanks } = useBanks(
+    { search: initialBankName },
+    !!initialBankName && !bankId,
+  );
+
+  const resolvedBankId =
+    bankId ||
+    matchedBanks?.find((bank) => bank.name.toLowerCase() === initialBankName.toLowerCase())?.id ||
+    '';
+
   const resolveAccount = (num: string, name: string) => {
     if (resolveTimerRef.current) {
       clearTimeout(resolveTimerRef.current);
@@ -87,14 +101,14 @@ export default function BankChangeModal({
   };
 
   const handleContinue = () => {
-    if (isVerified && bankId) {
+    if (isVerified && resolvedBankId) {
       setStep('confirm');
     }
   };
 
   const handleSave = () => {
     onSave({
-      bankId,
+      bankId: resolvedBankId,
       bankName,
       accountNumber,
       accountName,

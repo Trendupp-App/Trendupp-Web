@@ -7,13 +7,25 @@ import { cn } from '@/lib/utils';
 import { useNewsList } from '@/hooks/useNews';
 import { formatRelativeTime } from '@/utils/Utilities';
 import type { NewsArticle } from '@/types/news';
+import NewsDetailsDrawer from '@/components/dashboard/news/NewsDetailsDrawer';
 
 const FALLBACK_COVER_IMAGE =
   'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80';
 
-function NewsCard({ article }: { article: NewsArticle }) {
+function NewsCard({ article, onClick }: { article: NewsArticle; onClick: () => void }) {
   return (
-    <div>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="cursor-pointer"
+    >
       <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-[#1a1a2e] mb-3">
         <Image
           src={article.coverImage || FALLBACK_COVER_IMAGE}
@@ -41,9 +53,16 @@ function NewsCard({ article }: { article: NewsArticle }) {
 
 export default function TopNewsSection() {
   const [page, setPage] = useState(0);
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { data, isLoading } = useNewsList({ status: 'published', isTopNews: true, limit: 5 });
   const articles = data?.data ?? [];
   const activeArticle = articles[page];
+
+  const handleOpenArticle = (article: NewsArticle) => {
+    setSelectedArticle(article);
+    setIsDrawerOpen(true);
+  };
 
   return (
     <div className="bg-white border border-[#f0eef8] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
@@ -63,7 +82,9 @@ export default function TopNewsSection() {
         <p className="text-sm text-[#9a99b0] text-center py-6">No top news yet.</p>
       )}
 
-      {!isLoading && activeArticle && <NewsCard article={activeArticle} />}
+      {!isLoading && activeArticle && (
+        <NewsCard article={activeArticle} onClick={() => handleOpenArticle(activeArticle)} />
+      )}
 
       {/* Dots */}
       {articles.length > 1 && (
@@ -81,6 +102,12 @@ export default function TopNewsSection() {
           ))}
         </div>
       )}
+
+      <NewsDetailsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        article={selectedArticle}
+      />
     </div>
   );
 }

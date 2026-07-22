@@ -4,12 +4,16 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useNewsList } from '@/hooks/useNews';
 import NewsArticleCard from './NewsArticleCard';
+import NewsDetailsDrawer from '@/components/dashboard/news/NewsDetailsDrawer';
+import type { NewsArticle } from '@/types/news';
 
 const NEWS_LIMIT = 12;
 
 export default function NewsExploreTab() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [knownCategories, setKnownCategories] = useState<string[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const { data, isLoading } = useNewsList({
     status: 'published',
@@ -91,10 +95,23 @@ export default function NewsExploreTab() {
       {!isLoading && articles.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {articles.map((article) => (
-            <NewsArticleCard key={article.id} article={article} />
+            <NewsArticleCard
+              key={article.id}
+              article={article}
+              onClick={() => {
+                setSelectedArticle(article);
+                setIsDrawerOpen(true);
+              }}
+            />
           ))}
         </div>
       )}
+
+      <NewsDetailsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        article={selectedArticle}
+      />
     </div>
   );
 }
