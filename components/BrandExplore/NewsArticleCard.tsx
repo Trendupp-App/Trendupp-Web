@@ -27,7 +27,15 @@ export default function NewsArticleCard({
 }) {
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       className="bg-white border border-[#e8e6f0] rounded-2xl overflow-hidden flex flex-col cursor-pointer hover:shadow-sm transition-shadow"
     >
       <div className="relative aspect-[16/10] bg-zinc-100">

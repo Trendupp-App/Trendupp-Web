@@ -14,7 +14,18 @@ const FALLBACK_COVER_IMAGE =
 
 function NewsCard({ article, onClick }: { article: NewsArticle; onClick: () => void }) {
   return (
-    <div onClick={onClick} className="cursor-pointer">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="cursor-pointer"
+    >
       <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-[#1a1a2e] mb-3">
         <Image
           src={article.coverImage || FALLBACK_COVER_IMAGE}
