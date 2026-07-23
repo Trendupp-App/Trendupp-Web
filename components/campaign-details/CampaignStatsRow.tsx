@@ -1,8 +1,5 @@
 import type { Campaign } from '@/types/campaign';
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
+import { formatCurrency } from '@/utils/Utilities';
 
 function daysLeft(timeline?: string): number {
   if (!timeline) return 0;
@@ -21,7 +18,9 @@ export default function CampaignStatsRow({ campaign }: CampaignStatsRowProps) {
     <div className="border border-[#e8e6f0] rounded-xl p-5 flex items-center justify-around gap-4 mb-6">
       <div>
         <p className="text-xs text-[#9a99b0]">Budget range</p>
-        <p className="text-sm font-semibold text-brand-pink mt-0.5">{fmt(campaign.totalBudget)}</p>
+        <p className="text-sm font-semibold text-brand-pink mt-0.5">
+          {formatCurrency(campaign.totalBudget, campaign.currency ?? 'NGN')}
+        </p>
       </div>
       <div>
         <p className="text-xs text-[#9a99b0]">Deadline</p>

@@ -24,10 +24,6 @@ export const stepDetailsSchema = z
     platforms: z.array(z.string()).min(1, 'Select at least one platform'),
     creatorNicheIds: z.array(z.string()).min(1, 'Please select at least one niche'),
     // creatorNicheId: z.string().min(1, 'Please select a niche'),
-    timeline: z
-      .string()
-      .min(1, 'Timeline is required')
-      .refine((v) => !isNaN(Date.parse(v)), 'Enter a valid date'),
     amplificationAsset: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -51,9 +47,9 @@ const listItemSchema = z.object({ value: z.string() });
 export const stepCampaignBriefSchema = z.object({
   brief: z.string().min(1, 'Campaign brief is required'),
   deliverables: z.array(listItemSchema).min(1, 'Add at least one deliverable'),
-  contentDirection: z.array(listItemSchema),
-  dos: z.array(listItemSchema),
-  donts: z.array(listItemSchema),
+  contentDirection: z.array(listItemSchema).min(1, 'Add at least one content direction point'),
+  dos: z.array(listItemSchema).min(1, 'Add at least one do'),
+  donts: z.array(listItemSchema).min(1, "Add at least one don't"),
 });
 
 export type Step2Values = z.infer<typeof stepCampaignBriefSchema>;

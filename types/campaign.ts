@@ -156,7 +156,6 @@ export interface CreateCampaignPayload {
   totalBudget: number;
   creatorCategoryIds: string[];
   creatorNicheIds: string[];
-  timeline: string;
   preferredPlatformIds: string[];
   campaignBrief?: string;
   contentGuidelines?: ContentGuidelines;
@@ -172,7 +171,6 @@ export interface PatchCampaignStep1Payload {
   creatorCategoryIds: string[];
   creatorNicheIds: string[];
   preferredPlatformIds: string[];
-  timeline: string;
   coverImage?: File;
   amplificationAsset?: string;
 }
@@ -185,12 +183,6 @@ export interface PatchCampaignStep2Payload {
   contentGuidelines: ContentGuidelines;
 }
 
-export interface PatchCampaignStep3Payload {
-  currentStep: 3;
-  usageRights: string;
-  // successLooksLike: string;
-}
-
 export interface PatchCampaignStep4Payload {
   currentStep: 4;
   [key: string]: unknown;
@@ -199,7 +191,6 @@ export interface PatchCampaignStep4Payload {
 export type PatchCampaignPayload =
   | PatchCampaignStep1Payload
   | PatchCampaignStep2Payload
-  | PatchCampaignStep3Payload
   | PatchCampaignStep4Payload;
 
 // ── Responses ─────────────────────────────────────────────────────────────────

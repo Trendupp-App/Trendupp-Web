@@ -2,12 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Eye } from 'lucide-react';
 import CompletenessCard from '@/components/creator-dashboard/CompletenessCard';
 import BannerCarousel from '@/components/creator-dashboard/BannerCarousel';
-import StatCard from '@/components/creator-dashboard/StatCard';
 import CampaignCard from '@/components/creator-dashboard/CampaignCard';
-import AnalyticsDrawer from '@/components/creator-dashboard/AnalyticsDrawer';
 import CampaignDetailsDrawer, {
   MappedCampaign,
 } from '@/components/creator-dashboard/CampaignDetailsDrawer';
@@ -16,6 +13,7 @@ import { useCampaigns } from '@/hooks/useCampaign';
 import { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { formatCurrency } from '@/utils/Utilities';
 
 type FilterType = 'all' | 'live' | 'past';
 
@@ -24,7 +22,6 @@ export default function CreatorDashboardPage() {
   const { user } = useAuthStore();
   const isProfileCompleted = user?.onboardingPercentage === 100;
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
 
   // Fetch campaigns from backend
@@ -45,7 +42,7 @@ export default function CreatorDashboardPage() {
     id: c.id,
     title: c.title,
     brand: c.brand?.username || 'Unknown Brand',
-    budget: `₦${c.totalBudget.toLocaleString()}`,
+    budget: formatCurrency(c.totalBudget, c.currency ?? 'NGN'),
     budgetMin: c.totalBudget,
     budgetMax: c.totalBudget,
     daysLeft: getDaysLeft(c.timeline || ''),
@@ -97,61 +94,18 @@ export default function CreatorDashboardPage() {
         </div>
       </div>
 
-      {/* Row 1: Banner & Stats Grid (Conditional Layout) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Left Column: CompletenessCard or BannerCarousel */}
-        <div className="lg:col-span-5 flex flex-col justify-between h-full min-h-[256px]">
-          {isProfileCompleted ? (
-            <BannerCarousel />
-          ) : (
+      {/* Row 1: Banner / Completeness */}
+      <div className={cn('grid gap-6 items-stretch', !isProfileCompleted && 'lg:grid-cols-12')}>
+        {!isProfileCompleted && (
+          <div className="lg:col-span-5">
             <CompletenessCard
               percentage={user?.onboardingPercentage || 0}
               onCompleteClick={() => router.push('/onboard')}
             />
-          )}
-        </div>
-
-        {/* Right Column: Stats Grid (Conditional Values/Icons) */}
-        <div className="lg:col-span-7 hidden lg:grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {isProfileCompleted ? (
-            <>
-              <StatCard
-                amount="0"
-                label="Profile Views"
-                color="pink"
-                icon={Eye}
-                onClick={() => setIsAnalyticsOpen(true)}
-              />
-              <StatCard
-                amount="0"
-                label="Post view"
-                color="pink"
-                icon={Eye}
-                onClick={() => setIsAnalyticsOpen(true)}
-              />
-              <StatCard
-                amount="0.0%"
-                label="Avg. Engagement"
-                color="green"
-                icon={Users}
-                onClick={() => setIsAnalyticsOpen(true)}
-              />
-              <StatCard
-                amount="₦0"
-                label="Total money earned"
-                color="yellow"
-                icon="₦"
-                onClick={() => setIsAnalyticsOpen(true)}
-              />
-            </>
-          ) : (
-            <>
-              <StatCard amount="₦ -- -- --" label="Total money earned" color="pink" icon="₦" />
-              <StatCard amount="₦ -- -- --" label="Total money earned" color="blue" icon="₦" />
-              <StatCard amount="₦ -- -- --" label="Total money earned" color="yellow" icon="₦" />
-              <StatCard amount="₦ -- -- --" label="Total money earned" color="green" icon="₦" />
-            </>
-          )}
+          </div>
+        )}
+        <div className={cn(!isProfileCompleted && 'lg:col-span-7')}>
+          <BannerCarousel />
         </div>
       </div>
 
@@ -288,7 +242,6 @@ export default function CreatorDashboardPage() {
           </div>
         )}
       </div>
-      <AnalyticsDrawer isOpen={isAnalyticsOpen} onClose={() => setIsAnalyticsOpen(false)} />
       <CampaignDetailsDrawer
         isOpen={!!selectedCampaign}
         onClose={() => setSelectedCampaign(null)}

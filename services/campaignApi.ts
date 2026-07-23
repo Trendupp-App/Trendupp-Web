@@ -39,7 +39,6 @@ export const campaignApi = {
     payload.creatorCategoryIds.forEach((id) => fd.append('creatorCategoryIds', id));
     payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds', id));
     payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
-    appendIfDefined(fd, 'timeline', payload.timeline);
     appendIfDefined(fd, 'campaignBrief', payload.campaignBrief);
     appendIfDefined(fd, 'amplificationAsset', payload.amplificationAsset);
     if (payload.coverImage instanceof File) {
@@ -65,7 +64,6 @@ export const campaignApi = {
       payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds', id));
       payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
       appendIfDefined(fd, 'amplificationAsset', payload.amplificationAsset);
-      appendIfDefined(fd, 'timeline', payload.timeline);
       if (payload.coverImage instanceof File) {
         fd.append('coverImage', payload.coverImage);
       }
@@ -77,11 +75,6 @@ export const campaignApi = {
       payload.contentDirection.forEach((v) => appendIfDefined(fd, 'contentDirection', v));
       // contentGuidelines must be JSON-stringified inside form-data
       fd.append('contentGuidelines', JSON.stringify(payload.contentGuidelines));
-    }
-
-    if (payload.currentStep === 3) {
-      appendIfDefined(fd, 'usageRights', payload.usageRights);
-      // appendIfDefined(fd, 'successLooksLike', payload.successLooksLike);
     }
 
     return apiClient.patch<PatchCampaignResponse>(`/campaigns/${id}`, fd, {

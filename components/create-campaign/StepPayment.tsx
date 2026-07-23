@@ -111,7 +111,7 @@ export default function StepPayment({ breakdown, onBack, onPay, isLoading }: Ste
           />
           <span className="text-sm font-light text-[#4a4a6a] leading-relaxed">
             I agree to receive promotional emails, update, product announcement, and campaign
-            opportunities from Trendupp
+            opportunities from Trendupp <span className="text-red-500">*</span>
           </span>
         </label>
 

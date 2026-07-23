@@ -8,12 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Link2, AlertCircle } from 'lucide-react';
 import { WorkCampaign } from '@/components/creator-dashboard/WorkCampaignCard';
+import { useCyclingText } from '@/hooks/useCyclingText';
+
+const SUBMITTING_MESSAGES = ['Submitting…', 'Uploading link…', 'Almost done…'];
 
 interface SubmitContentModalProps {
   isOpen: boolean;
   campaign: WorkCampaign | null;
   onClose: () => void;
   onSubmit: (link: string) => void;
+  isSubmitting?: boolean;
 }
 
 export default function SubmitContentModal({
@@ -21,11 +25,17 @@ export default function SubmitContentModal({
   campaign,
   onClose,
   onSubmit,
+  isSubmitting = false,
 }: SubmitContentModalProps) {
   const [link, setLink] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const loadingText = useCyclingText(isSubmitting, SUBMITTING_MESSAGES);
+
+  function handleClose() {
+    if (isSubmitting) return;
+    onClose();
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,20 +54,13 @@ export default function SubmitContentModal({
       return;
     }
 
-    setIsSubmitting(true);
-    setTimeout(() => {
-      onSubmit(link);
-      setLink('');
-      setNote('');
-      setIsSubmitting(false);
-      onClose();
-    }, 1200);
+    onSubmit(link);
   };
 
   const isLinkFilled = link.trim().length > 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         showCloseButton={false}
         className="sm:max-w-[420px] max-h-[85vh] rounded-[24px] bg-white border border-[#e8e6f0]/60 shadow-xl select-none flex flex-col p-0 gap-0 overflow-hidden"
@@ -73,8 +76,9 @@ export default function SubmitContentModal({
             </p>
           </div>
           <button
-            onClick={onClose}
-            className="w-7 h-7 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#7a7a9a] transition-colors border-none cursor-pointer shrink-0"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="w-7 h-7 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#7a7a9a] transition-colors border-none cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <X size={15} />
           </button>
@@ -154,7 +158,7 @@ export default function SubmitContentModal({
             disabled={isSubmitting || !isLinkFilled}
             className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold text-xs h-11 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/45 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit for Brand Review'}
+            {isSubmitting ? loadingText : 'Submit for Brand Review'}
           </Button>
         </div>
       </DialogContent>

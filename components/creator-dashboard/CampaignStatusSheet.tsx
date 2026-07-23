@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkCampaign } from './WorkCampaignCard';
+import { formatCurrency } from '@/utils/Utilities';
 
 interface CampaignStatusSheetProps {
   campaign: WorkCampaign | null;
@@ -236,7 +237,7 @@ export default function CampaignStatusSheet({
                     Payment Released
                   </span>
                   <span className="text-lg font-extrabold text-[#16a34a] mt-0.5">
-                    ₦{(campaign.actualAmount ?? 250000).toLocaleString()}
+                    {formatCurrency(campaign.actualAmount ?? 250000, campaign.currency ?? 'NGN')}
                   </span>
                 </div>
                 <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-2xl p-4 flex flex-col gap-1 text-left">

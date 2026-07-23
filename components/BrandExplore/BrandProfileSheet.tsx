@@ -7,6 +7,7 @@ import CreatorProfileSkeleton from '@/components/skeletons/CreatorProfileSkeleto
 import EmptyState from '@/shared/EmptyState';
 import UserAvatar from '@/shared/UserAvatar';
 import { PLATFORMS } from '@/shared/Socials';
+import { formatCurrency } from '@/utils/Utilities';
 
 interface BrandProfileSheetProps {
   brandId: string | null;
@@ -16,10 +17,6 @@ interface BrandProfileSheetProps {
 
 function getPlatformMeta(key: string) {
   return PLATFORMS.find((p) => p.connectedKey === key);
-}
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
 }
 
 const LIVE_STATUSES = new Set(['live', 'active']);
@@ -193,7 +190,7 @@ export default function BrandProfileSheet({ brandId, open, onOpenChange }: Brand
                           </p>
                           <p className="text-[10px] text-[#7a7a9a] mt-0.5">{campaign.goal}</p>
                           <p className="text-[10px] font-semibold text-brand-pink mt-0.5">
-                            {fmt(campaign.totalBudget)}
+                            {formatCurrency(campaign.totalBudget, campaign.currency ?? 'NGN')}
                           </p>
                         </div>
                       </div>

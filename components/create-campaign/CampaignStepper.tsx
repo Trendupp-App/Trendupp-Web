@@ -11,9 +11,8 @@ export type CampaignStep = {
 export const CAMPAIGN_STEPS: CampaignStep[] = [
   { id: 1, label: 'Details' },
   { id: 2, label: 'Campaign brief' },
-  { id: 3, label: 'Success' },
-  { id: 4, label: 'Review' },
-  { id: 5, label: 'Payment' },
+  { id: 3, label: 'Review' },
+  { id: 4, label: 'Payment' },
 ];
 
 interface CampaignStepperProps {

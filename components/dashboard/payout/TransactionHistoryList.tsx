@@ -100,6 +100,18 @@ export default function TransactionHistoryList({
                 {formatCurrency(tx.amount, tx.currency ?? currency)}
               </span>
               {getStatusBadge(tx.status)}
+              {tx.releaseDate && (
+                <span className="text-[9.5px] font-light text-[#9a99b0] leading-none">
+                  Release:{' '}
+                  <span className="font-semibold text-[#7a7a9a]">
+                    {new Date(tx.releaseDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </span>
+              )}
             </div>
           </div>
         ))

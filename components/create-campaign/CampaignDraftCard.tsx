@@ -19,8 +19,8 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-// Each draft has 4 sections (currentStep maxes at 4 before submit triggers step 5)
-const TOTAL_SECTIONS = 4;
+// Each draft has 3 sections (currentStep maxes at 3 before submit triggers step 4)
+const TOTAL_SECTIONS = 3;
 
 export default function DraftCampaignCard({ campaign, onDelete }: DraftCampaignCardProps) {
   const router = useRouter();

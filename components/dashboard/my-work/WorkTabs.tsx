@@ -1,6 +1,5 @@
 'use client';
 
-import { SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type PrimaryTab = 'Active' | 'Applied' | 'Done';
@@ -28,7 +27,6 @@ interface WorkTabsProps {
       Rejected: number;
     };
   };
-  onFilterClick?: () => void;
 }
 
 export default function WorkTabs({
@@ -37,7 +35,6 @@ export default function WorkTabs({
   activeSubFilter,
   onSubFilterChange,
   counts,
-  onFilterClick,
 }: WorkTabsProps) {
   const activeSubPills = [
     { label: 'All', count: counts.activeSub.All },
@@ -102,8 +99,8 @@ export default function WorkTabs({
         </button>
       </div>
 
-      {/* Secondary Sub-Pills & Filter Button */}
-      <div className="flex items-center justify-between gap-3 overflow-x-auto scrollbar-hide py-1 w-full shrink-0">
+      {/* Secondary Sub-Pills */}
+      <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1 w-full shrink-0">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
           {activeTab === 'Active' &&
             activeSubPills.map((pill) => (
@@ -137,17 +134,6 @@ export default function WorkTabs({
               </button>
             ))}
         </div>
-
-        {/* Filter Button */}
-        {activeTab !== 'Done' && (
-          <button
-            onClick={onFilterClick}
-            className="px-4 py-2 h-9 text-xs font-semibold rounded-full bg-white text-[#7a7a9a] border border-[#e8e6f0]/70 hover:border-brand-pink/30 hover:text-brand-pink transition-all focus:outline-none flex items-center gap-1.5 shrink-0 cursor-pointer"
-          >
-            <SlidersHorizontal size={13} className="text-[#9a99b0] group-hover:text-brand-pink" />
-            <span>Filter</span>
-          </button>
-        )}
       </div>
     </div>
   );

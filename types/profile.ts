@@ -229,6 +229,7 @@ export interface BrandCampaignSummary {
   title: string;
   goal: string;
   totalBudget: number;
+  currency?: string;
   coverImage: string | null;
   status: 'draft' | 'submitted' | 'live' | 'active' | 'completed' | string;
   timeline: string;

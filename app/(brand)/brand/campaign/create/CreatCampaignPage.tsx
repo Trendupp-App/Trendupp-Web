@@ -6,7 +6,6 @@ import CampaignPageShell from '@/components/create-campaign/CampaignPageShell';
 import StepDetails from '@/components/create-campaign/StepDetails';
 import { type Step2Values } from '@/lib/validations/createCampaignSchemas';
 import StepCampaignBrief from '@/components/create-campaign/StepCampaignBrief';
-import StepSuccess, { type Step3Values } from '@/components/create-campaign/StepSuccess';
 import StepReview from '@/components/create-campaign/StepReview';
 import { type Step1Values } from '@/lib/validations/createCampaignSchemas';
 import {
@@ -17,11 +16,7 @@ import {
 } from '@/hooks/useCampaign';
 import StepPayment from '@/components/create-campaign/StepPayment';
 import type { PaymentBreakdown } from '@/types/campaign';
-import {
-  mapCampaignToStep1,
-  mapCampaignToStep2,
-  mapCampaignToStep3,
-} from '@/lib/mapCampaignToSteps';
+import { mapCampaignToStep1, mapCampaignToStep2 } from '@/lib/mapCampaignToSteps';
 import CampaignDetailSkeleton from '@/components/skeletons/CampaignDetailsSkeleton';
 
 export default function NewCampaignPage() {
@@ -31,7 +26,6 @@ export default function NewCampaignPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [step1Data, setStep1Data] = useState<Step1Values | null>(null);
   const [step2Data, setStep2Data] = useState<Step2Values | null>(null);
-  const [step3Data, setStep3Data] = useState<Step3Values | null>(null);
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<PaymentBreakdown | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
@@ -72,8 +66,7 @@ export default function NewCampaignPage() {
     setCampaignId(draftCampaign.id);
     setStep1Data(mapCampaignToStep1(draftCampaign) as Step1Values);
     setStep2Data(mapCampaignToStep2(draftCampaign));
-    setStep3Data(mapCampaignToStep3(draftCampaign));
-    setCurrentStep(Math.min(draftCampaign.currentStep, 4));
+    setCurrentStep(Math.min(draftCampaign.currentStep, 3));
     setIsHydratingDraft(false);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [draftId, draftCampaign, draftLoading, draftLoadError]);
@@ -87,7 +80,7 @@ export default function NewCampaignPage() {
   const submitCampaign = useSubmitCampaign((bd, url) => {
     setBreakdown(bd);
     setPaymentUrl(url);
-    goTo(5);
+    goTo(4);
   });
 
   function goTo(step: number) {
@@ -118,7 +111,6 @@ export default function NewCampaignPage() {
             creatorCategoryIds: data.creatorTierIds,
             creatorNicheIds: data.creatorNicheIds,
             preferredPlatformIds: data.platforms,
-            timeline: new Date(data.timeline).toISOString(),
             coverImage: data._coverFile,
           },
         },
@@ -126,7 +118,7 @@ export default function NewCampaignPage() {
           onSuccess: () => {
             if (editingFromReview) {
               setEditingFromReview(false);
-              goTo(4);
+              goTo(3);
             } else {
               goTo(2);
             }
@@ -143,7 +135,6 @@ export default function NewCampaignPage() {
       creatorCategoryIds: data.creatorTierIds,
       creatorNicheIds: data.creatorNicheIds,
       preferredPlatformIds: data.platforms,
-      timeline: new Date(data.timeline).toISOString(),
       coverImage: data._coverFile,
       amplificationAsset: data.goal === 'Amplify Content' ? data.amplificationAsset : undefined,
     });
@@ -169,40 +160,14 @@ export default function NewCampaignPage() {
       },
       {
         onSuccess: () => {
-          if (editingFromReview) {
-            setEditingFromReview(false);
-            goTo(4);
-          } else {
-            goTo(3);
-          }
-        },
-      },
-    );
-  }
-
-  function handleStep3Next(data: Step3Values) {
-    setStep3Data(data);
-    if (!campaignId) return;
-
-    patchCampaign.mutate(
-      {
-        id: campaignId,
-        payload: {
-          currentStep: 3,
-          usageRights: data.usageRights,
-          // successLooksLike: data.successDescription,
-        },
-      },
-      {
-        onSuccess: () => {
           setEditingFromReview(false);
-          goTo(4);
+          goTo(3);
         },
       },
     );
   }
 
-  function handleEditStep(step: 1 | 2 | 3) {
+  function handleEditStep(step: 1 | 2) {
     setEditingFromReview(true);
     goTo(step);
   }
@@ -262,29 +227,19 @@ export default function NewCampaignPage() {
         />
       )}
 
-      {currentStep === 3 && (
-        <StepSuccess
-          defaultValues={step3Data ?? undefined}
-          onNext={handleStep3Next}
-          onBack={() => goTo(2)}
-          isLoading={patchCampaign.isPending}
-        />
-      )}
-
-      {currentStep === 4 && step1Data && step2Data && step3Data && (
+      {currentStep === 3 && step1Data && step2Data && (
         <StepReview
           step1={step1Data}
           step2={step2Data}
-          step3={step3Data}
           onNext={handleReviewNext}
-          onBack={() => goTo(3)}
+          onBack={() => goTo(2)}
           onEdit={handleEditStep}
           isLoading={submitCampaign.isPending}
         />
       )}
 
-      {currentStep === 5 && breakdown && paymentUrl && (
-        <StepPayment breakdown={breakdown} onBack={() => goTo(4)} onPay={handlePay} />
+      {currentStep === 4 && breakdown && paymentUrl && (
+        <StepPayment breakdown={breakdown} onBack={() => goTo(3)} onPay={handlePay} />
       )}
     </CampaignPageShell>
   );
