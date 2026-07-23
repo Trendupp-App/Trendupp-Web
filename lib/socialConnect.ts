@@ -69,9 +69,16 @@ const OAUTH_CONFIG: Record<SocialPlatformId, PlatformOAuthConfig> = {
   },
 };
 
-/** Whether real OAuth can start for this platform (client id configured). */
+/**
+ * Platforms currently live for social connect. Instagram/TikTok/Twitter keep
+ * their OAuth config above (ready for later) but are intentionally kept out
+ * of this list so they show as "Coming soon" — only YouTube is enabled.
+ */
+const ENABLED_PLATFORMS: SocialPlatformId[] = ['youtube'];
+
+/** Whether real OAuth can start for this platform (enabled + client id configured). */
 export function isOAuthConfigured(platform: SocialPlatformId): boolean {
-  return Boolean(OAUTH_CONFIG[platform].clientId);
+  return ENABLED_PLATFORMS.includes(platform) && Boolean(OAUTH_CONFIG[platform].clientId);
 }
 
 export function readSocialConnectPending(): SocialConnectPending | null {
