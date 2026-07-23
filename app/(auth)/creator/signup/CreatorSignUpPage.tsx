@@ -23,8 +23,18 @@ import TermsModal from '@/components/auth/TermsModal';
 import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
 import { useUsernameAvailability } from '@/hooks/useAuthMutations';
 import { UsernameAvailabilityHint } from '@/shared/UsernameAvailabilityHint';
+import { PasswordRequirementsChecklist } from '@/shared/PasswordRequirementsChecklist';
 import GoogleLoader from '@/components/skeletons/GoogleLoader';
+import { useCyclingText } from '@/hooks/useCyclingText';
+
 type PendingAction = 'email' | 'google' | 'tiktok' | 'instagram' | null;
+
+const SIGNUP_LOADING_MESSAGES = [
+  'Creating your account…',
+  'Setting things up…',
+  'Almost there…',
+  'Just a few more seconds…',
+];
 
 export default function CreatorSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,6 +71,8 @@ export default function CreatorSignupPage() {
   const acceptedPromotions = useWatch({ control, name: 'acceptedPromotions' });
   const usernameValue = useWatch({ control, name: 'username' }) ?? '';
   const usernameCheck = useUsernameAvailability(usernameValue);
+  const passwordValue = useWatch({ control, name: 'password' }) ?? '';
+  const loadingText = useCyclingText(signup.isPending, SIGNUP_LOADING_MESSAGES);
 
   function requestTerms(action: PendingAction) {
     pendingActionRef.current = action;
@@ -291,8 +303,10 @@ export default function CreatorSignupPage() {
                       {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
-                  {errors.password && (
+                  {errors.password ? (
                     <p className="text-[11px] text-red-400">{errors.password.message}</p>
+                  ) : (
+                    <PasswordRequirementsChecklist password={passwordValue} />
                   )}
                 </div>
 
@@ -315,10 +329,8 @@ export default function CreatorSignupPage() {
                       {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
-                  {errors.confirmPassword ? (
+                  {errors.confirmPassword && (
                     <p className="text-[11px] text-red-400">{errors.confirmPassword.message}</p>
-                  ) : (
-                    <p className="text-[11px] text-[#9a99b0]">At least 8 characters</p>
                   )}
                 </div>
 
@@ -355,7 +367,8 @@ export default function CreatorSignupPage() {
                           className="text-brand-pink cursor-pointer hover:underline"
                         >
                           Terms & Conditions
-                        </button>
+                        </button>{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                     </div>
                     {errors.terms && (
@@ -394,7 +407,7 @@ export default function CreatorSignupPage() {
                   }
                   className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
                 >
-                  {signup.isPending ? 'Creating account…' : 'Sign up'}
+                  {signup.isPending ? loadingText : 'Sign up'}
                 </Button>
               </form>
               <p className="text-sm text-text-secondary text-center mt-5">

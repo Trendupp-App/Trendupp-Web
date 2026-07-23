@@ -4,9 +4,6 @@ import { useState } from 'react';
 import CampaignDetailsDrawer, {
   MappedCampaign,
 } from '@/components/creator-dashboard/CampaignDetailsDrawer';
-import CampaignFilterModal, {
-  FilterState,
-} from '@/components/creator-dashboard/CampaignFilterModal';
 import CategoryPillRow from '@/components/BrandExplore/CategoryPillRow';
 import CreatorProfileSheet from '@/components/campaign-details/CreatorProfileSheet';
 import BrandProfileSheet from '@/components/BrandExplore/BrandProfileSheet';
@@ -23,6 +20,14 @@ import { useExploreCampaigns } from '@/hooks/useExploreCampaign';
 import { useExploreCreators, useExploreBrands, useExploreSearch } from '@/hooks/useExplore';
 import { useNiches, useIndustries } from '@/hooks/useOnboardingQueries';
 import { mapCampaign } from '@/lib/campaignMappers';
+import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
+
+const DEFAULT_CAMPAIGN_FILTERS: FilterState = {
+  sortBy: 'Newest',
+  platforms: [],
+  niches: [],
+  campaignGoal: null,
+};
 
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState<MainTab>('campaigns');
@@ -37,19 +42,10 @@ export default function ExplorePage() {
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [brandSheetOpen, setBrandSheetOpen] = useState(false);
 
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filterModalKey, setFilterModalKey] = useState(0);
-  const [campaignFilters, setCampaignFilters] = useState<FilterState>({
-    sortBy: 'Newest',
-    platforms: [],
-    niches: [],
-    campaignGoal: null,
-  });
-
   const { campaigns: sortedCampaigns, isLoading: campaignsLoadingRaw } = useExploreCampaigns({
     statusFilter: activeCampaignFilter,
     searchQuery,
-    filters: campaignFilters,
+    filters: DEFAULT_CAMPAIGN_FILTERS,
   });
 
   const { data: niches } = useNiches();
@@ -120,15 +116,7 @@ export default function ExplorePage() {
         </h1>
       </div>
 
-      <ExploreSearchAndFilter
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        showFilterButton={showTabChrome && activeTab === 'campaigns'}
-        onFilterClick={() => {
-          setFilterModalKey((prev) => prev + 1);
-          setIsFilterModalOpen(true);
-        }}
-      />
+      <ExploreSearchAndFilter searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       <MainTabs active={activeTab} onChange={handleTabChange} />
 
@@ -196,16 +184,6 @@ export default function ExplorePage() {
         brandId={selectedBrandId}
         open={brandSheetOpen}
         onOpenChange={setBrandSheetOpen}
-      />
-      <CampaignFilterModal
-        key={filterModalKey}
-        isOpen={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-        currentFilters={campaignFilters}
-        onApply={setCampaignFilters}
-        onReset={() =>
-          setCampaignFilters({ sortBy: 'Newest', platforms: [], niches: [], campaignGoal: null })
-        }
       />
     </div>
   );

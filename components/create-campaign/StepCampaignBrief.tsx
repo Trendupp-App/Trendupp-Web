@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2, Plus } from 'lucide-react';
 import StepFooter from './StepFooter';
 import FieldLabel from './FieldLabel';
+import TrendUppPlatformRules from './TrendUppPlatformRules';
 import { FIELD_TOOLTIPS } from '@/lib/data/fieldTooltips';
 import { stepCampaignBriefSchema, type Step2Values } from '@/lib/validations/createCampaignSchemas';
 
@@ -24,6 +25,7 @@ interface StepCampaignBriefProps {
 function ListField<TFieldValues extends FieldValues>({
   label,
   tooltip,
+  required,
   placeholder,
   fields,
   append,
@@ -34,6 +36,7 @@ function ListField<TFieldValues extends FieldValues>({
 }: {
   label: string;
   tooltip?: string;
+  required?: boolean;
   placeholder: string;
   fields: { id: string }[];
   append: () => void;
@@ -44,7 +47,7 @@ function ListField<TFieldValues extends FieldValues>({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <FieldLabel label={label} tooltip={tooltip} />
+      <FieldLabel label={label} tooltip={tooltip} required={required} />
       <div className="flex flex-col gap-2">
         {fields.map((field, index) => (
           <div key={field.id} className="flex items-center gap-2">
@@ -112,7 +115,7 @@ export default function StepCampaignBrief({
     <form className="flex flex-col gap-6">
       {/* Campaign brief */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Campaign brief" tooltip={FIELD_TOOLTIPS.campaignBrief} />
+        <FieldLabel label="Campaign brief" tooltip={FIELD_TOOLTIPS.campaignBrief} required />
         <textarea
           {...register('brief')}
           rows={4}
@@ -125,6 +128,7 @@ export default function StepCampaignBrief({
       <ListField
         label="Deliverables"
         tooltip={FIELD_TOOLTIPS.deliverables}
+        required
         placeholder="e.g. 1x Instagram Reel (30–60 seconds)"
         fields={deliverables.fields}
         append={() => deliverables.append({ value: '' })}
@@ -137,35 +141,43 @@ export default function StepCampaignBrief({
       <ListField
         label="Content direction"
         tooltip={FIELD_TOOLTIPS.contentDirection}
+        required
         placeholder="e.g. Show yourself actively using the product outdoors"
         fields={contentDirection.fields}
         append={() => contentDirection.append({ value: '' })}
         remove={contentDirection.remove}
         register={register}
         name="contentDirection"
+        error={errors.contentDirection?.message}
       />
 
       <ListField
         label="Content guidelines - Do's"
         tooltip={FIELD_TOOLTIPS.dos}
+        required
         placeholder="e.g. Use natural lighting throughout the video"
         fields={dos.fields}
         append={() => dos.append({ value: '' })}
         remove={dos.remove}
         register={register}
         name="dos"
+        error={errors.dos?.message}
       />
 
       <ListField
         label="Content guidelines - Dont's"
         tooltip={FIELD_TOOLTIPS.donts}
+        required
         placeholder="e.g. Do not feature or mention competitor products"
         fields={donts.fields}
         append={() => donts.append({ value: '' })}
         remove={donts.remove}
         register={register}
         name="donts"
+        error={errors.donts?.message}
       />
+
+      <TrendUppPlatformRules />
 
       <StepFooter onBack={onBack} onContinue={handleSubmit(onNext)} isLoading={isLoading} />
     </form>

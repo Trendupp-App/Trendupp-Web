@@ -4,10 +4,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useCampaign } from '@/hooks/useCampaign';
 import { Megaphone, X, Clock, Wallet, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
+import { formatCurrency } from '@/utils/Utilities';
 
 function daysLeft(timeline?: string): number | null {
   if (!timeline) return null;
@@ -120,7 +117,9 @@ export default function CampaignDetailsSheet({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[#1a1a2e]">Budget</p>
-                      <p className="text-xs text-[#9a99b0]">{fmt(campaign.totalBudget)} total</p>
+                      <p className="text-xs text-[#9a99b0]">
+                        {formatCurrency(campaign.totalBudget, campaign.currency ?? 'NGN')} total
+                      </p>
                     </div>
                   </div>
 

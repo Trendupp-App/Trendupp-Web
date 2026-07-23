@@ -2,10 +2,7 @@ import { Clock, Users, Megaphone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
+import { formatCurrency } from '@/utils/Utilities';
 
 function daysLeft(timeline?: string): number {
   if (!timeline) return 0;
@@ -133,7 +130,9 @@ export default function CampaignCard({ campaign, onViewDetails }: CampaignCardPr
         <p className="text-xs text-[#9a99b0]">{campaign.goal}</p>
 
         <div className="flex items-center justify-between mt-1">
-          <span className="text-sm font-semibold text-brand-pink">{fmt(campaign.totalBudget)}</span>
+          <span className="text-sm font-semibold text-brand-pink">
+            {formatCurrency(campaign.totalBudget, campaign.currency ?? 'NGN')}
+          </span>
           {campaign.status === 'live' && (
             <div className="flex items-center gap-1 text-xs text-[#9a99b0]">
               <Users size={12} />

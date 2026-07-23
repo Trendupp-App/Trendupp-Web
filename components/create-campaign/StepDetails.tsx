@@ -61,6 +61,7 @@ export default function StepDetails({
 
   const selectedPlatforms = useWatch({ control, name: 'platforms' }) ?? [];
   const selectedGoal = useWatch({ control, name: 'goal' });
+  const budget = useWatch({ control, name: 'budget' }) ?? '';
   const selectedTierIds = useWatch({ control, name: 'creatorTierIds' }) ?? [];
   // const selectedTier = useWatch({ control, name: 'creatorTier' });
   const selectedNicheIds = useWatch({ control, name: 'creatorNicheIds' }) ?? [];
@@ -85,6 +86,11 @@ export default function StepDetails({
 
   function handleSubmitWithFile(data: Step1Values) {
     onNext({ ...data, _coverFile: coverFile ?? undefined } as Step1Values);
+  }
+
+  function handleBudgetChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/[^\d]/g, '');
+    setValue('budget', digits, { shouldValidate: true });
   }
 
   const inputCls =
@@ -130,14 +136,14 @@ export default function StepDetails({
 
       {/* Campaign title */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Campaign title</label>
+        <FieldLabel label="Campaign title" required />
         <input {...register('title')} placeholder="Enter campaign title" className={inputCls} />
         {errors.title && <p className="text-[11px] text-red-400">{errors.title.message}</p>}
       </div>
 
       {/* Campaign goal */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Campaign goal</label>
+        <FieldLabel label="Campaign goal" required />
         <ComboBox
           options={CAMPAIGN_GOALS.map((g) => ({ value: g, label: g }))}
           value={selectedGoal}
@@ -151,9 +157,7 @@ export default function StepDetails({
         {errors.goal && <p className="text-[11px] text-red-400">{errors.goal.message}</p>}
         {selectedGoal === 'Amplify Content' && (
           <div className="flex flex-col gap-1.5 mt-2">
-            <label className="text-sm font-medium text-[#1a1a2e]">
-              Link to content for amplification
-            </label>
+            <FieldLabel label="Link to content for amplification" required />
             <input
               {...register('amplificationAsset')}
               placeholder="https://drive.google.com/..."
@@ -168,10 +172,12 @@ export default function StepDetails({
 
       {/* Total budget */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Total budget</label>
+        <FieldLabel label="Total budget" required />
         <input
-          {...register('budget')}
-          type="number"
+          type="text"
+          inputMode="numeric"
+          value={budget ? Number(budget).toLocaleString('en-US') : ''}
+          onChange={handleBudgetChange}
           placeholder="Enter amount"
           className={inputCls}
         />
@@ -180,7 +186,7 @@ export default function StepDetails({
 
       {/* Creator tier — from API */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Creator tier</label>
+        <FieldLabel label="Creator tier" required />
         <MultiSelectDropdown
           options={creatorCategories.map((cat) => ({
             value: cat.id,
@@ -213,7 +219,7 @@ export default function StepDetails({
 
       {/* Creator niche — multiselect */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Creator niche" tooltip={FIELD_TOOLTIPS.creatorNiche} />
+        <FieldLabel label="Creator niche" tooltip={FIELD_TOOLTIPS.creatorNiche} required />
         <MultiSelectDropdown
           options={niches.map((n) => ({ value: n.id, label: n.name }))}
           selected={selectedNicheIds}
@@ -242,15 +248,9 @@ export default function StepDetails({
         )}
       </div> */}
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#1a1a2e]">Timeline</label>
-        <input {...register('timeline')} type="date" className={inputCls} />
-        {errors.timeline && <p className="text-[11px] text-red-400">{errors.timeline.message}</p>}
-      </div>
-
       {/* Platform — from API */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Platform" tooltip={FIELD_TOOLTIPS.platform} />
+        <FieldLabel label="Platform" tooltip={FIELD_TOOLTIPS.platform} required />
         <MultiSelectDropdown
           options={platforms.map((p) => ({ value: p.id, label: p.name }))}
           selected={selectedPlatforms}

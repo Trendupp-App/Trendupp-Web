@@ -1,5 +1,6 @@
 import type { Campaign } from '@/types/campaign';
 import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
+import { formatCurrency } from '@/utils/Utilities';
 
 export interface MappedExploreCampaign {
   id: string;
@@ -8,6 +9,7 @@ export interface MappedExploreCampaign {
   budget: string;
   budgetMin: number;
   budgetMax: number;
+  currency: string;
   daysLeft: string;
   daysLeftNumber: number;
   tier: string;
@@ -38,13 +40,15 @@ export function getDaysLeft(timelineDate: string): string {
 }
 
 export function mapCampaign(c: Campaign): MappedExploreCampaign {
+  const currency = c.currency ?? 'NGN';
   return {
     id: c.id,
     title: c.title,
     brand: c.brand?.username || 'Unknown Brand',
-    budget: `₦${c.totalBudget.toLocaleString()}`,
+    budget: formatCurrency(c.totalBudget, currency),
     budgetMin: c.totalBudget,
     budgetMax: c.totalBudget,
+    currency,
     daysLeft: getDaysLeft(c.timeline || ''),
     daysLeftNumber: (() => {
       const ts = Date.parse(c.timeline ?? '');

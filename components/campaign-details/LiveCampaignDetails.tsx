@@ -24,6 +24,7 @@ export default function LiveCampaignDetail({ campaign }: { campaign: Campaign })
           campaignId={campaign.id}
           applicationsForLive={campaign.applications}
           campaignTitle={campaign.title}
+          campaignCurrency={campaign.currency}
         />
       )}
     </>

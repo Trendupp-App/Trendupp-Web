@@ -128,7 +128,7 @@ export default function BrandCampaignsPage() {
         </div>
         <Link
           href="/brand/campaign/create"
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand-pink text-white text-sm font-medium rounded-lg hover:bg-brand-pink/90 transition-colors shrink-0 shadow-sm"
+          className="flex items-center animate-pulse gap-2 px-4 py-2.5 bg-brand-pink text-white text-sm font-medium rounded-lg hover:bg-brand-pink/90 transition-colors shrink-0 shadow-sm"
         >
           <Plus size={16} />
           New campaign

@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock } from 'lucide-react';
+import { Clock, Info } from 'lucide-react';
 import { formatCurrency } from '@/utils/Utilities';
 import type { PayoutEscrowItem } from '@/types/payout';
 
@@ -20,7 +20,7 @@ export default function EscrowReleaseList({
       {/* 30-Day Security Hold warning */}
       <div className="flex gap-3.5 bg-amber-50/45 border border-amber-100 rounded-2xl p-4">
         <div className="w-5 h-5 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0 mt-0.5">
-          <span className="text-[11px] font-bold">!</span>
+          <Info size={20} />
         </div>
         <div className="flex flex-col gap-0.5">
           <h4 className="text-xs font-bold text-[#1a1a2e]">30-Day Security Hold</h4>
