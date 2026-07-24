@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/shared/Sidebar';
 import Header from '@/shared/Header';
-import NotificationDrawer from '@/components/creator-dashboard/NotificationDrawer';
+import NotificationDrawer from '@/components/brand-profile/NotificationDrawer';
+import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import PageLoader from '@/components/skeletons/PageLoader';
@@ -42,6 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const { user, accessToken, hasHydrated } = useAuthStore();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount(hasHydrated && !!accessToken);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMobileMenuOpen(false);
@@ -88,6 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               title={headerTitle}
               onNotificationClick={() => setIsNotificationOpen(true)}
               onMenuClick={() => setIsMobileMenuOpen(true)}
+              hasUnreadNotifications={unreadCount > 0}
             />
           )}
 

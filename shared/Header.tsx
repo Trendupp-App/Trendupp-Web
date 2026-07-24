@@ -14,6 +14,7 @@ interface HeaderProps {
   user?: HeaderUser;
   onNotificationClick?: () => void;
   onMenuClick?: () => void;
+  hasUnreadNotifications?: boolean;
 }
 
 export default function Header({
@@ -21,6 +22,7 @@ export default function Header({
   user = { displayName: 'User', initials: 'U' },
   onNotificationClick,
   onMenuClick,
+  hasUnreadNotifications = false,
 }: HeaderProps) {
   return (
     <header className="h-20 bg-white border-b border-[#e8e6f0]/60 flex items-center justify-between px-4 md:px-8 shrink-0 select-none">
@@ -51,7 +53,9 @@ export default function Header({
           aria-label="Notifications"
         >
           <Bell size={18} className="text-[#5a5a7a]" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
+          {hasUnreadNotifications && (
+            <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
+          )}
         </button>
       </div>
 
@@ -69,7 +73,9 @@ export default function Header({
             aria-label="Notifications"
           >
             <Bell size={20} className="text-[#5a5a7a]" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
+            {hasUnreadNotifications && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
+            )}
           </button>
 
           {/* User Dropdown */}

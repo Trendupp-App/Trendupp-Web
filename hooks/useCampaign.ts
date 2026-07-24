@@ -5,6 +5,7 @@ import { campaignApi } from '@/services/campaignApi';
 import type {
   ApplyCampaignPayload,
   CampaignApplicationDto,
+  CampaignStatus,
   CreateCampaignPayload,
   PatchCampaignPayload,
   PaymentBreakdown,
@@ -59,7 +60,7 @@ export function usePatchCampaign(onSuccess?: () => void) {
 }
 
 export function useSubmitCampaign(
-  onSuccess: (breakdown: PaymentBreakdown, paymentUrl: string) => void,
+  onSuccess: (breakdown: PaymentBreakdown, paymentUrl: string, escrowId: string) => void,
 ) {
   return useMutation({
     mutationFn: (id: string) => campaignApi.submitCampaign(id),
@@ -74,10 +75,23 @@ export function useSubmitCampaign(
           totalToPay: bd.totalToPay,
         },
         data.payment.paymentUrl,
+        data.payment.escrowId,
       );
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit campaign');
+    },
+  });
+}
+
+export function useVerifyPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ campaignId, escrowId }: { campaignId: string; escrowId: string }) =>
+      campaignApi.verifyPayment(campaignId, escrowId).then((r) => r.data),
+    onSuccess: (_data, { campaignId }) => {
+      queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
     },
   });
 }
@@ -88,6 +102,15 @@ export function useCampaign(id: string | null) {
     queryFn: () => campaignApi.getCampaign(id!).then((r) => r.data),
     enabled: !!id,
     staleTime: 0,
+  });
+}
+
+export function useCampaignActivityTimeline(id: string | null, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['campaign-activity-timeline', id],
+    queryFn: () => campaignApi.getActivityTimeline(id!).then((r) => r.data),
+    enabled: !!id && enabled,
+    staleTime: 1000 * 30,
   });
 }
 
@@ -129,10 +152,7 @@ export function useMyApplications(enabled: boolean = true) {
   });
 }
 
-export function useMyCampaigns(
-  status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted',
-  enabled: boolean = true,
-) {
+export function useMyCampaigns(status?: CampaignStatus, enabled: boolean = true) {
   return useQuery({
     queryKey: ['my-campaigns', status],
     queryFn: () => campaignApi.getMyCampaigns(status).then((r) => r.data),
@@ -306,7 +326,7 @@ export function useCreatorReviews(creatorId: string | null) {
 
 export function useCampaigns(
   params?: {
-    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    status?: CampaignStatus;
     sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
     platforms?: string[];
     niches?: string[];

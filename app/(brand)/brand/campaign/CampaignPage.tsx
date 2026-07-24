@@ -72,6 +72,10 @@ export default function BrandCampaignsPage() {
     'submitted',
     mainTab === 'draft',
   );
+  const { data: pendingPaymentCampaigns = [], isLoading: pendingPaymentLoading } = useMyCampaigns(
+    'pending_payment',
+    mainTab === 'draft',
+  );
   const { data: activeCampaigns = [], isLoading: activeLoading } = useMyCampaigns(
     'active',
     mainTab === 'active',
@@ -81,11 +85,14 @@ export default function BrandCampaignsPage() {
   //   mainTab === 'completed',
   // );
 
-  const allDraftTabCampaigns = useMemo(
-    () => [...draftCampaigns, ...submittedCampaigns],
-    [draftCampaigns, submittedCampaigns],
-  );
-  const draftTabLoading = draftsLoading || submittedLoading;
+  const allDraftTabCampaigns = useMemo(() => {
+    const byId = new Map<string, (typeof draftCampaigns)[number]>();
+    for (const c of [...draftCampaigns, ...submittedCampaigns, ...pendingPaymentCampaigns]) {
+      byId.set(c.id, c);
+    }
+    return Array.from(byId.values());
+  }, [draftCampaigns, submittedCampaigns, pendingPaymentCampaigns]);
+  const draftTabLoading = draftsLoading || submittedLoading || pendingPaymentLoading;
 
   // const activeCampaigns = DUMMY_ACTIVE_CAMPAIGNS;
   const completedCampaigns = DUMMY_COMPLETED_CAMPAIGNS;

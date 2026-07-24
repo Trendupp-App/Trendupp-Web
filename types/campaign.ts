@@ -15,6 +15,10 @@ export interface CreatorCategory extends BaseEntity {
   name: string;
   minFollowers: number;
   maxFollowers: number | null;
+  minCostCreateNaira: number;
+  minCostCreateUsd: number;
+  minCostAmplifyNaira: number;
+  minCostAmplifyUsd: number;
 }
 
 // ── Enums (validated by API)
@@ -27,7 +31,13 @@ export type ContentType = (typeof CONTENT_TYPES)[number];
 
 //  Campaign
 
-export type CampaignStatus = 'draft' | 'submitted' | 'live' | 'active' | 'completed';
+export type CampaignStatus =
+  | 'draft'
+  | 'submitted'
+  | 'pending_payment'
+  | 'live'
+  | 'active'
+  | 'completed';
 
 export interface ContentGuidelines {
   dos: string[];
@@ -235,6 +245,10 @@ export interface SubmitCampaignResponse {
   };
 }
 
+export interface VerifyPaymentResponse {
+  message?: string;
+}
+
 export interface PayCampaignPayload {
   paymentReference: string;
 }
@@ -285,6 +299,22 @@ export interface SubmitLiveLinkPayload {
 export interface SubmitLiveLinkResponse {
   message?: string;
   submission?: unknown;
+}
+
+export type CampaignActivityActorType = 'Brand' | 'Creator' | 'System' | 'Admin' | string;
+
+export interface CampaignActivityEvent {
+  id: string;
+  actorType: CampaignActivityActorType;
+  timestamp: string;
+  formattedTime: string;
+  description: string;
+}
+
+export interface CampaignActivityTimeline {
+  campaignId: string;
+  totalEvents: number;
+  activities: CampaignActivityEvent[];
 }
 
 export interface ValidateSelectionResult {

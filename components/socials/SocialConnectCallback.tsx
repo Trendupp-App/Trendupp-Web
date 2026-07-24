@@ -69,10 +69,12 @@ export default function SocialConnectCallback({ platform, fallbackPath = '/' }: 
 
     completeSocialConnect(code, pending)
       .then((result) => {
+        console.log('[social-connect] success response:', result);
         toast.success(`${result.message} — you are now a ${result.tier}`);
         router.replace(returnTo);
       })
       .catch((err: { response?: { data?: { message?: string } } }) => {
+        console.log('[social-connect] error response:', err?.response?.data ?? err);
         toast.error(err?.response?.data?.message ?? 'Could not connect this account');
         router.replace(returnTo);
       });

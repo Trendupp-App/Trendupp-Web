@@ -1,14 +1,13 @@
-import type { NeedingFundingItem } from '@/types/payout';
+import type { Campaign } from '@/types/campaign';
 import NeedingFundingListItem from './NeedingFundsListItem';
 
 interface NeedingFundingTabProps {
-  items: NeedingFundingItem[];
-  onContinue: (item: NeedingFundingItem) => void;
-  onDelete: (item: NeedingFundingItem) => void;
+  campaigns: Campaign[];
+  onContinue: (campaign: Campaign) => void;
 }
 
-export default function NeedingFundingTab({ items, onContinue, onDelete }: NeedingFundingTabProps) {
-  if (items.length === 0) {
+export default function NeedingFundingTab({ campaigns, onContinue }: NeedingFundingTabProps) {
+  if (campaigns.length === 0) {
     return (
       <div className="py-16 text-center text-sm text-[#9a99b0]">
         Nothing needs funding right now.
@@ -18,13 +17,8 @@ export default function NeedingFundingTab({ items, onContinue, onDelete }: Needi
 
   return (
     <div className="flex flex-col gap-4">
-      {items.map((item) => (
-        <NeedingFundingListItem
-          key={item.id}
-          item={item}
-          onContinue={onContinue}
-          onDelete={onDelete}
-        />
+      {campaigns.map((campaign) => (
+        <NeedingFundingListItem key={campaign.id} campaign={campaign} onContinue={onContinue} />
       ))}
     </div>
   );

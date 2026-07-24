@@ -74,7 +74,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
 
   function handleNotificationClick(notif: NotificationItem) {
     if (!notif.readAt) markRead.mutate(notif.id);
-    const route = resolveNotificationRoute(notif.actionUrl, 'creator');
+    const route = resolveNotificationRoute(notif.actionUrl, 'brand');
     if (route) {
       router.push(route);
       onClose();
