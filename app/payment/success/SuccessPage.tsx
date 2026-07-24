@@ -13,13 +13,6 @@ type PageState = 'verifying' | 'success' | 'failed' | 'invalid' | 'handoff';
 export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // The gateway's actual redirect is ?status=success&type=escrow&ref=<escrowId>,
-  // but Pandascrow sometimes passes the underlying provider's own callback
-  // straight through instead — e.g. Paystack's ?trxref=...&reference=....
-  // For Paystack redirects, the backend wants verify-payment called with
-  // that `reference` value (Pandascrow's escrow lookup keys off it for
-  // Paystack transactions) rather than the escrowId we stashed at submit
-  // time, so it takes priority below when present.
   const gatewayStatus = searchParams.get('status');
   const paystackReference = searchParams.get('reference') ?? searchParams.get('trxref');
   const hasGatewayRef = Boolean(
@@ -39,8 +32,6 @@ export default function PaymentSuccessPage() {
   const { data: campaign } = useCampaign(state === 'success' ? campaignId : null);
 
   function attemptVerification() {
-    // The gateway can redirect here for a declined/cancelled payment too —
-    // don't bother calling verify-payment in that case.
     if (gatewayStatus && gatewayStatus !== 'success') {
       setState('failed');
       return;
@@ -68,18 +59,12 @@ export default function PaymentSuccessPage() {
       },
     );
   }
-
-  // Verify once on mount — but the payment gateway only has one configured
-  // return URL, so mobile-app users land on this same web page too. Their
-  // native app does its own verify-payment call and doesn't rely on the
-  // localStorage pending record (it was never written on this device/context),
-  // so just hand the redirect off to the app instead of verifying here.
   useEffect(() => {
     if (hasAttempted.current) return;
     hasAttempted.current = true;
 
     const isMobileApp = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobileApp) {
+    if (isMobileApp && !readPendingCampaignPayment()) {
       /* eslint-disable-next-line react-hooks/set-state-in-effect */
       setState('handoff');
       window.location.href = `trendupp-payment://payment/success?${searchParams.toString()}`;

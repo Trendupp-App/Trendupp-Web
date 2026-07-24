@@ -301,7 +301,7 @@ export interface SubmitLiveLinkResponse {
   submission?: unknown;
 }
 
-export type CampaignActivityActorType = 'Brand' | 'Creator' | 'System' | 'Admin' | string;
+export type CampaignActivityActorType = 'Brand' | 'Creator' | 'System' | 'Admin' | (string & {});
 
 export interface CampaignActivityEvent {
   id: string;

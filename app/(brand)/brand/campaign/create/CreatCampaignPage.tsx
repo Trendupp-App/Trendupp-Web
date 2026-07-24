@@ -46,6 +46,11 @@ export default function NewCampaignPage() {
     isError: draftLoadError,
   } = useCampaign(draftId);
 
+  // Currency isn't chosen in this wizard — the backend resolves it (from the
+  // brand's profile) the moment the campaign record is created, so this is
+  // available well before the payment step needs it to format the breakdown.
+  const { data: liveCampaign } = useCampaign(campaignId);
+
   function goTo(step: number) {
     setCurrentStep(step);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -274,6 +279,7 @@ export default function NewCampaignPage() {
       {currentStep === 4 && breakdown && paymentUrl && (
         <StepPayment
           breakdown={breakdown}
+          currency={liveCampaign?.currency}
           onBack={() => (paymentOnlyResume ? router.push('/brand/campaign') : goTo(3))}
           onPay={handlePay}
         />

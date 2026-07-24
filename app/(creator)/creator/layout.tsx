@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               title={headerTitle}
               onNotificationClick={() => setIsNotificationOpen(true)}
               onMenuClick={() => setIsMobileMenuOpen(true)}
-              hasUnreadNotifications={unreadCount > 0}
+              unreadCount={unreadCount}
             />
           )}
 

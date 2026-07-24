@@ -58,6 +58,7 @@ export function useMarkAllNotificationsRead() {
     mutationFn: () => notificationApi.markAllRead(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
     },
   });
 }
