@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { GoogleSignInButton, type SocialSignInHandle } from '@/components/auth/GoogleSignInButton';
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
+import { FacebookSignInButton } from '@/components/auth/FacebookSignInButton';
+import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import Link from 'next/link';
 import TermsModal from '@/components/auth/TermsModal';
 
@@ -27,7 +29,7 @@ import { PasswordRequirementsChecklist } from '@/shared/PasswordRequirementsChec
 import GoogleLoader from '@/components/skeletons/GoogleLoader';
 import { useCyclingText } from '@/hooks/useCyclingText';
 
-type PendingAction = 'email' | 'google' | 'tiktok' | 'instagram' | null;
+type PendingAction = 'email' | 'google' | 'tiktok' | 'instagram' | 'facebook' | 'apple' | null;
 
 const SIGNUP_LOADING_MESSAGES = [
   'Creating your account…',
@@ -42,12 +44,14 @@ export default function CreatorSignupPage() {
   const [googlePending, setGooglePending] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const pendingActionRef = useRef<PendingAction>(null);
-  const [activeProvider, setActiveProvider] = useState<'google' | 'tiktok' | 'instagram' | null>(
-    null,
-  );
+  const [activeProvider, setActiveProvider] = useState<
+    'google' | 'tiktok' | 'instagram' | 'facebook' | 'apple' | null
+  >(null);
   const googleRef = useRef<SocialSignInHandle>(null);
   const tiktokRef = useRef<SocialSignInHandle>(null);
   const instagramRef = useRef<SocialSignInHandle>(null);
+  const facebookRef = useRef<SocialSignInHandle>(null);
+  const appleRef = useRef<SocialSignInHandle>(null);
   const router = useRouter();
   const { data: roles } = useRoles();
   const signup = useSignup();
@@ -138,6 +142,10 @@ export default function CreatorSignupPage() {
       tiktokRef.current?.trigger({ skipTermsCheck: true });
     } else if (action === 'instagram') {
       instagramRef.current?.trigger({ skipTermsCheck: true });
+    } else if (action === 'facebook') {
+      facebookRef.current?.trigger({ skipTermsCheck: true });
+    } else if (action === 'apple') {
+      appleRef.current?.trigger({ skipTermsCheck: true });
     }
   }
 
@@ -202,6 +210,24 @@ export default function CreatorSignupPage() {
                   onRequireTerms={() => requestTerms('instagram')}
                   onStart={() => setActiveProvider('instagram')}
                   disabled={activeProvider !== null && activeProvider !== 'instagram'}
+                />
+                <FacebookSignInButton
+                  ref={facebookRef}
+                  role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
+                  acceptedTerms={!!termsAccepted}
+                  acceptedPromotions={!!acceptedPromotions}
+                  onRequireTerms={() => requestTerms('facebook')}
+                  onStart={() => setActiveProvider('facebook')}
+                  disabled={activeProvider !== null && activeProvider !== 'facebook'}
+                />
+                <AppleSignInButton
+                  ref={appleRef}
+                  role={roles?.find((r) => r.name === 'creator')?.id ?? ''}
+                  acceptedTerms={!!termsAccepted}
+                  acceptedPromotions={!!acceptedPromotions}
+                  onRequireTerms={() => requestTerms('apple')}
+                  onStart={() => setActiveProvider('apple')}
+                  disabled={activeProvider !== null && activeProvider !== 'apple'}
                 />
               </div>
 

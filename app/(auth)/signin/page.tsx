@@ -17,6 +17,8 @@ import { AxiosError } from 'axios';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
+import { FacebookSignInButton } from '@/components/auth/FacebookSignInButton';
+import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 
 export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -98,6 +100,8 @@ export default function SigninPage() {
             />
             <TiktokSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
             <InstagramSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
+            <FacebookSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
+            <AppleSignInButton role="creator" acceptedTerms={true} acceptedPromotions={false} />
           </div>
 
           <div className="flex items-center gap-3 mb-4">

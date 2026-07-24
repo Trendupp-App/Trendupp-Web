@@ -194,6 +194,48 @@ export function useInstagramAuth() {
   return { exchangeInstagramToken };
 }
 
+export function useFacebookAuth() {
+  const setSession = useAuthStore((s) => s.setSession);
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const updateUser = useAuthStore((s) => s.updateUser);
+
+  const exchangeFacebookToken = useMutation({
+    mutationFn: authApi.facebookAuth,
+    onSuccess: async ({ data }) => {
+      setSession(data.accessToken, data.user);
+      toast.success('Signed in with Facebook!');
+      await hydrateFullProfile(data.user.id, updateUser);
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      clearSession();
+      toast.error(err?.response?.data?.message ?? 'Facebook auth failed');
+    },
+  });
+
+  return { exchangeFacebookToken };
+}
+
+export function useAppleAuth() {
+  const setSession = useAuthStore((s) => s.setSession);
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const updateUser = useAuthStore((s) => s.updateUser);
+
+  const exchangeAppleToken = useMutation({
+    mutationFn: authApi.appleAuth,
+    onSuccess: async ({ data }) => {
+      setSession(data.accessToken, data.user);
+      toast.success('Signed in with Apple!');
+      await hydrateFullProfile(data.user.id, updateUser);
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      clearSession();
+      toast.error(err?.response?.data?.message ?? 'Apple auth failed');
+    },
+  });
+
+  return { exchangeAppleToken };
+}
+
 export function useUsernameAvailability(rawValue: string) {
   const value = rawValue.trim();
   const debounced = useDebouncedValue(value, 450);
