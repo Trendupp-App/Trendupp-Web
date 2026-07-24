@@ -3,11 +3,14 @@ import type {
   CampaignPlatform,
   CreatorCategory,
   Campaign,
+  CampaignActivityTimeline,
+  CampaignStatus,
   CreateCampaignPayload,
   CreateCampaignResponse,
   PatchCampaignPayload,
   PatchCampaignResponse,
   SubmitCampaignResponse,
+  VerifyPaymentResponse,
   CampaignApplicationDto,
   ApplyCampaignPayload,
   ApplyCampaignResponse,
@@ -84,11 +87,11 @@ export const campaignApi = {
   applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
     apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
 
-  getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
+  getMyCampaigns: (status?: CampaignStatus) =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
   getCampaigns: (params?: {
-    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    status?: CampaignStatus;
     sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
     platforms?: string[];
     niches?: string[];
@@ -98,7 +101,15 @@ export const campaignApi = {
 
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
 
+  getActivityTimeline: (id: string) =>
+    apiClient.get<CampaignActivityTimeline>(`/campaigns/${id}/activity-timeline`),
+
   submitCampaign: (id: string) => apiClient.post<SubmitCampaignResponse>(`/campaigns/${id}/submit`),
+
+  verifyPayment: (id: string, escrowId: string) =>
+    apiClient.post<VerifyPaymentResponse>(`/campaigns/${id}/verify-payment`, undefined, {
+      params: { escrowId },
+    }),
 
   getApplication: (id: string) =>
     apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),

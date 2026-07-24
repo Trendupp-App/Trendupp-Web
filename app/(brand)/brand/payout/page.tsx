@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import PayoutHeader from '@/components/brand-payout/PayOutHeader';
 import PayoutBalanceCard from '@/components/brand-payout/PayoutBalanceCard';
 import PayoutTabs, { type PayoutTab } from '@/components/brand-payout/PayoutTabs';
@@ -10,15 +11,16 @@ import NeedingFundingTab from '@/components/brand-payout/NeedingFundingTab';
 import BankDetailsCard from '@/components/dashboard/payout/BankDetailsCard';
 import BankChangeModal from '@/components/dashboard/payout/BankChangeModal';
 import { useBrandPayoutDashboard } from '@/hooks/usePayout';
+import { useMyCampaigns } from '@/hooks/useCampaign';
 import { useUpdatePayout } from '@/hooks/useBrandProfileMutations';
 import { useAuthStore } from '@/store/authStore';
-import { DUMMY_NEEDING_FUNDING } from '@/dummy/payout';
-import type { NeedingFundingItem } from '@/types/payout';
+import type { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
 
 const TRANSACTIONS_LIMIT = 20;
 
 export default function BrandPayoutPage() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const { mutate: updatePayout } = useUpdatePayout();
 
@@ -30,6 +32,26 @@ export default function BrandPayoutPage() {
     page: transactionsPage,
     limit: TRANSACTIONS_LIMIT,
   });
+
+  const needingFundingEnabled = activeTab === 'needing-funding';
+  const {
+    data: submittedCampaigns = [],
+    isLoading: submittedLoading,
+    isError: submittedError,
+  } = useMyCampaigns('submitted', needingFundingEnabled);
+  const {
+    data: pendingPaymentCampaigns = [],
+    isLoading: pendingPaymentLoading,
+    isError: pendingPaymentError,
+  } = useMyCampaigns('pending_payment', needingFundingEnabled);
+
+  const needingFundingCampaigns = useMemo(() => {
+    const byId = new Map<string, Campaign>();
+    for (const c of [...submittedCampaigns, ...pendingPaymentCampaigns]) byId.set(c.id, c);
+    return Array.from(byId.values());
+  }, [submittedCampaigns, pendingPaymentCampaigns]);
+  const needingFundingLoading = submittedLoading || pendingPaymentLoading;
+  const needingFundingHasError = submittedError || pendingPaymentError;
 
   const summary = data?.summary;
   const transactions = data?.transactions;
@@ -52,14 +74,8 @@ export default function BrandPayoutPage() {
     });
   };
 
-  function handleContinue(item: NeedingFundingItem) {
-    // TODO: route to campaign creation flow at the right step
-    console.log('continue', item.id);
-  }
-
-  function handleDelete(item: NeedingFundingItem) {
-    // TODO: wire to delete-draft mutation
-    console.log('delete', item.id);
+  function handleContinue(campaign: Campaign) {
+    router.push(`/brand/campaign/create?draft=${campaign.id}`);
   }
 
   return (
@@ -141,12 +157,25 @@ export default function BrandPayoutPage() {
             />
           )}
 
-          {activeTab === 'needing-funding' && (
-            <NeedingFundingTab
-              items={DUMMY_NEEDING_FUNDING}
-              onContinue={handleContinue}
-              onDelete={handleDelete}
-            />
+          {activeTab === 'needing-funding' && needingFundingLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="h-[84px] bg-white border border-[#e8e6f0]/70 rounded-2xl animate-pulse"
+                />
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'needing-funding' && !needingFundingLoading && needingFundingHasError && (
+            <div className="text-center py-10 border border-dashed border-red-200 bg-red-50/40 rounded-3xl text-sm font-light text-red-500">
+              Could not load campaigns awaiting payment. Please try again shortly.
+            </div>
+          )}
+
+          {activeTab === 'needing-funding' && !needingFundingLoading && !needingFundingHasError && (
+            <NeedingFundingTab campaigns={needingFundingCampaigns} onContinue={handleContinue} />
           )}
         </div>
 

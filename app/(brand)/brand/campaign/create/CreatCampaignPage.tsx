@@ -18,6 +18,7 @@ import StepPayment from '@/components/create-campaign/StepPayment';
 import type { PaymentBreakdown } from '@/types/campaign';
 import { mapCampaignToStep1, mapCampaignToStep2 } from '@/lib/mapCampaignToSteps';
 import CampaignDetailSkeleton from '@/components/skeletons/CampaignDetailsSkeleton';
+import { writePendingCampaignPayment } from '@/lib/paymentFlow';
 
 export default function NewCampaignPage() {
   const router = useRouter();
@@ -29,8 +30,13 @@ export default function NewCampaignPage() {
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<PaymentBreakdown | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [escrowId, setEscrowId] = useState<string | null>(null);
   const [editingFromReview, setEditingFromReview] = useState(false);
   const [isHydratingDraft, setIsHydratingDraft] = useState(!!draftId);
+  const [resumingPayment, setResumingPayment] = useState(false);
+  // True when we jumped straight to step 4 without ever loading step1Data/step2Data —
+  // "Back" from the payment step can't land on step 3's review in that case.
+  const [paymentOnlyResume, setPaymentOnlyResume] = useState(false);
   const [draftNotEditable, setDraftNotEditable] = useState(false);
   const hasHydratedDraftRef = useRef(false);
 
@@ -39,6 +45,25 @@ export default function NewCampaignPage() {
     isLoading: draftLoading,
     isError: draftLoadError,
   } = useCampaign(draftId);
+
+  function goTo(step: number) {
+    setCurrentStep(step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  const createCampaign = useCreateCampaign((id) => {
+    setCampaignId(id);
+    goTo(2);
+  });
+
+  const patchCampaign = usePatchCampaign();
+
+  const submitCampaign = useSubmitCampaign((bd, url, escrow) => {
+    setBreakdown(bd);
+    setPaymentUrl(url);
+    setEscrowId(escrow);
+    goTo(4);
+  });
 
   useEffect(() => {
     if (!draftId) return;
@@ -54,39 +79,46 @@ export default function NewCampaignPage() {
       return;
     }
 
-    // Hard gate: only 'draft' status campaigns get loaded into the wizard.
-    // Submitted/live/active/completed campaigns are explicitly out of scope
-    // for this resume flow — never re-enter the wizard for those.
-    if (draftCampaign.status !== 'draft') {
-      setDraftNotEditable(true);
+    if (draftCampaign.status === 'draft') {
+      setCampaignId(draftCampaign.id);
+      setStep1Data(mapCampaignToStep1(draftCampaign) as Step1Values);
+      setStep2Data(mapCampaignToStep2(draftCampaign));
+      setCurrentStep(Math.min(draftCampaign.currentStep, 3));
       setIsHydratingDraft(false);
       return;
     }
 
-    setCampaignId(draftCampaign.id);
-    setStep1Data(mapCampaignToStep1(draftCampaign) as Step1Values);
-    setStep2Data(mapCampaignToStep2(draftCampaign));
-    setCurrentStep(Math.min(draftCampaign.currentStep, 3));
+    // Submitted-but-unpaid campaigns skip straight to the payment step rather
+    // than re-opening the wizard from step 1. The Pandascrow paymentUrl/escrowId
+    // aren't persisted on the campaign record, so re-submitting reissues a
+    // fresh one before landing on step 4.
+    if (draftCampaign.status === 'submitted' || draftCampaign.status === 'pending_payment') {
+      setCampaignId(draftCampaign.id);
+      setIsHydratingDraft(false);
+      setResumingPayment(true);
+      setPaymentOnlyResume(true);
+      submitCampaign.mutate(draftCampaign.id);
+      return;
+    }
+
+    // live/active/completed campaigns are explicitly out of scope for this
+    // resume flow — never re-enter the wizard for those.
+    setDraftNotEditable(true);
     setIsHydratingDraft(false);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [draftId, draftCampaign, draftLoading, draftLoadError]);
-  const createCampaign = useCreateCampaign((id) => {
-    setCampaignId(id);
-    goTo(2);
-  });
+  }, [draftId, draftCampaign, draftLoading, draftLoadError, submitCampaign]);
 
-  const patchCampaign = usePatchCampaign();
-
-  const submitCampaign = useSubmitCampaign((bd, url) => {
-    setBreakdown(bd);
-    setPaymentUrl(url);
-    goTo(4);
-  });
-
-  function goTo(step: number) {
-    setCurrentStep(step);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  useEffect(() => {
+    if (!resumingPayment) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (submitCampaign.isSuccess) {
+      setResumingPayment(false);
+    } else if (submitCampaign.isError) {
+      setResumingPayment(false);
+      setDraftNotEditable(true);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [resumingPayment, submitCampaign.isSuccess, submitCampaign.isError]);
 
   function handleBack() {
     if (currentStep === 1) {
@@ -179,12 +211,13 @@ export default function NewCampaignPage() {
   }
 
   function handlePay() {
-    if (!paymentUrl) return;
+    if (!paymentUrl || !campaignId || !escrowId) return;
+    writePendingCampaignPayment(campaignId, escrowId);
     window.open(paymentUrl, '_blank', 'noopener,noreferrer');
     router.push('/brand/campaign');
   }
 
-  if (isHydratingDraft) {
+  if (isHydratingDraft || resumingPayment) {
     return <CampaignDetailSkeleton />;
   }
 
@@ -239,7 +272,11 @@ export default function NewCampaignPage() {
       )}
 
       {currentStep === 4 && breakdown && paymentUrl && (
-        <StepPayment breakdown={breakdown} onBack={() => goTo(3)} onPay={handlePay} />
+        <StepPayment
+          breakdown={breakdown}
+          onBack={() => (paymentOnlyResume ? router.push('/brand/campaign') : goTo(3))}
+          onPay={handlePay}
+        />
       )}
     </CampaignPageShell>
   );
