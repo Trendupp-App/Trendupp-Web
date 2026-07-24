@@ -20,7 +20,6 @@ import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 import Link from 'next/link';
 import TermsModal from '@/components/auth/TermsModal';
 
-import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
 import { useUsernameAvailability } from '@/hooks/useAuthMutations';
 import { UsernameAvailabilityHint } from '@/shared/UsernameAvailabilityHint';
 import { PasswordRequirementsChecklist } from '@/shared/PasswordRequirementsChecklist';
@@ -92,7 +91,7 @@ export default function CreatorSignupPage() {
     }
 
     try {
-      const res = await signup.mutateAsync({
+      await signup.mutateAsync({
         email: values.email,
         password: values.password,
         firstName: values.firstName,
@@ -102,14 +101,9 @@ export default function CreatorSignupPage() {
         acceptedTerms: values.terms,
         acceptedPromotions: values.acceptedPromotions,
       });
-      const otp = isOtpAutofillEnabled() ? extractOtpFromMessage(res.data?.message) : null;
 
       setTimeout(() => {
-        const query = new URLSearchParams({
-          email: values.email,
-          type: 'creator',
-          ...(otp ? { otp } : {}),
-        });
+        const query = new URLSearchParams({ email: values.email, type: 'creator' });
         router.push(`/verify-email?${query.toString()}`);
       }, 500);
     } catch {}

@@ -21,7 +21,6 @@ import { GoogleSignInButton, type SocialSignInHandle } from '@/components/auth/G
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
 import Link from 'next/link';
-import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
 import { useUsernameAvailability } from '@/hooks/useAuthMutations';
 import { UsernameAvailabilityHint } from '@/shared/UsernameAvailabilityHint';
 import { PasswordRequirementsChecklist } from '@/shared/PasswordRequirementsChecklist';
@@ -89,7 +88,7 @@ export default function AdvertiserSignupPage() {
       return;
     }
 
-    const res = await signup.mutateAsync({
+    await signup.mutateAsync({
       email: values.email,
       password: values.password,
       brandName: values.brandName,
@@ -98,14 +97,8 @@ export default function AdvertiserSignupPage() {
       acceptedPromotions: values.acceptedPromotions,
     });
 
-    const otp = isOtpAutofillEnabled() ? extractOtpFromMessage(res?.data?.message) : null;
-
     setTimeout(() => {
-      const query = new URLSearchParams({
-        email: values.email,
-        type: 'brand',
-        ...(otp ? { otp } : {}),
-      });
+      const query = new URLSearchParams({ email: values.email, type: 'brand' });
       router.push(`/verify-email?${query.toString()}`);
     }, 500);
   }

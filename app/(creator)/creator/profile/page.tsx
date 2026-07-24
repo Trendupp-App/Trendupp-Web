@@ -64,6 +64,11 @@ import SocialPlatformCards from '@/shared/SocialPlatformCards';
 import SocialsOAuthConnect from '@/shared/SocialsOAuthConnect';
 import { useSocialConnections } from '@/hooks/useSocials';
 import CreatorTierCard from '@/components/creator-dashboard/CreatorTierCard';
+import { PASSWORD_REGEX, PASSWORD_REQUIREMENT_MESSAGE } from '@/lib/validations/passwordRules';
+import DeleteAccountModal from '@/shared/DeleteAccountModal';
+import { useContactInfo } from '@/hooks/useSettings';
+import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -431,6 +436,7 @@ export default function CreatorProfilePage() {
   const updateSecuritySettingsMutation = useUpdateSecuritySettings();
   const changePasswordMutation = useChangePassword();
   const deactivateMutation = useDeactivateAccount();
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
   // Load security settings from the server
   useEffect(() => {
@@ -475,6 +481,9 @@ export default function CreatorProfilePage() {
   const { data: serverCategories } = useSupportTicketCategories(isHelpOpen);
   const { data: myTickets, isLoading: ticketsLoading } = useSupportTickets(
     isHelpOpen && helpStep === 'my-tickets',
+  );
+  const { data: contactInfo, isLoading: contactLoading } = useContactInfo(
+    isHelpOpen && helpStep === 'main',
   );
   const submitTicketMutation = useSubmitSupportTicket();
   // Action: Handle ticket attachments file selector change (store File objects)
@@ -2214,6 +2223,14 @@ export default function CreatorProfilePage() {
                       toast.error('Please fill in all password fields');
                       return;
                     }
+                    if (newPassword.length < 8) {
+                      toast.error('New password must be at least 8 characters');
+                      return;
+                    }
+                    if (!PASSWORD_REGEX.test(newPassword)) {
+                      toast.error(PASSWORD_REQUIREMENT_MESSAGE);
+                      return;
+                    }
                     if (newPassword !== confirmPassword) {
                       toast.error('New passwords do not match');
                       return;
@@ -2259,33 +2276,34 @@ export default function CreatorProfilePage() {
               <button
                 type="button"
                 disabled={deactivateMutation.isPending}
-                onClick={() => {
-                  const password = window.prompt(
-                    'Are you sure you want to deactivate your account? This action is irreversible.\n\nTo confirm, please enter your password:',
-                  );
-                  if (password !== null) {
-                    if (!password.trim()) {
-                      toast.error('Password is required to deactivate your account');
-                      return;
-                    }
-                    deactivateMutation.mutate({ password });
-                  }
-                }}
+                onClick={() => setShowDeleteAccountModal(true)}
                 className="w-full md:w-auto md:self-start py-2.5 bg-white border border-[#fca5a5] hover:bg-rose-50 text-[#ef4444] rounded-xl text-xs font-bold active:scale-98 transition-all text-center px-6 cursor-pointer select-none disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {deactivateMutation.isPending ? (
                   <>
                     <RotateCw className="animate-spin" size={12} />
-                    Deactivating...
+                    Deleting...
                   </>
                 ) : (
-                  'Deactivate account'
+                  'Delete account'
                 )}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      <DeleteAccountModal
+        open={showDeleteAccountModal}
+        onOpenChange={setShowDeleteAccountModal}
+        isPending={deactivateMutation.isPending}
+        onConfirm={(password) =>
+          deactivateMutation.mutate(
+            { password: password || undefined },
+            { onSuccess: () => setShowDeleteAccountModal(false) },
+          )
+        }
+      />
 
       {/* ── 10. ANALYTICS RESPONSIVE DRAWER ── */}
       <div
@@ -2744,65 +2762,90 @@ export default function CreatorProfilePage() {
                   <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1 block">
                     Contact Us
                   </span>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                    {/* Email Card */}
-                    <div
-                      onClick={() => window.open('mailto:trendupp@gmail.com')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
-                        <Mail size={16} />
-                      </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">Email</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
-                        trendupp@gmail.com
-                      </span>
+                  {contactLoading ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-[88px] rounded-2xl" />
+                      ))}
                     </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                      {/* Email Card */}
+                      <div
+                        onClick={() =>
+                          contactInfo?.supportEmail &&
+                          window.open(`mailto:${contactInfo.supportEmail}`)
+                        }
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
+                          <Mail size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">Email</span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
+                          {contactInfo?.supportEmail ?? '—'}
+                        </span>
+                      </div>
 
-                    {/* Call Support Card */}
-                    <div
-                      onClick={() => window.open('tel:+2348000000000')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#f5f3ff] flex items-center justify-center text-[#7c3aed] shrink-0">
-                        <Phone size={16} />
+                      {/* Call Support Card */}
+                      <div
+                        onClick={() =>
+                          contactInfo?.supportPhone &&
+                          window.open(`tel:${contactInfo.supportPhone}`)
+                        }
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#f5f3ff] flex items-center justify-center text-[#7c3aed] shrink-0">
+                          <Phone size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">Call Support</span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
+                          {contactInfo?.supportPhone ?? '—'}
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">Call Support</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                        Mon–Fri, 9am–6pm WAT
-                      </span>
-                    </div>
 
-                    {/* Submit Ticket Card */}
-                    <div
-                      id="help-card-submit-ticket"
-                      onClick={() => setHelpStep('ticket')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center text-[#2563eb] shrink-0">
-                        <FileText size={16} />
+                      {/* Submit Ticket Card */}
+                      <div
+                        id="help-card-submit-ticket"
+                        onClick={() => setHelpStep('ticket')}
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center text-[#2563eb] shrink-0">
+                          <FileText size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">
+                          Submit a Ticket
+                        </span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
+                          Response within 24 hrs
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">Submit a Ticket</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                        Response within 24 hrs
-                      </span>
-                    </div>
 
-                    {/* My Tickets Card */}
-                    <div
-                      onClick={() => setHelpStep('my-tickets')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
-                        <Inbox size={16} />
+                      {/* My Tickets Card */}
+                      <div
+                        onClick={() => setHelpStep('my-tickets')}
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
+                          <Inbox size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">My Tickets</span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
+                          Track submissions
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">My Tickets</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                        Track submissions
-                      </span>
                     </div>
-                  </div>
+                  )}
+                  {contactInfo?.businessAddress && (
+                    <p className="flex items-start gap-1.5 text-[10px] text-[#9a99b0] pl-1">
+                      <MapPin size={11} className="shrink-0 mt-0.5" />
+                      {contactInfo.businessAddress}
+                    </p>
+                  )}
                 </div>
+
+                {/* Connect with us */}
+                <ConnectWithUsSection enabled={isHelpOpen && helpStep === 'main'} />
 
                 {/* FAQ Section */}
                 <div className="flex flex-col gap-3">

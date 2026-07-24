@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, FileText, ChevronDown, ChevronRight, Star } from 'lucide-react';
+import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin, Star } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useContactInfo } from '@/hooks/useSettings';
+import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
 import SubmitTicketView from './SubmitTicketView';
 
 const FAQS = [
@@ -63,6 +66,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportSheetProps) {
   const [showTicket, setShowTicket] = useState(false);
+  const { data: contactInfo, isLoading: contactLoading } = useContactInfo(open);
 
   return (
     <Sheet
@@ -96,44 +100,67 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                 <p className="text-xs font-semibold text-[#9a99b0] uppercase tracking-wider">
                   Contact Us
                 </p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[
-                    {
-                      icon: Mail,
-                      label: 'Email',
-                      sub: 'trendupp.@gmail.com',
-                      color: 'bg-red-50 text-red-500',
-                    },
-                    {
-                      icon: Phone,
-                      label: 'Call Support',
-                      sub: 'Mon–Fri, 9am–6pm WAT',
-                      color: 'bg-purple-50 text-purple-500',
-                    },
-                    {
-                      icon: FileText,
-                      label: 'Submit a Ticket',
-                      sub: 'Response within 24 hrs',
-                      color: 'bg-blue-50 text-blue-500',
-                      onClick: () => setShowTicket(true),
-                    },
-                  ].map(({ icon: Icon, label, sub, color, onClick }) => (
-                    <button
-                      key={label}
-                      onClick={onClick}
-                      className="flex flex-col items-center gap-2 border border-[#e8e6f0] rounded-xl px-3 py-2 text-center hover:bg-[#faf9fc] transition-colors"
-                    >
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}
+                {contactLoading ? (
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-[92px] rounded-xl" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      {
+                        icon: Mail,
+                        label: 'Email',
+                        sub: contactInfo?.supportEmail ?? '—',
+                        color: 'bg-red-50 text-red-500',
+                        onClick: () =>
+                          contactInfo?.supportEmail &&
+                          window.open(`mailto:${contactInfo.supportEmail}`),
+                      },
+                      {
+                        icon: Phone,
+                        label: 'Call Support',
+                        sub: contactInfo?.supportPhone ?? '—',
+                        color: 'bg-purple-50 text-purple-500',
+                        onClick: () =>
+                          contactInfo?.supportPhone &&
+                          window.open(`tel:${contactInfo.supportPhone}`),
+                      },
+                      {
+                        icon: FileText,
+                        label: 'Submit a Ticket',
+                        sub: 'Response within 24 hrs',
+                        color: 'bg-blue-50 text-blue-500',
+                        onClick: () => setShowTicket(true),
+                      },
+                    ].map(({ icon: Icon, label, sub, color, onClick }) => (
+                      <button
+                        key={label}
+                        onClick={onClick}
+                        className="flex flex-col items-center gap-2 border border-[#e8e6f0] rounded-xl px-3 py-2 text-center hover:bg-[#faf9fc] transition-colors"
                       >
-                        <Icon size={18} />
-                      </div>
-                      <p className="text-xs font-semibold text-[#1a1a2e]">{label}</p>
-                      <p className="text-[10px] text-[#9a99b0] leading-normal">{sub}</p>
-                    </button>
-                  ))}
-                </div>
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}
+                        >
+                          <Icon size={18} />
+                        </div>
+                        <p className="text-xs font-semibold text-[#1a1a2e]">{label}</p>
+                        <p className="text-[10px] text-[#9a99b0] leading-normal break-all">{sub}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {contactInfo?.businessAddress && (
+                  <p className="flex items-start gap-1.5 text-[11px] text-[#9a99b0] px-1 mt-1">
+                    <MapPin size={12} className="shrink-0 mt-0.5" />
+                    {contactInfo.businessAddress}
+                  </p>
+                )}
               </div>
+
+              {/* Connect with us */}
+              <ConnectWithUsSection enabled={open} />
 
               {/* FAQs */}
               <div className="flex flex-col gap-2">
