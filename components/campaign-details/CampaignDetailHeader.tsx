@@ -14,7 +14,7 @@ export default function CampaignDetailHeader({ campaign }: CampaignDetailHeaderP
   return (
     <>
       <button
-        onClick={() => router.back()}
+        onClick={() => router.push('/brand/campaign')}
         className="flex cursor-pointer items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors mb-4"
       >
         <ArrowLeft size={16} />

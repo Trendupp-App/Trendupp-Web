@@ -1,16 +1,3 @@
-/**
- * Campaign payment flow (Pandascrow escrow):
- *
- * 1. submitCampaign() returns a paymentUrl + escrowId. Before opening the
- *    paymentUrl (in a new tab), we stash { campaignId, escrowId } here.
- * 2. Pandascrow redirects the browser to /payment/success?escrowId=...
- *    That redirect only carries escrowId — not campaignId — so the success
- *    page reads this pending record (localStorage is shared across tabs on
- *    the same origin) to know which campaign to verify.
- * 3. The pending record is cleared once verification succeeds. It's kept on
- *    failure so a retry on the success page still has campaignId to work with.
- */
-
 const PENDING_KEY = 'campaign_payment_pending';
 
 export interface PendingCampaignPayment {
@@ -20,7 +7,11 @@ export interface PendingCampaignPayment {
 
 export function writePendingCampaignPayment(campaignId: string, escrowId: string): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(PENDING_KEY, JSON.stringify({ campaignId, escrowId }));
+  try {
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ campaignId, escrowId }));
+  } catch {
+    // Storage may be unavailable (private mode/quota/etc). Ignore and let the success page handle it.
+  }
 }
 
 export function readPendingCampaignPayment(): PendingCampaignPayment | null {

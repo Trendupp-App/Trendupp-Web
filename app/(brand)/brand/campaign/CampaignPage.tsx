@@ -46,7 +46,7 @@ export default function BrandCampaignsPage() {
   const mainTab: MainTab = useMemo(() => {
     const fromQuery = searchParams.get('tab') as MainTab | null;
     if (fromQuery && VALID_TABS.includes(fromQuery)) return fromQuery;
-    return manualTab ?? 'draft';
+    return manualTab ?? 'live';
   }, [searchParams, manualTab]);
 
   const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('all');

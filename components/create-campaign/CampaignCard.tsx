@@ -1,15 +1,8 @@
-import { Clock, Users, Megaphone } from 'lucide-react';
+import { Users, Megaphone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/Utilities';
-
-function daysLeft(timeline?: string): number {
-  if (!timeline) return 0;
-  const deadline = new Date(timeline).getTime();
-  const diff = deadline - Date.now();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
 
 const STATUS_CONFIG: Record<
   string,
@@ -97,13 +90,6 @@ export default function CampaignCard({ campaign, onViewDetails }: CampaignCardPr
           />
         ) : (
           <Megaphone size={32} className="text-[#7c6fe0]" />
-        )}
-
-        {campaign.status === 'live' && (
-          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full">
-            <Clock size={10} />
-            {daysLeft(campaign.timeline)}days left
-          </div>
         )}
 
         <div
