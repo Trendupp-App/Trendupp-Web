@@ -87,6 +87,34 @@ test.describe('App smoke test', () => {
           }),
         });
       });
+
+      // Mock platform contact info (Help & Support "Contact Us" cards)
+      await page.route('**/api/v1/settings/contact-info', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            businessAddress: '12 Marina Way, Lagos Island, Lagos, Nigeria',
+            supportEmail: 'support@trendupp.com',
+            supportPhone: '+234 800 TRENDUPP',
+          }),
+        });
+      });
+
+      // Mock platform external links (Help & Support "Connect with us")
+      await page.route('**/api/v1/settings/external-links', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            websiteUrl: 'https://trendupp.com',
+            instagram: '@trendupp',
+            twitter: '@trendupp_ng',
+            linkedin: 'trendupp',
+            youtube: 'TrenduppAfrica',
+          }),
+        });
+      });
     }
 
     // Mock generic profile API endpoints to avoid 401 redirects
@@ -244,7 +272,7 @@ test.describe('App smoke test', () => {
     await helpBtn.click();
 
     // Check email info is visible (verifies the main help view is loaded)
-    const emailInfo = page.locator('text=trendupp@gmail.com').first();
+    const emailInfo = page.locator('text=support@trendupp.com').first();
     await expect(emailInfo).toBeVisible();
 
     // Click the "Submit a Ticket" card to open form

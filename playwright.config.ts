@@ -68,6 +68,15 @@ export default defineConfig({
         process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY ?? 'e2e-dummy-tiktok-key',
       NEXT_PUBLIC_INSTAGRAM_APP_ID:
         process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID ?? 'e2e-dummy-instagram-app-id',
+      // All API calls are intercepted via page.route('**/api/v1/...') mocks in
+      // the test files — this only needs to be well-formed so request URLs
+      // contain "/api/v1/" for those glob patterns to match. Without it,
+      // NEXT_PUBLIC_API_BASE_URL is undefined at build time (it's inlined by
+      // Next.js at build, and .env is gitignored/absent in CI), so every
+      // request silently drops the /api/v1 prefix and no mock ever matches.
+      NEXT_PUBLIC_API_BASE_URL:
+        process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001/api/v1',
+      NEXT_PUBLIC_API_KEY: process.env.NEXT_PUBLIC_API_KEY ?? 'e2e-dummy-api-key',
     },
   },
 });

@@ -22,6 +22,7 @@ import { useCountries, useStates } from '@/hooks/useOnboardingQueries';
 import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
 import { toast } from 'sonner';
 import { ComboBox } from '@/shared/ComboBox';
+import { formatNumberWithCommas, stripNonDigits } from '@/utils/Utilities';
 interface Props {
   onNext: (data: Partial<AdvertiserOnboardingData>) => void;
   defaultValues?: Partial<Values>;
@@ -55,6 +56,9 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
 
   const logo = useWatch({ control, name: 'logo' });
   const country = useWatch({ control, name: 'country' });
+  const monthlyBudget = useWatch({ control, name: 'monthlyBudget' }) ?? '';
+  const currencySymbol = country && country !== 'Nigeria' ? '$' : '₦';
+
   useEffect(() => {
     if (!defaultValues?.brandName && user?.username) {
       setValue('brandName', user.username);
@@ -74,6 +78,10 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
     setValue('country', countryName, { shouldValidate: true });
     setValue('state', '', { shouldValidate: true });
     setUserSelectedCountryId(countries.find((c) => c.name === countryName)?.id);
+  }
+
+  function handleMonthlyBudgetChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setValue('monthlyBudget', stripNonDigits(e.target.value), { shouldValidate: true });
   }
 
   function onSubmit(values: Values) {
@@ -216,12 +224,19 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
       {/* Monthly budget */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Monthly budget</Label>
-        <Input
-          {...register('monthlyBudget')}
-          type="number"
-          placeholder="Enter monthly budget"
-          className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
-        />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-light text-[#1a1a2e]">
+            {currencySymbol}
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={formatNumberWithCommas(monthlyBudget)}
+            onChange={handleMonthlyBudgetChange}
+            placeholder="Enter monthly budget"
+            className="w-full border border-[#e8e6f0] rounded-md h-10 pl-7 pr-3 text-xs font-light focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+          />
+        </div>
         {errors.monthlyBudget && (
           <p className="text-[11px] text-red-400">{errors.monthlyBudget.message}</p>
         )}
