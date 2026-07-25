@@ -30,7 +30,8 @@ export const AppleSignInButton = forwardRef<SocialSignInHandle, Props>(function 
     setLoading(true);
     onStart?.();
 
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback/apple`;
+    // Apple's form_post must target the API route handler, not the client page.
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/apple/callback`;
 
     sessionStorage.setItem(
       APPLE_PENDING_KEY,
@@ -41,7 +42,10 @@ export const AppleSignInButton = forwardRef<SocialSignInHandle, Props>(function 
       client_id: process.env.NEXT_PUBLIC_APPLE_SERVICES_ID!,
       redirect_uri: redirectUri,
       response_type: 'code id_token',
-      response_mode: 'fragment',
+      // Apple mandates form_post when the name/email scope is requested. The
+      // POST lands on /api/auth/apple/callback, which forwards the values to
+      // the client callback page as a URL fragment.
+      response_mode: 'form_post',
       scope: 'name email',
       state: 'login_apple',
     });
