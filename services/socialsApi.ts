@@ -1,13 +1,14 @@
 import apiClient from '@/lib/apiClient';
 
 /** Platform ids as the backend knows them (server: src/domains/socials). */
-export type SocialPlatformId = 'instagram' | 'tiktok' | 'youtube' | 'twitter';
+export type SocialPlatformId = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook';
 
 export const SOCIAL_PLATFORM_IDS: SocialPlatformId[] = [
   'instagram',
   'tiktok',
   'youtube',
   'twitter',
+  'facebook',
 ];
 
 /** One platform card from GET /socials — connected or not. */

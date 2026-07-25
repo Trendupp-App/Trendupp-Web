@@ -65,6 +65,23 @@ export interface InstagramAuthPayload {
   acceptedTerms: boolean;
   acceptedPromotions: boolean;
 }
+export interface FacebookAuthPayload {
+  code: string;
+  redirectUri: string;
+  role: string;
+  acceptedTerms: boolean;
+  acceptedPromotions: boolean;
+}
+
+export interface AppleAuthPayload {
+  identityToken: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  acceptedTerms: boolean;
+  acceptedPromotions: boolean;
+}
+
 export interface UsernameCheckResponse {
   username: string;
   isAvailable: boolean;
@@ -93,6 +110,10 @@ export const authApi = {
 
   instagramAuth: (data: InstagramAuthPayload) =>
     apiClient.post<AuthResponse>('/auth/instagram', data),
+
+  facebookAuth: (data: FacebookAuthPayload) => apiClient.post<AuthResponse>('/auth/facebook', data),
+
+  appleAuth: (data: AppleAuthPayload) => apiClient.post<AuthResponse>('/auth/apple', data),
 
   getUserProfile: (userId: string) => apiClient.get<RawUserProfile>(`/users/${userId}`),
 
