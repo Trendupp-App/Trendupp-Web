@@ -10,7 +10,6 @@ import DraftCampaignCardSkeleton from '@/components/skeletons/DraftCardSkeleton'
 import CampaignCard from '@/components/create-campaign/CampaignCard';
 import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
 import { useMyCampaigns, useDeleteDraftCampaign } from '@/hooks/useCampaign';
-import { DUMMY_COMPLETED_CAMPAIGNS } from '@/dummy/campaign';
 import FeedbackModal from '@/shared/FeedBackModal';
 
 type MainTab = 'draft' | 'live' | 'active' | 'completed';
@@ -80,10 +79,10 @@ export default function BrandCampaignsPage() {
     'active',
     mainTab === 'active',
   );
-  // const { data: completedCampaigns = [], isLoading: completedLoading } = useMyCampaigns(
-  //   'completed',
-  //   mainTab === 'completed',
-  // );
+  const { data: completedCampaigns = [], isLoading: completedLoading } = useMyCampaigns(
+    'completed',
+    mainTab === 'completed',
+  );
 
   const allDraftTabCampaigns = useMemo(() => {
     const byId = new Map<string, (typeof draftCampaigns)[number]>();
@@ -93,11 +92,6 @@ export default function BrandCampaignsPage() {
     return Array.from(byId.values());
   }, [draftCampaigns, submittedCampaigns, pendingPaymentCampaigns]);
   const draftTabLoading = draftsLoading || submittedLoading || pendingPaymentLoading;
-
-  // const activeCampaigns = DUMMY_ACTIVE_CAMPAIGNS;
-  const completedCampaigns = DUMMY_COMPLETED_CAMPAIGNS;
-  // const activeLoading = false;
-  const completedLoading = false;
 
   const filteredActive =
     activeSubTab === 'all'

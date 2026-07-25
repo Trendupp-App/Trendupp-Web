@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Users } from 'lucide-react';
+import { Users, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CampaignCardProps {
@@ -40,6 +40,32 @@ export default function CampaignCard({
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-w-768px) 100vw, 300px"
         />
+
+        {/* Days left / Closed badge overlay (bottom-left) */}
+        {daysLeft && (
+          <div
+            className={cn(
+              'absolute bottom-3 left-3 flex items-center gap-1 bg-white text-[10px] px-2.5 py-1 rounded-full shadow-sm z-10 border border-[#e8e6f0]/40',
+              isClosed
+                ? 'text-[#9a99b0] font-semibold'
+                : daysLeft.toLowerCase().includes('h') && !daysLeft.toLowerCase().includes('d')
+                  ? 'text-red-500 font-bold border-red-100'
+                  : 'text-[#5a5a7a] font-semibold',
+            )}
+          >
+            <Clock
+              size={11}
+              className={
+                isClosed
+                  ? 'text-[#9a99b0]'
+                  : daysLeft.toLowerCase().includes('h') && !daysLeft.toLowerCase().includes('d')
+                    ? 'text-red-500'
+                    : 'text-[#7a7a9a]'
+              }
+            />
+            <span>{daysLeft}</span>
+          </div>
+        )}
 
         {/* Bottom-right Overlay Badge (Live or Creator Tier for Closed campaigns) */}
         {isClosed ? (

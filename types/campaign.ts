@@ -31,6 +31,18 @@ export type ContentType = (typeof CONTENT_TYPES)[number];
 
 //  Campaign
 
+export interface CampaignTimelineStage {
+  goal: string;
+  status: 'completed' | 'in_progress' | 'pending' | string;
+  endedDate: string | null;
+  intendedFor: string | null;
+  startedDate: string | null;
+}
+
+// Keys are e.g. "stage0_escrow", "stage1_application_window" — see
+// lib/campaignTimelineStage.ts for how these are ordered/interpreted.
+export type CampaignTimeline = Record<string, CampaignTimelineStage>;
+
 export type CampaignStatus =
   | 'draft'
   | 'submitted'
@@ -87,7 +99,7 @@ export interface Campaign extends BaseEntity {
     name: string;
   }[];
   creatorNicheId?: string;
-  timeline?: string;
+  timeline?: CampaignTimeline;
   approvedAt?: string | null;
   urlIsLive?: boolean | null;
   creatorNiche?: {

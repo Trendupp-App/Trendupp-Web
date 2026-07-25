@@ -1,12 +1,6 @@
 import type { Campaign } from '@/types/campaign';
 import { formatCurrency } from '@/utils/Utilities';
-
-function daysLeft(timeline?: string): number {
-  if (!timeline) return 0;
-  const deadline = new Date(timeline).getTime();
-  const diff = deadline - Date.now();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
+import { formatTimeRemaining, getActiveDeadline } from '@/lib/campaignTimelineStage';
 
 interface CampaignStatsRowProps {
   campaign: Campaign;
@@ -14,6 +8,8 @@ interface CampaignStatsRowProps {
 }
 
 export default function CampaignStatsRow({ campaign }: CampaignStatsRowProps) {
+  const timeRemaining = formatTimeRemaining(getActiveDeadline(campaign.timeline));
+
   return (
     <div className="border border-[#e8e6f0] rounded-xl p-5 flex items-center justify-around gap-4 mb-6">
       <div>
@@ -24,9 +20,7 @@ export default function CampaignStatsRow({ campaign }: CampaignStatsRowProps) {
       </div>
       <div>
         <p className="text-xs text-[#9a99b0]">Deadline</p>
-        <p className="text-sm font-semibold text-[#1a1a2e] mt-0.5">
-          {daysLeft(campaign.timeline)} days left
-        </p>
+        <p className="text-sm font-semibold text-[#1a1a2e] mt-0.5">{timeRemaining ?? '—'}</p>
       </div>
       <div>
         <p className="text-xs text-[#9a99b0]">Creator Tier</p>

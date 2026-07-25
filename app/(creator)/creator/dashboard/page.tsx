@@ -14,6 +14,7 @@ import { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { formatCurrency } from '@/utils/Utilities';
+import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
 
 type FilterType = 'all' | 'live' | 'past';
 
@@ -29,51 +30,40 @@ export default function CreatorDashboardPage() {
     status: activeFilter === 'all' ? undefined : activeFilter === 'live' ? 'live' : 'completed',
   });
 
-  const getDaysLeft = (timelineDate: string) => {
-    const diffTime = new Date(timelineDate).getTime() - new Date().getTime();
-    if (diffTime <= 0) return 'Closed';
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays > 0) return `${diffDays}d left`;
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    return `${diffHours}h left`;
-  };
-
-  const mappedCampaigns = liveCampaigns.map((c: Campaign) => ({
-    id: c.id,
-    title: c.title,
-    brand: c.brand?.username || 'Unknown Brand',
-    budget: formatCurrency(c.totalBudget, c.currency ?? 'NGN'),
-    budgetMin: c.totalBudget,
-    budgetMax: c.totalBudget,
-    daysLeft: getDaysLeft(c.timeline || ''),
-    daysLeftNumber: Math.max(
-      0,
-      Math.floor(
-        (new Date(c.timeline || '').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
-      ),
-    ),
-    tier: c.creatorCategory?.name || 'Nano',
-    appliedCount: c.applicationsCount?.total || 0,
-    image:
-      c.coverImage ||
-      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
-    platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
-    status: (c.status === 'active' || c.status === 'live'
-      ? 'live'
-      : c.status === 'completed'
-        ? 'past'
-        : c.status) as string,
-    isSocialImpact: false,
-    goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
-    createdAt: c.createdAt,
-    campaignBrief: c.campaignBrief || 'No brief provided.',
-    deliverables: c.deliverables || [],
-    contentDirection: c.contentDirection || [],
-    contentGuidelines: c.contentGuidelines || { dos: [], donts: [] },
-    usageRights: c.usageRights || '',
-    successLooksLike: c.successLooksLike || '',
-  }));
+  const mappedCampaigns = liveCampaigns.map((c: Campaign) => {
+    const deadline = getCampaignDeadlineInfo(c.timeline);
+    return {
+      id: c.id,
+      title: c.title,
+      brand: c.brand?.username || 'Unknown Brand',
+      budget: formatCurrency(c.totalBudget, c.currency ?? 'NGN'),
+      budgetMin: c.totalBudget,
+      budgetMax: c.totalBudget,
+      daysLeft: deadline.label ?? 'Closed',
+      daysLeftNumber: deadline.daysRemaining,
+      tier: c.creatorCategory?.name || 'Nano',
+      appliedCount: c.applicationsCount?.total || 0,
+      image:
+        c.coverImage ||
+        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+      niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
+      platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
+      status: (c.status === 'active' || c.status === 'live'
+        ? 'live'
+        : c.status === 'completed'
+          ? 'past'
+          : c.status) as string,
+      isSocialImpact: false,
+      goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
+      createdAt: c.createdAt,
+      campaignBrief: c.campaignBrief || 'No brief provided.',
+      deliverables: c.deliverables || [],
+      contentDirection: c.contentDirection || [],
+      contentGuidelines: c.contentGuidelines || { dos: [], donts: [] },
+      usageRights: c.usageRights || '',
+      successLooksLike: c.successLooksLike || '',
+    };
+  });
 
   const filteredCampaigns = mappedCampaigns.filter((campaign) => {
     if (activeFilter === 'all') return true;
