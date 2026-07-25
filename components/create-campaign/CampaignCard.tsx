@@ -1,8 +1,9 @@
-import { Users, Megaphone } from 'lucide-react';
+import { Users, Megaphone, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/Utilities';
+import { formatTimeRemaining, getActiveDeadline } from '@/lib/campaignTimelineStage';
 
 const STATUS_CONFIG: Record<
   string,
@@ -69,6 +70,7 @@ export default function CampaignCard({ campaign, onViewDetails }: CampaignCardPr
   // const config = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.live;
   const displayStatus = campaign.subStatus ?? campaign.status;
   const config = STATUS_CONFIG[displayStatus] ?? STATUS_CONFIG.live;
+  const timeRemaining = formatTimeRemaining(getActiveDeadline(campaign.timeline));
 
   function handleClick() {
     if (onViewDetails) {
@@ -90,6 +92,13 @@ export default function CampaignCard({ campaign, onViewDetails }: CampaignCardPr
           />
         ) : (
           <Megaphone size={32} className="text-[#7c6fe0]" />
+        )}
+
+        {timeRemaining && (campaign.status === 'live' || campaign.status === 'active') && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full">
+            <Clock size={10} />
+            {timeRemaining}
+          </div>
         )}
 
         <div

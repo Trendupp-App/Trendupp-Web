@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { CampaignApplicationDto, Campaign } from '@/types/campaign';
 import { useBrandNames } from '@/hooks/useBrandNames';
 import { formatCurrency } from '@/utils/Utilities';
+import { getActiveDeadline } from '@/lib/campaignTimelineStage';
 
 interface SubmissionItem {
   id?: string;
@@ -73,8 +74,9 @@ function mapAppToWorkCampaign(
   }
   let daysLeft = '0d';
   let daysLeftNumber = 0;
-  if (campaign.timeline) {
-    const diff = new Date(campaign.timeline).getTime() - Date.now();
+  const activeDeadline = getActiveDeadline(campaign.timeline);
+  if (activeDeadline) {
+    const diff = new Date(activeDeadline).getTime() - Date.now();
     if (diff > 0) {
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

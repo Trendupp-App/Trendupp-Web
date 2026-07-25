@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 
-type DetailTab = 'overview' | 'applications';
+type DetailTab = 'overview' | 'applications' | 'timeline';
 
 interface CampaignDetailTabsProps {
   activeTab: DetailTab;
@@ -48,6 +48,17 @@ export default function CampaignDetailTabs({
         >
           {applicationsCount}
         </span>
+      </button>
+      <button
+        onClick={() => onChange('timeline')}
+        className={cn(
+          'px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors',
+          activeTab === 'timeline'
+            ? 'bg-white text-brand-pink shadow-sm'
+            : 'text-[#7a7a9a] hover:text-[#1a1a2e]',
+        )}
+      >
+        Timeline
       </button>
     </div>
   );
