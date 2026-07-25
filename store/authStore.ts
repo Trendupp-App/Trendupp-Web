@@ -18,6 +18,7 @@ export interface AuthUser {
     tiktok: boolean;
     youtube: boolean;
     twitter: boolean;
+    facebook: boolean;
   };
   username: string | null;
   niches: Array<{ id: string; name: string; order: number }>;

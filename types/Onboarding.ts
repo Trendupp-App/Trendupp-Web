@@ -174,6 +174,7 @@ export interface SocialsConnected {
   tiktok: boolean;
   youtube: boolean;
   twitter: boolean;
+  facebook: boolean;
 }
 
 export interface UpdateSocialsResponse {

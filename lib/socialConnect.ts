@@ -67,6 +67,13 @@ const OAUTH_CONFIG: Record<SocialPlatformId, PlatformOAuthConfig> = {
     clientIdParam: 'client_id',
     usesPkce: true, // PKCE is mandatory for X OAuth 2.0
   },
+  facebook: {
+    clientId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+    authorizeUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
+    scope: 'public_profile,pages_show_list,pages_read_engagement',
+    clientIdParam: 'client_id',
+    usesPkce: false,
+  },
 };
 
 /**
@@ -74,7 +81,7 @@ const OAUTH_CONFIG: Record<SocialPlatformId, PlatformOAuthConfig> = {
  * their OAuth config above (ready for later) but are intentionally kept out
  * of this list so they show as "Coming soon" — only YouTube is enabled.
  */
-const ENABLED_PLATFORMS: SocialPlatformId[] = ['youtube'];
+const ENABLED_PLATFORMS: SocialPlatformId[] = ['youtube', 'facebook'];
 
 /** Whether real OAuth can start for this platform (enabled + client id configured). */
 export function isOAuthConfigured(platform: SocialPlatformId): boolean {
@@ -160,6 +167,7 @@ export function syncAuthStoreFromSocials(result: SocialsMutationResult): void {
       tiktok: connected.tiktok ?? false,
       youtube: connected.youtube ?? false,
       twitter: connected.twitter ?? false,
+      facebook: connected.facebook ?? false,
     },
   });
 }
