@@ -66,7 +66,7 @@ import { useSocialConnections } from '@/hooks/useSocials';
 import CreatorTierCard from '@/components/creator-dashboard/CreatorTierCard';
 import { PASSWORD_REGEX, PASSWORD_REQUIREMENT_MESSAGE } from '@/lib/validations/passwordRules';
 import DeleteAccountModal from '@/shared/DeleteAccountModal';
-import { useContactInfo } from '@/hooks/useSettings';
+import { useContactInfo, useFaqs } from '@/hooks/useSettings';
 import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -197,33 +197,6 @@ const INITIAL_PROFILE: CreatorProfile = {
   email: 'teniolu@gmail.com',
   nationality: 'Nigeria',
 };
-
-const MOCK_FAQS = [
-  {
-    q: 'How does escrow payment work?',
-    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt. You can withdraw payment on or after 30 days.',
-  },
-  {
-    q: 'How long does profile verification take?',
-    a: 'Profile verification typically takes between 24 to 48 hours. Our team reviews your connected social channels, engagement rates, and content quality to verify authenticity before approving your profile.',
-  },
-  {
-    q: 'Can I apply for multiple campaigns?',
-    a: 'Yes, you can apply for multiple campaigns simultaneously. However, we recommend only applying to campaigns that align well with your niche and target audience to maintain high engagement.',
-  },
-  {
-    q: "What happens if a brand doesn't approve my work?",
-    a: "If a brand has feedback or requests revisions, they will outline the changes needed. If there's an unresolved dispute, Trendupp's support team will step in as an arbitrator to review according to the campaign requirements.",
-  },
-  {
-    q: 'How do I withdraw my earnings?',
-    a: 'Once funds are cleared and available in your wallet, you can request a withdrawal directly to your linked bank account. Bank transfers are usually processed within 1-3 business days.',
-  },
-  {
-    q: 'What creator tiers are available?',
-    a: 'Trendupp features multiple creator tiers based on your follower count and engagement: Micro (1K-10K), Mid-tier (10K-100K), Macro (100K-1M), and Mega/Celebrity (1M+). Higher tiers unlock exclusive campaign opportunities.',
-  },
-];
 
 export default function CreatorProfilePage() {
   // Queries & Mutations
@@ -496,6 +469,7 @@ export default function CreatorProfilePage() {
   const { data: contactInfo, isLoading: contactLoading } = useContactInfo(
     isHelpOpen && helpStep === 'main',
   );
+  const { data: faqs, isLoading: faqsLoading } = useFaqs(isHelpOpen && helpStep === 'main');
   const submitTicketMutation = useSubmitSupportTicket();
   // Action: Handle ticket attachments file selector change (store File objects)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -539,10 +513,10 @@ export default function CreatorProfilePage() {
     }
   }, [isAnalyticsOpen]);
 
-  const filteredFaqs = MOCK_FAQS.filter(
+  const filteredFaqs = (faqs ?? []).filter(
     (faq) =>
-      faq.q.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
-      faq.a.toLowerCase().includes(helpSearchQuery.toLowerCase()),
+      faq.question.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(helpSearchQuery.toLowerCase()),
   );
 
   // Modals
@@ -632,7 +606,6 @@ export default function CreatorProfilePage() {
     formData.append('firstName', editFirstName.trim());
     formData.append('lastName', editLastName.trim());
     formData.append('username', editHandle.trim());
-    formData.append('email', editEmail.trim());
     formData.append('bio', editBio);
     if (nationalityId) formData.append('nationalityId', nationalityId);
     if (countryId) formData.append('countryId', countryId);
@@ -1656,9 +1629,8 @@ export default function CreatorProfilePage() {
                         type="email"
                         placeholder="Email address"
                         value={editEmail}
-                        onChange={(e) => setEditEmail(e.target.value)}
-                        className="w-full h-10 border border-[#e8e6f0] rounded-xl pl-9 pr-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
-                        required
+                        disabled
+                        className="w-full h-10 border border-[#e8e6f0] rounded-xl pl-9 pr-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5] disabled:bg-[#faf9fc] disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -2864,17 +2836,23 @@ export default function CreatorProfilePage() {
                     FAQ
                   </span>
                   <div className="flex flex-col gap-2.5">
-                    {filteredFaqs.length > 0 ? (
+                    {faqsLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-14 rounded-xl" />
+                      ))
+                    ) : filteredFaqs.length > 0 ? (
                       filteredFaqs.map((faq, idx) => {
                         const isExpanded = expandedFaqIdx === idx;
                         return (
                           <div
-                            key={idx}
+                            key={faq.id}
                             onClick={() => setExpandedFaqIdx(isExpanded ? null : idx)}
                             className="bg-white border border-[#e8e6f0]/70 rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-colors hover:bg-neutral-50/50"
                           >
                             <div className="flex items-center justify-between gap-3">
-                              <span className="text-[11px] font-bold text-[#1a1a2e]">{faq.q}</span>
+                              <span className="text-[11px] font-bold text-[#1a1a2e]">
+                                {faq.question}
+                              </span>
                               <ChevronRight
                                 size={14}
                                 className={cn(
@@ -2889,7 +2867,9 @@ export default function CreatorProfilePage() {
                                 isExpanded ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0',
                               )}
                             >
-                              <p className="text-[10px] text-[#5a5a7a] leading-relaxed">{faq.a}</p>
+                              <p className="text-[10px] text-[#5a5a7a] leading-relaxed">
+                                {faq.answer}
+                              </p>
                             </div>
                           </div>
                         );

@@ -1,11 +1,23 @@
-export function formatFollowerRange(min: number, max: number | null) {
-  const fmt = (n: number) => n.toLocaleString();
-  if (max === null) return `${fmt(min)}+ followers`;
-  return `${fmt(min)} - ${fmt(max)} followers`;
+function abbreviateFollowerCount(n: number): string {
+  if (n >= 1_000_000) return `${Math.round(n / 1_000_000)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+  return `${n}`;
 }
 
-export function formatTierLabel(name: string, min: number, max: number | null) {
-  return `${name} (${formatFollowerRange(min, max)})`;
+// Tier bands are contiguous (a tier's maxFollowers + 1 is the next tier's
+// minFollowers), so the upper bound is shown as that round next-tier value
+// (e.g. 9,999 -> "10K") rather than the raw inclusive max.
+export function formatTierFollowerRange(min: number, max: number | null) {
+  if (max === null) return `${abbreviateFollowerCount(min)}+`;
+  return `${abbreviateFollowerCount(min)}-${abbreviateFollowerCount(max + 1)}`;
+}
+
+export function formatMinCostLabel(minCostNaira: number) {
+  return `Minimum ${minCostNaira.toLocaleString('en-US')} naira`;
+}
+
+export function formatMinCostUsdLabel(minCostUsd: number) {
+  return `Minimum $${minCostUsd.toLocaleString('en-US')}`;
 }
 
 export function formatRelativeTime(dateString: string): string {

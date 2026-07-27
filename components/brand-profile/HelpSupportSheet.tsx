@@ -4,36 +4,9 @@ import { useState } from 'react';
 import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin, Star } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useContactInfo } from '@/hooks/useSettings';
+import { useContactInfo, useFaqs } from '@/hooks/useSettings';
 import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
 import SubmitTicketView from './SubmitTicketView';
-
-const FAQS = [
-  {
-    q: 'How does escrow payment work?',
-    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt, withdraw payment on or after 30 days.',
-  },
-  {
-    q: 'How long does profile verification take?',
-    a: 'Profile verification typically takes 24–48 hours after you complete all onboarding steps.',
-  },
-  {
-    q: 'Can I apply for multiple campaigns?',
-    a: 'Yes, you can apply for multiple campaigns simultaneously as long as you meet the tier requirements.',
-  },
-  {
-    q: "What happens if a brand doesn't approve my work?",
-    a: "If a brand doesn't approve your content, you can submit a revision. Disputes can be raised through our support system.",
-  },
-  {
-    q: 'How do I withdraw my earnings?',
-    a: 'Earnings are released to your linked bank account within 48 hours of content approval.',
-  },
-  {
-    q: 'What creator tiers are available?',
-    a: 'We have Nano (under 10K), Micro (10K–100K), Macro (100K–1M), and Mega (1M+) tiers based on follower count.',
-  },
-];
 
 interface HelpSupportSheetProps {
   open: boolean;
@@ -67,6 +40,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportSheetProps) {
   const [showTicket, setShowTicket] = useState(false);
   const { data: contactInfo, isLoading: contactLoading } = useContactInfo(open);
+  const { data: faqs, isLoading: faqsLoading } = useFaqs(open);
 
   return (
     <Sheet
@@ -168,9 +142,17 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                   FAQs
                 </p>
                 <div className="flex flex-col gap-2">
-                  {FAQS.map((faq) => (
-                    <FaqItem key={faq.q} {...faq} />
-                  ))}
+                  {faqsLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-12 rounded-xl" />
+                    ))
+                  ) : faqs && faqs.length > 0 ? (
+                    faqs.map((faq) => <FaqItem key={faq.id} q={faq.question} a={faq.answer} />)
+                  ) : (
+                    <p className="text-xs text-[#9a99b0] text-center py-4">
+                      No FAQs available right now.
+                    </p>
+                  )}
                 </div>
               </div>
 

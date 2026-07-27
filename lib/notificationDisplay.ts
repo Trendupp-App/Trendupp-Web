@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   CalendarClock,
   Gift,
+  Bell,
   type LucideIcon,
 } from 'lucide-react';
 import type { NotificationCategory } from '@/types/notifications';
@@ -64,8 +65,18 @@ export const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
   'security',
 ];
 
-export function getNotificationCategoryMeta(category: NotificationCategory): CategoryMeta {
-  return CATEGORY_META[category];
+// Fallback for categories the backend sends that this catalog doesn't know
+// about yet — `category` is an open string server-side (see NOTIFICATION_CATEGORIES
+// docs), not a closed enum, so an unrecognized value must render *something*
+// rather than crash the drawer.
+const DEFAULT_CATEGORY_META: CategoryMeta = {
+  label: 'Updates',
+  icon: Bell,
+  iconClassName: 'bg-[#f4f3f6] text-[#5a5a7a]',
+};
+
+export function getNotificationCategoryMeta(category: string): CategoryMeta {
+  return CATEGORY_META[category as NotificationCategory] ?? DEFAULT_CATEGORY_META;
 }
 
 export type NotificationRole = 'creator' | 'brand';

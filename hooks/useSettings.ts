@@ -21,3 +21,19 @@ export function useExternalLinks(enabled: boolean = true) {
     staleTime: SETTINGS_STALE_TIME,
   });
 }
+
+export function useFaqs(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['platform-faqs'],
+    queryFn: () =>
+      settingsApi
+        .getFaqs()
+        .then((r) =>
+          r.data
+            .filter((faq) => faq.status === 'published')
+            .sort((a, b) => a.sortOrder - b.sortOrder),
+        ),
+    enabled,
+    staleTime: SETTINGS_STALE_TIME,
+  });
+}

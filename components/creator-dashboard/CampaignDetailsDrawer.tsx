@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Clock, Shield, Check, ArrowLeft } from 'lucide-react';
+import { X, Clock, Shield, Check, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCampaignPlatforms, useApplyCampaign } from '@/hooks/useCampaign';
@@ -43,7 +43,7 @@ export default function CampaignDetailsDrawer({
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [drawerMode, setDrawerMode] = useState<'details' | 'apply' | 'success'>('details');
   const [contentTitle, setContentTitle] = useState('');
-  const [workLink, setWorkLink] = useState('');
+  const [workLinks, setWorkLinks] = useState<string[]>(['']);
   const [primaryPlatform, setPrimaryPlatform] = useState('Instagram');
   const [secondaryPlatform, setSecondaryPlatform] = useState('None');
   const [feeRequest, setFeeRequest] = useState('');
@@ -87,7 +87,7 @@ export default function CampaignDetailsDrawer({
   const handleClose = () => {
     setDrawerMode('details');
     setContentTitle('');
-    setWorkLink('');
+    setWorkLinks(['']);
     setPrimaryPlatform('Instagram');
     setSecondaryPlatform('None');
     setFeeRequest('');
@@ -97,17 +97,30 @@ export default function CampaignDetailsDrawer({
 
   const isFormValid = contentTitle.length >= 20 && feeRequest.trim() !== '';
 
+  function updateWorkLink(index: number, value: string) {
+    setWorkLinks((prev) => prev.map((link, i) => (i === index ? value : link)));
+  }
+
+  function addWorkLink() {
+    setWorkLinks((prev) => [...prev, '']);
+  }
+
+  function removeWorkLink(index: number) {
+    setWorkLinks((prev) => prev.filter((_, i) => i !== index));
+  }
+
   const handleSubmit = () => {
     if (!isFormValid || !campaign) return;
     const primaryId = getPlatformIdByName(primaryPlatform);
     const secondaryId = getPlatformIdByName(secondaryPlatform);
     const fallbackId = platformsList[0]?.id || '';
+    const cleanedWorkLinks = workLinks.map((link) => link.trim()).filter(Boolean);
 
     applyMutation.mutate({
       id: campaign.id,
       payload: {
         contentIdea: contentTitle,
-        pastWorkLink: workLink.trim() ? [workLink.trim()] : undefined,
+        pastWorkLink: cleanedWorkLinks.length > 0 ? cleanedWorkLinks : undefined,
         primaryPlatformId: primaryId || fallbackId,
         secondaryPlatformId: secondaryId,
         feeRequest: Number(feeRequest.replace(/[^0-9]/g, '')),
@@ -576,19 +589,42 @@ export default function CampaignDetailsDrawer({
                   </div>
                 </div>
 
-                {/* Past Work Link */}
+                {/* Past Work Link(s) */}
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="workLink" className="text-xs font-bold text-[#1a1a2e]">
+                  <label className="text-xs font-bold text-[#1a1a2e]">
                     Past Work Link (optional)
                   </label>
-                  <input
-                    id="workLink"
-                    type="text"
-                    value={workLink}
-                    onChange={(e) => setWorkLink(e.target.value)}
-                    placeholder="https://instagram.com/p/example"
-                    className="border border-[#e8e6f0] focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/30 rounded-xl p-3 text-xs w-full outline-none transition-all placeholder:text-[#9a99b0] text-[#1a1a2e]"
-                  />
+                  <div className="flex flex-col gap-2">
+                    {workLinks.map((link, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={link}
+                          onChange={(e) => updateWorkLink(index, e.target.value)}
+                          placeholder="https://instagram.com/p/example"
+                          className="border border-[#e8e6f0] focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/30 rounded-xl p-3 text-xs w-full outline-none transition-all placeholder:text-[#9a99b0] text-[#1a1a2e]"
+                        />
+                        {workLinks.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeWorkLink(index)}
+                            className="w-9 h-9 flex items-center justify-center rounded-xl border border-[#e8e6f0] text-[#c4c2d4] hover:text-red-400 hover:border-red-200 transition-colors shrink-0 cursor-pointer"
+                            aria-label="Remove link"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addWorkLink}
+                    className="flex items-center gap-1.5 text-xs font-bold text-brand-pink hover:text-brand-pink/80 transition-colors w-fit cursor-pointer"
+                  >
+                    <Plus size={13} />
+                    Add another link
+                  </button>
                 </div>
 
                 {/* Platform select dropdowns */}
