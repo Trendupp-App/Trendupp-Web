@@ -51,7 +51,7 @@ export default function Header({
         {/* Notification Bell */}
         <button
           onClick={onNotificationClick}
-          className="relative p-2.5 rounded-full bg-[#f4f3f6]/60 border border-[#e8e6f0]/40 text-[#5a5a7a] active:scale-95 transition-transform shrink-0"
+          className="relative p-2.5 rounded-full bg-[#f4f3f6]/60 border border-[#e8e6f0]/40 text-[#5a5a7a] active:scale-95 transition-transform shrink-0 cursor-pointer"
           aria-label="Notifications"
         >
           <Bell size={18} className="text-[#5a5a7a]" />
@@ -73,7 +73,7 @@ export default function Header({
           {/* Notifications */}
           <button
             onClick={onNotificationClick}
-            className="relative p-2 rounded-full hover:bg-[#f4f3f6] transition-colors text-[#5a5a7a]"
+            className="relative p-2 rounded-full hover:bg-[#f4f3f6] transition-colors text-[#5a5a7a] cursor-pointer"
             aria-label="Notifications"
           >
             <Bell size={20} className="text-[#5a5a7a]" />

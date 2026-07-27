@@ -15,9 +15,14 @@ import {
 import { CAMPAIGN_GOALS } from '@/types/campaign';
 import { useCampaignPlatforms, useCreatorCategories } from '@/hooks/useCampaign';
 import { ComboBox } from '@/shared/ComboBox';
-import { useNiches } from '@/hooks/useOnboardingQueries';
+import { useNiches, useCountries } from '@/hooks/useOnboardingQueries';
 import { MultiSelectDropdown } from '@/shared/MultiSelectDropDown';
-import { formatTierLabel } from '@/utils/Utilities';
+import {
+  formatTierFollowerRange,
+  formatMinCostLabel,
+  formatMinCostUsdLabel,
+} from '@/utils/Utilities';
+import { useAuthStore } from '@/store/authStore';
 import FieldLabel from './FieldLabel';
 import { FIELD_TOOLTIPS } from '@/lib/data/fieldTooltips';
 
@@ -41,6 +46,9 @@ export default function StepDetails({
   const { data: platforms = [], isLoading: platformsLoading } = useCampaignPlatforms();
   const { data: creatorCategories = [], isLoading: categoriesLoading } = useCreatorCategories();
   const { data: niches = [], isLoading: nichesLoading } = useNiches();
+  const { data: countries = [] } = useCountries();
+  const user = useAuthStore((s) => s.user);
+  const isNigerianBrand = countries.find((c) => c.id === user?.countryId)?.name === 'Nigeria';
 
   const {
     register,
@@ -190,7 +198,11 @@ export default function StepDetails({
         <MultiSelectDropdown
           options={creatorCategories.map((cat) => ({
             value: cat.id,
-            label: formatTierLabel(cat.name, cat.minFollowers, cat.maxFollowers),
+            label: cat.name,
+            sublabel: formatTierFollowerRange(cat.minFollowers, cat.maxFollowers),
+            meta: isNigerianBrand
+              ? formatMinCostLabel(cat.minCostCreateNaira)
+              : formatMinCostUsdLabel(cat.minCostCreateUsd),
           }))}
           selected={selectedTierIds}
           onChange={(vals) => setValue('creatorTierIds', vals, { shouldValidate: true })}

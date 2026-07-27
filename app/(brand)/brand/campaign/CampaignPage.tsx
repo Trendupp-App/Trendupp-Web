@@ -12,6 +12,8 @@ import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
 import { useMyCampaigns, useDeleteDraftCampaign } from '@/hooks/useCampaign';
 import FeedbackModal from '@/shared/FeedBackModal';
 
+const DELETE_CONFIRM_PHRASE = 'I WANT TO DELETE';
+
 type MainTab = 'draft' | 'live' | 'active' | 'completed';
 type ActiveSubTab = 'in_progress' | 'content_review' | 'revision' | 'live_content' | 'all';
 
@@ -50,7 +52,11 @@ export default function BrandCampaignsPage() {
 
   const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('all');
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const deleteDraft = useDeleteDraftCampaign(() => setPendingDeleteId(null));
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const deleteDraft = useDeleteDraftCampaign(() => {
+    setPendingDeleteId(null);
+    setDeleteConfirmText('');
+  });
 
   function handleTabClick(tab: MainTab) {
     setManualTab(tab);
@@ -115,7 +121,7 @@ export default function BrandCampaignsPage() {
   }
 
   function handleConfirmDelete() {
-    if (!pendingDeleteId) return;
+    if (!pendingDeleteId || deleteConfirmText !== DELETE_CONFIRM_PHRASE) return;
     deleteDraft.mutate(pendingDeleteId);
   }
   const pendingDeleteCampaign = allDraftTabCampaigns.find((c) => c.id === pendingDeleteId);
@@ -281,15 +287,39 @@ export default function BrandCampaignsPage() {
             </>
           }
           actions={[
-            { label: 'cancel', onClick: () => setPendingDeleteId(null) },
+            {
+              label: 'cancel',
+              onClick: () => {
+                setPendingDeleteId(null);
+                setDeleteConfirmText('');
+              },
+            },
             {
               label: 'delete',
               variant: 'primary',
               onClick: handleConfirmDelete,
               loading: deleteDraft.isPending,
+              disabled: deleteConfirmText !== DELETE_CONFIRM_PHRASE,
             },
           ]}
-        />
+        >
+          <div className="w-full flex flex-col gap-1.5 text-left">
+            <p className="text-xs text-[#7a7a9a]">
+              Type <span className="font-semibold text-[#1a1a2e]">{DELETE_CONFIRM_PHRASE}</span> to
+              confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={DELETE_CONFIRM_PHRASE}
+              className="w-full px-3 py-2.5 border border-[#e8e6f0] rounded-xl text-sm text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-red-400"
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+            />
+          </div>
+        </FeedbackModal>
       )}
     </div>
   );

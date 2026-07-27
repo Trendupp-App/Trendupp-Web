@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -190,10 +191,11 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
       {/* Bio */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Bio</Label>
-        <Input
+        <Textarea
           {...register('bio')}
           placeholder="Enter Bio"
-          className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+          rows={3}
+          className="border-[#e8e6f0] text-xs font-light resize-none focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
         />
         <p className="text-[11px] text-[#9a99b0]">
           Write about your brand e.g previous campaign, project etc

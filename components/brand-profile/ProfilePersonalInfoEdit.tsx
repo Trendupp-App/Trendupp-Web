@@ -20,6 +20,7 @@ import { ComboBox } from '@/shared/ComboBox';
 import { useCountries, useStates } from '@/hooks/useOnboardingQueries';
 import { useUpdatePersonalInfo } from '@/hooks/useBrandProfileMutations';
 import { useAuthStore } from '@/store/authStore';
+import { formatNumberWithCommas, stripNonDigits } from '@/utils/Utilities';
 
 const schema = z.object({
   avatar: z.string().optional(),
@@ -67,6 +68,8 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
 
   const avatar = useWatch({ control, name: 'avatar' });
   const country = useWatch({ control, name: 'country' });
+  const monthlyBudget = useWatch({ control, name: 'monthlyBudget' }) ?? '';
+  const currencySymbol = country && country !== 'Nigeria' ? '$' : '₦';
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -92,6 +95,10 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
     setUserSelectedCountryId(countries.find((c) => c.name === countryName)?.id);
   }
 
+  function handleMonthlyBudgetChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setValue('monthlyBudget', stripNonDigits(e.target.value), { shouldValidate: true });
+  }
+
   function onSubmit(values: Values) {
     if (avatarError) return;
     const countryId = values.country
@@ -102,7 +109,6 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
     updatePersonalInfo(
       {
         ...(values.brandName && { username: values.brandName }),
-        ...(values.email && { email: values.email }),
         ...(values.bio && { bio: values.bio }),
         ...(countryId && { countryId }),
         ...(stateId && { stateId }),
@@ -161,8 +167,9 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
         <Input
           {...register('email')}
           type="email"
+          disabled
           placeholder="Enter email address"
-          className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+          className="border-[#e8e6f0] h-10 text-xs font-light disabled:bg-[#faf9fc] disabled:cursor-not-allowed focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
         />
         {errors.email && <p className="text-[11px] text-red-400">{errors.email.message}</p>}
       </div>
@@ -220,11 +227,19 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
 
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Monthly Marketing Budget</Label>
-        <Input
-          {...register('monthlyBudget')}
-          placeholder="400,000"
-          className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
-        />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-light text-[#1a1a2e]">
+            {currencySymbol}
+          </span>
+          <Input
+            type="text"
+            inputMode="numeric"
+            value={formatNumberWithCommas(monthlyBudget)}
+            onChange={handleMonthlyBudgetChange}
+            placeholder="400,000"
+            className="border-[#e8e6f0] h-10 pl-7 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+          />
+        </div>
       </div>
 
       <Button

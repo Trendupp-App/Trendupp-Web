@@ -27,6 +27,16 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'static.vecteezy.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn0.gstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'trendupp-s3-bucket.s3.eu-north-1.amazonaws.com',
         pathname: '/**',
       },

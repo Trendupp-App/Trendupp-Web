@@ -606,7 +606,6 @@ export default function CreatorProfilePage() {
     formData.append('firstName', editFirstName.trim());
     formData.append('lastName', editLastName.trim());
     formData.append('username', editHandle.trim());
-    formData.append('email', editEmail.trim());
     formData.append('bio', editBio);
     if (nationalityId) formData.append('nationalityId', nationalityId);
     if (countryId) formData.append('countryId', countryId);
@@ -1630,9 +1629,8 @@ export default function CreatorProfilePage() {
                         type="email"
                         placeholder="Email address"
                         value={editEmail}
-                        onChange={(e) => setEditEmail(e.target.value)}
-                        className="w-full h-10 border border-[#e8e6f0] rounded-xl pl-9 pr-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
-                        required
+                        disabled
+                        className="w-full h-10 border border-[#e8e6f0] rounded-xl pl-9 pr-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5] disabled:bg-[#faf9fc] disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
