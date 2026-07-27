@@ -291,7 +291,7 @@ export interface ApplyCampaignPayload {
 
 export interface ApplyCampaignResponse {
   message?: string;
-  application?: unknown;
+  application?: CampaignApplicationDto;
 }
 export type CampaignSubStatus = 'in_progress' | 'content_review' | 'revision' | 'live_content';
 

@@ -192,9 +192,10 @@ export default function CampaignStatusSheet({
                   Content Approved!
                 </span>
                 <p className="text-xs text-[#5a5a7a] font-light leading-relaxed">
-                  Publish your content on <span className="font-bold">{campaign.platform}</span>,
-                  then come back to submit proof of posting. The post must stay live for{' '}
-                  <span className="font-bold">24 hours</span> before payment is released.
+                  Publish your content on{' '}
+                  <span className="font-bold">the agreed social platform(s)</span>, submit proof of
+                  posting below. The post must remain on your social media for at least{' '}
+                  <span className="font-bold"> 3months</span> before payment is released.
                 </p>
               </div>
             )}
