@@ -13,6 +13,7 @@ interface ApplicationsTabProps {
   campaignId: string;
   campaignTitle: string;
   applicationsForLive?: CampaignApplicationDto[];
+  campaignCurrency?: string;
 }
 
 type PendingAction = {
@@ -42,6 +43,7 @@ export default function ApplicationsTab({
   campaignId,
   applicationsForLive,
   campaignTitle,
+  campaignCurrency,
 }: ApplicationsTabProps) {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
@@ -180,6 +182,7 @@ export default function ApplicationsTab({
             onView={handleView}
             selected={selectedIds.has(app.id)}
             onToggleSelect={handleToggleSelect}
+            currency={campaignCurrency}
           />
         ))}
       </div>
@@ -189,6 +192,7 @@ export default function ApplicationsTab({
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         onViewProfile={handleViewProfile}
+        currency={campaignCurrency}
       />
 
       <CreatorProfileSheet

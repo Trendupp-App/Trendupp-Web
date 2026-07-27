@@ -4,10 +4,7 @@ import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
+import { formatCurrency } from '@/utils/Utilities';
 
 const STATUS_LABEL: Record<CampaignApplicationDto['status'], string> = {
   pending: 'Pending',
@@ -26,6 +23,7 @@ interface ApplicationListItemProps {
   onView: (application: CampaignApplicationDto) => void;
   selected?: boolean;
   onToggleSelect?: (application: CampaignApplicationDto) => void;
+  currency?: string;
 }
 
 export default function ApplicationListItem({
@@ -33,6 +31,7 @@ export default function ApplicationListItem({
   onView,
   selected = false,
   onToggleSelect,
+  currency,
 }: ApplicationListItemProps) {
   const user = application?.creator;
   const initials = user
@@ -102,7 +101,10 @@ export default function ApplicationListItem({
               followers
             </span>
             <span className="text-xs font-semibold text-[#1a1a2e]">
-              {fmt(application?.feeRequest || 0)}
+              {formatCurrency(
+                application?.feeRequest || 0,
+                application.campaign?.currency ?? currency ?? 'NGN',
+              )}
             </span>
           </div>
         </div>

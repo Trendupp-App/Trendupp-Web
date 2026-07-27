@@ -14,6 +14,7 @@ interface HeaderProps {
   user?: HeaderUser;
   onNotificationClick?: () => void;
   onMenuClick?: () => void;
+  unreadCount?: number;
 }
 
 export default function Header({
@@ -21,7 +22,10 @@ export default function Header({
   user = { displayName: 'User', initials: 'U' },
   onNotificationClick,
   onMenuClick,
+  unreadCount = 0,
 }: HeaderProps) {
+  const badgeLabel = unreadCount > 9 ? '9+' : String(unreadCount);
+
   return (
     <header className="h-20 bg-white border-b border-[#e8e6f0]/60 flex items-center justify-between px-4 md:px-8 shrink-0 select-none">
       {/* Mobile view header: hamburger, search, notifications */}
@@ -51,7 +55,11 @@ export default function Header({
           aria-label="Notifications"
         >
           <Bell size={18} className="text-[#5a5a7a]" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full bg-brand-pink text-white text-[9px] font-bold border border-white leading-none">
+              {badgeLabel}
+            </span>
+          )}
         </button>
       </div>
 
@@ -69,7 +77,11 @@ export default function Header({
             aria-label="Notifications"
           >
             <Bell size={20} className="text-[#5a5a7a]" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-brand-pink rounded-full border border-white" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-brand-pink text-white text-[10px] font-bold border border-white leading-none">
+                {badgeLabel}
+              </span>
+            )}
           </button>
 
           {/* User Dropdown */}

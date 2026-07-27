@@ -1,4 +1,4 @@
-import { FaInstagram, FaTiktok, FaGoogle } from 'react-icons/fa6';
+import { FaInstagram, FaTiktok, FaGoogle, FaFacebook } from 'react-icons/fa6';
 export const socials = [
   {
     label: 'Instagram',
@@ -11,5 +11,9 @@ export const socials = [
   {
     label: 'Google',
     icon: FaGoogle,
+  },
+  {
+    label: 'Facebook',
+    icon: FaFacebook,
   },
 ];

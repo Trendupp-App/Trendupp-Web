@@ -3,11 +3,14 @@ import type {
   CampaignPlatform,
   CreatorCategory,
   Campaign,
+  CampaignActivityTimeline,
+  CampaignStatus,
   CreateCampaignPayload,
   CreateCampaignResponse,
   PatchCampaignPayload,
   PatchCampaignResponse,
   SubmitCampaignResponse,
+  VerifyPaymentResponse,
   CampaignApplicationDto,
   ApplyCampaignPayload,
   ApplyCampaignResponse,
@@ -39,7 +42,6 @@ export const campaignApi = {
     payload.creatorCategoryIds.forEach((id) => fd.append('creatorCategoryIds', id));
     payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds', id));
     payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
-    appendIfDefined(fd, 'timeline', payload.timeline);
     appendIfDefined(fd, 'campaignBrief', payload.campaignBrief);
     appendIfDefined(fd, 'amplificationAsset', payload.amplificationAsset);
     if (payload.coverImage instanceof File) {
@@ -65,7 +67,6 @@ export const campaignApi = {
       payload.creatorNicheIds.forEach((id) => fd.append('creatorNicheIds', id));
       payload.preferredPlatformIds.forEach((id) => fd.append('preferredPlatformIds', id));
       appendIfDefined(fd, 'amplificationAsset', payload.amplificationAsset);
-      appendIfDefined(fd, 'timeline', payload.timeline);
       if (payload.coverImage instanceof File) {
         fd.append('coverImage', payload.coverImage);
       }
@@ -79,11 +80,6 @@ export const campaignApi = {
       fd.append('contentGuidelines', JSON.stringify(payload.contentGuidelines));
     }
 
-    if (payload.currentStep === 3) {
-      appendIfDefined(fd, 'usageRights', payload.usageRights);
-      // appendIfDefined(fd, 'successLooksLike', payload.successLooksLike);
-    }
-
     return apiClient.patch<PatchCampaignResponse>(`/campaigns/${id}`, fd, {
       headers: { 'Content-Type': undefined },
     });
@@ -91,11 +87,11 @@ export const campaignApi = {
   applyCampaign: (id: string, payload: ApplyCampaignPayload) =>
     apiClient.post<ApplyCampaignResponse>(`/campaigns/${id}/applications`, payload),
 
-  getMyCampaigns: (status?: 'draft' | 'submitted' | 'live' | 'active' | 'completed') =>
+  getMyCampaigns: (status?: CampaignStatus) =>
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
   getCampaigns: (params?: {
-    status?: 'draft' | 'live' | 'active' | 'completed' | 'submitted';
+    status?: CampaignStatus;
     sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
     platforms?: string[];
     niches?: string[];
@@ -105,7 +101,15 @@ export const campaignApi = {
 
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
 
+  getActivityTimeline: (id: string) =>
+    apiClient.get<CampaignActivityTimeline>(`/campaigns/${id}/activity-timeline`),
+
   submitCampaign: (id: string) => apiClient.post<SubmitCampaignResponse>(`/campaigns/${id}/submit`),
+
+  verifyPayment: (id: string, escrowId: string) =>
+    apiClient.post<VerifyPaymentResponse>(`/campaigns/${id}/verify-payment`, undefined, {
+      params: { escrowId },
+    }),
 
   getApplication: (id: string) =>
     apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),

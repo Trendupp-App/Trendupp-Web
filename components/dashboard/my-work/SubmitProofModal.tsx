@@ -175,6 +175,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { X, Link2, AlertCircle, Clock, Plus, Trash2 } from 'lucide-react';
 import { WorkCampaign } from '@/components/creator-dashboard/WorkCampaignCard';
+import { useCyclingText } from '@/hooks/useCyclingText';
+
+const SUBMITTING_MESSAGES = ['Submitting…', 'Verifying links…', 'Almost done…'];
 
 export interface LiveLinkEntry {
   platform: string; // e.g. 'instagram', 'tiktok', 'youtube', 'twitter'
@@ -186,6 +189,7 @@ interface SubmitProofModalProps {
   campaign: WorkCampaign | null;
   onClose: () => void;
   onSubmit: (entries: LiveLinkEntry[]) => void;
+  isSubmitting?: boolean;
 }
 
 const PLATFORM_OPTIONS = [
@@ -212,6 +216,7 @@ export default function SubmitProofModal({
   campaign,
   onClose,
   onSubmit,
+  isSubmitting = false,
 }: SubmitProofModalProps) {
   const defaultPlatform = campaign ? normalizePlatformKey(campaign.platform) : 'instagram';
 
@@ -219,13 +224,12 @@ export default function SubmitProofModal({
     { id: nextEntryId(), platform: defaultPlatform, link: '' },
   ]);
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const loadingText = useCyclingText(isSubmitting, SUBMITTING_MESSAGES);
 
-  function resetState() {
-    setEntries([{ id: nextEntryId(), platform: defaultPlatform, link: '' }]);
-    setIsConfirmed(false);
-    setError('');
+  function handleClose() {
+    if (isSubmitting) return;
+    onClose();
   }
 
   function handleAddEntry() {
@@ -282,28 +286,14 @@ export default function SubmitProofModal({
       return;
     }
 
-    setIsSubmitting(true);
-    setTimeout(() => {
-      onSubmit(entries.map(({ platform, link }) => ({ platform, link })));
-      resetState();
-      setIsSubmitting(false);
-      onClose();
-    }, 1200);
+    onSubmit(entries.map(({ platform, link }) => ({ platform, link })));
   };
 
   const allLinksFilled = entries.every((e) => e.link.trim().length > 0);
   const canAddMore = entries.length < PLATFORM_OPTIONS.length;
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          resetState();
-          onClose();
-        }
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         showCloseButton={false}
         className="sm:max-w-[420px] max-h-[85vh] rounded-[24px] bg-white border border-[#e8e6f0]/60 shadow-xl select-none flex flex-col p-0 gap-0 overflow-hidden"
@@ -319,11 +309,9 @@ export default function SubmitProofModal({
             </p>
           </div>
           <button
-            onClick={() => {
-              resetState();
-              onClose();
-            }}
-            className="w-7 h-7 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#7a7a9a] transition-colors border-none cursor-pointer shrink-0"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="w-7 h-7 rounded-full bg-[#f4f4f8] hover:bg-[#eaeaf0] flex items-center justify-center text-[#7a7a9a] transition-colors border-none cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <X size={15} />
           </button>
@@ -447,7 +435,7 @@ export default function SubmitProofModal({
             disabled={isSubmitting || !allLinksFilled || !isConfirmed}
             className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold text-xs h-11 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/45 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Proof of Posting'}
+            {isSubmitting ? loadingText : 'Submit Proof of Posting'}
           </Button>
         </div>
       </DialogContent>

@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: '' },
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
 
             <Button
               type="submit"
-              disabled={isValid || isSubmitting}
+              disabled={isSubmitting}
               className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-6 disabled:bg-brand-pink/40"
             >
               {isSubmitting ? 'Sending…' : 'Send code'}

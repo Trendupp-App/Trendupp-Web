@@ -16,6 +16,7 @@ const ICON_ID_BY_PLATFORM: Record<SocialPlatformId, string> = {
   tiktok: 'tiktok',
   youtube: 'youtube',
   twitter: 'x',
+  facebook: 'facebook',
 };
 
 function platformIcon(platform: SocialPlatformId) {

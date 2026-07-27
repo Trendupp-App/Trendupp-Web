@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/utils/Utilities';
 
 export interface WorkCampaign {
   id: string;
@@ -17,6 +18,7 @@ export interface WorkCampaign {
   brand: string;
   budgetMinMax: string;
   budgetString: string;
+  currency?: string;
   daysLeft: string;
   status:
     | 'In progress'
@@ -181,7 +183,7 @@ export default function WorkCampaignCard({
           </h4>
 
           <span className="text-[16px] font-extrabold text-[#1a1a2e] mt-1">
-            ₦{(campaign.actualAmount ?? 300000).toLocaleString()}
+            {formatCurrency(campaign.actualAmount ?? 300000, campaign.currency ?? 'NGN')}
           </span>
         </div>
 

@@ -3,37 +3,25 @@
 import { Megaphone, Tag, Pencil, Trash2, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Campaign } from '@/types/campaign';
+import { formatRelativeTime } from '@/utils/Utilities';
 
 interface DraftCampaignCardProps {
   campaign: Campaign;
   onDelete: (id: string) => void;
 }
 
-function timeAgo(dateStr: string): string {
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-// Each draft has 4 sections (currentStep maxes at 4 before submit triggers step 5)
-const TOTAL_SECTIONS = 4;
+// Each draft has 3 sections (currentStep maxes at 3 before submit triggers step 4)
+const TOTAL_SECTIONS = 3;
 
 export default function DraftCampaignCard({ campaign, onDelete }: DraftCampaignCardProps) {
   const router = useRouter();
-  const isSubmitted = campaign.status === 'submitted';
+  const isSubmitted = campaign.status === 'submitted' || campaign.status === 'pending_payment';
   const sectionsCompleted = Math.min(campaign.currentStep, TOTAL_SECTIONS);
 
   function handleContinue() {
-    if (isSubmitted) {
-      // Skip straight to the payment step rather than re-opening the wizard from step 1
-      router.push(`/brand/campaign/create?draft=${campaign.id}&step=5`);
-    } else {
-      router.push(`/brand/campaign/create?draft=${campaign.id}`);
-    }
+    // Resuming a submitted/pending-payment campaign skips straight to the
+    // payment step — see CreatCampaignPage's draft-hydration effect.
+    router.push(`/brand/campaign/create?draft=${campaign.id}`);
   }
 
   return (
@@ -56,7 +44,9 @@ export default function DraftCampaignCard({ campaign, onDelete }: DraftCampaignC
           <Tag size={11} className="text-[#9a99b0]" />
           <span className="text-xs text-[#9a99b0]">{campaign.goal}</span>
           <span className="text-[#d4d2e3]">·</span>
-          <span className="text-xs text-[#9a99b0]">Last edited {timeAgo(campaign.updatedAt)}</span>
+          <span className="text-xs text-[#9a99b0]">
+            Last edited {formatRelativeTime(campaign.updatedAt)}
+          </span>
         </div>
         {!isSubmitted && (
           <p className="text-xs text-[#9a99b0] mt-1">

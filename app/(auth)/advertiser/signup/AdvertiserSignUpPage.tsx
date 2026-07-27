@@ -20,27 +20,39 @@ import { useRoles, useSignup } from '@/hooks/useAuthMutations';
 import { GoogleSignInButton, type SocialSignInHandle } from '@/components/auth/GoogleSignInButton';
 import { TiktokSignInButton } from '@/components/auth/TiktokSignInButton';
 import { InstagramSignInButton } from '@/components/auth/InstagramSignInButton';
+import { FacebookSignInButton } from '@/components/auth/FacebookSignInButton';
+import { AppleSignInButton } from '@/components/auth/AppleSignInButton';
 import Link from 'next/link';
-import { extractOtpFromMessage, isOtpAutofillEnabled } from '@/lib/extractOtpFromMessage';
 import { useUsernameAvailability } from '@/hooks/useAuthMutations';
 import { UsernameAvailabilityHint } from '@/shared/UsernameAvailabilityHint';
+import { PasswordRequirementsChecklist } from '@/shared/PasswordRequirementsChecklist';
 import TermsModal from '@/components/auth/TermsModal';
 import GoogleLoader from '@/components/skeletons/GoogleLoader';
+import { useCyclingText } from '@/hooks/useCyclingText';
 
-type PendingAction = 'email' | 'google' | 'tiktok' | 'instagram' | null;
+type PendingAction = 'email' | 'google' | 'tiktok' | 'instagram' | 'facebook' | 'apple' | null;
+
+const SIGNUP_LOADING_MESSAGES = [
+  'Creating your account…',
+  'Setting things up…',
+  'Almost there…',
+  'Just a few more seconds…',
+];
 
 export default function AdvertiserSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [activeProvider, setActiveProvider] = useState<'google' | 'tiktok' | 'instagram' | null>(
-    null,
-  );
+  const [activeProvider, setActiveProvider] = useState<
+    'google' | 'tiktok' | 'instagram' | 'facebook' | 'apple' | null
+  >(null);
   const pendingActionRef = useRef<PendingAction>(null);
   const googleRef = useRef<SocialSignInHandle>(null);
   const tiktokRef = useRef<SocialSignInHandle>(null);
   const instagramRef = useRef<SocialSignInHandle>(null);
+  const facebookRef = useRef<SocialSignInHandle>(null);
+  const appleRef = useRef<SocialSignInHandle>(null);
   const router = useRouter();
   const { data: roles } = useRoles();
   const signup = useSignup();
@@ -64,6 +76,8 @@ export default function AdvertiserSignupPage() {
   const brandNameValue = useWatch({ control, name: 'brandName' }) ?? '';
   const brandNameCheck = useUsernameAvailability(brandNameValue);
   const acceptPromotions = useWatch({ control, name: 'acceptedPromotions' });
+  const passwordValue = useWatch({ control, name: 'password' }) ?? '';
+  const loadingText = useCyclingText(signup.isPending, SIGNUP_LOADING_MESSAGES);
 
   function requestTerms(action: PendingAction) {
     pendingActionRef.current = action;
@@ -78,7 +92,7 @@ export default function AdvertiserSignupPage() {
       return;
     }
 
-    const res = await signup.mutateAsync({
+    await signup.mutateAsync({
       email: values.email,
       password: values.password,
       brandName: values.brandName,
@@ -87,14 +101,8 @@ export default function AdvertiserSignupPage() {
       acceptedPromotions: values.acceptedPromotions,
     });
 
-    const otp = isOtpAutofillEnabled() ? extractOtpFromMessage(res?.data?.message) : null;
-
     setTimeout(() => {
-      const query = new URLSearchParams({
-        email: values.email,
-        type: 'brand',
-        ...(otp ? { otp } : {}),
-      });
+      const query = new URLSearchParams({ email: values.email, type: 'brand' });
       router.push(`/verify-email?${query.toString()}`);
     }, 500);
   }
@@ -122,6 +130,10 @@ export default function AdvertiserSignupPage() {
       tiktokRef.current?.trigger({ skipTermsCheck: true });
     } else if (action === 'instagram') {
       instagramRef.current?.trigger({ skipTermsCheck: true });
+    } else if (action === 'facebook') {
+      facebookRef.current?.trigger({ skipTermsCheck: true });
+    } else if (action === 'apple') {
+      appleRef.current?.trigger({ skipTermsCheck: true });
     }
   }
 
@@ -187,6 +199,24 @@ export default function AdvertiserSignupPage() {
                   onRequireTerms={() => requestTerms('instagram')}
                   onStart={() => setActiveProvider('instagram')}
                   disabled={activeProvider !== null && activeProvider !== 'instagram'}
+                />
+                <FacebookSignInButton
+                  ref={facebookRef}
+                  role={roles?.find((r) => r.name === 'brand')?.id ?? ''}
+                  acceptedTerms={!!termsAccepted}
+                  acceptedPromotions={!!acceptPromotions}
+                  onRequireTerms={() => requestTerms('facebook')}
+                  onStart={() => setActiveProvider('facebook')}
+                  disabled={activeProvider !== null && activeProvider !== 'facebook'}
+                />
+                <AppleSignInButton
+                  ref={appleRef}
+                  role={roles?.find((r) => r.name === 'brand')?.id ?? ''}
+                  acceptedTerms={!!termsAccepted}
+                  acceptedPromotions={!!acceptPromotions}
+                  onRequireTerms={() => requestTerms('apple')}
+                  onStart={() => setActiveProvider('apple')}
+                  disabled={activeProvider !== null && activeProvider !== 'apple'}
                 />
               </div>
 
@@ -258,8 +288,10 @@ export default function AdvertiserSignupPage() {
                       {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
-                  {errors.password && (
+                  {errors.password ? (
                     <p className="text-[11px] text-red-400">{errors.password.message}</p>
+                  ) : (
+                    <PasswordRequirementsChecklist password={passwordValue} />
                   )}
                 </div>
 
@@ -282,10 +314,8 @@ export default function AdvertiserSignupPage() {
                       {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
-                  {errors.confirmPassword ? (
+                  {errors.confirmPassword && (
                     <p className="text-[11px] text-red-400">{errors.confirmPassword.message}</p>
-                  ) : (
-                    <p className="text-[11px] text-[#9a99b0]">At least 8 characters</p>
                   )}
                 </div>
 
@@ -323,7 +353,8 @@ export default function AdvertiserSignupPage() {
                           className="text-brand-pink cursor-pointer hover:underline"
                         >
                           Terms & Conditions
-                        </button>
+                        </button>{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                     </div>
                     {errors.terms && (
@@ -362,7 +393,7 @@ export default function AdvertiserSignupPage() {
                   }
                   className="w-full shadow-xl shadow-brand-pink-light bg-brand-pink rounded-md h-12 text-[15px] font-extralight text-white mt-2 disabled:bg-brand-pink/40"
                 >
-                  {signup.isPending ? 'Creating account…' : 'Sign up'}
+                  {signup.isPending ? loadingText : 'Sign up'}
                 </Button>
               </form>
               <p className="text-sm text-text-secondary text-center mt-5">

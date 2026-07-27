@@ -11,7 +11,7 @@ import TransactionHistoryList from '@/components/dashboard/payout/TransactionHis
 import EscrowReleaseList from '@/components/dashboard/payout/EscrowReleaseList';
 import BankChangeModal from '@/components/dashboard/payout/BankChangeModal';
 import { cn } from '@/lib/utils';
-
+import { Info } from 'lucide-react';
 const TRANSACTIONS_LIMIT = 20;
 
 export default function CreatorPayoutPage() {
@@ -197,7 +197,7 @@ export default function CreatorPayoutPage() {
           {activeTab === 'transactions' ? (
             <div className="flex gap-3 bg-pink-50 border border-pink-100 rounded-3xl p-5 shadow-xs">
               <div className="w-5 h-5 rounded-full bg-pink-100/50 flex items-center justify-center text-brand-pink shrink-0 mt-0.5">
-                <span className="text-[10px] font-bold">i</span>
+                <Info size={20} />
               </div>
               <p className="text-xs text-brand-pink leading-relaxed font-light">
                 Payments are automatically transferred to your linked bank account once the 30-day
@@ -207,7 +207,7 @@ export default function CreatorPayoutPage() {
           ) : (
             <div className="flex gap-3 bg-amber-50/50 border border-amber-100 rounded-3xl p-5 shadow-xs lg:hidden">
               <div className="w-5 h-5 rounded-full bg-amber-100/40 flex items-center justify-center text-amber-600 shrink-0 mt-0.5">
-                <span className="text-[10px] font-bold">!</span>
+                <Info size={20} />
               </div>
               <p className="text-xs text-amber-700 leading-relaxed font-light">
                 Every campaign payment is held for 30 days after posting is verified to protect both

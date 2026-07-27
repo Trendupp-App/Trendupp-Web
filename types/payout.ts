@@ -1,12 +1,3 @@
-export interface NeedingFundingItem {
-  id: string;
-  title: string;
-  category: string;
-  lastEditedLabel: string;
-  sectionsCompleted: number;
-  sectionsTotal: number;
-}
-
 // ── Creator payout dashboard (GET /transactions/payouts) ──
 
 export interface PayoutDashboardSummary {

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/shared/Sidebar';
 import Header from '@/shared/Header';
 import NotificationDrawer from '@/components/creator-dashboard/NotificationDrawer';
+import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import PageLoader from '@/components/skeletons/PageLoader';
@@ -42,6 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const { user, accessToken, hasHydrated } = useAuthStore();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount(hasHydrated && !!accessToken);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -70,7 +72,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     : undefined;
 
   // Hide header on detail/article pages (e.g. /creator/news/some-article)
-  const isDetailPage = /\/(creator|brand)\/news\/.+/.test(pathname);
+  const isDetailPage =
+    /\/(creator|brand)\/news\/.+/.test(pathname) || pathname === '/creator/profile/tier';
 
   return (
     <StreamChatProvider>
@@ -88,6 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               title={headerTitle}
               onNotificationClick={() => setIsNotificationOpen(true)}
               onMenuClick={() => setIsMobileMenuOpen(true)}
+              unreadCount={unreadCount}
             />
           )}
 

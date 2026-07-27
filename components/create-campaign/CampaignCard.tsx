@@ -1,18 +1,9 @@
-import { Clock, Users, Megaphone } from 'lucide-react';
+import { Users, Megaphone, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
-
-function daysLeft(timeline?: string): number {
-  if (!timeline) return 0;
-  const deadline = new Date(timeline).getTime();
-  const diff = deadline - Date.now();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
+import { formatCurrency } from '@/utils/Utilities';
+import { formatTimeRemaining, getActiveDeadline } from '@/lib/campaignTimelineStage';
 
 const STATUS_CONFIG: Record<
   string,
@@ -79,6 +70,7 @@ export default function CampaignCard({ campaign, onViewDetails }: CampaignCardPr
   // const config = STATUS_CONFIG[campaign.status] ?? STATUS_CONFIG.live;
   const displayStatus = campaign.subStatus ?? campaign.status;
   const config = STATUS_CONFIG[displayStatus] ?? STATUS_CONFIG.live;
+  const timeRemaining = formatTimeRemaining(getActiveDeadline(campaign.timeline));
 
   function handleClick() {
     if (onViewDetails) {
@@ -102,10 +94,10 @@ export default function CampaignCard({ campaign, onViewDetails }: CampaignCardPr
           <Megaphone size={32} className="text-[#7c6fe0]" />
         )}
 
-        {campaign.status === 'live' && (
+        {timeRemaining && (campaign.status === 'live' || campaign.status === 'active') && (
           <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full">
             <Clock size={10} />
-            {daysLeft(campaign.timeline)}days left
+            {timeRemaining}
           </div>
         )}
 
@@ -133,7 +125,9 @@ export default function CampaignCard({ campaign, onViewDetails }: CampaignCardPr
         <p className="text-xs text-[#9a99b0]">{campaign.goal}</p>
 
         <div className="flex items-center justify-between mt-1">
-          <span className="text-sm font-semibold text-brand-pink">{fmt(campaign.totalBudget)}</span>
+          <span className="text-sm font-semibold text-brand-pink">
+            {formatCurrency(campaign.totalBudget, campaign.currency ?? 'NGN')}
+          </span>
           {campaign.status === 'live' && (
             <div className="flex items-center gap-1 text-xs text-[#9a99b0]">
               <Users size={12} />

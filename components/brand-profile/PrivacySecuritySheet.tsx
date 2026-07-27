@@ -15,13 +15,13 @@ import {
   useDeactivateAccount,
 } from '@/hooks/useBrandProfileMutations';
 import type { SecuritySettings } from '@/types/profile';
-import FeedbackModal from '@/shared/FeedBackModal';
-import { AlertCircle } from 'lucide-react';
+import DeleteAccountModal from '@/shared/DeleteAccountModal';
+import { strongPasswordSchema } from '@/lib/validations/passwordRules';
 
 const passwordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Enter your current password'),
-    newPassword: z.string().min(8, 'Minimum 8 characters'),
+    newPassword: strongPasswordSchema,
     confirmPassword: z.string(),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
@@ -204,7 +204,7 @@ export default function PrivacySecuritySheet({ open, onOpenChange }: PrivacySecu
                   onClick={() => setShowDeactivateConfirm(true)}
                   className="w-fit text-xs font-medium text-red-500 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
                 >
-                  Deactivate account
+                  Delete account
                 </button>
               </div>
             </div>
@@ -212,23 +212,17 @@ export default function PrivacySecuritySheet({ open, onOpenChange }: PrivacySecu
         </SheetContent>
       </Sheet>
 
-      {showDeactivateConfirm && (
-        <FeedbackModal
-          icon={AlertCircle}
-          iconColor="text-red-500"
-          message="Are you sure you want to deactivate your account? You can restore it within 30 days."
-          actions={[
-            { label: 'Cancel', onClick: () => setShowDeactivateConfirm(false) },
-            {
-              label: deactivating ? 'Deactivating…' : 'Yes, deactivate',
-              variant: 'primary',
-              onClick: () => {
-                deactivateAccount({}, { onSuccess: () => setShowDeactivateConfirm(false) });
-              },
-            },
-          ]}
-        />
-      )}
+      <DeleteAccountModal
+        open={showDeactivateConfirm}
+        onOpenChange={setShowDeactivateConfirm}
+        isPending={deactivating}
+        onConfirm={(password) =>
+          deactivateAccount(
+            { password: password || undefined },
+            { onSuccess: () => setShowDeactivateConfirm(false) },
+          )
+        }
+      />
     </>
   );
 }

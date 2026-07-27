@@ -15,6 +15,10 @@ export interface CreatorCategory extends BaseEntity {
   name: string;
   minFollowers: number;
   maxFollowers: number | null;
+  minCostCreateNaira: number;
+  minCostCreateUsd: number;
+  minCostAmplifyNaira: number;
+  minCostAmplifyUsd: number;
 }
 
 // ── Enums (validated by API)
@@ -27,7 +31,25 @@ export type ContentType = (typeof CONTENT_TYPES)[number];
 
 //  Campaign
 
-export type CampaignStatus = 'draft' | 'submitted' | 'live' | 'active' | 'completed';
+export interface CampaignTimelineStage {
+  goal: string;
+  status: 'completed' | 'in_progress' | 'pending' | string;
+  endedDate: string | null;
+  intendedFor: string | null;
+  startedDate: string | null;
+}
+
+// Keys are e.g. "stage0_escrow", "stage1_application_window" — see
+// lib/campaignTimelineStage.ts for how these are ordered/interpreted.
+export type CampaignTimeline = Record<string, CampaignTimelineStage>;
+
+export type CampaignStatus =
+  | 'draft'
+  | 'submitted'
+  | 'pending_payment'
+  | 'live'
+  | 'active'
+  | 'completed';
 
 export interface ContentGuidelines {
   dos: string[];
@@ -77,7 +99,7 @@ export interface Campaign extends BaseEntity {
     name: string;
   }[];
   creatorNicheId?: string;
-  timeline?: string;
+  timeline?: CampaignTimeline;
   approvedAt?: string | null;
   urlIsLive?: boolean | null;
   creatorNiche?: {
@@ -156,7 +178,6 @@ export interface CreateCampaignPayload {
   totalBudget: number;
   creatorCategoryIds: string[];
   creatorNicheIds: string[];
-  timeline: string;
   preferredPlatformIds: string[];
   campaignBrief?: string;
   contentGuidelines?: ContentGuidelines;
@@ -172,7 +193,6 @@ export interface PatchCampaignStep1Payload {
   creatorCategoryIds: string[];
   creatorNicheIds: string[];
   preferredPlatformIds: string[];
-  timeline: string;
   coverImage?: File;
   amplificationAsset?: string;
 }
@@ -185,12 +205,6 @@ export interface PatchCampaignStep2Payload {
   contentGuidelines: ContentGuidelines;
 }
 
-export interface PatchCampaignStep3Payload {
-  currentStep: 3;
-  usageRights: string;
-  // successLooksLike: string;
-}
-
 export interface PatchCampaignStep4Payload {
   currentStep: 4;
   [key: string]: unknown;
@@ -199,7 +213,6 @@ export interface PatchCampaignStep4Payload {
 export type PatchCampaignPayload =
   | PatchCampaignStep1Payload
   | PatchCampaignStep2Payload
-  | PatchCampaignStep3Payload
   | PatchCampaignStep4Payload;
 
 // ── Responses ─────────────────────────────────────────────────────────────────
@@ -242,6 +255,10 @@ export interface SubmitCampaignResponse {
     provider: string;
     escrowStatus: string;
   };
+}
+
+export interface VerifyPaymentResponse {
+  message?: string;
 }
 
 export interface PayCampaignPayload {
@@ -294,6 +311,22 @@ export interface SubmitLiveLinkPayload {
 export interface SubmitLiveLinkResponse {
   message?: string;
   submission?: unknown;
+}
+
+export type CampaignActivityActorType = 'Brand' | 'Creator' | 'System' | 'Admin' | (string & {});
+
+export interface CampaignActivityEvent {
+  id: string;
+  actorType: CampaignActivityActorType;
+  timestamp: string;
+  formattedTime: string;
+  description: string;
+}
+
+export interface CampaignActivityTimeline {
+  campaignId: string;
+  totalEvents: number;
+  activities: CampaignActivityEvent[];
 }
 
 export interface ValidateSelectionResult {

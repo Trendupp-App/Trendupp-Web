@@ -1,5 +1,7 @@
 import type { Campaign } from '@/types/campaign';
 import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
+import { formatCurrency } from '@/utils/Utilities';
+import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
 
 export interface MappedExploreCampaign {
   id: string;
@@ -8,6 +10,7 @@ export interface MappedExploreCampaign {
   budget: string;
   budgetMin: number;
   budgetMax: number;
+  currency: string;
   daysLeft: string;
   daysLeftNumber: number;
   tier: string;
@@ -26,32 +29,19 @@ export interface MappedExploreCampaign {
   successLooksLike: string;
 }
 
-export function getDaysLeft(timelineDate: string): string {
-  const ts = Date.parse(timelineDate);
-  if (Number.isNaN(ts)) return 'Closed';
-  const diffTime = ts - Date.now();
-  if (diffTime <= 0) return 'Closed';
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays > 0) return `${diffDays}d left`;
-  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-  return `${Math.max(0, diffHours)}h left`;
-}
-
 export function mapCampaign(c: Campaign): MappedExploreCampaign {
+  const currency = c.currency ?? 'NGN';
+  const deadline = getCampaignDeadlineInfo(c.timeline);
   return {
     id: c.id,
     title: c.title,
     brand: c.brand?.username || 'Unknown Brand',
-    budget: `₦${c.totalBudget.toLocaleString()}`,
+    budget: formatCurrency(c.totalBudget, currency),
     budgetMin: c.totalBudget,
     budgetMax: c.totalBudget,
-    daysLeft: getDaysLeft(c.timeline || ''),
-    daysLeftNumber: (() => {
-      const ts = Date.parse(c.timeline ?? '');
-      return Number.isNaN(ts)
-        ? 0
-        : Math.max(0, Math.floor((ts - Date.now()) / (1000 * 60 * 60 * 24)));
-    })(),
+    currency,
+    daysLeft: deadline.label ?? 'Closed',
+    daysLeftNumber: deadline.daysRemaining,
     tier: c.creatorCategory?.name || 'Nano',
     appliedCount: c.applicationsCount?.total || 0,
     image:

@@ -5,6 +5,7 @@ export interface SocialsConnected {
   tiktok: boolean;
   youtube: boolean;
   twitter: boolean;
+  facebook: boolean;
 }
 
 export interface UpdatePersonalInfoPayload {
@@ -229,6 +230,7 @@ export interface BrandCampaignSummary {
   title: string;
   goal: string;
   totalBudget: number;
+  currency?: string;
   coverImage: string | null;
   status: 'draft' | 'submitted' | 'live' | 'active' | 'completed' | string;
   timeline: string;

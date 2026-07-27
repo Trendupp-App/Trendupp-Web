@@ -4,17 +4,8 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useCampaign } from '@/hooks/useCampaign';
 import { Megaphone, X, Clock, Wallet, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
-
-function daysLeft(timeline?: string): number | null {
-  if (!timeline) return null;
-  const deadline = new Date(timeline).getTime();
-  const diff = deadline - Date.now();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
+import { formatCurrency } from '@/utils/Utilities';
+import { formatTimeRemaining, getActiveDeadline } from '@/lib/campaignTimelineStage';
 
 interface CampaignDetailsSheetProps {
   campaignId: string | null;
@@ -28,7 +19,7 @@ export default function CampaignDetailsSheet({
   onOpenChange,
 }: CampaignDetailsSheetProps) {
   const { data: campaign, isLoading, isError } = useCampaign(campaignId);
-  const remaining = campaign ? daysLeft(campaign.timeline) : null;
+  const timeRemaining = campaign ? formatTimeRemaining(getActiveDeadline(campaign.timeline)) : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -76,10 +67,10 @@ export default function CampaignDetailsSheet({
                 {campaign.goal}
               </div>
 
-              {remaining !== null && campaign.status === 'live' && (
+              {timeRemaining && (campaign.status === 'live' || campaign.status === 'active') && (
                 <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full">
                   <Clock size={10} />
-                  {remaining} days left
+                  {timeRemaining}
                 </div>
               )}
             </div>
@@ -120,7 +111,9 @@ export default function CampaignDetailsSheet({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[#1a1a2e]">Budget</p>
-                      <p className="text-xs text-[#9a99b0]">{fmt(campaign.totalBudget)} total</p>
+                      <p className="text-xs text-[#9a99b0]">
+                        {formatCurrency(campaign.totalBudget, campaign.currency ?? 'NGN')} total
+                      </p>
                     </div>
                   </div>
 

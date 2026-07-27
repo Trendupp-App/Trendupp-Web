@@ -17,12 +17,6 @@ interface Props {
   fallbackPath?: string;
 }
 
-/**
- * OAuth callback handler for the "connect socials" flow. The platform
- * redirects here with ?code=...; we exchange it via
- * POST /api/v1/socials/:platform/connect and bounce back to wherever the
- * connect was started (onboarding step, settings page, ...).
- */
 export default function SocialConnectCallback({ platform, fallbackPath = '/' }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -33,6 +27,13 @@ export default function SocialConnectCallback({ platform, fallbackPath = '/' }: 
 
     const code = searchParams.get('code');
     const error = searchParams.get('error');
+    const state = searchParams.get('state');
+    const isMobileApp = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobileApp && code && state) {
+      window.location.href = `trendupp://auth/${platform}/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+      return;
+    }
+
     const pending = readSocialConnectPending();
     const returnTo = pending?.returnTo ?? fallbackPath;
 

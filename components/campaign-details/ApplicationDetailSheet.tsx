@@ -6,16 +6,14 @@ import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
 import { useApplication } from '@/hooks/useCampaign';
 import ApplicationDetailSkeleton from '@/components/skeletons/ApplicationDetailSkeleton';
-
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
+import { formatCurrency } from '@/utils/Utilities';
 
 interface ApplicationDetailSheetProps {
   applicationId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onViewProfile: (application: CampaignApplicationDto) => void;
+  currency?: string;
 }
 
 export default function ApplicationDetailSheet({
@@ -23,6 +21,7 @@ export default function ApplicationDetailSheet({
   open,
   onOpenChange,
   onViewProfile,
+  currency,
 }: ApplicationDetailSheetProps) {
   const { data: application, isLoading, isError } = useApplication(open ? applicationId : null);
 
@@ -81,7 +80,10 @@ export default function ApplicationDetailSheet({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[#9a99b0]">Fee request</span>
                   <span className="text-sm font-semibold text-brand-pink">
-                    {fmt(application.feeRequest)}
+                    {formatCurrency(
+                      application.feeRequest,
+                      application.campaign?.currency ?? currency ?? 'NGN',
+                    )}
                   </span>
                 </div>
 

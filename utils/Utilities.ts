@@ -33,6 +33,19 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
   return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+// Strips everything but digits — use on the raw input value before storing
+// in form state, so the stored value stays a plain numeric string.
+export function stripNonDigits(value: string): string {
+  return value.replace(/[^\d]/g, '');
+}
+
+// Comma-formats a plain digit string for display (e.g. "1000000" -> "1,000,000").
+export function formatNumberWithCommas(value: string): string {
+  if (!value) return '';
+  const num = Number(value);
+  return Number.isNaN(num) ? '' : num.toLocaleString('en-US');
+}
+
 export function estimateReadTime(html: string): string {
   const words = html
     .replace(/<[^>]*>/g, ' ')

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Lock } from 'lucide-react';
 import StepFooter from './StepFooter';
 import TermsModal from './TermsModal';
+import { formatCurrency } from '@/utils/Utilities';
 
 export interface PaymentBreakdown {
   campaignBudget: number;
@@ -14,16 +15,20 @@ export interface PaymentBreakdown {
 
 interface StepPaymentProps {
   breakdown: PaymentBreakdown;
+  currency?: string;
   onBack: () => void;
   onPay: () => void;
   isLoading?: boolean;
 }
 
-function fmt(n: number) {
-  return `₦${n.toLocaleString('en-NG')}`;
-}
-
-export default function StepPayment({ breakdown, onBack, onPay, isLoading }: StepPaymentProps) {
+export default function StepPayment({
+  breakdown,
+  currency,
+  onBack,
+  onPay,
+  isLoading,
+}: StepPaymentProps) {
+  const fmt = (n: number) => formatCurrency(n, currency ?? 'NGN');
   const [checkboxTicked, setCheckboxTicked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -111,7 +116,7 @@ export default function StepPayment({ breakdown, onBack, onPay, isLoading }: Ste
           />
           <span className="text-sm font-light text-[#4a4a6a] leading-relaxed">
             I agree to receive promotional emails, update, product announcement, and campaign
-            opportunities from Trendupp
+            opportunities from Trendupp <span className="text-red-500">*</span>
           </span>
         </label>
 

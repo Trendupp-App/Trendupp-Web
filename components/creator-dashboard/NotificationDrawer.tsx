@@ -1,79 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Check, FileText } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { X, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface NotificationItem {
-  id: number;
-  title: string;
-  message: string;
-  time: string;
-  type: 'payment' | 'selection' | 'revision';
-  isUnread: boolean;
-}
+import { formatRelativeTime } from '@/utils/Utilities';
+import {
+  NOTIFICATION_CATEGORIES,
+  getNotificationCategoryMeta,
+  resolveNotificationRoute,
+} from '@/lib/notificationDisplay';
+import {
+  useNotificationsFeed,
+  useMarkNotificationsSeen,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from '@/hooks/useNotifications';
+import type { NotificationCategory, NotificationItem } from '@/types/notifications';
 
 interface NotificationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 1,
-    title: 'Payment Released',
-    message: '₦180,000 from Zara Africa has been released to your wallet.',
-    time: '2 mins ago',
-    type: 'payment',
-    isUnread: true,
-  },
-  {
-    id: 2,
-    title: "You've been Selected!",
-    message: 'Congratulations! Tecno Mobile selected you for their SPARK 20 launch.',
-    time: '2 mins ago',
-    type: 'selection',
-    isUnread: true,
-  },
-  {
-    id: 3,
-    title: 'Revision Requested',
-    message: '₦180,000 from Zara Africa has been released to your wallet.',
-    time: '1 hour ago',
-    type: 'revision',
-    isUnread: true,
-  },
-  {
-    id: 4,
-    title: 'Payment Released',
-    message: 'Nestlé Nigeria has requested one revision on your submitted content.',
-    time: '2 mins ago',
-    type: 'payment',
-    isUnread: true,
-  },
-  {
-    id: 5,
-    title: 'Payment Released',
-    message: '₦180,000 from Zara Africa has been released to your wallet.',
-    time: '2 mins ago',
-    type: 'payment',
-    isUnread: true,
-  },
-  {
-    id: 6,
-    title: 'Payment Released',
-    message: '₦180,000 from Zara Africa has been released to your wallet.',
-    time: '2 mins ago',
-    type: 'payment',
-    isUnread: true,
-  },
-];
+type CategoryFilter = 'all' | NotificationCategory;
 
-type CategoryFilter = 'all' | 'campaigns' | 'payments' | 'content' | 'reminders';
+const SCROLL_FETCH_THRESHOLD_PX = 120;
 
 export default function NotificationDrawer({ isOpen, onClose }: NotificationDrawerProps) {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<CategoryFilter>('all');
-  const notifications = MOCK_NOTIFICATIONS;
+  const listRef = useRef<HTMLDivElement>(null);
+  const hasMarkedSeenRef = useRef(false);
+
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useNotificationsFeed(activeFilter === 'all' ? undefined : activeFilter, isOpen);
+  const markSeen = useMarkNotificationsSeen();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+
+  const notifications = data?.pages.flatMap((page) => page.data) ?? [];
 
   // Prevent scroll behind the drawer when it is open
   useEffect(() => {
@@ -81,19 +47,39 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      hasMarkedSeenRef.current = false;
     }
     return () => {
       document.body.style.overflow = '';
     };
   }, [isOpen]);
 
-  const filteredNotifications = notifications.filter((item) => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'payments') return item.type === 'payment';
-    if (activeFilter === 'campaigns') return item.type === 'selection';
-    if (activeFilter === 'content') return item.type === 'revision';
-    return true; // fallbacks for reminders
-  });
+  // Clear the bell badge the first time the drawer opens — items stay unread
+  useEffect(() => {
+    if (isOpen && !hasMarkedSeenRef.current) {
+      hasMarkedSeenRef.current = true;
+      markSeen.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  function handleScroll() {
+    const el = listRef.current;
+    if (!el || !hasNextPage || isFetchingNextPage) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < SCROLL_FETCH_THRESHOLD_PX) {
+      fetchNextPage();
+    }
+  }
+
+  function handleNotificationClick(notif: NotificationItem) {
+    if (!notif.readAt) markRead.mutate(notif.id);
+    const route = resolveNotificationRoute(notif.actionUrl, 'creator');
+    if (route) {
+      router.push(route);
+      onClose();
+    }
+  }
 
   return (
     <div
@@ -119,83 +105,110 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
         {/* Drawer Header */}
         <div className="flex items-center justify-between border-b border-[#e8e6f0]/40 pb-4 shrink-0">
           <h3 className="text-xl font-bold text-[#1a1a2e]">Notification</h3>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[#f4f3f6] transition-colors text-[#5a5a7a] focus:outline-none"
-            aria-label="Close notifications"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => markAllRead.mutate()}
+              disabled={markAllRead.isPending || notifications.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-[#7a7a9a] hover:bg-[#f4f3f6] disabled:opacity-40 transition-colors"
+            >
+              <CheckCheck size={14} />
+              Mark all read
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-[#f4f3f6] transition-colors text-[#5a5a7a] focus:outline-none"
+              aria-label="Close notifications"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 mt-5 overflow-x-auto pb-1 shrink-0 scrollbar-none">
-          {(['all', 'campaigns', 'payments', 'content', 'reminders'] as const).map((filter) => (
+          {(['all', ...NOTIFICATION_CATEGORIES] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
               className={cn(
-                'px-4.5 py-2 text-xs font-semibold rounded-full border border-transparent transition-all capitalize whitespace-nowrap',
+                'px-4.5 py-2 text-xs font-semibold rounded-full border border-transparent transition-all whitespace-nowrap',
                 activeFilter === filter
                   ? 'bg-brand-pink text-white border-brand-pink shadow-[0_2px_8px_rgba(215,23,111,0.15)]'
                   : 'bg-[#f4f3f6] text-[#7a7a9a] hover:bg-[#eae8ed]',
               )}
             >
-              {filter}
+              {filter === 'all' ? 'All' : getNotificationCategoryMeta(filter).label}
             </button>
           ))}
         </div>
 
         {/* Notification Cards List */}
-        <div className="flex-1 overflow-y-auto mt-6 flex flex-col gap-3 pr-1.5 auth-scrollbar">
-          {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((notif) => {
-              // Icon selector
-              let iconElement = <span>₦</span>;
-              let iconClass = 'bg-[#fdf2f6] text-[#d7176f]'; // payment
-              if (notif.type === 'selection') {
-                iconElement = <Check size={16} className="stroke-[3]" />;
-                iconClass = 'bg-[#edf2fe] text-[#2f63eb]';
-              } else if (notif.type === 'revision') {
-                iconElement = <FileText size={16} />;
-                iconClass = 'bg-[#fef9e7] text-[#ca8a04]';
-              }
+        <div
+          ref={listRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto mt-6 flex flex-col gap-3 pr-1.5 auth-scrollbar"
+        >
+          {isLoading ? (
+            Array.from({ length: 5 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="h-[76px] bg-[#faf9fc] border border-[#e8e6f0]/60 rounded-2xl animate-pulse"
+              />
+            ))
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-16 text-red-400 gap-2">
+              <span className="text-sm">Could not load notifications.</span>
+            </div>
+          ) : notifications.length > 0 ? (
+            <>
+              {notifications.map((notif) => {
+                const meta = getNotificationCategoryMeta(notif.category);
+                const Icon = meta.icon;
+                const isUnread = !notif.readAt;
 
-              return (
-                <div
-                  key={notif.id}
-                  className="bg-white border border-[#e8e6f0]/60 rounded-2xl p-4 flex gap-3.5 relative hover:shadow-[0_2px_12px_rgba(4,0,57,0.03)] transition-all cursor-pointer group"
-                >
-                  {/* Left Icon Square */}
+                return (
                   <div
+                    key={notif.id}
+                    onClick={() => handleNotificationClick(notif)}
                     className={cn(
-                      'w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-bold text-base',
-                      iconClass,
+                      'bg-white border border-[#e8e6f0]/60 rounded-2xl p-4 flex gap-3.5 relative hover:shadow-[0_2px_12px_rgba(4,0,57,0.03)] transition-all cursor-pointer group',
+                      notif.priority === 'critical' && 'border-l-2 border-l-red-400',
                     )}
                   >
-                    {iconElement}
-                  </div>
+                    {/* Left Icon Square */}
+                    <div
+                      className={cn(
+                        'w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-bold text-base',
+                        meta.iconClassName,
+                      )}
+                    >
+                      <Icon size={16} className="stroke-[2.25]" />
+                    </div>
 
-                  {/* Details block */}
-                  <div className="flex flex-col gap-0.5 pr-4">
-                    <h4 className="text-sm font-bold text-[#1a1a2e] group-hover:text-brand-pink transition-colors">
-                      {notif.title}
-                    </h4>
-                    <p className="text-xs font-extralight text-[#7a7a9a] leading-relaxed mt-0.5">
-                      {notif.message}
-                    </p>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-1.5 block">
-                      {notif.time}
-                    </span>
-                  </div>
+                    {/* Details block */}
+                    <div className="flex flex-col gap-0.5 pr-4">
+                      <h4 className="text-sm font-bold text-[#1a1a2e] group-hover:text-brand-pink transition-colors">
+                        {notif.title}
+                      </h4>
+                      <p className="text-xs font-extralight text-[#7a7a9a] leading-relaxed mt-0.5">
+                        {notif.body}
+                      </p>
+                      <span className="text-[10px] text-[#9a99b0] font-light mt-1.5 block">
+                        {formatRelativeTime(notif.createdAt)}
+                      </span>
+                    </div>
 
-                  {/* Unread pink dot indicator */}
-                  {notif.isUnread && (
-                    <span className="absolute top-4 right-4 w-1.5 h-1.5 bg-brand-pink rounded-full" />
-                  )}
-                </div>
-              );
-            })
+                    {/* Unread pink dot indicator */}
+                    {isUnread && (
+                      <span className="absolute top-4 right-4 w-1.5 h-1.5 bg-brand-pink rounded-full" />
+                    )}
+                  </div>
+                );
+              })}
+              {isFetchingNextPage && (
+                <div className="h-[76px] bg-[#faf9fc] border border-[#e8e6f0]/60 rounded-2xl animate-pulse" />
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-[#9a99b0] gap-2">
               <span className="text-sm">No notifications found</span>

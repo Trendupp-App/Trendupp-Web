@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Clock, Users } from 'lucide-react';
+import { Users, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CampaignCardProps {

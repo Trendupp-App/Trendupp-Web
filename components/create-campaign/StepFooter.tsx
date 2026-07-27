@@ -2,6 +2,9 @@
 
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCyclingText } from '@/hooks/useCyclingText';
+
+const SAVING_MESSAGES = ['Saving…', 'Almost there…', 'Just a moment…'];
 
 interface StepFooterProps {
   onBack: () => void;
@@ -20,6 +23,8 @@ export default function StepFooter({
   continueDisabled = false,
   isLoading = false,
 }: StepFooterProps) {
+  const loadingText = useCyclingText(isLoading, SAVING_MESSAGES);
+
   return (
     <div className="flex items-center justify-between mt-8 pt-4">
       {/* Back */}
@@ -44,7 +49,7 @@ export default function StepFooter({
               : 'bg-brand-pink text-white hover:bg-brand-pink/90 shadow-sm',
           )}
         >
-          {isLoading ? 'Saving…' : continueLabel}
+          {isLoading ? loadingText : continueLabel}
           {!isLoading && <ArrowRight size={15} />}
         </button>
       </div>

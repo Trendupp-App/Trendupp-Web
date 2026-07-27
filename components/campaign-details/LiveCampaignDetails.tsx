@@ -4,9 +4,10 @@ import { useState } from 'react';
 import CampaignDetailTabs from './CampaignDetailsTab';
 import CampaignOverviewTab from './CampaignOverviewTab';
 import ApplicationsTab from './ApplicationsTab';
+import CampaignTimelineTab from './CampaignTimelineTab';
 import type { Campaign } from '@/types/campaign';
 
-type DetailTab = 'overview' | 'applications';
+type DetailTab = 'overview' | 'applications' | 'timeline';
 
 export default function LiveCampaignDetail({ campaign }: { campaign: Campaign }) {
   const [activeTab, setActiveTab] = useState<DetailTab>('overview');
@@ -19,12 +20,15 @@ export default function LiveCampaignDetail({ campaign }: { campaign: Campaign })
       />
       {activeTab === 'overview' ? (
         <CampaignOverviewTab campaign={campaign} />
-      ) : (
+      ) : activeTab === 'applications' ? (
         <ApplicationsTab
           campaignId={campaign.id}
           applicationsForLive={campaign.applications}
           campaignTitle={campaign.title}
+          campaignCurrency={campaign.currency}
         />
+      ) : (
+        <CampaignTimelineTab campaign={campaign} />
       )}
     </>
   );

@@ -9,11 +9,9 @@ import {
   Trash2,
   Edit2,
   LogOut,
-  ArrowRight,
   Award,
   Search,
   ChevronLeft,
-  Info,
   Wallet,
   Bell,
   Shield,
@@ -65,20 +63,25 @@ import type { PortfolioItemDto } from '@/types/profile';
 import SocialPlatformCards from '@/shared/SocialPlatformCards';
 import SocialsOAuthConnect from '@/shared/SocialsOAuthConnect';
 import { useSocialConnections } from '@/hooks/useSocials';
+import CreatorTierCard from '@/components/creator-dashboard/CreatorTierCard';
+import { PASSWORD_REGEX, PASSWORD_REQUIREMENT_MESSAGE } from '@/lib/validations/passwordRules';
+import DeleteAccountModal from '@/shared/DeleteAccountModal';
+import { useContactInfo } from '@/hooks/useSettings';
+import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
   name: string;
   handle: string;
   followers: string;
-  icon: 'instagram' | 'tiktok' | 'youtube' | 'twitter';
+  icon: 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook';
   connected: boolean;
 }
 
 interface CreatorProfile {
   name: string;
   handle: string;
-  tier: string;
   rating: number;
   image: string;
   location: string;
@@ -142,6 +145,16 @@ interface ToggleSwitchProps {
   onChange: (val: boolean) => void;
 }
 
+function FacebookIcon() {
+  return (
+    <div className="w-10 h-10 rounded-xl bg-[#1877F2] shrink-0 flex items-center justify-center">
+      <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+      </svg>
+    </div>
+  );
+}
+
 function ToggleSwitch({ checked, onChange }: ToggleSwitchProps) {
   return (
     <button
@@ -166,6 +179,7 @@ function PlatformIcon({ icon }: { icon: Platform['icon'] }) {
   if (icon === 'instagram') return <InstagramIcon />;
   if (icon === 'tiktok') return <TikTokIcon />;
   if (icon === 'youtube') return <YouTubeIcon />;
+  if (icon === 'facebook') return <FacebookIcon />;
   return <TwitterIcon />;
 }
 
@@ -173,7 +187,6 @@ function PlatformIcon({ icon }: { icon: Platform['icon'] }) {
 const INITIAL_PROFILE: CreatorProfile = {
   name: 'Teni Olu',
   handle: 'teniolu',
-  tier: 'Micro Creator',
   rating: 4.9,
   image: '',
   location: 'Lagos, Nigeria',
@@ -184,15 +197,6 @@ const INITIAL_PROFILE: CreatorProfile = {
   email: 'teniolu@gmail.com',
   nationality: 'Nigeria',
 };
-
-interface ReviewBrand {
-  id: number;
-  name: string;
-  industry: string;
-  campaigns: number;
-  followers: string;
-  logo: string;
-}
 
 const MOCK_FAQS = [
   {
@@ -259,6 +263,8 @@ export default function CreatorProfilePage() {
   const { data: serverReviews } = useCreatorReviews(user?.id || null);
   const { data: myApps } = useMyApplications();
   const { data: socialConnections } = useSocialConnections();
+
+  const displayTier = (userDetail || user)?.assignedTier;
 
   const completedCampaignsCount = myApps
     ? myApps.filter((app) => app.status === 'accepted').length
@@ -441,6 +447,7 @@ export default function CreatorProfilePage() {
   const updateSecuritySettingsMutation = useUpdateSecuritySettings();
   const changePasswordMutation = useChangePassword();
   const deactivateMutation = useDeactivateAccount();
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
   // Load security settings from the server
   useEffect(() => {
@@ -486,6 +493,9 @@ export default function CreatorProfilePage() {
   const { data: myTickets, isLoading: ticketsLoading } = useSupportTickets(
     isHelpOpen && helpStep === 'my-tickets',
   );
+  const { data: contactInfo, isLoading: contactLoading } = useContactInfo(
+    isHelpOpen && helpStep === 'main',
+  );
   const submitTicketMutation = useSubmitSupportTicket();
   // Action: Handle ticket attachments file selector change (store File objects)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -528,54 +538,6 @@ export default function CreatorProfilePage() {
       };
     }
   }, [isAnalyticsOpen]);
-
-  // Request Review Modal States
-  const [isRequestReviewOpen, setIsRequestReviewOpen] = useState(false);
-  const [requestStep, setRequestStep] = useState<'select' | 'message'>('select');
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [personalMessage, setPersonalMessage] = useState('');
-  const [brandSearchQuery, setBrandSearchQuery] = useState('');
-
-  interface CampaignBrandWithExtra {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    username: string;
-    companyName?: string | null;
-    avatarUrl?: string | null;
-  }
-
-  const reviewBrands: ReviewBrand[] = [];
-  if (myApps) {
-    const brandsMap = new Map<string, ReviewBrand>();
-    myApps.forEach((app, idx) => {
-      const b = app.campaign?.brand as CampaignBrandWithExtra;
-      if (b && b.id) {
-        const name = b.companyName || `${b.firstName || ''} ${b.lastName || ''}`.trim() || 'Brand';
-        if (!brandsMap.has(b.id)) {
-          brandsMap.set(b.id, {
-            id: idx + 1,
-            name,
-            industry: app.campaign?.creatorCategory?.name || 'Campaign',
-            campaigns: 1,
-            followers: '—',
-            logo:
-              b.avatarUrl ||
-              'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
-          });
-        }
-      }
-    });
-    reviewBrands.push(...Array.from(brandsMap.values()));
-  }
-
-  const selectedBrand = reviewBrands.find((brand) => brand.id === selectedBrandId);
-  const filteredBrands = reviewBrands.filter(
-    (brand) =>
-      brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()) ||
-      brand.industry.toLowerCase().includes(brandSearchQuery.toLowerCase()),
-  );
 
   const filteredFaqs = MOCK_FAQS.filter(
     (faq) =>
@@ -782,10 +744,6 @@ export default function CreatorProfilePage() {
                   .slice(0, 2)}
               </div>
             )}
-            {/* Small 'M' badge overlapping avatar */}
-            <div className="absolute bottom-0 right-0 w-6.5 h-6.5 rounded-full bg-brand-pink border-2 border-[#040039] flex items-center justify-center text-[10px] font-black text-white shadow-md z-10">
-              M
-            </div>
           </div>
 
           <div className="flex flex-col gap-1">
@@ -811,9 +769,11 @@ export default function CreatorProfilePage() {
 
         {/* Right Side: Tier Badge & Edit button (Desktop view) */}
         <div className="hidden md:flex flex-col items-end gap-3 z-10" id="desktop-banner-actions">
-          <span className="bg-brand-pink-light text-brand-pink font-bold text-[10px] tracking-wider uppercase px-3 py-1 rounded-full shadow-sm">
-            {profile.tier}
-          </span>
+          {displayTier && (
+            <span className="bg-brand-pink-light text-brand-pink font-bold text-[10px] tracking-wider uppercase px-3 py-1 rounded-full shadow-sm">
+              {displayTier}
+            </span>
+          )}
           <button
             id="btn-edit-profile-desktop"
             onClick={handleOpenEditProfile}
@@ -903,6 +863,9 @@ export default function CreatorProfilePage() {
           <span className="text-base font-bold text-[#1a1a2e]">{profile.earned}</span>
         </div>
       </div>
+
+      {/* ── CREATOR TIER CARD ── */}
+      <CreatorTierCard />
 
       {/* ── CONNECTED PLATFORMS ── */}
       <div className="flex flex-col gap-3" id="connected-platforms-section">
@@ -1127,64 +1090,41 @@ export default function CreatorProfilePage() {
         {activeTab === 'reviews' && (
           <div className="flex flex-col gap-6" id="reviews-tab-content">
             {/* Rating Overview Card */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center border-b border-[#e8e6f0]/60 pb-6">
-              {/* Score Column */}
-              <div className="flex items-center gap-6 justify-between md:justify-start md:col-span-2">
-                <div className="flex flex-col gap-1 text-left">
-                  <span className="text-[44px] font-black text-[#1a1a2e] leading-none">
-                    {averageRating}
-                  </span>
-                  <div className="flex items-center gap-0.5 mt-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        className={cn(
-                          'text-[#f59e0b]',
-                          i < Math.round(Number(averageRating)) ? 'fill-[#f59e0b]' : 'fill-none',
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-[11px] text-[#7a7a9a] font-medium mt-1">
-                    {totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'}
-                  </span>
+            <div className="flex items-center gap-6 justify-between border-b border-[#e8e6f0]/60 pb-6">
+              <div className="flex flex-col gap-1 text-left">
+                <span className="text-[44px] font-black text-[#1a1a2e] leading-none">
+                  {averageRating}
+                </span>
+                <div className="flex items-center gap-0.5 mt-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      size={14}
+                      className={cn(
+                        'text-[#f59e0b]',
+                        i < Math.round(Number(averageRating)) ? 'fill-[#f59e0b]' : 'fill-none',
+                      )}
+                    />
+                  ))}
                 </div>
-
-                {/* Rating Progress Bars */}
-                <div className="flex flex-col gap-1.5 flex-1 max-w-[240px]">
-                  {[5, 4, 3, 2, 1].map((stars) => {
-                    const pct = getPercentage(stars);
-                    return (
-                      <div key={stars} className="flex items-center gap-2">
-                        <span className="text-[10px] text-[#7a7a9a] font-bold w-2">{stars}</span>
-                        <div className="flex-1 h-1.5 bg-[#e8e6f0] rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#f59e0b] rounded-full"
-                            style={{ width: pct }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <span className="text-[11px] text-[#7a7a9a] font-medium mt-1">
+                  {totalReviewsCount} {totalReviewsCount === 1 ? 'review' : 'reviews'}
+                </span>
               </div>
 
-              {/* Request Review Button Column */}
-              <div className="flex justify-end w-full md:w-auto">
-                <button
-                  id="btn-request-review-trigger"
-                  onClick={() => {
-                    setIsRequestReviewOpen(true);
-                    setRequestStep('select');
-                    setSelectedBrandId(null);
-                    setPersonalMessage('');
-                  }}
-                  className="w-full md:w-auto px-5 py-3 border border-brand-pink bg-[#fff5f7] hover:bg-[#ffeef2] text-xs font-bold text-brand-pink rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
-                >
-                  <Wallet size={13} className="text-brand-pink shrink-0" />
-                  Request review
-                </button>
+              {/* Rating Progress Bars */}
+              <div className="flex flex-col gap-1.5 flex-1 max-w-[240px]">
+                {[5, 4, 3, 2, 1].map((stars) => {
+                  const pct = getPercentage(stars);
+                  return (
+                    <div key={stars} className="flex items-center gap-2">
+                      <span className="text-[10px] text-[#7a7a9a] font-bold w-2">{stars}</span>
+                      <div className="flex-1 h-1.5 bg-[#e8e6f0] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#f59e0b] rounded-full" style={{ width: pct }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1509,373 +1449,6 @@ export default function CreatorProfilePage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* ── 5. REQUEST REVIEW DIALOG MODAL (DESKTOP) ── */}
-      <Dialog
-        open={isRequestReviewOpen}
-        onOpenChange={(open) => !open && setIsRequestReviewOpen(false)}
-      >
-        <DialogContent className="hidden md:flex sm:max-w-[480px] rounded-[24px] bg-white border border-[#e8e6f0] p-6 flex-col gap-5 shadow-xl">
-          {requestStep === 'select' ? (
-            <>
-              <DialogHeader className="border-b border-[#e8e6f0]/40 pb-2 relative">
-                <DialogTitle className="text-base font-bold text-[#1a1a2e] tracking-tight">
-                  Request review
-                </DialogTitle>
-              </DialogHeader>
-
-              {/* Search Bar */}
-              <div className="relative">
-                <Search size={14} className="absolute left-3.5 top-3.5 text-[#7a7a9a]" />
-                <input
-                  type="text"
-                  placeholder="Search brands e.g. Zara Africa..."
-                  value={brandSearchQuery}
-                  onChange={(e) => setBrandSearchQuery(e.target.value)}
-                  className="w-full h-10 pl-10 pr-4 border border-[#e8e6f0] rounded-xl text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#7a7a9a]"
-                />
-              </div>
-
-              <span className="text-[9px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                Select a brand to submit a request
-              </span>
-
-              {/* Brands Scroll Area */}
-              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-                {filteredBrands.length > 0 ? (
-                  filteredBrands.map((brand) => (
-                    <div
-                      key={brand.id}
-                      onClick={() => {
-                        setSelectedBrandId(brand.id);
-                        setRequestStep('message');
-                      }}
-                      className="border border-[#e8e6f0] hover:border-brand-pink/40 bg-white hover:bg-[#fff9fb] rounded-xl p-3 flex items-center justify-between transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-zinc-100">
-                          <Image src={brand.logo} alt={brand.name} fill className="object-cover" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-[#1a1a2e]">{brand.name}</span>
-                          <span className="text-[10px] text-[#7a7a9a] mt-0.5">
-                            {brand.industry}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-[#9a99b0] font-light">
-                          {brand.campaigns} campaigns
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            alert(`Viewing ${brand.name} details...`);
-                          }}
-                          className="px-3 py-1 bg-brand-pink-light hover:bg-[#ffe3ec] text-brand-pink font-bold text-[10px] rounded-full transition-colors"
-                        >
-                          View
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-xs text-[#9a99b0] text-center py-4">No brands found</span>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Back Header */}
-              <div className="flex items-center justify-between border-b border-[#e8e6f0]/40 pb-2">
-                <button
-                  type="button"
-                  onClick={() => setRequestStep('select')}
-                  className="text-xs font-bold text-brand-pink flex items-center gap-1 hover:text-brand-pink-dark transition-colors cursor-pointer"
-                >
-                  <ChevronLeft size={14} />
-                  Back
-                </button>
-                <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                  Selected brand
-                </span>
-              </div>
-
-              {/* Selected Brand Display */}
-              {selectedBrand && (
-                <div className="border border-brand-pink/40 bg-[#fff9fb] rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-zinc-100">
-                      <Image
-                        src={selectedBrand.logo}
-                        alt={selectedBrand.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-[#1a1a2e]">{selectedBrand.name}</span>
-                      <span className="text-[10px] text-[#7a7a9a] mt-0.5">
-                        {selectedBrand.industry}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#7a7a9a] font-medium">
-                      {selectedBrand.campaigns} campaigns
-                    </span>
-                    <span className="text-[9px] text-[#9a99b0] font-light">•</span>
-                    <span className="text-[10px] text-[#7a7a9a] font-medium">
-                      {selectedBrand.followers} followers
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Warning Box */}
-              <div className="flex items-start gap-2.5 p-3.5 bg-[#fffbeb] border border-[#fef3c7] rounded-xl text-[#d97706]">
-                <Info size={14} className="shrink-0 mt-0.5" />
-                <span className="text-[11px] leading-relaxed font-medium">
-                  Please keep your review requests professional and clear. Responses will be visible
-                  on your public campaign profile.
-                </span>
-              </div>
-
-              {/* Message Input */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#1a1a2e] tracking-tight">
-                  Personal Message
-                </label>
-                <textarea
-                  placeholder="Add a personal note to your request (optional)..."
-                  value={personalMessage}
-                  onChange={(e) => setPersonalMessage(e.target.value.slice(0, 160))}
-                  maxLength={160}
-                  className="w-full h-24 border border-[#e8e6f0] rounded-xl p-3 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-light resize-none leading-relaxed"
-                />
-                <span className="text-[10px] text-[#9a99b0] font-medium text-right mt-1">
-                  {personalMessage.length}/160
-                </span>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  alert(`Review request successfully sent to ${selectedBrand?.name}!`);
-                  setIsRequestReviewOpen(false);
-                }}
-                className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs"
-              >
-                Submit
-              </button>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* ── 6. REQUEST REVIEW MOBILE FULL-SCREEN OVERLAY ── */}
-      {isRequestReviewOpen && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col md:hidden animate-in slide-in-from-bottom duration-250">
-          {requestStep === 'select' ? (
-            <>
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-[#e8e6f0]">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsRequestReviewOpen(false)}
-                    className="p-1 text-[#1a1a2e] hover:bg-zinc-50 rounded-full"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <h3 className="text-sm font-bold text-[#1a1a2e]">Request Review</h3>
-                </div>
-              </div>
-
-              {/* Search */}
-              <div className="p-4 border-b border-[#e8e6f0]/40">
-                <div className="relative">
-                  <Search size={14} className="absolute left-3.5 top-3.5 text-[#7a7a9a]" />
-                  <input
-                    type="text"
-                    placeholder="Search brands..."
-                    value={brandSearchQuery}
-                    onChange={(e) => setBrandSearchQuery(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 border border-[#e8e6f0] rounded-xl text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#7a7a9a]"
-                  />
-                </div>
-              </div>
-
-              <div className="p-4 pb-1">
-                <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                  Select a brand to submit a request
-                </span>
-              </div>
-
-              {/* Brands List */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pt-2">
-                {filteredBrands.length > 0 ? (
-                  filteredBrands.map((brand) => {
-                    const isSelected = selectedBrandId === brand.id;
-                    return (
-                      <div
-                        key={brand.id}
-                        onClick={() => setSelectedBrandId(brand.id)}
-                        className={cn(
-                          'border rounded-2xl p-3.5 flex items-center justify-between transition-all bg-white',
-                          isSelected
-                            ? 'border-brand-pink border-2 bg-[#fff9fb]'
-                            : 'border-[#e8e6f0]',
-                        )}
-                      >
-                        <div className="flex items-center gap-3.5">
-                          <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-zinc-100">
-                            <Image
-                              src={brand.logo}
-                              alt={brand.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-xs font-bold text-[#1a1a2e]">{brand.name}</span>
-                            <span className="text-[10px] text-[#7a7a9a] mt-0.5">
-                              {brand.industry}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] text-[#9a99b0] font-light">
-                            {brand.campaigns} campaigns
-                          </span>
-                          <button
-                            type="button"
-                            className="px-3.5 py-1.5 bg-brand-pink-light text-brand-pink font-bold text-[10px] rounded-full"
-                          >
-                            View
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <span className="text-xs text-[#9a99b0] text-center py-6">No brands found</span>
-                )}
-              </div>
-
-              {/* Sticky bottom select button */}
-              <div className="p-4 border-t border-[#e8e6f0] bg-white">
-                <button
-                  type="button"
-                  onClick={() => selectedBrandId && setRequestStep('message')}
-                  disabled={!selectedBrandId}
-                  className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 active:scale-98 transition-all"
-                >
-                  Select
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-[#e8e6f0]">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRequestStep('select')}
-                    className="p-1 text-[#1a1a2e] hover:bg-zinc-50 rounded-full"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <h3 className="text-sm font-bold text-[#1a1a2e]">Request Review</h3>
-                </div>
-              </div>
-
-              {/* Scrollable message content */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-                <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
-                  Selected brand
-                </span>
-
-                {/* Selected Brand */}
-                {selectedBrand && (
-                  <div className="border border-brand-pink/40 bg-[#fff9fb] rounded-2xl p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3.5">
-                      <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-zinc-100">
-                        <Image
-                          src={selectedBrand.logo}
-                          alt={selectedBrand.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-[#1a1a2e]">
-                          {selectedBrand.name}
-                        </span>
-                        <span className="text-[10px] text-[#7a7a9a] mt-0.5">
-                          {selectedBrand.industry}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-0.5">
-                      <span className="text-[10px] text-[#7a7a9a] font-semibold">
-                        {selectedBrand.campaigns} campaigns
-                      </span>
-                      <span className="text-[9px] text-[#9a99b0]">
-                        {selectedBrand.followers} followers
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Warning Callout */}
-                <div className="flex items-start gap-2.5 p-4 bg-[#fffbeb] border border-[#fef3c7] rounded-2xl text-[#d97706]">
-                  <Info size={15} className="shrink-0 mt-0.5" />
-                  <span className="text-[11px] leading-relaxed font-medium">
-                    Please keep your review requests professional and clear. Responses will be
-                    visible on your public campaign profile.
-                  </span>
-                </div>
-
-                {/* Message Input */}
-                <div className="flex flex-col gap-1.5 mt-1">
-                  <label className="text-xs font-bold text-[#1a1a2e] tracking-tight">
-                    Personal Message
-                  </label>
-                  <textarea
-                    placeholder="Add a personal note to your request (optional)..."
-                    value={personalMessage}
-                    onChange={(e) => setPersonalMessage(e.target.value.slice(0, 160))}
-                    maxLength={160}
-                    className="w-full h-28 border border-[#e8e6f0] rounded-2xl p-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-light resize-none leading-relaxed"
-                  />
-                  <span className="text-[10px] text-[#9a99b0] font-medium text-right mt-1">
-                    {personalMessage.length}/160
-                  </span>
-                </div>
-              </div>
-
-              {/* Sticky bottom submit button */}
-              <div className="p-4 border-t border-[#e8e6f0] bg-white">
-                <button
-                  type="button"
-                  onClick={() => {
-                    alert(`Review request successfully sent to ${selectedBrand?.name}!`);
-                    setIsRequestReviewOpen(false);
-                  }}
-                  className="w-full py-3.5 bg-brand-pink hover:bg-brand-pink-dark text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer shadow-xs"
-                >
-                  Submit
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {/* ── 7. EDIT PROFILE RESPONSIVE OVERLAY / DRAWER PANEL ── */}
       <div
@@ -2661,6 +2234,14 @@ export default function CreatorProfilePage() {
                       toast.error('Please fill in all password fields');
                       return;
                     }
+                    if (newPassword.length < 8) {
+                      toast.error('New password must be at least 8 characters');
+                      return;
+                    }
+                    if (!PASSWORD_REGEX.test(newPassword)) {
+                      toast.error(PASSWORD_REQUIREMENT_MESSAGE);
+                      return;
+                    }
                     if (newPassword !== confirmPassword) {
                       toast.error('New passwords do not match');
                       return;
@@ -2706,33 +2287,34 @@ export default function CreatorProfilePage() {
               <button
                 type="button"
                 disabled={deactivateMutation.isPending}
-                onClick={() => {
-                  const password = window.prompt(
-                    'Are you sure you want to deactivate your account? This action is irreversible.\n\nTo confirm, please enter your password:',
-                  );
-                  if (password !== null) {
-                    if (!password.trim()) {
-                      toast.error('Password is required to deactivate your account');
-                      return;
-                    }
-                    deactivateMutation.mutate({ password });
-                  }
-                }}
+                onClick={() => setShowDeleteAccountModal(true)}
                 className="w-full md:w-auto md:self-start py-2.5 bg-white border border-[#fca5a5] hover:bg-rose-50 text-[#ef4444] rounded-xl text-xs font-bold active:scale-98 transition-all text-center px-6 cursor-pointer select-none disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {deactivateMutation.isPending ? (
                   <>
                     <RotateCw className="animate-spin" size={12} />
-                    Deactivating...
+                    Deleting...
                   </>
                 ) : (
-                  'Deactivate account'
+                  'Delete account'
                 )}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      <DeleteAccountModal
+        open={showDeleteAccountModal}
+        onOpenChange={setShowDeleteAccountModal}
+        isPending={deactivateMutation.isPending}
+        onConfirm={(password) =>
+          deactivateMutation.mutate(
+            { password: password || undefined },
+            { onSuccess: () => setShowDeleteAccountModal(false) },
+          )
+        }
+      />
 
       {/* ── 10. ANALYTICS RESPONSIVE DRAWER ── */}
       <div
@@ -3191,65 +2773,90 @@ export default function CreatorProfilePage() {
                   <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1 block">
                     Contact Us
                   </span>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                    {/* Email Card */}
-                    <div
-                      onClick={() => window.open('mailto:trendupp@gmail.com')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
-                        <Mail size={16} />
-                      </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">Email</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
-                        trendupp@gmail.com
-                      </span>
+                  {contactLoading ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-[88px] rounded-2xl" />
+                      ))}
                     </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                      {/* Email Card */}
+                      <div
+                        onClick={() =>
+                          contactInfo?.supportEmail &&
+                          window.open(`mailto:${contactInfo.supportEmail}`)
+                        }
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
+                          <Mail size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">Email</span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
+                          {contactInfo?.supportEmail ?? '—'}
+                        </span>
+                      </div>
 
-                    {/* Call Support Card */}
-                    <div
-                      onClick={() => window.open('tel:+2348000000000')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#f5f3ff] flex items-center justify-center text-[#7c3aed] shrink-0">
-                        <Phone size={16} />
+                      {/* Call Support Card */}
+                      <div
+                        onClick={() =>
+                          contactInfo?.supportPhone &&
+                          window.open(`tel:${contactInfo.supportPhone}`)
+                        }
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#f5f3ff] flex items-center justify-center text-[#7c3aed] shrink-0">
+                          <Phone size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">Call Support</span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
+                          {contactInfo?.supportPhone ?? '—'}
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">Call Support</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                        Mon–Fri, 9am–6pm WAT
-                      </span>
-                    </div>
 
-                    {/* Submit Ticket Card */}
-                    <div
-                      id="help-card-submit-ticket"
-                      onClick={() => setHelpStep('ticket')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center text-[#2563eb] shrink-0">
-                        <FileText size={16} />
+                      {/* Submit Ticket Card */}
+                      <div
+                        id="help-card-submit-ticket"
+                        onClick={() => setHelpStep('ticket')}
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center text-[#2563eb] shrink-0">
+                          <FileText size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">
+                          Submit a Ticket
+                        </span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
+                          Response within 24 hrs
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">Submit a Ticket</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                        Response within 24 hrs
-                      </span>
-                    </div>
 
-                    {/* My Tickets Card */}
-                    <div
-                      onClick={() => setHelpStep('my-tickets')}
-                      className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
-                        <Inbox size={16} />
+                      {/* My Tickets Card */}
+                      <div
+                        onClick={() => setHelpStep('my-tickets')}
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
+                          <Inbox size={16} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[#1a1a2e]">My Tickets</span>
+                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
+                          Track submissions
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#1a1a2e]">My Tickets</span>
-                      <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                        Track submissions
-                      </span>
                     </div>
-                  </div>
+                  )}
+                  {contactInfo?.businessAddress && (
+                    <p className="flex items-start gap-1.5 text-[10px] text-[#9a99b0] pl-1">
+                      <MapPin size={11} className="shrink-0 mt-0.5" />
+                      {contactInfo.businessAddress}
+                    </p>
+                  )}
                 </div>
+
+                {/* Connect with us */}
+                <ConnectWithUsSection enabled={isHelpOpen && helpStep === 'main'} />
 
                 {/* FAQ Section */}
                 <div className="flex flex-col gap-3">

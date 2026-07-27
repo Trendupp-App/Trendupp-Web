@@ -8,9 +8,6 @@ import SubmitProofModal, {
   type LiveLinkEntry,
 } from '@/components/dashboard/my-work/SubmitProofModal';
 import CampaignStatusSheet from '@/components/creator-dashboard/CampaignStatusSheet';
-import CampaignFilterModal, {
-  FilterState,
-} from '@/components/creator-dashboard/CampaignFilterModal';
 import RaiseDisputeModal from '@/components/dashboard/my-work/RaiseDisputeModal';
 import MyWorkPageSkeleton from '@/components/skeletons/MyWorkPageSkeleton';
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,6 +19,8 @@ import {
 import { toast } from 'sonner';
 import { CampaignApplicationDto, Campaign } from '@/types/campaign';
 import { useBrandNames } from '@/hooks/useBrandNames';
+import { formatCurrency } from '@/utils/Utilities';
+import { getActiveDeadline } from '@/lib/campaignTimelineStage';
 
 interface SubmissionItem {
   id?: string;
@@ -75,8 +74,9 @@ function mapAppToWorkCampaign(
   }
   let daysLeft = '0d';
   let daysLeftNumber = 0;
-  if (campaign.timeline) {
-    const diff = new Date(campaign.timeline).getTime() - Date.now();
+  const activeDeadline = getActiveDeadline(campaign.timeline);
+  if (activeDeadline) {
+    const diff = new Date(activeDeadline).getTime() - Date.now();
     if (diff > 0) {
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -95,8 +95,9 @@ function mapAppToWorkCampaign(
     submissionId: latestSubmission?.id,
     title: campaign.title || 'Untitled Campaign',
     brand: brandName,
-    budgetMinMax: `₦${(campaign.totalBudget || 0).toLocaleString()}`,
-    budgetString: `₦${(campaign.totalBudget || 0).toLocaleString()}`,
+    currency: campaign.currency ?? 'NGN',
+    budgetMinMax: formatCurrency(campaign.totalBudget || 0, campaign.currency ?? 'NGN'),
+    budgetString: formatCurrency(campaign.totalBudget || 0, campaign.currency ?? 'NGN'),
     daysLeft,
     daysLeftNumber,
     status,
@@ -144,15 +145,6 @@ export default function MyWorkPage() {
 
   // Raise dispute modal states
   const [disputeCampaign, setDisputeCampaign] = useState<WorkCampaign | null>(null);
-
-  // Filter modal states
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    sortBy: 'Newest',
-    platforms: [],
-    niches: [],
-    campaignGoal: null,
-  });
 
   const submitDraft = useSubmitContentDraft(() => {
     queryClient.invalidateQueries({ queryKey: ['my-applications'] });
@@ -261,23 +253,7 @@ export default function MyWorkPage() {
   // Filter campaigns depending on tab, sub-pill selection, and filter modal selections
   const filteredCampaigns = campaigns
     .filter((c) => {
-      // 1. Platform check
-      if (filters.platforms.length > 0 && !filters.platforms.includes(c.platform)) {
-        return false;
-      }
-
-      // 2. Niche check
-      if (filters.niches.length > 0) {
-        const hasMatchingNiche = c.niches?.some((n) => filters.niches.includes(n));
-        if (!hasMatchingNiche) return false;
-      }
-
-      // 3. Campaign Goal check
-      if (filters.campaignGoal && c.goal !== filters.campaignGoal) {
-        return false;
-      }
-
-      // 4. Tab and Sub-pill checks
+      // Tab and Sub-pill checks
       if (activeTab === 'Active') {
         const isActive = ['In progress', 'Under review', 'Revision requested', 'Approved'].includes(
           c.status,
@@ -308,23 +284,9 @@ export default function MyWorkPage() {
       return true;
     })
     .sort((a, b) => {
-      // 5. Sort filters
-      if (filters.sortBy === 'Newest') {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA;
-      }
-      if (filters.sortBy === 'Closing Soon') {
-        const daysA = a.daysLeftNumber ?? 999999;
-        const daysB = b.daysLeftNumber ?? 999999;
-        return daysA - daysB;
-      }
-      if (filters.sortBy === 'Highest Budget') {
-        const budgetA = a.budgetMax ?? 0;
-        const budgetB = b.budgetMax ?? 0;
-        return budgetB - budgetA;
-      }
-      return 0;
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
     });
 
   if (isLoading) {
@@ -351,7 +313,6 @@ export default function MyWorkPage() {
         activeSubFilter={activeSubFilter}
         onSubFilterChange={setActiveSubFilter}
         counts={counts}
-        onFilterClick={() => setIsFilterOpen(true)}
       />
 
       {/* Campaign Cards Grid */}
@@ -418,18 +379,22 @@ export default function MyWorkPage() {
 
       {/* Submit Draft Link Modal */}
       <SubmitContentModal
+        key={submitLinkCampaign?.id ?? 'closed'}
         isOpen={!!submitLinkCampaign}
         campaign={submitLinkCampaign}
         onClose={() => setSubmitLinkCampaign(null)}
         onSubmit={handleSubmitLink}
+        isSubmitting={submitDraft.isPending}
       />
 
       {/* Submit Proof of Posting Modal */}
       <SubmitProofModal
+        key={submitProofCampaign?.id ?? 'closed'}
         isOpen={!!submitProofCampaign}
         campaign={submitProofCampaign}
         onClose={() => setSubmitProofCampaign(null)}
         onSubmit={handleSubmitProof}
+        isSubmitting={submitProof.isPending}
       />
 
       {/* Raise Dispute Modal */}
@@ -437,21 +402,6 @@ export default function MyWorkPage() {
         isOpen={!!disputeCampaign}
         campaign={disputeCampaign}
         onClose={() => setDisputeCampaign(null)}
-      />
-
-      {/* Side Filters Modal Drawer */}
-      <CampaignFilterModal
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        onApply={(f) => {
-          setFilters(f);
-          setIsFilterOpen(false);
-        }}
-        onReset={() => {
-          setFilters({ sortBy: 'Newest', platforms: [], niches: [], campaignGoal: null });
-          setIsFilterOpen(false);
-        }}
-        currentFilters={filters}
       />
     </div>
   );

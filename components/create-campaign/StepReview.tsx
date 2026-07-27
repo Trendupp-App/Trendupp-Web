@@ -5,16 +5,14 @@ import { Pencil } from 'lucide-react';
 import StepFooter from './StepFooter';
 import { type Step1Values } from '@/lib/validations/createCampaignSchemas';
 import type { Step2Values } from '@/lib/validations/createCampaignSchemas';
-import type { Step3Values } from './StepSuccess';
 import { useCreatorCategories, useCampaignPlatforms } from '@/hooks/useCampaign';
 
 interface StepReviewProps {
   step1: Step1Values;
   step2: Step2Values;
-  step3: Step3Values;
   onNext: () => void;
   onBack: () => void;
-  onEdit: (step: 1 | 2 | 3) => void;
+  onEdit: (step: 1 | 2) => void;
   isLoading?: boolean;
 }
 
@@ -77,7 +75,6 @@ function ReviewList({ label, items }: { label: string; items: { value: string }[
 export default function StepReview({
   step1,
   step2,
-  step3,
   onNext,
   onBack,
   onEdit,
@@ -123,20 +120,6 @@ export default function StepReview({
         <ReviewList label="Content direction" items={step2.contentDirection} />
         <ReviewList label="Do's" items={step2.dos} />
         <ReviewList label="Don'ts" items={step2.donts} />
-      </ReviewSection>
-
-      {/* Section 3: Success */}
-      <ReviewSection title="Success criteria" onEdit={() => onEdit(3)}>
-        {/* <div className="flex flex-col gap-1">
-          <span className="text-sm text-[#9a99b0] font-light">What success looks like</span>
-          <p className="text-sm text-[#1a1a2e] font-light leading-relaxed">
-            {step3.successDescription}
-          </p>
-        </div> */}
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-[#9a99b0] font-light">Usage rights</span>
-          <p className="text-sm text-[#1a1a2e] font-light leading-relaxed">{step3.usageRights}</p>
-        </div>
       </ReviewSection>
 
       <StepFooter

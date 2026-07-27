@@ -10,7 +10,6 @@ import DraftCampaignCardSkeleton from '@/components/skeletons/DraftCardSkeleton'
 import CampaignCard from '@/components/create-campaign/CampaignCard';
 import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
 import { useMyCampaigns, useDeleteDraftCampaign } from '@/hooks/useCampaign';
-import { DUMMY_COMPLETED_CAMPAIGNS } from '@/dummy/campaign';
 import FeedbackModal from '@/shared/FeedBackModal';
 
 type MainTab = 'draft' | 'live' | 'active' | 'completed';
@@ -46,7 +45,7 @@ export default function BrandCampaignsPage() {
   const mainTab: MainTab = useMemo(() => {
     const fromQuery = searchParams.get('tab') as MainTab | null;
     if (fromQuery && VALID_TABS.includes(fromQuery)) return fromQuery;
-    return manualTab ?? 'draft';
+    return manualTab ?? 'live';
   }, [searchParams, manualTab]);
 
   const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('all');
@@ -72,25 +71,27 @@ export default function BrandCampaignsPage() {
     'submitted',
     mainTab === 'draft',
   );
+  const { data: pendingPaymentCampaigns = [], isLoading: pendingPaymentLoading } = useMyCampaigns(
+    'pending_payment',
+    mainTab === 'draft',
+  );
   const { data: activeCampaigns = [], isLoading: activeLoading } = useMyCampaigns(
     'active',
     mainTab === 'active',
   );
-  // const { data: completedCampaigns = [], isLoading: completedLoading } = useMyCampaigns(
-  //   'completed',
-  //   mainTab === 'completed',
-  // );
-
-  const allDraftTabCampaigns = useMemo(
-    () => [...draftCampaigns, ...submittedCampaigns],
-    [draftCampaigns, submittedCampaigns],
+  const { data: completedCampaigns = [], isLoading: completedLoading } = useMyCampaigns(
+    'completed',
+    mainTab === 'completed',
   );
-  const draftTabLoading = draftsLoading || submittedLoading;
 
-  // const activeCampaigns = DUMMY_ACTIVE_CAMPAIGNS;
-  const completedCampaigns = DUMMY_COMPLETED_CAMPAIGNS;
-  // const activeLoading = false;
-  const completedLoading = false;
+  const allDraftTabCampaigns = useMemo(() => {
+    const byId = new Map<string, (typeof draftCampaigns)[number]>();
+    for (const c of [...draftCampaigns, ...submittedCampaigns, ...pendingPaymentCampaigns]) {
+      byId.set(c.id, c);
+    }
+    return Array.from(byId.values());
+  }, [draftCampaigns, submittedCampaigns, pendingPaymentCampaigns]);
+  const draftTabLoading = draftsLoading || submittedLoading || pendingPaymentLoading;
 
   const filteredActive =
     activeSubTab === 'all'
@@ -128,7 +129,7 @@ export default function BrandCampaignsPage() {
         </div>
         <Link
           href="/brand/campaign/create"
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand-pink text-white text-sm font-medium rounded-lg hover:bg-brand-pink/90 transition-colors shrink-0 shadow-sm"
+          className="flex items-center animate-pulse gap-2 px-4 py-2.5 bg-brand-pink text-white text-sm font-medium rounded-lg hover:bg-brand-pink/90 transition-colors shrink-0 shadow-sm"
         >
           <Plus size={16} />
           New campaign
