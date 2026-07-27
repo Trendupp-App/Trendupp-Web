@@ -33,12 +33,12 @@ export default function Home() {
             Trend<span className="text-brand-pink">upp</span>
           </span>
           <nav className="flex items-center gap-4 text-sm font-semibold">
-            <Link href="/privacy" className="text-[#5a5a7a] hover:text-[#1a1a2e]">
+            {/* <Link href="/privacy" className="text-[#5a5a7a] hover:text-[#1a1a2e]">
               Privacy
             </Link>
             <Link href="/terms" className="text-[#5a5a7a] hover:text-[#1a1a2e]">
               Terms
-            </Link>
+            </Link> */}
             <Link
               href="/signin"
               className="px-4 py-2 rounded-xl bg-brand-pink text-white hover:bg-brand-pink/90 transition-colors"
@@ -107,7 +107,7 @@ export default function Home() {
         </section>
 
         {/* Google user data transparency */}
-        <section className="max-w-5xl mx-auto px-6 py-14">
+        {/* <section className="max-w-5xl mx-auto px-6 py-14">
           <h2 className="text-2xl font-extrabold">How Trendupp uses Google user data</h2>
           <div className="mt-4 flex flex-col gap-4 text-sm text-[#5a5a7a] leading-relaxed max-w-3xl">
             <p>
@@ -152,7 +152,7 @@ export default function Home() {
               .
             </p>
           </div>
-        </section>
+        </section> */}
       </main>
 
       {/* Footer */}
