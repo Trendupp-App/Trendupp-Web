@@ -114,7 +114,7 @@ export function useCampaignActivityTimeline(id: string | null, enabled: boolean 
   });
 }
 
-export function useApplyCampaign(onSuccess: () => void) {
+export function useApplyCampaign(onSuccess: (application?: CampaignApplicationDto) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: ApplyCampaignPayload }) =>
@@ -124,7 +124,7 @@ export function useApplyCampaign(onSuccess: () => void) {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       queryClient.invalidateQueries({ queryKey: ['campaign'] });
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });
-      onSuccess();
+      onSuccess(data.application);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit application, please try again');

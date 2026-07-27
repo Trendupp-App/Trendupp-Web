@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Clock, Shield, Check, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Clock, Shield, Check, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCampaignPlatforms, useApplyCampaign } from '@/hooks/useCampaign';
+import ApplicationSuccessView from './ApplicationSuccessView';
+import type { CampaignTimeline } from '@/types/campaign';
 
 export interface MappedCampaign {
   id: string;
   title: string;
   brand: string;
   budget: string;
+  budgetMax?: number;
   daysLeft: string;
   tier: string;
   appliedCount: number;
@@ -48,10 +51,12 @@ export default function CampaignDetailsDrawer({
   const [secondaryPlatform, setSecondaryPlatform] = useState('None');
   const [feeRequest, setFeeRequest] = useState('');
   const [comments, setComments] = useState('');
+  const [appliedTimeline, setAppliedTimeline] = useState<CampaignTimeline | undefined>();
 
   const { data: platformsList = [] } = useCampaignPlatforms();
 
-  const applyMutation = useApplyCampaign(() => {
+  const applyMutation = useApplyCampaign((application) => {
+    setAppliedTimeline(application?.campaign?.timeline);
     setDrawerMode('success');
   });
 
@@ -92,10 +97,16 @@ export default function CampaignDetailsDrawer({
     setSecondaryPlatform('None');
     setFeeRequest('');
     setComments('');
+    setAppliedTimeline(undefined);
     onClose();
   };
 
   const isFormValid = contentTitle.length >= 20 && feeRequest.trim() !== '';
+  const feeRequestNumber = Number(feeRequest.replace(/[^0-9]/g, '')) || 0;
+  const feeExceedsBudget =
+    feeRequestNumber > 0 &&
+    campaign?.budgetMax !== undefined &&
+    feeRequestNumber > campaign.budgetMax;
 
   function updateWorkLink(index: number, value: string) {
     setWorkLinks((prev) => prev.map((link, i) => (i === index ? value : link)));
@@ -727,6 +738,11 @@ export default function CampaignDetailsDrawer({
                   <span className="text-[10px] text-[#7a7a9a] font-light leading-none px-0.5 mt-0.5">
                     Range: {campaign.budget}
                   </span>
+                  {feeExceedsBudget && (
+                    <span className="text-[10px] text-red-500 font-medium leading-relaxed px-0.5 mt-0.5">
+                      This exceeds the campaign&apos;s budget of {campaign.budget}
+                    </span>
+                  )}
                 </div>
 
                 {/* Question/Comments */}
@@ -777,100 +793,7 @@ export default function CampaignDetailsDrawer({
         )}
 
         {drawerMode === 'success' && (
-          <>
-            {/* Success Sticky Header */}
-            <div className="sticky top-0 bg-white py-4.5 px-5 flex items-center justify-end z-20 shrink-0">
-              <button
-                onClick={handleClose}
-                className="text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors focus:outline-none border-none bg-transparent cursor-pointer"
-                aria-label="Close success screen"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Success Body */}
-            <div className="flex-1 flex flex-col items-center py-6 px-8 text-center my-auto min-h-[350px]">
-              <div className="w-16 h-16 rounded-full border border-[#00c37b]/25 bg-[#00c37b]/5 flex items-center justify-center text-[#00c37b] mb-6 shadow-sm">
-                <Check size={28} className="stroke-[2.5]" />
-              </div>
-
-              <span className="text-[10px] font-bold text-[#00c37b] leading-none uppercase tracking-wider mb-2">
-                Application Sent
-              </span>
-
-              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3 select-none leading-none">
-                You&apos;re in the running!
-              </h3>
-
-              <p className="text-xs font-light text-[#7a7a9a] leading-relaxed max-w-[340px] mb-8">
-                The brand reviews all applications after the 48-hour window closes. You will get a
-                push+email notification whether your application is approved or rejected.
-              </p>
-
-              {/* Progress Timeline List */}
-              <div className="w-full max-w-[280px] text-left flex flex-col gap-6 pl-8 ml-3 border-l border-[#e8e6f0]/80 relative mb-10 select-none">
-                {/* Step 1: Application Received */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                    <Check size={10} className="stroke-[3]" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">Application Received</h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">Now</span>
-                  </div>
-                </div>
-
-                {/* Step 2: 48hr Window Closes */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                    <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">48hr Window Closes</h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                      After application closes
-                    </span>
-                  </div>
-                </div>
-
-                {/* Step 3: Brand Selects Creators */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                    <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">Brand Selects Creators</h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                      After application closes
-                    </span>
-                  </div>
-                </div>
-
-                {/* Step 4: Escrow Confirmed -> Work Begins */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                    <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">
-                      Escrow Confirmed — Work Begins
-                    </h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                      After brand confirmed
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleClose}
-                className="w-full max-w-[280px] bg-brand-pink text-white font-semibold text-[14px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all border-none cursor-pointer"
-              >
-                Back to Campaigns
-              </Button>
-            </div>
-          </>
+          <ApplicationSuccessView timeline={appliedTimeline} onClose={handleClose} />
         )}
       </div>
     </div>
