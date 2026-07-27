@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import QueryProvider from '@/lib/providers/QueryProvider';
+import ZohoAsapWidget from '@/components/support/ZohoAsapWidget';
 
 const slussen = localFont({
   src: [
@@ -60,6 +61,7 @@ export default function RootLayout({
           <TooltipProvider delayDuration={200}>
             {children}
             <Toaster richColors />
+            <ZohoAsapWidget />
           </TooltipProvider>
         </QueryProvider>
       </body>
