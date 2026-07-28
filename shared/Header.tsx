@@ -8,7 +8,6 @@ import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
 interface HeaderUser {
-  displayName: string;
   initials: string;
   avatarUrl?: string;
 }
@@ -23,7 +22,7 @@ interface HeaderProps {
 
 export default function Header({
   title = 'Dashboard',
-  user = { displayName: 'User', initials: 'U' },
+  user = { initials: 'U' },
   onNotificationClick,
   onMenuClick,
   unreadCount = 0,
@@ -110,9 +109,6 @@ export default function Header({
               className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-[#f4f3f6]/60 rounded-xl transition-all"
             >
               <UserAvatar avatarUrl={user.avatarUrl} initials={user.initials} size={44} />
-              <span className="text-xs font-medium text-[#1a1a2e] hidden sm:inline truncate max-w-[120px]">
-                {user.displayName}
-              </span>
               <ChevronDown
                 size={14}
                 className={cn(
