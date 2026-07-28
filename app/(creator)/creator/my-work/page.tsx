@@ -123,6 +123,9 @@ function mapAppToWorkCampaign(
     liveLink: latestSubmission?.liveLink ?? null,
     contentIdea: app.contentIdea,
     applicationsCount: campaign.applicationsCount?.total ?? 0,
+    campaignComment: app.campaignComment
+      ? { comment: app.campaignComment.comment, response: app.campaignComment.response }
+      : null,
   };
 }
 

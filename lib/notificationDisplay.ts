@@ -4,8 +4,9 @@ import {
   Wallet,
   MessageSquare,
   ShieldCheck,
-  CalendarClock,
+  UserRound,
   Gift,
+  Radio,
   Bell,
   type LucideIcon,
 } from 'lucide-react';
@@ -18,51 +19,57 @@ interface CategoryMeta {
 }
 
 const CATEGORY_META: Record<NotificationCategory, CategoryMeta> = {
-  newCampaigns: {
+  campaigns: {
     label: 'Campaigns',
     icon: Megaphone,
     iconClassName: 'bg-[#edf2fe] text-[#2f63eb]',
   },
-  applicationUpdates: {
+  applications: {
     label: 'Applications',
     icon: CircleCheck,
     iconClassName: 'bg-[#eafaf0] text-[#16a34a]',
   },
-  paymentAlerts: {
+  payments: {
     label: 'Payments',
     icon: Wallet,
     iconClassName: 'bg-[#fdf2f6] text-[#d7176f]',
   },
-  brandMessages: {
-    label: 'Messages',
+  chatDispute: {
+    label: 'Chat & Disputes',
     icon: MessageSquare,
     iconClassName: 'bg-[#f2effe] text-[#7c3aed]',
   },
-  weeklySummary: {
-    label: 'Summary',
-    icon: CalendarClock,
-    iconClassName: 'bg-[#eef6fb] text-[#0284c7]',
-  },
-  marketingOffers: {
-    label: 'Offers',
-    icon: Gift,
-    iconClassName: 'bg-[#fef9e7] text-[#ca8a04]',
+  account: {
+    label: 'Account',
+    icon: UserRound,
+    iconClassName: 'bg-[#eef2ff] text-[#4f46e5]',
   },
   security: {
     label: 'Security',
     icon: ShieldCheck,
     iconClassName: 'bg-[#f4f3f6] text-[#5a5a7a]',
   },
+  opportunities: {
+    label: 'Opportunities',
+    icon: Gift,
+    iconClassName: 'bg-[#fef9e7] text-[#ca8a04]',
+  },
+  broadcast: {
+    label: 'Announcements',
+    icon: Radio,
+    iconClassName: 'bg-[#ecfeff] text-[#0891b2]',
+  },
 };
 
 export const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
-  'newCampaigns',
-  'applicationUpdates',
-  'paymentAlerts',
-  'brandMessages',
-  'weeklySummary',
-  'marketingOffers',
+  'campaigns',
+  'applications',
+  'payments',
+  'chatDispute',
+  'account',
   'security',
+  'opportunities',
+  'broadcast',
 ];
 
 // Fallback for categories the backend sends that this catalog doesn't know

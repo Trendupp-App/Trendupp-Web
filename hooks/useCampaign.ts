@@ -170,6 +170,28 @@ export function useApplication(id: string | null) {
   });
 }
 
+export function useRespondToComment(applicationId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      campaignId,
+      creatorId,
+      response,
+    }: {
+      campaignId: string;
+      creatorId: string;
+      response: string;
+    }) => campaignApi.respondToComment(campaignId, creatorId, response),
+    onSuccess: () => {
+      toast.success('Response sent to creator');
+      queryClient.invalidateQueries({ queryKey: ['application', applicationId] });
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not send response, please try again');
+    },
+  });
+}
+
 export function useValidateSelection(campaignId: string) {
   return useMutation({
     mutationFn: (applicationIds: string[]) =>

@@ -1,12 +1,17 @@
 'use client';
 
-import { CheckCircle2, ArrowUpRight, XCircle, Clock, UserRound } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, ArrowUpRight, XCircle, Clock, UserRound, Check, Send } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
-import { useApplication } from '@/hooks/useCampaign';
+import { useApplication, useRespondToComment } from '@/hooks/useCampaign';
 import ApplicationDetailSkeleton from '@/components/skeletons/ApplicationDetailSkeleton';
 import { formatCurrency } from '@/utils/Utilities';
+
+function toAbsoluteUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
 
 interface ApplicationDetailSheetProps {
   applicationId: string | null;
@@ -24,10 +29,28 @@ export default function ApplicationDetailSheet({
   currency,
 }: ApplicationDetailSheetProps) {
   const { data: application, isLoading, isError } = useApplication(open ? applicationId : null);
+  const respondMutation = useRespondToComment(applicationId);
+  const [responseText, setResponseText] = useState('');
+  // Reset the draft response when a different application is opened — adjusted
+  // during render (React's recommended pattern) rather than in an effect.
+  const [lastApplicationId, setLastApplicationId] = useState(applicationId);
+  if (applicationId !== lastApplicationId) {
+    setLastApplicationId(applicationId);
+    setResponseText('');
+  }
 
   const initials = application?.creator
     ? `${application.creator.firstName?.[0] ?? ''}${application.creator.lastName?.[0] ?? ''}`.toUpperCase()
     : 'U';
+
+  function handleSendResponse() {
+    if (!application?.campaignComment || !responseText.trim()) return;
+    respondMutation.mutate({
+      campaignId: application.campaignId,
+      creatorId: application.campaignComment.creatorId,
+      response: responseText.trim(),
+    });
+  }
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-[520px] overflow-y-auto">
@@ -102,21 +125,77 @@ export default function ApplicationDetailSheet({
                       .join(', ') || '—'}
                   </span>
                 </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#9a99b0]">Past work</span>
-
-                  <a
-                    href={application.pastWorkLink?.[0] || 'www.mywork.com'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm text-brand-pink hover:underline"
-                  >
-                    View Portfolio
-                    <ArrowUpRight size={13} />
-                  </a>
-                </div>
               </div>
+
+              {/* Past work links */}
+              <div className="border border-[#e8e6f0] rounded-xl p-5 flex flex-col gap-3">
+                <h3 className="text-sm font-semibold text-[#1a1a2e]">Past work Links</h3>
+                {application.pastWorkLink && application.pastWorkLink.length > 0 ? (
+                  <div className="flex flex-col gap-2.5">
+                    {application.pastWorkLink.map((link, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <span className="text-sm text-[#9a99b0]">Link {i + 1}</span>
+                        <a
+                          href={toAbsoluteUrl(link)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-brand-pink hover:underline"
+                        >
+                          View link
+                          <ArrowUpRight size={13} />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#9a99b0]">No past work links provided.</p>
+                )}
+              </div>
+
+              {/* Comments from creator (campaign-level question + brand reply) */}
+              {application.campaignComment && (
+                <div className="border border-[#e8e6f0] rounded-xl p-5 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-[#1a1a2e]">Comments from creator</h3>
+                    {application.campaignComment.response ? (
+                      <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
+                        Responded
+                        <Check size={13} className="stroke-[3]" />
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendResponse}
+                        disabled={!responseText.trim() || respondMutation.isPending}
+                        className="flex items-center gap-1 text-xs font-semibold text-brand-pink hover:text-brand-pink/80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                      >
+                        {respondMutation.isPending ? 'Sending...' : 'Send'}
+                        <Send size={13} />
+                      </button>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-[#4a4a6a] leading-relaxed">
+                    {application.campaignComment.comment}
+                  </p>
+
+                  {application.campaignComment.response ? (
+                    <div className="bg-amber-50 border border-amber-100 rounded-lg px-3.5 py-3">
+                      <p className="text-xs text-amber-700 italic leading-relaxed">
+                        {application.campaignComment.response}
+                      </p>
+                    </div>
+                  ) : (
+                    <textarea
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      rows={3}
+                      placeholder="Drop your comment"
+                      className="w-full border border-[#e8e6f0] rounded-lg px-3.5 py-3 text-sm text-[#1a1a2e] resize-none focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/20 placeholder:text-[#9a99b0]"
+                    />
+                  )}
+                </div>
+              )}
 
               {/* Comment + reply flow */}
               {application.comments && (

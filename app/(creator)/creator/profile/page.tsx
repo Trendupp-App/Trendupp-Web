@@ -452,7 +452,6 @@ export default function CreatorProfilePage() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [helpSearchQuery, setHelpSearchQuery] = useState('');
   const [expandedFaqIdx, setExpandedFaqIdx] = useState<number | null>(null);
-  const [userRating, setUserRating] = useState(0);
   const [helpStep, setHelpStep] = useState<'main' | 'ticket' | 'my-tickets'>('main');
   const [ticketCategory, setTicketCategory] = useState('Select a category');
   const [ticketCategoryId, setTicketCategoryId] = useState<string | null>(null);
@@ -674,14 +673,6 @@ export default function CreatorProfilePage() {
             Welcome back to your creator dashboard
           </p>
         </div>
-        <button
-          id="btn-sign-out"
-          onClick={() => alert('Signing out...')}
-          className="px-4 py-2 border border-red-100 bg-red-50/50 hover:bg-red-50 text-red-500 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
-        >
-          <LogOut size={14} />
-          Sign out
-        </button>
       </div>
 
       {/* ── MAIN CREATOR CARD ── */}
@@ -1739,22 +1730,26 @@ export default function CreatorProfilePage() {
                       : ALL_NICHES_INDUSTRIES
                     ).map((niche) => {
                       const active = editNiches.includes(niche);
+                      const disabled = !active && editNiches.length >= 3;
                       return (
                         <button
                           key={niche}
                           type="button"
+                          disabled={disabled}
                           onClick={() => {
                             if (active) {
                               setEditNiches(editNiches.filter((n) => n !== niche));
-                            } else {
+                            } else if (editNiches.length < 3) {
                               setEditNiches([...editNiches, niche]);
                             }
                           }}
                           className={cn(
-                            'px-4 py-2 text-xs font-semibold rounded-full border transition-all cursor-pointer select-none',
+                            'px-4 py-2 text-xs font-semibold rounded-full border transition-all select-none',
                             active
-                              ? 'bg-brand-pink-light border-brand-pink text-brand-pink shadow-[0_1px_4px_rgba(215,23,111,0.1)]'
-                              : 'bg-[#f4f3f6] border-transparent text-[#5a5a7a] hover:bg-[#eae8ed]',
+                              ? 'cursor-pointer bg-brand-pink-light border-brand-pink text-brand-pink shadow-[0_1px_4px_rgba(215,23,111,0.1)]'
+                              : disabled
+                                ? 'cursor-not-allowed bg-[#f4f3f6] border-transparent text-[#c4c2d4]'
+                                : 'cursor-pointer bg-[#f4f3f6] border-transparent text-[#5a5a7a] hover:bg-[#eae8ed]',
                           )}
                         >
                           {niche}
@@ -1762,6 +1757,21 @@ export default function CreatorProfilePage() {
                       );
                     })}
                   </div>
+
+                  {editNiches.length === 0 && (
+                    <p className="text-[11px] text-[#9a99b0] text-center">Select 1 to 3 niches</p>
+                  )}
+                  {editNiches.length > 0 && editNiches.length < 3 && (
+                    <p className="text-[11px] text-[#9a99b0] text-center">
+                      You can select up to {3 - editNiches.length} more niche
+                      {3 - editNiches.length > 1 ? 's' : ''}
+                    </p>
+                  )}
+                  {editNiches.length === 3 && (
+                    <p className="text-[11px] text-[#9a99b0] text-center">
+                      Maximum of 3 niches selected
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -2882,44 +2892,6 @@ export default function CreatorProfilePage() {
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Enjoying Trendupp review widget */}
-                <div className="bg-white border border-[#e8e6f0]/50 rounded-2xl p-5 flex flex-col items-center gap-4 text-center mt-auto shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
-                  <div className="flex flex-col gap-1">
-                    <h4 className="text-xs font-extrabold text-[#1a1a2e]">Enjoying Trendupp?</h4>
-                    <span className="text-[10px] text-[#7a7a9a]">Your review helps us grow</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setUserRating(star)}
-                        className="text-[#f59e0b] hover:scale-110 active:scale-95 transition-transform cursor-pointer"
-                      >
-                        <Star
-                          size={20}
-                          className={cn(
-                            'transition-all',
-                            (userRating === 0 ? true : star <= userRating)
-                              ? 'fill-[#f59e0b] text-[#f59e0b]'
-                              : 'text-[#e2e0e7] fill-none',
-                          )}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      alert(`Redirecting to app rating... Rating: ${userRating || 5} Stars`)
-                    }
-                    className="w-full py-2.5 bg-brand-pink hover:bg-opacity-95 text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer select-none text-center"
-                  >
-                    <span className="hidden md:inline">Rate us on playstore</span>
-                    <span className="inline md:hidden">Rate Us on App Store</span>
-                  </button>
                 </div>
               </>
             ) : helpStep === 'my-tickets' ? (

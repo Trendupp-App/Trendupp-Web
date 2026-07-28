@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin, Star } from 'lucide-react';
+import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContactInfo, useFaqs } from '@/hooks/useSettings';
@@ -50,7 +50,7 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
         if (!v) setShowTicket(false);
       }}
     >
-      <SheetContent side="right" className="px-3 w-full sm:max-w-[500px] overflow-y-auto">
+      <SheetContent side="right" className="px-3 w-full sm:max-w-[500px] overflow-y-auto pb-4">
         {showTicket ? (
           <div className="pt-2">
             <SubmitTicketView
@@ -154,20 +154,6 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                     </p>
                   )}
                 </div>
-              </div>
-
-              {/* Rate us */}
-              <div className="flex flex-col items-center gap-3 py-4">
-                <p className="text-base font-bold text-[#1a1a2e]">Enjoying Trendupp?</p>
-                <p className="text-xs text-[#9a99b0]">Your review helps us grow</p>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} size={28} className="text-amber-400 fill-amber-400" />
-                  ))}
-                </div>
-                <button className="w-full py-3.5 bg-brand-pink text-white text-sm font-medium rounded-xl hover:bg-brand-pink/90 transition-colors">
-                  Rate us on playstore
-                </button>
               </div>
             </div>
           </>

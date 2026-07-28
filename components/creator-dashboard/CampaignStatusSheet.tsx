@@ -255,6 +255,36 @@ export default function CampaignStatusSheet({
             )}
           </div>
 
+          {/* Comments from creator + brand response */}
+          {campaign.campaignComment && (
+            <div className="mt-5 border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2.5 text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#1a1a2e] flex items-center gap-1.5">
+                  <MessageCircle size={13} />
+                  Your comment
+                </span>
+                {campaign.campaignComment.response ? (
+                  <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+                    <CheckCircle2 size={12} />
+                    Brand responded
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-medium text-[#9a99b0]">Awaiting response</span>
+                )}
+              </div>
+              <p className="text-xs text-[#4a4a6a] leading-relaxed">
+                {campaign.campaignComment.comment}
+              </p>
+              {campaign.campaignComment.response && (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+                  <p className="text-[11px] text-amber-700 italic leading-relaxed">
+                    {campaign.campaignComment.response}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="mt-5 flex flex-col gap-3">
             {campaign.status === 'In progress' && (

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Pencil, Globe, MapPin, LogOut } from 'lucide-react';
+import { Pencil, Globe, MapPin } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { UpdatePersonalInfoPayload } from '@/types/profile';
 interface ProfileHeroBannerProps {
@@ -10,21 +10,11 @@ interface ProfileHeroBannerProps {
 
 export default function ProfileHeroBanner({ onEditProfile }: ProfileHeroBannerProps) {
   const user = useAuthStore((s) => s.user);
-  const clearSession = useAuthStore((s) => s.clearSession);
 
   const displayName = user?.username ?? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 
   return (
     <div className="relative bg-[#0d0d2b] rounded-2xl px-6 py-8 flex items-center gap-5">
-      {/* Sign out */}
-      <button
-        onClick={clearSession}
-        className="absolute top-4 cursor-pointer right-4 flex items-center gap-1.5 text-xs text-white/70 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
-      >
-        <LogOut size={13} />
-        Sign out
-      </button>
-
       {/* Avatar */}
       <div className="w-20 h-20 rounded-full overflow-hidden bg-[#f0eef8] shrink-0 border-2 border-white/20">
         {user?.avatarUrl ? (
