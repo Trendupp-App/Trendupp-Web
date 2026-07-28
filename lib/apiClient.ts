@@ -80,12 +80,13 @@ apiClient.interceptors.response.use(
       !error.config?.skipAuthRedirect &&
       typeof window !== 'undefined'
     ) {
+      const hadSession = !!useAuthStore.getState().accessToken;
       console.warn(
         '[apiClient] 401 on',
         error.config?.url,
         '- clearing session and redirecting to /signin',
       );
-      useAuthStore.getState().clearSession();
+      useAuthStore.getState().clearSession(false);
       if (hadSession && !isOnPublicPath()) {
         window.location.href = '/signin';
       }
