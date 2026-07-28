@@ -10,6 +10,21 @@ import { toast } from 'sonner';
 const PENDING_KEY = 'google_auth_pending';
 const PENDING_MAX_AGE_MS = 5 * 60 * 1000;
 
+/**
+ * Google ID tokens expire after 1 hour. A NextAuth session can outlive that
+ * by weeks — replaying its stored idToken makes the backend reject with
+ * "Invalid Google ID Token". Only exchange tokens that are still fresh.
+ */
+function isIdTokenFresh(idToken: string): boolean {
+  try {
+    const [, payload] = idToken.split('.');
+    const { exp } = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof exp === 'number' && exp * 1000 > Date.now() + 30_000;
+  } catch {
+    return false;
+  }
+}
+
 interface PendingAuth {
   role: string;
   acceptedTerms: boolean;
@@ -81,6 +96,15 @@ export const GoogleSignInButton = forwardRef<SocialSignInHandle, Props>(function
       onRequireTerms?.();
       return;
     }
+
+    // Stale session (e.g. an abandoned sign-in attempt resumed hours later):
+    // the stored idToken has expired — drop the pending state and wait for a
+    // fresh click instead of sending a doomed exchange to the backend.
+    if (!isIdTokenFresh(session.idToken)) {
+      sessionStorage.removeItem(PENDING_KEY);
+      return;
+    }
+
     onResumeTermsAccepted?.();
 
     hasExchanged.current = true;

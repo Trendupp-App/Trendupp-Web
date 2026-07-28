@@ -52,6 +52,24 @@ function formatSingleMessage(msg: string): string {
   return formatted;
 }
 
+/** Routes a signed-out visitor may use — never bounce these to /signin. */
+const PUBLIC_PATH_PREFIXES = [
+  '/signin',
+  '/user-type',
+  '/creator/signup',
+  '/advertiser/signup',
+  '/forgot-password',
+  '/auth/callback',
+  '/terms',
+  '/privacy',
+  '/',
+];
+
+const isOnPublicPath = () => {
+  const path = window.location.pathname;
+  return PUBLIC_PATH_PREFIXES.some((p) => (p === '/' ? path === '/' : path.startsWith(p)));
+};
+
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -68,7 +86,9 @@ apiClient.interceptors.response.use(
         '- clearing session and redirecting to /signin',
       );
       useAuthStore.getState().clearSession();
-      // window.location.href = '/signin';
+      if (hadSession && !isOnPublicPath()) {
+        window.location.href = '/signin';
+      }
     }
 
     if (error.response?.data?.message) {
