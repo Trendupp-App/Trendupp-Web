@@ -53,6 +53,7 @@ export interface WorkCampaign {
   liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string }> | null;
   contentIdea?: string;
   applicationsCount: number;
+  campaignComment?: { comment: string; response: string | null } | null;
 }
 
 interface WorkCampaignCardProps {

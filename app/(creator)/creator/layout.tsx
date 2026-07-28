@@ -65,7 +65,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Derived user shape for Header
   const headerUser = user
     ? {
-        displayName: `${user.firstName} ${user.lastName}`.trim(),
         initials: `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase(),
         avatarUrl: user.avatarUrl ?? undefined,
       }

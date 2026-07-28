@@ -218,7 +218,7 @@ export default function Sidebar() {
 
       {/* Logout */}
       <button
-        onClick={clearSession}
+        onClick={() => clearSession()}
         className="flex items-center gap-3 px-4 py-3 text-sm text-[#7a7a9a] hover:bg-white/60 hover:text-red-500 rounded-xl transition-all duration-200 group w-full text-left"
       >
         <LogOut

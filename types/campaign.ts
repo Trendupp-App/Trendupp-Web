@@ -147,6 +147,31 @@ export interface Creator {
   twitterFollowers: number;
 }
 
+export interface CampaignCommentParticipant {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+// A creator's question/comment on a campaign, and the brand's reply (if any) —
+// distinct from CampaignApplicationDto.comments, which is the optional note
+// submitted alongside the application itself.
+export interface CampaignComment {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  campaignId: string;
+  creatorId: string;
+  brandId: string;
+  comment: string;
+  response: string | null;
+  creator: CampaignCommentParticipant;
+  brand: CampaignCommentParticipant;
+}
+
 export interface CampaignApplicationDto {
   id: string;
   createdAt: string;
@@ -168,6 +193,7 @@ export interface CampaignApplicationDto {
   secondaryPlatform: Platform;
   campaign?: Campaign;
   submissions?: unknown[];
+  campaignComment?: CampaignComment | null;
 }
 
 // ── Payloads ──────────────────────────────────────────────────────────────────

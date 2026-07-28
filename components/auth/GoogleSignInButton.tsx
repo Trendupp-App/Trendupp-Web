@@ -8,6 +8,7 @@ import { FaSpinner } from 'react-icons/fa6';
 import { toast } from 'sonner';
 
 const PENDING_KEY = 'google_auth_pending';
+const PENDING_MAX_AGE_MS = 5 * 60 * 1000;
 
 /**
  * Google ID tokens expire after 1 hour. A NextAuth session can outlive that
@@ -28,6 +29,7 @@ interface PendingAuth {
   role: string;
   acceptedTerms: boolean;
   acceptedPromotions: boolean;
+  createdAt: number;
 }
 
 interface Props {
@@ -84,8 +86,13 @@ export const GoogleSignInButton = forwardRef<SocialSignInHandle, Props>(function
       return;
     }
 
+    sessionStorage.removeItem(PENDING_KEY);
+
+    if (Date.now() - pending.createdAt > PENDING_MAX_AGE_MS) {
+      return;
+    }
+
     if (!pending.acceptedTerms) {
-      sessionStorage.removeItem(PENDING_KEY);
       onRequireTerms?.();
       return;
     }
@@ -101,7 +108,6 @@ export const GoogleSignInButton = forwardRef<SocialSignInHandle, Props>(function
     onResumeTermsAccepted?.();
 
     hasExchanged.current = true;
-    sessionStorage.removeItem(PENDING_KEY);
     setIsExchanging(true);
 
     exchangeGoogleToken.mutate(
@@ -141,7 +147,7 @@ export const GoogleSignInButton = forwardRef<SocialSignInHandle, Props>(function
 
     sessionStorage.setItem(
       PENDING_KEY,
-      JSON.stringify({ role, acceptedTerms: true, acceptedPromotions }),
+      JSON.stringify({ role, acceptedTerms: true, acceptedPromotions, createdAt: Date.now() }),
     );
 
     signIn('google');

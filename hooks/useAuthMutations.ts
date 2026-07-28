@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { authApi } from '@/services/authApi';
 import { AuthUser, useAuthStore } from '@/store/authStore';
 import { AxiosError } from 'axios';
-import { signIn } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
 import { mapUserProfileToAuthUser } from '@/lib/mapUserProfile';
 import { useDebouncedValue } from './useDebounceValue';
 import { useRouter } from 'next/navigation';
@@ -132,6 +132,10 @@ export function useGoogleAuth() {
   const exchangeGoogleToken = useMutation({
     mutationFn: authApi.googleAuth,
     onSuccess: async ({ data }) => {
+      // The NextAuth session only exists to carry Google's id_token to this
+      // exchange — once it's been used, drop it so it can never be reused
+      // later with a token that's since expired.
+      void signOut({ redirect: false });
       setSession(data.accessToken, data.user);
       toast.success('Signed in with Google!');
       await hydrateFullProfile(data.user.id, updateUser);
@@ -144,6 +148,7 @@ export function useGoogleAuth() {
       }
     },
     onError: (err: AxiosError<{ message?: string }>) => {
+      void signOut({ redirect: false });
       clearSession();
       toast.error(err?.response?.data?.message ?? 'Google auth failed');
     },

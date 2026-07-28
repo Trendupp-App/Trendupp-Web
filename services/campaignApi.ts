@@ -114,6 +114,11 @@ export const campaignApi = {
   getApplication: (id: string) =>
     apiClient.get<{ application: CampaignApplicationDto }>(`/campaigns/applications/${id}`),
 
+  respondToComment: (campaignId: string, creatorId: string, response: string) =>
+    apiClient.post<{ message?: string }>(`/campaigns/${campaignId}/comments/${creatorId}/respond`, {
+      response,
+    }),
+
   getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
 
   validateSelection: (campaignId: string, applicationIds: string[]) =>

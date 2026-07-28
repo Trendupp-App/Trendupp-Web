@@ -1,6 +1,14 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    // Best-effort requests (e.g. hydrating extra profile data after login)
+    // shouldn't be able to log the user out if they happen to 401.
+    skipAuthRedirect?: boolean;
+  }
+}
+
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
@@ -66,13 +74,19 @@ apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
     const isAuthEndpoint = error.config?.url?.startsWith('/auth/');
-    if (error.response?.status === 401 && !isAuthEndpoint && typeof window !== 'undefined') {
-      // Stale/expired session: clear it fully and land on /signin so the
-      // user isn't stranded on a dead dashboard. Public pages (signup flow,
-      // callbacks) are left alone — a background 401 there must not hijack
-      // navigation.
+    if (
+      error.response?.status === 401 &&
+      !isAuthEndpoint &&
+      !error.config?.skipAuthRedirect &&
+      typeof window !== 'undefined'
+    ) {
       const hadSession = !!useAuthStore.getState().accessToken;
-      useAuthStore.getState().clearSession();
+      console.warn(
+        '[apiClient] 401 on',
+        error.config?.url,
+        '- clearing session and redirecting to /signin',
+      );
+      useAuthStore.getState().clearSession(false);
       if (hadSession && !isOnPublicPath()) {
         window.location.href = '/signin';
       }
