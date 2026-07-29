@@ -93,10 +93,16 @@ export interface GetSupportTicketsResponse {
   ticket?: SupportTicket;
 }
 
-export interface GetSupportTicketCategoriesResponse {
-  message: string;
-  categories: Array<string | { id: string; name: string }>;
-}
+/**
+ * GET /profile/support-ticket/categories returns a bare array of the
+ * admin-managed issue categories (Admin → Settings → Ticket Categories).
+ * It is NOT wrapped in { message, categories }.
+ */
+export type GetSupportTicketCategoriesResponse = Array<{
+  id: string;
+  name: string;
+  description?: string | null;
+}>;
 
 export interface DeactivateAccountPayload {
   password?: string;

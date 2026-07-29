@@ -180,7 +180,7 @@ export function useDeactivateAccount() {
 export function useSupportTicketCategories(enabled: boolean) {
   return useQuery({
     queryKey: ['supportTicketCategories'],
-    queryFn: () => profileApi.getSupportTicketCategories().then((r) => r.data.categories),
+    queryFn: () => profileApi.getSupportTicketCategories().then((r) => r.data),
     enabled,
     staleTime: 1000 * 60 * 30,
   });

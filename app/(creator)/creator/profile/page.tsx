@@ -3017,20 +3017,12 @@ export default function CreatorProfilePage() {
 
                       {isCategoryDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#e8e6f0] rounded-xl shadow-lg z-50 overflow-hidden">
-                          {(serverCategories
-                            ? serverCategories.map((c) =>
-                                typeof c === 'string'
-                                  ? { id: '', name: c }
-                                  : { id: c.id, name: c.name },
-                              )
-                            : [
-                                { id: '', name: 'Campaign Dispute' },
-                                { id: '', name: 'Payment & Wallet' },
-                                { id: '', name: 'Account Verification' },
-                                { id: '', name: 'Technical Issue' },
-                                { id: '', name: 'Other' },
-                              ]
-                          ).map((cat) => (
+                          {(serverCategories ?? []).length === 0 && (
+                            <div className="px-4 py-3 text-xs text-[#9a99b0]">
+                              No categories available.
+                            </div>
+                          )}
+                          {(serverCategories ?? []).map((cat) => (
                             <button
                               key={cat.name}
                               type="button"
