@@ -26,9 +26,12 @@ export default function CreatorDashboardPage() {
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
 
   // Fetch campaigns from backend
-  const { data: liveCampaigns = [], isLoading } = useCampaigns({
+  const { data: campaignsResponse, isLoading } = useCampaigns({
     status: activeFilter === 'all' ? undefined : activeFilter === 'live' ? 'live' : 'completed',
+    page: 1,
+    limit: 6,
   });
+  const liveCampaigns = campaignsResponse?.data ?? [];
 
   const mappedCampaigns = liveCampaigns.map((c: Campaign) => {
     const deadline = getCampaignDeadlineInfo(c.timeline);

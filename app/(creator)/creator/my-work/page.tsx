@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
-import WorkTabs from '@/components/dashboard/my-work/WorkTabs';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import WorkTabs, { type PrimaryTab } from '@/components/dashboard/my-work/WorkTabs';
 import WorkCampaignCard, { WorkCampaign } from '@/components/creator-dashboard/WorkCampaignCard';
 import WorkDetailsDrawer from '@/components/creator-dashboard/WorkDetailsDrawer';
 import SubmitContentModal from '@/components/dashboard/my-work/SubmitContentModal';
@@ -9,10 +10,17 @@ import SubmitProofModal, {
 } from '@/components/dashboard/my-work/SubmitProofModal';
 import CampaignStatusSheet from '@/components/creator-dashboard/CampaignStatusSheet';
 import RaiseDisputeModal from '@/components/dashboard/my-work/RaiseDisputeModal';
+import SocialImpactWorkGrid, {
+  getLiveLinkSubmission,
+} from '@/components/dashboard/my-work/SocialImpactWorkGrid';
+import SocialImpactDetailSheet from '@/components/creator-dashboard/explore/SocialImpactDetailSheet';
+import SocialImpactSubmitLiveLinkModal from '@/components/dashboard/my-work/SocialImpactSubmitLiveLinkModal';
 import MyWorkPageSkeleton from '@/components/skeletons/MyWorkPageSkeleton';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useMyApplications,
+  useMySocialImpactApplications,
+  useSubmitSocialImpactLiveLink,
   useSubmitContentDraft,
   useSubmitProofOfPosting,
 } from '@/hooks/useCampaign';
@@ -129,17 +137,34 @@ function mapAppToWorkCampaign(
   };
 }
 
-type PrimaryTab = 'Active' | 'Applied' | 'Done';
-
 export default function MyWorkPage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const { data: myApps = [], isLoading, refetch } = useMyApplications();
 
-  const [activeTab, setActiveTab] = useState<PrimaryTab>('Active');
+  const initialTab: PrimaryTab = useMemo(
+    () => (searchParams.get('tab') === 'social-impact' ? 'Social impact' : 'Active'),
+    [searchParams],
+  );
+
+  const [activeTab, setActiveTab] = useState<PrimaryTab>(initialTab);
   const [activeSubFilter, setActiveSubFilter] = useState<string>('All');
   const [statusSheetCampaign, setStatusSheetCampaign] = useState<WorkCampaign | null>(null);
   const [isStatusSheetOpen, setIsStatusSheetOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<WorkCampaign | null>(null);
+  const [selectedSocialImpactCampaignId, setSelectedSocialImpactCampaignId] = useState<
+    string | null
+  >(null);
+  const [socialImpactSheetOpen, setSocialImpactSheetOpen] = useState(false);
+  const [submitLiveLinkApp, setSubmitLiveLinkApp] = useState<CampaignApplicationDto | null>(null);
+
+  const { data: socialImpactApps = [], isLoading: socialImpactLoading } =
+    useMySocialImpactApplications(undefined, activeTab === 'Social impact');
+
+  const submitSocialImpactLiveLink = useSubmitSocialImpactLiveLink((data) => {
+    toast.success(`${data.message} +${data.tokensAwarded} tokens`, { duration: 2000 });
+    setSubmitLiveLinkApp(null);
+  });
 
   // Submit content modal states
   const [submitLinkCampaign, setSubmitLinkCampaign] = useState<WorkCampaign | null>(null);
@@ -238,6 +263,7 @@ export default function MyWorkPage() {
     active: activeCount,
     applied: appliedCount,
     done: doneCount,
+    socialImpact: socialImpactApps.length,
     activeSub: {
       All: activeCount,
       'In Progress': campaigns.filter((c) => c.status === 'In progress').length,
@@ -251,7 +277,20 @@ export default function MyWorkPage() {
       Pending: campaigns.filter((c) => c.status === 'Pending').length,
       Rejected: campaigns.filter((c) => c.status === 'Declined').length,
     },
+    socialImpactSub: {
+      All: socialImpactApps.length,
+      Pending: socialImpactApps.filter((a) => a.status === 'pending').length,
+      Accepted: socialImpactApps.filter((a) => a.status === 'accepted').length,
+      Rejected: socialImpactApps.filter((a) => a.status === 'rejected').length,
+    },
   };
+
+  const filteredSocialImpactApps = socialImpactApps.filter((a) => {
+    if (activeSubFilter === 'Pending') return a.status === 'pending';
+    if (activeSubFilter === 'Accepted') return a.status === 'accepted';
+    if (activeSubFilter === 'Rejected') return a.status === 'rejected';
+    return true;
+  });
 
   // Filter campaigns depending on tab, sub-pill selection, and filter modal selections
   const filteredCampaigns = campaigns
@@ -292,6 +331,22 @@ export default function MyWorkPage() {
       return dateB - dateA;
     });
 
+  const selectedSocialImpactApp = socialImpactApps.find(
+    (a) => a.campaign?.id === selectedSocialImpactCampaignId,
+  );
+  const selectedHasSubmittedLiveLink = selectedSocialImpactApp
+    ? !!getLiveLinkSubmission(selectedSocialImpactApp)
+    : false;
+
+  const submitLiveLinkDeadline = getActiveDeadline(submitLiveLinkApp?.campaign?.timeline);
+  const submitLiveLinkDeadlineLabel = submitLiveLinkDeadline
+    ? new Date(submitLiveLinkDeadline).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : undefined;
+
   if (isLoading) {
     return <MyWorkPageSkeleton />;
   }
@@ -319,7 +374,17 @@ export default function MyWorkPage() {
       />
 
       {/* Campaign Cards Grid */}
-      {filteredCampaigns.length > 0 ? (
+      {activeTab === 'Social impact' ? (
+        <SocialImpactWorkGrid
+          applications={filteredSocialImpactApps}
+          isLoading={socialImpactLoading}
+          onViewBrief={(campaignId) => {
+            setSelectedSocialImpactCampaignId(campaignId);
+            setSocialImpactSheetOpen(true);
+          }}
+          onSubmitLiveLink={(app) => setSubmitLiveLinkApp(app)}
+        />
+      ) : filteredCampaigns.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
           {filteredCampaigns.map((campaign) => (
             <WorkCampaignCard
@@ -405,6 +470,38 @@ export default function MyWorkPage() {
         isOpen={!!disputeCampaign}
         campaign={disputeCampaign}
         onClose={() => setDisputeCampaign(null)}
+      />
+
+      {/* Social Impact campaign brief (read-only — already joined) */}
+      <SocialImpactDetailSheet
+        campaignId={selectedSocialImpactCampaignId}
+        open={socialImpactSheetOpen}
+        onOpenChange={setSocialImpactSheetOpen}
+        onParticipated={() => {}}
+        hideParticipateButton
+        showSubmitLiveLink={!!selectedSocialImpactApp}
+        hasSubmittedLiveLink={selectedHasSubmittedLiveLink}
+        onOpenSubmitLiveLink={() => {
+          if (selectedSocialImpactApp) {
+            setSocialImpactSheetOpen(false);
+            setSubmitLiveLinkApp(selectedSocialImpactApp);
+          }
+        }}
+      />
+
+      {/* Submit Live Content Modal (Social Impact) */}
+      <SocialImpactSubmitLiveLinkModal
+        isOpen={!!submitLiveLinkApp}
+        campaignTitle={submitLiveLinkApp?.campaign?.title || 'Social Impact campaign'}
+        tokenReward={submitLiveLinkApp?.campaign?.tokenReward ?? 0}
+        deadlineLabel={submitLiveLinkDeadlineLabel}
+        onClose={() => setSubmitLiveLinkApp(null)}
+        onSubmit={(liveLink) => {
+          if (submitLiveLinkApp?.campaignId) {
+            submitSocialImpactLiveLink.mutate({ id: submitLiveLinkApp.campaignId, liveLink });
+          }
+        }}
+        isSubmitting={submitSocialImpactLiveLink.isPending}
       />
     </div>
   );

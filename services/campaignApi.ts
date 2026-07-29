@@ -3,6 +3,7 @@ import type {
   CampaignPlatform,
   CreatorCategory,
   Campaign,
+  CampaignsPagination,
   CampaignActivityTimeline,
   CampaignStatus,
   CreateCampaignPayload,
@@ -14,6 +15,7 @@ import type {
   CampaignApplicationDto,
   ApplyCampaignPayload,
   ApplyCampaignResponse,
+  SubmitSocialImpactLiveLinkResponse,
   SubmitContentDraftPayload,
   SubmitContentDraftResponse,
   SubmitLiveLinkPayload,
@@ -91,15 +93,42 @@ export const campaignApi = {
     apiClient.get<Campaign[]>('/campaigns/my', { params: status ? { status } : undefined }),
 
   getCampaigns: (params?: {
+    page?: number;
+    limit?: number;
     status?: CampaignStatus;
     sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
     platforms?: string[];
     niches?: string[];
     nicheIds?: string[];
     goal?: string;
-  }) => apiClient.get<{ data: Campaign[] }>('/campaigns', { params }),
+  }) =>
+    apiClient.get<{ data: Campaign[]; pagination: CampaignsPagination }>('/campaigns', { params }),
 
   getCampaign: (id: string) => apiClient.get<Campaign>(`/campaigns/${id}`),
+
+  getSocialImpactCampaigns: (params?: {
+    tab?: 'all' | 'active' | 'completed';
+    page?: number;
+    limit?: number;
+  }) =>
+    apiClient.get<{ data: Campaign[]; pagination: CampaignsPagination }>(
+      '/campaigns/social-impact',
+      { params },
+    ),
+
+  participateSocialImpact: (id: string) =>
+    apiClient.post<ApplyCampaignResponse>(`/campaigns/social-impact/${id}/participate`),
+
+  getMySocialImpactApplications: (tab?: 'all' | 'pending' | 'accepted' | 'rejected') =>
+    apiClient.get<{ data: CampaignApplicationDto[] }>('/campaigns/social-impact/my-applications', {
+      params: tab ? { tab } : undefined,
+    }),
+
+  submitSocialImpactLiveLink: (id: string, liveLink: string) =>
+    apiClient.post<SubmitSocialImpactLiveLinkResponse>(
+      `/campaigns/social-impact/${id}/submit-livelink`,
+      { liveLink },
+    ),
 
   getActivityTimeline: (id: string) =>
     apiClient.get<CampaignActivityTimeline>(`/campaigns/${id}/activity-timeline`),

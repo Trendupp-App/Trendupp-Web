@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import PageLoader from '@/components/skeletons/PageLoader';
 import StreamChatProvider from '@/lib/providers/StreamChatProvider';
+import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed';
 
 const CREATOR_TITLES: Record<string, string> = {
   '/creator/dashboard': 'Dashboard',
@@ -44,6 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { user, accessToken, hasHydrated } = useAuthStore();
   const { data: unreadCount = 0 } = useUnreadNotificationCount(hasHydrated && !!accessToken);
+  const { collapsed, toggle } = useSidebarCollapsed();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMobileMenuOpen(false);
@@ -78,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex h-dvh w-screen overflow-hidden bg-[#faf9fc] font-sans relative">
         {/* Left fixed Sidebar — desktop only */}
         <div className="hidden md:block">
-          <Sidebar />
+          <Sidebar collapsed={collapsed} onToggleCollapse={toggle} />
         </div>
 
         {/* Right content area */}
