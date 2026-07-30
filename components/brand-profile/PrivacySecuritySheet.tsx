@@ -96,7 +96,7 @@ export default function PrivacySecuritySheet({ open, onOpenChange }: PrivacySecu
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-[480px] overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-[580px] overflow-y-auto">
           <SheetHeader className="mb-6">
             <SheetTitle className="text-base font-semibold text-[#1a1a2e]">
               Privacy & Security
@@ -111,32 +111,34 @@ export default function PrivacySecuritySheet({ open, onOpenChange }: PrivacySecu
             </div>
           ) : (
             <div className="flex flex-col gap-6">
-              {/* Account Security toggles */}
-              <div className="flex flex-col gap-1 px-3">
-                <p className="text-xs font-semibold text-[#9a99b0] uppercase tracking-wider px-1 mb-1">
-                  Account Security
-                </p>
-                <div className="bg-white border border-[#e8e6f0] rounded-xl divide-y divide-[#f0eef8]">
-                  <ToggleRow
-                    label="Two-Factor Authentication"
-                    description="Extra layer of sign-in protection"
-                    checked={settings?.twoFactorEnabled ?? false}
-                    onChange={() => toggle('twoFactorEnabled')}
-                  />
-                  <ToggleRow
-                    label="Biometric Login"
-                    description="Use fingerprint or face ID"
-                    checked={settings?.biometricLoginEnabled ?? false}
-                    onChange={() => toggle('biometricLoginEnabled')}
-                  />
-                  <ToggleRow
-                    label="Login Alerts"
-                    description="Notify me of new sign-ins"
-                    checked={settings?.loginAlertsEnabled ?? false}
-                    onChange={() => toggle('loginAlertsEnabled')}
-                  />
+              {/* Account Security toggles — disabled pending backend support, see [[account_security_toggles_disabled]] */}
+              {false && (
+                <div className="flex flex-col gap-1 px-3">
+                  <p className="text-xs font-semibold text-[#9a99b0] uppercase tracking-wider px-1 mb-1">
+                    Account Security
+                  </p>
+                  <div className="bg-white border border-[#e8e6f0] rounded-xl divide-y divide-[#f0eef8]">
+                    <ToggleRow
+                      label="Two-Factor Authentication"
+                      description="Extra layer of sign-in protection"
+                      checked={settings?.twoFactorEnabled ?? false}
+                      onChange={() => toggle('twoFactorEnabled')}
+                    />
+                    <ToggleRow
+                      label="Biometric Login"
+                      description="Use fingerprint or face ID"
+                      checked={settings?.biometricLoginEnabled ?? false}
+                      onChange={() => toggle('biometricLoginEnabled')}
+                    />
+                    <ToggleRow
+                      label="Login Alerts"
+                      description="Notify me of new sign-ins"
+                      checked={settings?.loginAlertsEnabled ?? false}
+                      onChange={() => toggle('loginAlertsEnabled')}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Password change */}
               <div className="flex flex-col gap-3 px-3">

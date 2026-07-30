@@ -83,6 +83,9 @@ export interface SupportTicket {
   description: string;
   status: string;
   createdAt: string;
+  issueCategoryId?: string;
+  issueCategory?: SupportTicketCategory;
+  attachmentUrl?: string | null;
 }
 
 export interface SupportTicketResponse {

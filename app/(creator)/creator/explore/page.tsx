@@ -23,7 +23,11 @@ import CreatorsList from '@/components/creator-dashboard/explore/CreatorList';
 import ExploreSearchAndFilter from '@/components/creator-dashboard/explore/ExploreSearchAndFilter';
 import { useExploreCampaigns } from '@/hooks/useExploreCampaign';
 import { useExploreCreators, useExploreBrands, useExploreSearch } from '@/hooks/useExplore';
-import { useSocialImpactCampaigns, useMySocialImpactApplications } from '@/hooks/useCampaign';
+import {
+  useSocialImpactCampaigns,
+  useMySocialImpactApplications,
+  useMyApplications,
+} from '@/hooks/useCampaign';
 import { useNiches, useIndustries } from '@/hooks/useOnboardingQueries';
 import { mapCampaign } from '@/lib/campaignMappers';
 import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
@@ -88,6 +92,9 @@ export default function ExplorePage() {
     mySocialImpactApplications.map((app) => app.campaignId),
   );
 
+  const { data: myApplications = [] } = useMyApplications();
+  const appliedCampaignIds = new Set(myApplications.map((app) => app.campaignId));
+
   const { data: niches } = useNiches();
   const { data: industries } = useIndustries();
 
@@ -119,7 +126,10 @@ export default function ExplorePage() {
   const searchCreators = searchResults?.creators.data ?? [];
   const searchBrands = searchResults?.brands.data ?? [];
 
-  const displayedCampaigns = isSearching ? searchCampaigns : sortedCampaigns;
+  const displayedCampaigns = (isSearching ? searchCampaigns : sortedCampaigns).map((c) => ({
+    ...c,
+    hasApplied: appliedCampaignIds.has(c.id),
+  }));
   const displayedCreators = isSearching ? searchCreators : creators;
   const displayedBrands = isSearching ? searchBrands : brands;
 

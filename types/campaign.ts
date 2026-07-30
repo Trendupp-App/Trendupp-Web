@@ -26,6 +26,7 @@ export interface CreatorCategory extends BaseEntity {
   minCostCreateUsd: number;
   minCostAmplifyNaira: number;
   minCostAmplifyUsd: number;
+  rewardTokens: number;
 }
 
 // ── Enums (validated by API)
@@ -95,12 +96,8 @@ export interface Campaign extends BaseEntity {
     email: string;
     username: string;
   };
-  creatorCategory?: {
-    id: string;
-    name: string;
-    minFollowers: number;
-    maxFollowers: number | null;
-  };
+  creatorCategory?: CreatorCategory;
+  creatorCategories?: CreatorCategory[];
   preferredPlatforms?: {
     id: string;
     name: string;

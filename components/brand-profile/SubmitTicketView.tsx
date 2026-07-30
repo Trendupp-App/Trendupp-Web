@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ArrowLeft, X, CloudUpload } from 'lucide-react';
+import { ArrowLeft, CloudUpload } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,18 +51,13 @@ export default function SubmitTicketView({ onBack, onClose }: SubmitTicketViewPr
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors"
-        >
-          <ArrowLeft size={16} />
-          Back
-        </button>
-        <button onClick={onClose} className="text-[#9a99b0] hover:text-[#1a1a2e] transition-colors">
-          <X size={18} />
-        </button>
-      </div>
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-sm text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors w-fit"
+      >
+        <ArrowLeft size={16} />
+        Back
+      </button>
 
       <div>
         <h2 className="text-base font-semibold text-[#1a1a2e]">Submit a ticket</h2>

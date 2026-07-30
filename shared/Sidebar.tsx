@@ -15,6 +15,7 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -36,6 +37,7 @@ const CREATOR_NAV_ITEMS: NavItem[] = [
   { label: 'My Work', href: '/creator/my-work', icon: Briefcase },
   { label: 'Messages', href: '/creator/messages', icon: MessageSquare },
   { label: 'Payout', href: '/creator/payout', icon: Wallet },
+  { label: 'Achievements', href: '/creator/achievements', icon: Trophy },
   { label: 'My Profile', href: '/creator/profile', icon: User },
 ];
 
@@ -76,7 +78,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
         collapsed ? 'w-20' : 'w-[260px]',
       )}
     >
-      <div className="flex flex-col min-h-0">
+      <div className="flex flex-col shrink-0">
         {/* Logo + collapse toggle */}
         <div
           className={cn(
@@ -119,78 +121,74 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
             </div>
           )}
         </div>
-
-        {/* Nav Links */}
-        <nav className="flex flex-col gap-1.5">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-
-            const link = (
-              <Link
-                href={item.href}
-                className={cn(
-                  'flex items-center rounded-xl transition-all duration-200 group',
-                  collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3 text-sm',
-                  isActive
-                    ? 'bg-white text-brand-pink font-medium shadow-[0_2px_8px_-3px_rgba(215,23,111,0.08)]'
-                    : 'text-[#7a7a9a] hover:bg-white/60 hover:text-brand-pink',
-                )}
-              >
-                <Icon
-                  size={18}
-                  className={cn(
-                    'transition-colors shrink-0',
-                    isActive ? 'text-brand-pink' : 'text-[#9a99b0] group-hover:text-brand-pink',
-                  )}
-                />
-                {!collapsed && item.label}
-              </Link>
-            );
-
-            if (!collapsed) {
-              return <div key={item.label}>{link}</div>;
-            }
-
-            return (
-              <Tooltip key={item.label}>
-                <TooltipTrigger asChild>{link}</TooltipTrigger>
-                <TooltipContent side="right">{item.label}</TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </nav>
       </div>
 
-      {/* Logout */}
-      {collapsed ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              aria-label="Logout"
-              className="flex cursor-pointer items-center justify-center px-0 py-3 text-sm text-[#7a7a9a] hover:bg-white/60 hover:text-red-500 rounded-xl transition-all duration-200 group w-full mt-3"
+      {/* Nav Links — scrolls internally so it can never push Logout off-screen */}
+      <nav className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+
+          const link = (
+            <Link
+              href={item.href}
+              className={cn(
+                'flex items-center rounded-xl transition-all duration-200 group',
+                collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3 text-sm',
+                isActive
+                  ? 'bg-white text-brand-pink font-medium shadow-[0_2px_8px_-3px_rgba(215,23,111,0.08)]'
+                  : 'text-[#7a7a9a] hover:bg-white/60 hover:text-brand-pink',
+              )}
             >
-              <LogOut
+              <Icon
                 size={18}
-                className="text-[#9a99b0] group-hover:text-red-500 transition-colors shrink-0"
+                className={cn(
+                  'transition-colors shrink-0',
+                  isActive ? 'text-brand-pink' : 'text-[#9a99b0] group-hover:text-brand-pink',
+                )}
               />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">Logout</TooltipContent>
-        </Tooltip>
-      ) : (
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
-          className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm text-[#7a7a9a] hover:bg-white/60 hover:text-red-500 rounded-xl transition-all duration-200 group w-full mt-3 text-left"
-        >
-          <LogOut
-            size={18}
-            className="text-[#9a99b0] group-hover:text-red-500 transition-colors shrink-0"
-          />
-          Logout
-        </button>
-      )}
+              {!collapsed && item.label}
+            </Link>
+          );
+
+          if (!collapsed) {
+            return <div key={item.label}>{link}</div>;
+          }
+
+          return (
+            <Tooltip key={item.label}>
+              <TooltipTrigger asChild>{link}</TooltipTrigger>
+              <TooltipContent side="right">{item.label}</TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </nav>
+
+      {/* Logout — visually set apart from nav items as a distinct, destructive action */}
+      <div className="border-t border-[#fae2ec] mt-2 pt-2 shrink-0">
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                aria-label="Logout"
+                className="flex cursor-pointer items-center justify-center px-0 py-3 text-sm text-red-400 bg-red-50/60 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 group w-full"
+              >
+                <LogOut size={18} className="transition-colors shrink-0" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Logout</TooltipContent>
+          </Tooltip>
+        ) : (
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm font-medium text-red-400 bg-red-50/60 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 group w-full text-left"
+          >
+            <LogOut size={18} className="transition-colors shrink-0" />
+            Logout
+          </button>
+        )}
+      </div>
       {showLogoutConfirm && (
         <FeedbackModal
           icon={LogOut}

@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { X, Link2, AlertCircle, AlertTriangle, Ticket, ExternalLink } from 'lucide-react';
+import { X, Link2, AlertCircle, AlertTriangle, ExternalLink } from 'lucide-react';
+import TokenIcon from '@/components/icons/TokenIcon';
 
 interface SocialImpactSubmitLiveLinkModalProps {
   isOpen: boolean;
@@ -118,7 +119,7 @@ export default function SocialImpactSubmitLiveLinkModal({
           <div className="flex items-center justify-between bg-[#f9f8fc] rounded-2xl px-4 py-3">
             <span className="text-xs font-medium text-[#5a5a7a]">Your reward upon submission</span>
             <span className="flex items-center gap-1.5 text-brand-pink font-bold text-sm">
-              <Ticket size={14} />
+              <TokenIcon size={14} />
               {tokenReward} Tokens
             </span>
           </div>
@@ -129,7 +130,7 @@ export default function SocialImpactSubmitLiveLinkModal({
             className="w-full bg-brand-pink hover:bg-brand-pink/90 text-white font-semibold text-xs h-11 rounded-2xl shadow-md transition-all active:scale-95 disabled:bg-brand-pink/45 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
           >
             <ExternalLink size={14} />
-            {isSubmitting ? 'Submitting…' : 'Submit live content'}
+            {isSubmitting ? 'Submitting…' : 'Send live link'}
           </Button>
         </form>
       </DialogContent>

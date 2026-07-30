@@ -29,6 +29,7 @@ export default function CampaignsGrid({
               appliedCount={campaign.appliedCount}
               image={campaign.image}
               status={campaign.status}
+              hasApplied={campaign.hasApplied}
             />
           </div>
         ))

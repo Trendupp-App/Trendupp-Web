@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { Check, Clock, Ticket } from 'lucide-react';
+import { Check, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import TokenIcon from '@/components/icons/TokenIcon';
 
 interface SocialCampaignCardProps {
   title: string;
@@ -83,33 +84,33 @@ export default function SocialCampaignCard({
 
         {/* Tokens */}
         <div className="flex items-center gap-1.5 text-brand-pink font-bold text-xs sm:text-sm mt-4">
-          <Ticket size={14} className="text-brand-pink shrink-0" />
+          <TokenIcon size={14} className="text-brand-pink shrink-0" />
           <span>{tokens}</span>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-stretch gap-2 mt-3">
           {showParticipate &&
             (hasApplied ? (
               <button
                 disabled
-                className="flex-1 flex items-center justify-center gap-1.5 bg-[#f4f3f6] text-[#7a7a9a] px-4 py-2 rounded-xl text-xs font-semibold shrink-0 cursor-not-allowed"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 bg-[#f4f3f6] text-[#7a7a9a] px-3 py-2 rounded-xl text-xs font-semibold cursor-not-allowed"
               >
-                <Check size={13} />
-                {appliedLabel}
+                <Check size={13} className="shrink-0" />
+                <span className="truncate">{appliedLabel}</span>
               </button>
             ) : (
               <button
                 onClick={onParticipate}
                 disabled={isParticipating}
-                className="flex-1 bg-brand-pink hover:bg-brand-pink/90 text-white transition-all duration-250 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 min-w-0 bg-brand-pink hover:bg-brand-pink/90 text-white transition-all duration-250 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed truncate"
               >
                 {isParticipating ? 'Joining…' : participateLabel}
               </button>
             ))}
           <button
             onClick={onViewBrief}
-            className="flex-1 bg-[#fef2f6] hover:bg-brand-pink/10 text-brand-pink transition-all duration-250 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer shrink-0"
+            className="flex-1 min-w-0 bg-[#fef2f6] hover:bg-brand-pink/10 text-brand-pink transition-all duration-250 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer truncate"
           >
             View brief
           </button>

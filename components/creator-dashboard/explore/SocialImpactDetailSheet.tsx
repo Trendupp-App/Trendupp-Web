@@ -1,9 +1,12 @@
 'use client';
 
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { useCampaign, useParticipateSocialImpact } from '@/hooks/useCampaign';
-import { Check, ExternalLink, Ticket, X, Clock, Megaphone } from 'lucide-react';
+import { useCampaign, useCreatorCategories, useParticipateSocialImpact } from '@/hooks/useCampaign';
+import { Check, ExternalLink, X, Clock, Megaphone } from 'lucide-react';
+import TokenIcon from '@/components/icons/TokenIcon';
 import { formatTimeRemaining, getActiveDeadline } from '@/lib/campaignTimelineStage';
+import { getRewardTokensForTier } from '@/constants/creatorTiers';
+import { useAuthStore } from '@/store/authStore';
 import type { CampaignApplicationDto } from '@/types/campaign';
 
 interface SocialImpactDetailSheetProps {
@@ -35,6 +38,10 @@ export default function SocialImpactDetailSheet({
     onOpenChange(false);
     onParticipated(application);
   });
+
+  const { user } = useAuthStore();
+  const { data: creatorCategories = [] } = useCreatorCategories();
+  const myRewardTokens = getRewardTokensForTier(creatorCategories, user?.assignedTier);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -118,11 +125,11 @@ export default function SocialImpactDetailSheet({
                 <div className="flex flex-col gap-3">
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-brand-pink text-white text-[11px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
-                      <Ticket size={12} />
+                      <TokenIcon size={12} />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[#1a1a2e]">Token reward</p>
-                      <p className="text-xs text-[#9a99b0]">{campaign.tokenReward ?? 0} Tokens</p>
+                      <p className="text-xs text-[#9a99b0]">{myRewardTokens} Tokens</p>
                     </div>
                   </div>
 
@@ -225,7 +232,7 @@ export default function SocialImpactDetailSheet({
                     className="w-full flex items-center justify-center gap-1.5 bg-[#f4f3f6] text-[#7a7a9a] font-semibold text-sm py-3.5 rounded-xl cursor-not-allowed"
                   >
                     <Check size={15} />
-                    Submitted · {campaign.tokenReward ?? 0} tokens earned
+                    Submitted · {myRewardTokens} tokens earned
                   </button>
                 ) : (
                   <button
@@ -233,7 +240,7 @@ export default function SocialImpactDetailSheet({
                     className="w-full flex items-center justify-center gap-1.5 bg-brand-pink text-white font-semibold text-sm py-3.5 rounded-xl hover:bg-brand-pink/90 transition-colors cursor-pointer"
                   >
                     <ExternalLink size={15} />
-                    Submit live content
+                    Send live link
                   </button>
                 ))}
 

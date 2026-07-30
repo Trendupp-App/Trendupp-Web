@@ -2,8 +2,10 @@
 
 import SocialCampaignCard from '@/components/creator-dashboard/SocialCampaignCard';
 import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
-import { useParticipateSocialImpact } from '@/hooks/useCampaign';
+import { useCreatorCategories, useParticipateSocialImpact } from '@/hooks/useCampaign';
 import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
+import { getRewardTokensForTier } from '@/constants/creatorTiers';
+import { useAuthStore } from '@/store/authStore';
 import type { Campaign, CampaignApplicationDto } from '@/types/campaign';
 
 const FALLBACK_IMAGE =
@@ -12,11 +14,13 @@ const FALLBACK_IMAGE =
 function SocialImpactCardItem({
   campaign,
   hasApplied,
+  myRewardTokens,
   onViewBrief,
   onParticipated,
 }: {
   campaign: Campaign;
   hasApplied: boolean;
+  myRewardTokens: number;
   onViewBrief: (campaign: Campaign) => void;
   onParticipated: (campaign: Campaign, application?: CampaignApplicationDto) => void;
 }) {
@@ -30,7 +34,7 @@ function SocialImpactCardItem({
       title={campaign.title}
       brand={campaign.brand?.username || 'Trendupp'}
       daysLeft={deadline.label ?? undefined}
-      tokens={`${campaign.tokenReward ?? 0} Tokens`}
+      tokens={`${myRewardTokens} Tokens`}
       image={campaign.coverImage || FALLBACK_IMAGE}
       isParticipating={participate.isPending}
       hasApplied={hasApplied}
@@ -53,6 +57,10 @@ export default function SocialImpactGrid({
   onViewBrief: (campaign: Campaign) => void;
   onParticipated: (campaign: Campaign, application?: CampaignApplicationDto) => void;
 }) {
+  const { user } = useAuthStore();
+  const { data: creatorCategories = [] } = useCreatorCategories();
+  const myRewardTokens = getRewardTokensForTier(creatorCategories, user?.assignedTier);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
       {isLoading ? (
@@ -63,6 +71,7 @@ export default function SocialImpactGrid({
             key={campaign.id}
             campaign={campaign}
             hasApplied={appliedCampaignIds.has(campaign.id)}
+            myRewardTokens={myRewardTokens}
             onViewBrief={onViewBrief}
             onParticipated={onParticipated}
           />

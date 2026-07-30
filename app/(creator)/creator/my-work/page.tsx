@@ -18,6 +18,7 @@ import SocialImpactSubmitLiveLinkModal from '@/components/dashboard/my-work/Soci
 import MyWorkPageSkeleton from '@/components/skeletons/MyWorkPageSkeleton';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  useCreatorCategories,
   useMyApplications,
   useMySocialImpactApplications,
   useSubmitSocialImpactLiveLink,
@@ -27,6 +28,8 @@ import {
 import { toast } from 'sonner';
 import { CampaignApplicationDto, Campaign } from '@/types/campaign';
 import { useBrandNames } from '@/hooks/useBrandNames';
+import { useAuthStore } from '@/store/authStore';
+import { getRewardTokensForTier } from '@/constants/creatorTiers';
 import { formatCurrency } from '@/utils/Utilities';
 import { getActiveDeadline } from '@/lib/campaignTimelineStage';
 
@@ -141,6 +144,9 @@ export default function MyWorkPage() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const { data: myApps = [], isLoading, refetch } = useMyApplications();
+  const { user } = useAuthStore();
+  const { data: creatorCategories = [] } = useCreatorCategories();
+  const myRewardTokens = getRewardTokensForTier(creatorCategories, user?.assignedTier);
 
   const initialTab: PrimaryTab = useMemo(
     () => (searchParams.get('tab') === 'social-impact' ? 'Social impact' : 'Active'),
@@ -447,7 +453,7 @@ export default function MyWorkPage() {
 
       {/* Submit Draft Link Modal */}
       <SubmitContentModal
-        key={submitLinkCampaign?.id ?? 'closed'}
+        key={`submit-link-${submitLinkCampaign?.id ?? 'closed'}`}
         isOpen={!!submitLinkCampaign}
         campaign={submitLinkCampaign}
         onClose={() => setSubmitLinkCampaign(null)}
@@ -457,7 +463,7 @@ export default function MyWorkPage() {
 
       {/* Submit Proof of Posting Modal */}
       <SubmitProofModal
-        key={submitProofCampaign?.id ?? 'closed'}
+        key={`submit-proof-${submitProofCampaign?.id ?? 'closed'}`}
         isOpen={!!submitProofCampaign}
         campaign={submitProofCampaign}
         onClose={() => setSubmitProofCampaign(null)}
@@ -493,7 +499,7 @@ export default function MyWorkPage() {
       <SocialImpactSubmitLiveLinkModal
         isOpen={!!submitLiveLinkApp}
         campaignTitle={submitLiveLinkApp?.campaign?.title || 'Social Impact campaign'}
-        tokenReward={submitLiveLinkApp?.campaign?.tokenReward ?? 0}
+        tokenReward={myRewardTokens}
         deadlineLabel={submitLiveLinkDeadlineLabel}
         onClose={() => setSubmitLiveLinkApp(null)}
         onSubmit={(liveLink) => {

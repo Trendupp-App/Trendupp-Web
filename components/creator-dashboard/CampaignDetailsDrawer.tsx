@@ -15,6 +15,10 @@ export interface MappedCampaign {
   brand: string;
   budget: string;
   budgetMax?: number;
+  feeRangeLabel?: string;
+  feeRangeMin?: number;
+  feeRangeMax?: number;
+  hasApplied?: boolean;
   daysLeft: string;
   tier: string;
   appliedCount: number;
@@ -105,8 +109,12 @@ export default function CampaignDetailsDrawer({
   const feeRequestNumber = Number(feeRequest.replace(/[^0-9]/g, '')) || 0;
   const feeExceedsBudget =
     feeRequestNumber > 0 &&
-    campaign?.budgetMax !== undefined &&
-    feeRequestNumber > campaign.budgetMax;
+    campaign?.feeRangeMax !== undefined &&
+    feeRequestNumber > campaign.feeRangeMax;
+  const feeBelowRange =
+    feeRequestNumber > 0 &&
+    campaign?.feeRangeMin !== undefined &&
+    feeRequestNumber < campaign.feeRangeMin;
 
   function updateWorkLink(index: number, value: string) {
     setWorkLinks((prev) => prev.map((link, i) => (i === index ? value : link)));
@@ -520,7 +528,15 @@ export default function CampaignDetailsDrawer({
               </div>
 
               {/* Action apply button */}
-              {campaign.status === 'live' ? (
+              {campaign.hasApplied ? (
+                <Button
+                  disabled
+                  className="w-full bg-[#e6f9f1] text-[#00c37b] font-semibold text-[15px] py-6.5 rounded-xl transition-all select-none border-none shrink-0 mt-4 cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Check size={18} />
+                  Already Applied
+                </Button>
+              ) : campaign.status === 'live' ? (
                 <Button
                   onClick={() => setDrawerMode('apply')}
                   className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
@@ -736,11 +752,18 @@ export default function CampaignDetailsDrawer({
                     />
                   </div>
                   <span className="text-[10px] text-[#7a7a9a] font-light leading-none px-0.5 mt-0.5">
-                    Range: {campaign.budget}
+                    Range: {campaign.feeRangeLabel ?? campaign.budget}
                   </span>
                   {feeExceedsBudget && (
                     <span className="text-[10px] text-red-500 font-medium leading-relaxed px-0.5 mt-0.5">
-                      This exceeds the campaign&apos;s budget of {campaign.budget}
+                      This exceeds the campaign&apos;s budget of{' '}
+                      {campaign.feeRangeLabel ?? campaign.budget}
+                    </span>
+                  )}
+                  {feeBelowRange && (
+                    <span className="text-[10px] text-red-500 font-medium leading-relaxed px-0.5 mt-0.5">
+                      This is below the recommended range of{' '}
+                      {campaign.feeRangeLabel ?? campaign.budget}
                     </span>
                   )}
                 </div>

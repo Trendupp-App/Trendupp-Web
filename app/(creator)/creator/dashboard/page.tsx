@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { formatCurrency } from '@/utils/Utilities';
 import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
+import { getCampaignBudgetRange } from '@/lib/campaignMappers';
 
 type FilterType = 'all' | 'live' | 'past';
 
@@ -35,6 +36,7 @@ export default function CreatorDashboardPage() {
 
   const mappedCampaigns = liveCampaigns.map((c: Campaign) => {
     const deadline = getCampaignDeadlineInfo(c.timeline);
+    const feeRange = getCampaignBudgetRange(c);
     return {
       id: c.id,
       title: c.title,
@@ -42,6 +44,9 @@ export default function CreatorDashboardPage() {
       budget: formatCurrency(c.totalBudget, c.currency ?? 'NGN'),
       budgetMin: c.totalBudget,
       budgetMax: c.totalBudget,
+      feeRangeLabel: feeRange.label,
+      feeRangeMin: feeRange.min,
+      feeRangeMax: feeRange.max,
       daysLeft: deadline.label ?? 'Closed',
       daysLeftNumber: deadline.daysRemaining,
       tier: c.creatorCategory?.name || 'Nano',

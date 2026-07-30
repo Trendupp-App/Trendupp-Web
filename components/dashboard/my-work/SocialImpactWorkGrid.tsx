@@ -2,7 +2,10 @@
 
 import SocialCampaignCard from '@/components/creator-dashboard/SocialCampaignCard';
 import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
+import { useCreatorCategories } from '@/hooks/useCampaign';
 import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
+import { getRewardTokensForTier } from '@/constants/creatorTiers';
+import { useAuthStore } from '@/store/authStore';
 import type { CampaignApplicationDto, SocialImpactSubmission } from '@/types/campaign';
 
 const FALLBACK_IMAGE =
@@ -32,6 +35,10 @@ export default function SocialImpactWorkGrid({
   onViewBrief: (campaignId: string) => void;
   onSubmitLiveLink: (application: CampaignApplicationDto) => void;
 }) {
+  const { user } = useAuthStore();
+  const { data: creatorCategories = [] } = useCreatorCategories();
+  const myRewardTokens = getRewardTokensForTier(creatorCategories, user?.assignedTier);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
       {isLoading ? (
@@ -49,12 +56,12 @@ export default function SocialImpactWorkGrid({
               title={campaign?.title || 'Untitled campaign'}
               brand={campaign?.brand?.username || 'Trendupp'}
               daysLeft={deadline.label ?? undefined}
-              tokens={`${campaign?.tokenReward ?? 0} Tokens`}
+              tokens={`${myRewardTokens} Tokens`}
               image={campaign?.coverImage || FALLBACK_IMAGE}
               badgeLabel={badge.label}
               badgeClassName={badge.className}
               hasApplied={!!submission}
-              participateLabel="Submit live content"
+              participateLabel="Send live link"
               appliedLabel="Submitted"
               onParticipate={() => onSubmitLiveLink(app)}
               onViewBrief={() => campaign?.id && onViewBrief(campaign.id)}
