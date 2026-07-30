@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
+import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin, Inbox } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContactInfo, useFaqs } from '@/hooks/useSettings';
 import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
 import SubmitTicketView from './SubmitTicketView';
+import MyTicketsView from './MyTicketsView';
 
 interface HelpSupportSheetProps {
   open: boolean;
@@ -38,7 +39,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportSheetProps) {
-  const [showTicket, setShowTicket] = useState(false);
+  const [view, setView] = useState<'main' | 'ticket' | 'my-tickets'>('main');
   const { data: contactInfo, isLoading: contactLoading } = useContactInfo(open);
   const { data: faqs, isLoading: faqsLoading } = useFaqs(open);
 
@@ -47,15 +48,19 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
       open={open}
       onOpenChange={(v) => {
         onOpenChange(v);
-        if (!v) setShowTicket(false);
+        if (!v) setView('main');
       }}
     >
-      <SheetContent side="right" className="px-3 w-full sm:max-w-[500px] overflow-y-auto pb-4">
-        {showTicket ? (
+      <SheetContent side="right" className="px-3 w-full sm:max-w-[600px] overflow-y-auto pb-4">
+        {view === 'ticket' ? (
           <div className="pt-2">
-            <SubmitTicketView
-              onBack={() => setShowTicket(false)}
-              onClose={() => onOpenChange(false)}
+            <SubmitTicketView onBack={() => setView('main')} onClose={() => onOpenChange(false)} />
+          </div>
+        ) : view === 'my-tickets' ? (
+          <div className="pt-2">
+            <MyTicketsView
+              onBack={() => setView('main')}
+              onSubmitTicket={() => setView('ticket')}
             />
           </div>
         ) : (
@@ -75,13 +80,13 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                   Contact Us
                 </p>
                 {contactLoading ? (
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Skeleton key={i} className="h-[92px] rounded-xl" />
+                  <div className="grid grid-cols-2 gap-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-[110px] rounded-xl" />
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 gap-3">
                     {[
                       {
                         icon: Mail,
@@ -106,21 +111,32 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                         label: 'Submit a Ticket',
                         sub: 'Response within 24 hrs',
                         color: 'bg-blue-50 text-blue-500',
-                        onClick: () => setShowTicket(true),
+                        onClick: () => setView('ticket'),
+                      },
+                      {
+                        icon: Inbox,
+                        label: 'My Tickets',
+                        sub: 'Track submissions',
+                        color: 'bg-green-50 text-green-600',
+                        onClick: () => setView('my-tickets'),
                       },
                     ].map(({ icon: Icon, label, sub, color, onClick }) => (
                       <button
                         key={label}
                         onClick={onClick}
-                        className="flex flex-col items-center gap-2 border border-[#e8e6f0] rounded-xl px-3 py-2 text-center hover:bg-[#faf9fc] transition-colors"
+                        className="flex flex-col items-center gap-2.5 border border-[#e8e6f0] rounded-xl px-4 py-5 text-center hover:bg-[#faf9fc] hover:border-brand-pink/20 transition-colors"
                       >
                         <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}
                         >
-                          <Icon size={18} />
+                          <Icon size={19} />
                         </div>
-                        <p className="text-xs font-semibold text-[#1a1a2e]">{label}</p>
-                        <p className="text-[10px] text-[#9a99b0] leading-normal break-all">{sub}</p>
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-xs font-semibold text-[#1a1a2e]">{label}</p>
+                          <p className="text-[11px] text-[#9a99b0] leading-snug break-words line-clamp-2">
+                            {sub}
+                          </p>
+                        </div>
                       </button>
                     ))}
                   </div>

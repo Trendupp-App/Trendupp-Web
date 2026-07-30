@@ -7,14 +7,16 @@ import ProfilePersonalInfoEdit from '@/components/brand-profile/ProfilePersonalI
 import ProfileIndustryEdit from '@/components/brand-profile/ProfileIndustryEdit';
 import ProfileRepresentativeEdit from '@/components/brand-profile/ProfileRepresentativeEdit';
 import ProfileSocialsEdit from '@/components/brand-profile/ProfileSocialsEdit';
+import ProfilePaymentEdit from '@/components/brand-profile/ProfilePaymentEdit';
 
-type EditTab = 'personal' | 'industry' | 'representative' | 'socials';
+type EditTab = 'personal' | 'industry' | 'representative' | 'socials' | 'payment';
 
 const TABS: { id: EditTab; label: string }[] = [
   { id: 'personal', label: 'Personal Info' },
   { id: 'industry', label: 'Industry' },
   { id: 'representative', label: 'Representative' },
   { id: 'socials', label: 'Socials' },
+  { id: 'payment', label: 'Payment' },
 ];
 
 interface EditProfileSheetProps {
@@ -27,7 +29,7 @@ export default function EditProfileSheet({ open, onOpenChange }: EditProfileShee
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[520px] overflow-y-auto p-0">
+      <SheetContent side="right" className="w-full sm:max-w-[640px] overflow-y-auto p-0">
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-[#e8e6f0]">
           <SheetTitle className="text-base font-semibold text-[#1a1a2e]">Edit profile</SheetTitle>
         </SheetHeader>
@@ -56,6 +58,7 @@ export default function EditProfileSheet({ open, onOpenChange }: EditProfileShee
           {activeTab === 'industry' && <ProfileIndustryEdit />}
           {activeTab === 'representative' && <ProfileRepresentativeEdit />}
           {activeTab === 'socials' && <ProfileSocialsEdit />}
+          {activeTab === 'payment' && <ProfilePaymentEdit />}
         </div>
       </SheetContent>
     </Sheet>

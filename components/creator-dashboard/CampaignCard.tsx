@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Users, Clock } from 'lucide-react';
+import { Users, Clock, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CampaignCardProps {
@@ -14,6 +14,7 @@ interface CampaignCardProps {
   image: string;
   hideApplied?: boolean;
   status?: string;
+  hasApplied?: boolean;
 }
 
 export default function CampaignCard({
@@ -26,6 +27,7 @@ export default function CampaignCard({
   image,
   hideApplied = false,
   status,
+  hasApplied = false,
 }: CampaignCardProps) {
   const isClosed = daysLeft.toLowerCase() === 'closed';
 
@@ -121,9 +123,16 @@ export default function CampaignCard({
         </div>
 
         {/* Apply / View Details Button */}
-        <button className="w-full bg-[#f5f3ff] text-[#4c49d8] hover:bg-brand-pink hover:text-white transition-colors duration-200 font-bold text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl text-center mt-4 cursor-pointer">
-          {isClosed ? 'View Details' : 'Apply'}
-        </button>
+        {hasApplied ? (
+          <button className="w-full flex items-center justify-center gap-1.5 bg-[#e6f9f1] text-[#00c37b] font-bold text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl text-center mt-4 cursor-pointer">
+            <Check size={14} />
+            Applied
+          </button>
+        ) : (
+          <button className="w-full bg-[#f5f3ff] text-[#4c49d8] hover:bg-brand-pink hover:text-white transition-colors duration-200 font-bold text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl text-center mt-4 cursor-pointer">
+            {isClosed ? 'View Details' : 'Apply'}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import type {
   DeactivateAccountPayload,
   SupportTicketCategory,
   CreateSupportTicketPayload,
+  SupportTicket,
   UpdateProfilePayoutPayload,
   UpdateProfilePayoutResponse,
 } from '@/types/profile';
@@ -60,6 +61,11 @@ export const BrandProfileApi = {
 
   getTicketCategories: () =>
     apiClient.get<SupportTicketCategory[]>('/profile/support-ticket/categories'),
+
+  getTickets: (id?: string) =>
+    apiClient.get<SupportTicket[]>('/profile/support-ticket', {
+      params: id ? { id } : undefined,
+    }),
 
   createTicket: (payload: CreateSupportTicketPayload) => {
     const fd = new FormData();

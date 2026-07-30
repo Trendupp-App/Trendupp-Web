@@ -9,11 +9,13 @@ import {
   ChangePasswordPayload,
   DeactivateAccountPayload,
   SupportTicket,
+  SupportTicketCategory,
+  CreateSupportTicketPayload,
 } from '@/services/profileApi';
 import { useAuthStore } from '@/store/authStore';
 import { usersApi } from '@/services/usersApi';
 
-export type { SupportTicket };
+export type { SupportTicket, SupportTicketCategory };
 
 export function useUserDetail(id: string | null) {
   return useQuery({
@@ -189,10 +191,7 @@ export function useSupportTicketCategories(enabled: boolean) {
 export function useSupportTickets(enabled: boolean) {
   return useQuery<SupportTicket[]>({
     queryKey: ['supportTickets'],
-    queryFn: async () => {
-      const { data } = await profileApi.getSupportTickets();
-      return data.tickets ?? [];
-    },
+    queryFn: () => profileApi.getSupportTickets().then((r) => r.data),
     enabled,
     staleTime: 1000 * 60 * 2, // refresh every 2 min
   });
@@ -202,11 +201,11 @@ export function useSubmitSupportTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: FormData) => profileApi.submitSupportTicket(payload),
-    onSuccess: ({ data }) => {
+    mutationFn: (payload: CreateSupportTicketPayload) => profileApi.submitSupportTicket(payload),
+    onSuccess: () => {
       // Refresh the tickets list so "My Tickets" reflects the new submission
       queryClient.invalidateQueries({ queryKey: ['supportTickets'] });
-      toast.success(data.message ?? 'Ticket submitted successfully');
+      toast.success('Ticket submitted successfully');
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit ticket');

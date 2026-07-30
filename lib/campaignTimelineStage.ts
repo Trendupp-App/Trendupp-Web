@@ -17,7 +17,9 @@ export interface CurrentTimelineStage {
 // it keeps working as more stages get added later in the campaign lifecycle.
 export function getCurrentTimelineStage(timeline?: CampaignTimeline): CurrentTimelineStage | null {
   if (!timeline) return null;
-  const entries = Object.entries(timeline).sort(([a], [b]) => stageOrder(a) - stageOrder(b));
+  const entries = Object.entries(timeline)
+    .filter((entry): entry is [string, CampaignTimelineStage] => !!entry[1])
+    .sort(([a], [b]) => stageOrder(a) - stageOrder(b));
   if (entries.length === 0) return null;
 
   const inProgress = entries.find(([, s]) => s.status === 'in_progress');

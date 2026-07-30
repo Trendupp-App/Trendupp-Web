@@ -49,6 +49,8 @@ export interface AuthUser {
   } | null;
   avgRating?: number | null;
   totalReviews?: number | null;
+  totalTokens?: number | null;
+  badge?: string | null;
 }
 
 interface AuthState {

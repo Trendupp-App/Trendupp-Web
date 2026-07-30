@@ -10,6 +10,10 @@ export interface MappedExploreCampaign {
   budget: string;
   budgetMin: number;
   budgetMax: number;
+  feeRangeLabel: string;
+  feeRangeMin: number;
+  feeRangeMax: number;
+  hasApplied?: boolean;
   currency: string;
   daysLeft: string;
   daysLeftNumber: number;
@@ -29,9 +33,51 @@ export interface MappedExploreCampaign {
   successLooksLike: string;
 }
 
+// Tiers only expose a *minimum* cost each (no per-tier maximum), so the
+// displayed range spans the lowest targeted tier's min cost to the highest
+// targeted tier's min cost — independent of the campaign's totalBudget.
+export function getCampaignBudgetRange(campaign: Campaign): {
+  label: string;
+  min: number;
+  max: number;
+} {
+  const tiers = campaign.creatorCategories?.length
+    ? campaign.creatorCategories
+    : campaign.creatorCategory
+      ? [campaign.creatorCategory]
+      : [];
+  const currency = (campaign.currency ?? 'NGN').toUpperCase();
+  const isUsd = currency === 'USD';
+  const isAmplify = campaign.goal !== 'Create Content';
+
+  const values = tiers.map((t) =>
+    isAmplify
+      ? isUsd
+        ? t.minCostAmplifyUsd
+        : t.minCostAmplifyNaira
+      : isUsd
+        ? t.minCostCreateUsd
+        : t.minCostCreateNaira,
+  );
+
+  if (values.length === 0) {
+    const budget = campaign.totalBudget;
+    return { label: formatCurrency(budget, currency), min: budget, max: budget };
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const label =
+    min === max
+      ? formatCurrency(min, currency)
+      : `${formatCurrency(min, currency)} - ${formatCurrency(max, currency)}`;
+  return { label, min, max };
+}
+
 export function mapCampaign(c: Campaign): MappedExploreCampaign {
   const currency = c.currency ?? 'NGN';
   const deadline = getCampaignDeadlineInfo(c.timeline);
+  const feeRange = getCampaignBudgetRange(c);
   return {
     id: c.id,
     title: c.title,
@@ -39,6 +85,9 @@ export function mapCampaign(c: Campaign): MappedExploreCampaign {
     budget: formatCurrency(c.totalBudget, currency),
     budgetMin: c.totalBudget,
     budgetMax: c.totalBudget,
+    feeRangeLabel: feeRange.label,
+    feeRangeMin: feeRange.min,
+    feeRangeMax: feeRange.max,
     currency,
     daysLeft: deadline.label ?? 'Closed',
     daysLeftNumber: deadline.daysRemaining,

@@ -171,10 +171,21 @@ export function useTicketCategories() {
   });
 }
 
+export function useTickets(enabled: boolean) {
+  return useQuery({
+    queryKey: ['support-tickets'],
+    queryFn: () => BrandProfileApi.getTickets().then((r) => r.data),
+    enabled,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
 export function useCreateTicket(onSuccess?: () => void) {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateSupportTicketPayload) => BrandProfileApi.createTicket(payload),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['support-tickets'] });
       toast.success('Support ticket submitted successfully');
       onSuccess?.();
     },

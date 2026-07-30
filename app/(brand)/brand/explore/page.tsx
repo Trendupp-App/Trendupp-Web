@@ -14,6 +14,7 @@ import { useNiches, useIndustries } from '@/hooks/useOnboardingQueries';
 import type { ExploreCreator, ExploreBrand } from '@/types/explore';
 import CampaignsExploreTab from '@/components/BrandExplore/CampaignExploreTab';
 import { useCampaigns } from '@/hooks/useCampaign';
+import CampaignsPagination from '@/shared/CampaignsPagination';
 import ExploreSearchResults from '@/components/BrandExplore/ExploreSearchResults';
 import CampaignDetailsSheet from '@/components/BrandExplore/CampaignDetailsSheet';
 import { Campaign } from '@/types/campaign';
@@ -22,6 +23,7 @@ export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState<ExploreTab>('campaigns');
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
+  const [campaignPage, setCampaignPage] = useState(1);
   const isSearching = searchValue.trim().length > 0;
 
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
@@ -34,10 +36,15 @@ export default function ExplorePage() {
   const { data: industries } = useIndustries();
 
   const {
-    data: campaigns,
+    data: campaignsResponse,
     isLoading: campaignsLoading,
     isError: campaignsError,
-  } = useCampaigns({ status: 'live' }, !isSearching && activeTab === 'campaigns');
+  } = useCampaigns(
+    { status: 'live', page: campaignPage, limit: 12 },
+    !isSearching && activeTab === 'campaigns',
+  );
+  const campaigns = campaignsResponse?.data;
+  const campaignsPagination = campaignsResponse?.pagination;
 
   const {
     data: creators,
@@ -60,6 +67,7 @@ export default function ExplorePage() {
   function handleTabChange(tab: ExploreTab) {
     setActiveTab(tab);
     setActiveCategoryId(null);
+    setCampaignPage(1);
   }
 
   function handleViewCreator(creator: ExploreCreator) {
@@ -97,11 +105,18 @@ export default function ExplorePage() {
       ) : (
         <>
           {activeTab === 'campaigns' && (
-            <CampaignsExploreTab
-              campaigns={campaigns}
-              isLoading={campaignsLoading}
-              isError={campaignsError}
-            />
+            <>
+              <CampaignsExploreTab
+                campaigns={campaigns}
+                isLoading={campaignsLoading}
+                isError={campaignsError}
+              />
+              <CampaignsPagination
+                page={campaignPage}
+                totalPages={campaignsPagination?.pages ?? 1}
+                onPageChange={setCampaignPage}
+              />
+            </>
           )}
 
           {activeTab === 'creators' && (

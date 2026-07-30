@@ -45,6 +45,16 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
   return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+// Compact form for tight spaces (e.g. "₦847K" instead of "₦847,000.00").
+export function formatCompactCurrency(amount: number, currency = 'USD'): string {
+  const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] ?? `${currency.toUpperCase()} `;
+  const compact = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(amount);
+  return `${symbol}${compact}`;
+}
+
 // Strips everything but digits — use on the raw input value before storing
 // in form state, so the stored value stays a plain numeric string.
 export function stripNonDigits(value: string): string {

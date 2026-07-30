@@ -32,6 +32,17 @@ export function parseTierName(assignedTier: string | null | undefined): CreatorT
   return match ?? 'Nano';
 }
 
+// Looks up how many tokens a creator earns for Social Impact participation,
+// based on their own assigned tier — not the campaign, since a creator's
+// reward is a function of their tier, not the brand's campaign.
+export function getRewardTokensForTier(
+  categories: { name: string; rewardTokens: number }[],
+  assignedTier: string | null | undefined,
+): number {
+  const tierName = parseTierName(assignedTier);
+  return categories.find((c) => c.name.toLowerCase() === tierName.toLowerCase())?.rewardTokens ?? 0;
+}
+
 export function formatFollowerCount(n: number): string {
   if (n >= 1_000_000) {
     const v = n / 1_000_000;
