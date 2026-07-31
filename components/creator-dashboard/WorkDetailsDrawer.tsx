@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { ensureHttpUrl } from '@/utils/Utilities';
 import type { WorkCampaign } from './WorkCampaignCard';
 
 type DrawerTab = 'overview' | 'requirement' | 'timeline' | 'deliverables';
@@ -52,8 +53,8 @@ export default function WorkDetailsDrawer({
   const wasRevised = hasRevision || (isPastRevision && !!campaign.revisionComment);
   const isApproved = campaign.status === 'Approved' || campaign.status === 'Payment released';
   const hasLiveLink = campaign.liveLink && Object.keys(campaign.liveLink).length > 0;
-
-  console.log('Campaign', campaign);
+  const isPausedOrCancelled =
+    campaign.campaignStatus === 'paused' || campaign.campaignStatus === 'cancelled';
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
@@ -191,6 +192,37 @@ export default function WorkDetailsDrawer({
                 )}
               </div>
 
+              {campaign.campaignComment && (
+                <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-[#1a1a2e] flex items-center gap-1.5">
+                      <MessageCircle size={14} />
+                      Your comment
+                    </h4>
+                    {campaign.campaignComment.response ? (
+                      <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+                        <CheckCircle2 size={12} />
+                        Brand responded
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-medium text-[#9a99b0]">
+                        Awaiting response
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#4a4a6a] leading-relaxed">
+                    {campaign.campaignComment.comment}
+                  </p>
+                  {campaign.campaignComment.response && (
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+                      <p className="text-[11px] text-amber-700 italic leading-relaxed">
+                        {campaign.campaignComment.response}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="bg-[#fff0f5] rounded-2xl p-4 flex items-start gap-3">
                 <ShieldCheck size={18} className="text-brand-pink shrink-0 mt-0.5" />
                 <div>
@@ -302,7 +334,7 @@ export default function WorkDetailsDrawer({
                   <p className="text-[10px] font-semibold text-[#9a99b0] mb-1">CONTENT LINK</p>
 
                   <a
-                    href={campaign.draftLink!}
+                    href={ensureHttpUrl(campaign.draftLink!)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
@@ -338,7 +370,7 @@ export default function WorkDetailsDrawer({
                   <p className="text-xs font-bold text-indigo-600 mb-1">Revised Content</p>
 
                   <a
-                    href={campaign.draftLink!}
+                    href={ensureHttpUrl(campaign.draftLink!)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
@@ -376,7 +408,7 @@ export default function WorkDetailsDrawer({
                       <div key={platform} className="flex flex-col gap-0.5">
                         <span className="text-[10px] text-[#9a99b0] capitalize">{platform}</span>
                         <a
-                          href={entry.url}
+                          href={ensureHttpUrl(entry.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
@@ -391,7 +423,17 @@ export default function WorkDetailsDrawer({
               )}
 
               {/* Actions */}
-              {campaign.status === 'In progress' && (
+              {isPausedOrCancelled && (
+                <div className="bg-[#fef2f2] border border-[#fee2e2] rounded-2xl p-4 flex items-center gap-2 text-left">
+                  <Info size={15} className="text-[#dc2626] shrink-0" />
+                  <p className="text-xs font-medium text-[#b91c1c] capitalize">
+                    This campaign has been {campaign.campaignStatus} by the brand. No further action
+                    can be taken on it right now.
+                  </p>
+                </div>
+              )}
+
+              {!isPausedOrCancelled && campaign.status === 'In progress' && (
                 <button
                   onClick={() => onSubmitLink?.(campaign)}
                   className="w-full bg-brand-pink text-white text-xs font-semibold py-3 rounded-2xl hover:bg-brand-pink/90 transition-colors cursor-pointer"
@@ -400,7 +442,7 @@ export default function WorkDetailsDrawer({
                 </button>
               )}
 
-              {campaign.status === 'Revision requested' && (
+              {!isPausedOrCancelled && campaign.status === 'Revision requested' && (
                 <button
                   onClick={() => onSubmitLink?.(campaign)}
                   className="w-full border border-amber-500/80 bg-amber-50/50 hover:bg-amber-50 text-amber-700 text-xs font-bold py-3 rounded-2xl transition-all cursor-pointer"
@@ -409,7 +451,7 @@ export default function WorkDetailsDrawer({
                 </button>
               )}
 
-              {isApproved && !hasLiveLink && (
+              {!isPausedOrCancelled && isApproved && !hasLiveLink && (
                 <button
                   onClick={() => onSubmitProof?.(campaign)}
                   className="w-full bg-brand-pink text-white text-xs font-semibold py-3 rounded-2xl hover:bg-brand-pink/90 transition-colors cursor-pointer"
@@ -417,7 +459,7 @@ export default function WorkDetailsDrawer({
                   Submit Proof of Posting
                 </button>
               )}
-              {campaign.status !== 'Payment released' && (
+              {!isPausedOrCancelled && campaign.status !== 'Payment released' && (
                 <button
                   onClick={() => onRaiseDispute?.(campaign)}
                   className="absolute bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"

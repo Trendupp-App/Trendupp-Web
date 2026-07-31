@@ -12,11 +12,14 @@ import EscrowReleaseList from '@/components/dashboard/payout/EscrowReleaseList';
 import BankChangeModal from '@/components/dashboard/payout/BankChangeModal';
 import { cn } from '@/lib/utils';
 import { Info } from 'lucide-react';
+import { useDisplayCurrency } from '@/hooks/useExchangeRate';
+import { convertForDisplay } from '@/utils/Utilities';
 const TRANSACTIONS_LIMIT = 20;
 
 export default function CreatorPayoutPage() {
   const { user } = useAuthStore();
   const { mutate: updatePayout } = useUpdateProfilePayout();
+  const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
 
   const [activeTab, setActiveTab] = useState<'transactions' | 'escrow'>('transactions');
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
@@ -28,9 +31,34 @@ export default function CreatorPayoutPage() {
   });
 
   const summary = data?.summary;
-  const transactions = data?.transactions;
   const escrow = data?.escrow;
-  const currency = summary?.currency ?? 'USD';
+  const conv = (amount: number, sourceCurrency: string) =>
+    convertForDisplay(amount, sourceCurrency, { displayInNgn, usdToNgnRate });
+
+  const summaryCurrency = summary?.currency ?? 'USD';
+  const currency = conv(0, summaryCurrency).currency;
+  const displayAvailableBalance = conv(summary?.availableBalance ?? 0, summaryCurrency).amount;
+  const displayThirtyDayHold = conv(summary?.thirtyDayHold ?? 0, summaryCurrency).amount;
+  const displayTotalEarned = conv(summary?.totalEarned ?? 0, summaryCurrency).amount;
+
+  const transactions = data?.transactions
+    ? {
+        ...data.transactions,
+        items: data.transactions.items.map((tx) => {
+          const c = conv(tx.amount, tx.currency);
+          return { ...tx, amount: c.amount, currency: c.currency };
+        }),
+      }
+    : undefined;
+
+  const displayEscrowItems = (escrow?.items ?? []).map((item) => {
+    const c = conv(item.amount, item.currency);
+    return { ...item, amount: c.amount, currency: c.currency };
+  });
+  const displayTotalFundsYetToBeReleased = conv(
+    escrow?.totalFundsYetToBeReleased ?? 0,
+    summaryCurrency,
+  ).amount;
 
   // Fallbacks using store user details or empty defaults
   const bankName = user?.bankName || '';
@@ -72,9 +100,9 @@ export default function CreatorPayoutPage() {
       </div>
 
       <PayoutBalanceCard
-        availableBalance={summary?.availableBalance ?? 0}
-        hold30Day={summary?.thirtyDayHold ?? 0}
-        totalEarned={summary?.totalEarned ?? 0}
+        availableBalance={displayAvailableBalance}
+        hold30Day={displayThirtyDayHold}
+        totalEarned={displayTotalEarned}
         currency={currency}
       />
 
@@ -174,8 +202,8 @@ export default function CreatorPayoutPage() {
               </>
             ) : (
               <EscrowReleaseList
-                pendingReleases={escrow?.items ?? []}
-                totalFundsYetToBeReleased={escrow?.totalFundsYetToBeReleased ?? 0}
+                pendingReleases={displayEscrowItems}
+                totalFundsYetToBeReleased={displayTotalFundsYetToBeReleased}
                 currency={currency}
               />
             ))}

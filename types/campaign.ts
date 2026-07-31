@@ -5,6 +5,13 @@ interface BaseEntity {
   deletedAt: string | null;
 }
 
+export interface CampaignsPagination {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
 // ── Reference data ────────────────────────────────────────────────────────────
 
 export interface CampaignPlatform extends BaseEntity {
@@ -19,6 +26,7 @@ export interface CreatorCategory extends BaseEntity {
   minCostCreateUsd: number;
   minCostAmplifyNaira: number;
   minCostAmplifyUsd: number;
+  rewardTokens: number;
 }
 
 // ── Enums (validated by API)
@@ -39,9 +47,7 @@ export interface CampaignTimelineStage {
   startedDate: string | null;
 }
 
-// Keys are e.g. "stage0_escrow", "stage1_application_window" — see
-// lib/campaignTimelineStage.ts for how these are ordered/interpreted.
-export type CampaignTimeline = Record<string, CampaignTimelineStage>;
+export type CampaignTimeline = Record<string, CampaignTimelineStage | null>;
 
 export type CampaignStatus =
   | 'draft'
@@ -49,7 +55,9 @@ export type CampaignStatus =
   | 'pending_payment'
   | 'live'
   | 'active'
-  | 'completed';
+  | 'completed'
+  | 'paused'
+  | 'cancelled';
 
 export interface ContentGuidelines {
   dos: string[];
@@ -88,12 +96,8 @@ export interface Campaign extends BaseEntity {
     email: string;
     username: string;
   };
-  creatorCategory?: {
-    id: string;
-    name: string;
-    minFollowers: number;
-    maxFollowers: number | null;
-  };
+  creatorCategory?: CreatorCategory;
+  creatorCategories?: CreatorCategory[];
   preferredPlatforms?: {
     id: string;
     name: string;
@@ -119,6 +123,8 @@ export interface Campaign extends BaseEntity {
   currency?: string;
   creatorNicheIds?: string[];
   amplificationAsset?: string | null;
+  type?: string;
+  tokenReward?: number | null;
 }
 
 export interface Platform {
@@ -147,6 +153,31 @@ export interface Creator {
   twitterFollowers: number;
 }
 
+export interface CampaignCommentParticipant {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+// A creator's question/comment on a campaign, and the brand's reply (if any) —
+// distinct from CampaignApplicationDto.comments, which is the optional note
+// submitted alongside the application itself.
+export interface CampaignComment {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  campaignId: string;
+  creatorId: string;
+  brandId: string;
+  comment: string;
+  response: string | null;
+  creator: CampaignCommentParticipant;
+  brand: CampaignCommentParticipant;
+}
+
 export interface CampaignApplicationDto {
   id: string;
   createdAt: string;
@@ -168,6 +199,7 @@ export interface CampaignApplicationDto {
   secondaryPlatform: Platform;
   campaign?: Campaign;
   submissions?: unknown[];
+  campaignComment?: CampaignComment | null;
 }
 
 // ── Payloads ──────────────────────────────────────────────────────────────────
@@ -291,7 +323,7 @@ export interface ApplyCampaignPayload {
 
 export interface ApplyCampaignResponse {
   message?: string;
-  application?: unknown;
+  application?: CampaignApplicationDto;
 }
 export type CampaignSubStatus = 'in_progress' | 'content_review' | 'revision' | 'live_content';
 
@@ -327,6 +359,28 @@ export interface CampaignActivityTimeline {
   campaignId: string;
   totalEvents: number;
   activities: CampaignActivityEvent[];
+}
+
+export interface SocialImpactSubmission {
+  id: string;
+  campaignId: string;
+  applicationId: string;
+  creatorId: string;
+  liveLink: { link: string } | null;
+  status: string;
+  draftLink: string | null;
+  brandFeedback: string | null;
+  urlIsLive: boolean | null;
+  urlCheckedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface SubmitSocialImpactLiveLinkResponse {
+  message: string;
+  submission: SocialImpactSubmission;
+  tokensAwarded: number;
 }
 
 export interface ValidateSelectionResult {

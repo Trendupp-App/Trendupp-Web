@@ -115,7 +115,8 @@ export const authApi = {
 
   appleAuth: (data: AppleAuthPayload) => apiClient.post<AuthResponse>('/auth/apple', data),
 
-  getUserProfile: (userId: string) => apiClient.get<RawUserProfile>(`/users/${userId}`),
+  getUserProfile: (userId: string) =>
+    apiClient.get<RawUserProfile>(`/users/${userId}`, { skipAuthRedirect: true }),
 
   checkUsername: (username: string) =>
     apiClient.get<UsernameCheckResponse>('/auth/username/check', {

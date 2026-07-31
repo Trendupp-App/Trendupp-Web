@@ -59,13 +59,15 @@ function ListField<TFieldValues extends FieldValues>({
                 className="flex-1 text-sm font-light text-[#1a1a2e] focus:outline-none placeholder:text-[#c4c2d4] bg-transparent"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              className="w-9 h-9 flex items-center justify-center rounded-md border border-[#e8e6f0] text-[#c4c2d4] hover:text-red-400 hover:border-red-200 transition-colors shrink-0"
-            >
-              <Trash2 size={15} />
-            </button>
+            {fields.length > 1 && (
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="w-9 h-9 flex items-center justify-center rounded-md border border-[#e8e6f0] text-[#c4c2d4] hover:text-red-400 hover:border-red-200 transition-colors shrink-0"
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
           </div>
         ))}
       </div>

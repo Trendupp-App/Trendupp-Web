@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { Clock, Ticket } from 'lucide-react';
+import { Check, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import TokenIcon from '@/components/icons/TokenIcon';
 
 interface SocialCampaignCardProps {
   title: string;
@@ -12,6 +13,14 @@ interface SocialCampaignCardProps {
   image: string;
   showParticipate?: boolean;
   className?: string;
+  onParticipate?: () => void;
+  onViewBrief?: () => void;
+  isParticipating?: boolean;
+  hasApplied?: boolean;
+  participateLabel?: string;
+  appliedLabel?: string;
+  badgeLabel?: string;
+  badgeClassName?: string;
 }
 
 export default function SocialCampaignCard({
@@ -22,6 +31,14 @@ export default function SocialCampaignCard({
   image,
   showParticipate = true,
   className,
+  onParticipate,
+  onViewBrief,
+  isParticipating = false,
+  hasApplied = false,
+  participateLabel = 'Participate',
+  appliedLabel = 'Applied',
+  badgeLabel = 'Live',
+  badgeClassName = 'bg-[#e6f9f1] text-[#00c37b]',
 }: SocialCampaignCardProps) {
   return (
     <div
@@ -46,8 +63,13 @@ export default function SocialCampaignCard({
             <span>{daysLeft}</span>
           </div>
         )}
-        <div className="absolute top-3 left-3 bg-[#e6f9f1] text-[#00c37b] text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm z-10">
-          Live
+        <div
+          className={cn(
+            'absolute top-3 left-3 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm z-10',
+            badgeClassName,
+          )}
+        >
+          {badgeLabel}
         </div>
       </div>
 
@@ -60,20 +82,38 @@ export default function SocialCampaignCard({
           <p className="text-xs sm:text-sm text-[#7a7a9a] font-light mt-1">{brand}</p>
         </div>
 
-        {/* Bottom Row */}
-        <div className="flex items-center justify-between mt-4">
-          {/* Tokens */}
-          <div className="flex items-center gap-1.5 text-brand-pink font-bold text-xs sm:text-sm">
-            <Ticket size={14} className="text-brand-pink shrink-0" />
-            <span>{tokens}</span>
-          </div>
+        {/* Tokens */}
+        <div className="flex items-center gap-1.5 text-brand-pink font-bold text-xs sm:text-sm mt-4">
+          <TokenIcon size={14} className="text-brand-pink shrink-0" />
+          <span>{tokens}</span>
+        </div>
 
-          {/* Participate Action */}
-          {showParticipate && (
-            <button className="bg-[#fef2f6] hover:bg-brand-pink text-brand-pink hover:text-white transition-all duration-250 px-4 py-1.5 rounded-xl text-xs font-semibold cursor-pointer shrink-0">
-              Participate
-            </button>
-          )}
+        {/* Actions */}
+        <div className="flex items-stretch gap-2 mt-3">
+          {showParticipate &&
+            (hasApplied ? (
+              <button
+                disabled
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 bg-[#f4f3f6] text-[#7a7a9a] px-3 py-2 rounded-xl text-xs font-semibold cursor-not-allowed"
+              >
+                <Check size={13} className="shrink-0" />
+                <span className="truncate">{appliedLabel}</span>
+              </button>
+            ) : (
+              <button
+                onClick={onParticipate}
+                disabled={isParticipating}
+                className="flex-1 min-w-0 bg-brand-pink hover:bg-brand-pink/90 text-white transition-all duration-250 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed truncate"
+              >
+                {isParticipating ? 'Joining…' : participateLabel}
+              </button>
+            ))}
+          <button
+            onClick={onViewBrief}
+            className="flex-1 min-w-0 bg-[#fef2f6] hover:bg-brand-pink/10 text-brand-pink transition-all duration-250 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer truncate"
+          >
+            View brief
+          </button>
         </div>
       </div>
     </div>

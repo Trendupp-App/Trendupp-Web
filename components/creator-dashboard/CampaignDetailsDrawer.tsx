@@ -2,16 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Clock, Shield, Check, ArrowLeft } from 'lucide-react';
+import { Clock, Shield, Check, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCampaignPlatforms, useApplyCampaign } from '@/hooks/useCampaign';
+import ApplicationSuccessView from './ApplicationSuccessView';
+import type { CampaignTimeline } from '@/types/campaign';
+import { buildTimelineSteps } from '@/lib/campaignTimelineStage';
 
 export interface MappedCampaign {
   id: string;
   title: string;
   brand: string;
   budget: string;
+  budgetMax?: number;
+  currency?: string;
+  feeRangeLabel?: string;
+  feeRangeMin?: number;
+  feeRangeMax?: number;
+  hasApplied?: boolean;
   daysLeft: string;
   tier: string;
   appliedCount: number;
@@ -25,6 +34,7 @@ export interface MappedCampaign {
   usageRights?: string;
   successLooksLike?: string;
   status?: string;
+  timeline?: CampaignTimeline;
 }
 
 interface CampaignDetailsDrawerProps {
@@ -43,15 +53,17 @@ export default function CampaignDetailsDrawer({
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [drawerMode, setDrawerMode] = useState<'details' | 'apply' | 'success'>('details');
   const [contentTitle, setContentTitle] = useState('');
-  const [workLink, setWorkLink] = useState('');
+  const [workLinks, setWorkLinks] = useState<string[]>(['']);
   const [primaryPlatform, setPrimaryPlatform] = useState('Instagram');
   const [secondaryPlatform, setSecondaryPlatform] = useState('None');
   const [feeRequest, setFeeRequest] = useState('');
   const [comments, setComments] = useState('');
+  const [appliedTimeline, setAppliedTimeline] = useState<CampaignTimeline | undefined>();
 
   const { data: platformsList = [] } = useCampaignPlatforms();
 
-  const applyMutation = useApplyCampaign(() => {
+  const applyMutation = useApplyCampaign((application) => {
+    setAppliedTimeline(application?.campaign?.timeline);
     setDrawerMode('success');
   });
 
@@ -87,27 +99,55 @@ export default function CampaignDetailsDrawer({
   const handleClose = () => {
     setDrawerMode('details');
     setContentTitle('');
-    setWorkLink('');
+    setWorkLinks(['']);
     setPrimaryPlatform('Instagram');
     setSecondaryPlatform('None');
     setFeeRequest('');
     setComments('');
+    setAppliedTimeline(undefined);
     onClose();
   };
 
+  // campaign.feeRangeMin/Max/Label already arrive display-currency-converted
+  // (see useDisplayCurrency + mapCampaign/getCampaignBudgetRange), so this
+  // just compares against whatever was handed in — no conversion here.
+  const displayFeeRangeLabel = campaign?.feeRangeLabel ?? campaign?.budget;
+
   const isFormValid = contentTitle.length >= 20 && feeRequest.trim() !== '';
+  const feeRequestNumber = Number(feeRequest.replace(/[^0-9]/g, '')) || 0;
+  const feeExceedsBudget =
+    feeRequestNumber > 0 &&
+    campaign?.feeRangeMax !== undefined &&
+    feeRequestNumber > campaign.feeRangeMax;
+  const feeBelowRange =
+    feeRequestNumber > 0 &&
+    campaign?.feeRangeMin !== undefined &&
+    feeRequestNumber < campaign.feeRangeMin;
+
+  function updateWorkLink(index: number, value: string) {
+    setWorkLinks((prev) => prev.map((link, i) => (i === index ? value : link)));
+  }
+
+  function addWorkLink() {
+    setWorkLinks((prev) => [...prev, '']);
+  }
+
+  function removeWorkLink(index: number) {
+    setWorkLinks((prev) => prev.filter((_, i) => i !== index));
+  }
 
   const handleSubmit = () => {
     if (!isFormValid || !campaign) return;
     const primaryId = getPlatformIdByName(primaryPlatform);
     const secondaryId = getPlatformIdByName(secondaryPlatform);
     const fallbackId = platformsList[0]?.id || '';
+    const cleanedWorkLinks = workLinks.map((link) => link.trim()).filter(Boolean);
 
     applyMutation.mutate({
       id: campaign.id,
       payload: {
         contentIdea: contentTitle,
-        pastWorkLink: workLink.trim() ? [workLink.trim()] : undefined,
+        pastWorkLink: cleanedWorkLinks.length > 0 ? cleanedWorkLinks : undefined,
         primaryPlatformId: primaryId || fallbackId,
         secondaryPlatformId: secondaryId,
         feeRequest: Number(feeRequest.replace(/[^0-9]/g, '')),
@@ -117,6 +157,8 @@ export default function CampaignDetailsDrawer({
   };
 
   if (!campaign) return null;
+
+  const timelineSteps = buildTimelineSteps(campaign.timeline);
 
   return (
     <div
@@ -412,91 +454,56 @@ export default function CampaignDetailsDrawer({
                 {activeTab === 'timeline' && (
                   <div className="flex flex-col gap-5">
                     <h4 className="text-[13px] font-bold text-[#1a1a2e] mb-1">Campaign Timeline</h4>
-                    <div className="flex flex-col gap-6 pl-8 ml-3 border-l border-[#e8e6f0]/75 relative select-none">
-                      {/* Step 1 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                          <Check size={10} className="stroke-[3]" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Brief issued</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            May 28, 2026
-                          </span>
-                        </div>
+                    {timelineSteps.length === 0 ? (
+                      <p className="text-xs font-light text-[#9a99b0] leading-relaxed">
+                        Timeline details aren&apos;t available for this campaign yet.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-6 pl-8 ml-3 border-l border-[#e8e6f0]/75 relative select-none">
+                        {timelineSteps.map((step) => (
+                          <div key={step.key} className="relative">
+                            <div
+                              className={cn(
+                                'absolute -left-[42px] top-0.5 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center select-none',
+                                step.status === 'completed'
+                                  ? 'bg-[#00c37b] text-white'
+                                  : step.status === 'in_progress'
+                                    ? 'bg-brand-pink text-white'
+                                    : 'bg-[#e8e6f0] text-[#9a99b0]',
+                              )}
+                            >
+                              {step.status === 'completed' ? (
+                                <Check size={10} className="stroke-[3]" />
+                              ) : step.status === 'in_progress' ? (
+                                <Clock size={10} />
+                              ) : (
+                                <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <h4 className="text-xs font-bold text-[#1a1a2e]">{step.title}</h4>
+                              <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
+                                {step.subtext}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-
-                      {/* Step 2 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                          <Check size={10} className="stroke-[3]" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Escrow confirmed</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            May 30, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 3 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Content deadline</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 5, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 4 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Brand review (48h)</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 7, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 5 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Post live deadline</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 10, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 6 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Payment release</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 11, 2026
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
 
               {/* Action apply button */}
-              {campaign.status === 'live' ? (
+              {campaign.hasApplied ? (
+                <Button
+                  disabled
+                  className="w-full bg-[#e6f9f1] text-[#00c37b] font-semibold text-[15px] py-6.5 rounded-xl transition-all select-none border-none shrink-0 mt-4 cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Check size={18} />
+                  Already Applied
+                </Button>
+              ) : campaign.status === 'live' ? (
                 <Button
                   onClick={() => setDrawerMode('apply')}
                   className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
@@ -576,19 +583,42 @@ export default function CampaignDetailsDrawer({
                   </div>
                 </div>
 
-                {/* Past Work Link */}
+                {/* Past Work Link(s) */}
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="workLink" className="text-xs font-bold text-[#1a1a2e]">
+                  <label className="text-xs font-bold text-[#1a1a2e]">
                     Past Work Link (optional)
                   </label>
-                  <input
-                    id="workLink"
-                    type="text"
-                    value={workLink}
-                    onChange={(e) => setWorkLink(e.target.value)}
-                    placeholder="https://instagram.com/p/example"
-                    className="border border-[#e8e6f0] focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/30 rounded-xl p-3 text-xs w-full outline-none transition-all placeholder:text-[#9a99b0] text-[#1a1a2e]"
-                  />
+                  <div className="flex flex-col gap-2">
+                    {workLinks.map((link, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={link}
+                          onChange={(e) => updateWorkLink(index, e.target.value)}
+                          placeholder="https://instagram.com/p/example"
+                          className="border border-[#e8e6f0] focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/30 rounded-xl p-3 text-xs w-full outline-none transition-all placeholder:text-[#9a99b0] text-[#1a1a2e]"
+                        />
+                        {workLinks.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeWorkLink(index)}
+                            className="w-9 h-9 flex items-center justify-center rounded-xl border border-[#e8e6f0] text-[#c4c2d4] hover:text-red-400 hover:border-red-200 transition-colors shrink-0 cursor-pointer"
+                            aria-label="Remove link"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addWorkLink}
+                    className="flex items-center gap-1.5 text-xs font-bold text-brand-pink hover:text-brand-pink/80 transition-colors w-fit cursor-pointer"
+                  >
+                    <Plus size={13} />
+                    Add another link
+                  </button>
                 </div>
 
                 {/* Platform select dropdowns */}
@@ -689,8 +719,18 @@ export default function CampaignDetailsDrawer({
                     />
                   </div>
                   <span className="text-[10px] text-[#7a7a9a] font-light leading-none px-0.5 mt-0.5">
-                    Range: {campaign.budget}
+                    Range: {displayFeeRangeLabel}
                   </span>
+                  {feeExceedsBudget && (
+                    <span className="text-[10px] text-red-500 font-medium leading-relaxed px-0.5 mt-0.5">
+                      This exceeds the campaign&apos;s budget of {displayFeeRangeLabel}
+                    </span>
+                  )}
+                  {feeBelowRange && (
+                    <span className="text-[10px] text-red-500 font-medium leading-relaxed px-0.5 mt-0.5">
+                      This is below the recommended range of {displayFeeRangeLabel}
+                    </span>
+                  )}
                 </div>
 
                 {/* Question/Comments */}
@@ -741,100 +781,7 @@ export default function CampaignDetailsDrawer({
         )}
 
         {drawerMode === 'success' && (
-          <>
-            {/* Success Sticky Header */}
-            <div className="sticky top-0 bg-white py-4.5 px-5 flex items-center justify-end z-20 shrink-0">
-              <button
-                onClick={handleClose}
-                className="text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors focus:outline-none border-none bg-transparent cursor-pointer"
-                aria-label="Close success screen"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Success Body */}
-            <div className="flex-1 flex flex-col items-center py-6 px-8 text-center my-auto min-h-[350px]">
-              <div className="w-16 h-16 rounded-full border border-[#00c37b]/25 bg-[#00c37b]/5 flex items-center justify-center text-[#00c37b] mb-6 shadow-sm">
-                <Check size={28} className="stroke-[2.5]" />
-              </div>
-
-              <span className="text-[10px] font-bold text-[#00c37b] leading-none uppercase tracking-wider mb-2">
-                Application Sent
-              </span>
-
-              <h3 className="text-xl font-bold text-[#1a1a2e] mb-3 select-none leading-none">
-                You&apos;re in the running!
-              </h3>
-
-              <p className="text-xs font-light text-[#7a7a9a] leading-relaxed max-w-[340px] mb-8">
-                The brand reviews all applications after the 48-hour window closes. You will get a
-                push+email notification whether your application is approved or rejected.
-              </p>
-
-              {/* Progress Timeline List */}
-              <div className="w-full max-w-[280px] text-left flex flex-col gap-6 pl-8 ml-3 border-l border-[#e8e6f0]/80 relative mb-10 select-none">
-                {/* Step 1: Application Received */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                    <Check size={10} className="stroke-[3]" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">Application Received</h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">Now</span>
-                  </div>
-                </div>
-
-                {/* Step 2: 48hr Window Closes */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                    <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">48hr Window Closes</h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                      After application closes
-                    </span>
-                  </div>
-                </div>
-
-                {/* Step 3: Brand Selects Creators */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                    <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">Brand Selects Creators</h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                      After application closes
-                    </span>
-                  </div>
-                </div>
-
-                {/* Step 4: Escrow Confirmed -> Work Begins */}
-                <div className="relative">
-                  <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                    <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className="text-xs font-bold text-[#1a1a2e]">
-                      Escrow Confirmed — Work Begins
-                    </h4>
-                    <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                      After brand confirmed
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleClose}
-                className="w-full max-w-[280px] bg-brand-pink text-white font-semibold text-[14px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all border-none cursor-pointer"
-              >
-                Back to Campaigns
-              </Button>
-            </div>
-          </>
+          <ApplicationSuccessView timeline={appliedTimeline} onClose={handleClose} />
         )}
       </div>
     </div>

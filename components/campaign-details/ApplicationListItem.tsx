@@ -73,13 +73,13 @@ export default function ApplicationListItem({
               {user?.firstName} {user?.lastName}
             </p>
             {user?.instagramUsername ? (
-              <span className="text-sm text-[#9a99b0]">@{user.instagramUsername}</span>
+              <span className="text-sm text-[#9a99b0]">{user.instagramUsername}</span>
             ) : user?.tiktokUsername ? (
-              <span className="text-sm text-[#9a99b0]">@{user.tiktokUsername}</span>
+              <span className="text-sm text-[#9a99b0]">{user.tiktokUsername}</span>
             ) : user?.youtubeUsername ? (
-              <span className="text-sm text-[#9a99b0]">@{user.youtubeUsername}</span>
+              <span className="text-sm text-[#9a99b0]">{user.youtubeUsername}</span>
             ) : user?.twitterUsername ? (
-              <span className="text-sm text-[#9a99b0]">@{user.twitterUsername}</span>
+              <span className="text-sm text-[#9a99b0]">{user.twitterUsername}</span>
             ) : null}
           </div>
           <p className="text-sm text-[#4a4a6a] mt-1 leading-relaxed">{application?.contentIdea}</p>

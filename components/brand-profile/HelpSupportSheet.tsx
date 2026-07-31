@@ -1,39 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin, Star } from 'lucide-react';
+import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin, Inbox } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useContactInfo } from '@/hooks/useSettings';
+import { useContactInfo, useFaqs } from '@/hooks/useSettings';
 import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
 import SubmitTicketView from './SubmitTicketView';
-
-const FAQS = [
-  {
-    q: 'How does escrow payment work?',
-    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt, withdraw payment on or after 30 days.',
-  },
-  {
-    q: 'How long does profile verification take?',
-    a: 'Profile verification typically takes 24–48 hours after you complete all onboarding steps.',
-  },
-  {
-    q: 'Can I apply for multiple campaigns?',
-    a: 'Yes, you can apply for multiple campaigns simultaneously as long as you meet the tier requirements.',
-  },
-  {
-    q: "What happens if a brand doesn't approve my work?",
-    a: "If a brand doesn't approve your content, you can submit a revision. Disputes can be raised through our support system.",
-  },
-  {
-    q: 'How do I withdraw my earnings?',
-    a: 'Earnings are released to your linked bank account within 48 hours of content approval.',
-  },
-  {
-    q: 'What creator tiers are available?',
-    a: 'We have Nano (under 10K), Micro (10K–100K), Macro (100K–1M), and Mega (1M+) tiers based on follower count.',
-  },
-];
+import MyTicketsView from './MyTicketsView';
 
 interface HelpSupportSheetProps {
   open: boolean;
@@ -65,23 +39,28 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportSheetProps) {
-  const [showTicket, setShowTicket] = useState(false);
+  const [view, setView] = useState<'main' | 'ticket' | 'my-tickets'>('main');
   const { data: contactInfo, isLoading: contactLoading } = useContactInfo(open);
+  const { data: faqs, isLoading: faqsLoading } = useFaqs(open);
 
   return (
     <Sheet
       open={open}
       onOpenChange={(v) => {
         onOpenChange(v);
-        if (!v) setShowTicket(false);
+        if (!v) setView('main');
       }}
     >
-      <SheetContent side="right" className="px-3 w-full sm:max-w-[500px] overflow-y-auto">
-        {showTicket ? (
+      <SheetContent side="right" className="px-3 w-full sm:max-w-[600px] overflow-y-auto pb-4">
+        {view === 'ticket' ? (
           <div className="pt-2">
-            <SubmitTicketView
-              onBack={() => setShowTicket(false)}
-              onClose={() => onOpenChange(false)}
+            <SubmitTicketView onBack={() => setView('main')} onClose={() => onOpenChange(false)} />
+          </div>
+        ) : view === 'my-tickets' ? (
+          <div className="pt-2">
+            <MyTicketsView
+              onBack={() => setView('main')}
+              onSubmitTicket={() => setView('ticket')}
             />
           </div>
         ) : (
@@ -101,13 +80,13 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                   Contact Us
                 </p>
                 {contactLoading ? (
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Skeleton key={i} className="h-[92px] rounded-xl" />
+                  <div className="grid grid-cols-2 gap-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-[110px] rounded-xl" />
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 gap-3">
                     {[
                       {
                         icon: Mail,
@@ -132,21 +111,32 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                         label: 'Submit a Ticket',
                         sub: 'Response within 24 hrs',
                         color: 'bg-blue-50 text-blue-500',
-                        onClick: () => setShowTicket(true),
+                        onClick: () => setView('ticket'),
+                      },
+                      {
+                        icon: Inbox,
+                        label: 'My Tickets',
+                        sub: 'Track submissions',
+                        color: 'bg-green-50 text-green-600',
+                        onClick: () => setView('my-tickets'),
                       },
                     ].map(({ icon: Icon, label, sub, color, onClick }) => (
                       <button
                         key={label}
                         onClick={onClick}
-                        className="flex flex-col items-center gap-2 border border-[#e8e6f0] rounded-xl px-3 py-2 text-center hover:bg-[#faf9fc] transition-colors"
+                        className="flex flex-col items-center gap-2.5 border border-[#e8e6f0] rounded-xl px-4 py-5 text-center hover:bg-[#faf9fc] hover:border-brand-pink/20 transition-colors"
                       >
                         <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}
                         >
-                          <Icon size={18} />
+                          <Icon size={19} />
                         </div>
-                        <p className="text-xs font-semibold text-[#1a1a2e]">{label}</p>
-                        <p className="text-[10px] text-[#9a99b0] leading-normal break-all">{sub}</p>
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-xs font-semibold text-[#1a1a2e]">{label}</p>
+                          <p className="text-[11px] text-[#9a99b0] leading-snug break-words line-clamp-2">
+                            {sub}
+                          </p>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -168,24 +158,18 @@ export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportShee
                   FAQs
                 </p>
                 <div className="flex flex-col gap-2">
-                  {FAQS.map((faq) => (
-                    <FaqItem key={faq.q} {...faq} />
-                  ))}
+                  {faqsLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-12 rounded-xl" />
+                    ))
+                  ) : faqs && faqs.length > 0 ? (
+                    faqs.map((faq) => <FaqItem key={faq.id} q={faq.question} a={faq.answer} />)
+                  ) : (
+                    <p className="text-xs text-[#9a99b0] text-center py-4">
+                      No FAQs available right now.
+                    </p>
+                  )}
                 </div>
-              </div>
-
-              {/* Rate us */}
-              <div className="flex flex-col items-center gap-3 py-4">
-                <p className="text-base font-bold text-[#1a1a2e]">Enjoying Trendupp?</p>
-                <p className="text-xs text-[#9a99b0]">Your review helps us grow</p>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} size={28} className="text-amber-400 fill-amber-400" />
-                  ))}
-                </div>
-                <button className="w-full py-3.5 bg-brand-pink text-white text-sm font-medium rounded-xl hover:bg-brand-pink/90 transition-colors">
-                  Rate us on playstore
-                </button>
               </div>
             </div>
           </>

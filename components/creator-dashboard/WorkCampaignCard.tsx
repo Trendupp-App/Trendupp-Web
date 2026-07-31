@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/Utilities';
+import type { CampaignStatus } from '@/types/campaign';
 
 export interface WorkCampaign {
   id: string;
@@ -42,6 +43,7 @@ export interface WorkCampaign {
   budgetMax?: number;
   daysLeftNumber?: number;
   campaignId?: string;
+  campaignStatus?: CampaignStatus;
   submissionId?: string;
   deliverables: string[];
   contentDirection: string[];
@@ -53,6 +55,7 @@ export interface WorkCampaign {
   liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string }> | null;
   contentIdea?: string;
   applicationsCount: number;
+  campaignComment?: { comment: string; response: string | null } | null;
 }
 
 interface WorkCampaignCardProps {
@@ -89,7 +92,10 @@ function getStatusLabel(status: WorkCampaign['status']) {
 }
 
 // Single CTA per status — every status opens the same CampaignStatusSheet.
-function getPrimaryAction(status: WorkCampaign['status']) {
+function getPrimaryAction(status: WorkCampaign['status'], campaignStatus?: CampaignStatus) {
+  if (campaignStatus === 'paused' || campaignStatus === 'cancelled') {
+    return { label: 'View details', icon: AlertCircle, style: 'neutral' as const };
+  }
   switch (status) {
     case 'In progress':
       return { label: 'Submit content link', icon: LinkIcon, style: 'solid' as const };
@@ -126,7 +132,9 @@ export default function WorkCampaignCard({
   onOpenStatusSheet,
   isSelected = false,
 }: WorkCampaignCardProps) {
-  const action = getPrimaryAction(campaign.status);
+  const isPausedOrCancelled =
+    campaign.campaignStatus === 'paused' || campaign.campaignStatus === 'cancelled';
+  const action = getPrimaryAction(campaign.status, campaign.campaignStatus);
   const ActionIcon = action.icon;
 
   return (
@@ -171,10 +179,12 @@ export default function WorkCampaignCard({
             <span
               className={cn(
                 'text-[10px] font-bold px-2.5 py-0.5 rounded-full border leading-none whitespace-nowrap capitalize',
-                getStatusBadgeStyles(campaign.status),
+                isPausedOrCancelled
+                  ? 'bg-[#fef2f2] text-[#dc2626] border-[#fee2e2]'
+                  : getStatusBadgeStyles(campaign.status),
               )}
             >
-              {getStatusLabel(campaign.status)}
+              {isPausedOrCancelled ? campaign.campaignStatus : getStatusLabel(campaign.status)}
             </span>
           </div>
 

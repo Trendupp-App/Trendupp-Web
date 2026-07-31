@@ -88,6 +88,18 @@ export function isOAuthConfigured(platform: SocialPlatformId): boolean {
   return ENABLED_PLATFORMS.includes(platform) && Boolean(OAUTH_CONFIG[platform].clientId);
 }
 
+/**
+ * The login and "connect socials" flows share one redirect URI per platform,
+ * so the callback must know which it is. `beginSocialConnect` sends
+ * `state=connect_<platform>` and the platform echoes it back — that is the
+ * authoritative signal. Deciding from leftover localStorage instead let an
+ * abandoned connect attempt hijack a later sign-in into the authenticated
+ * connect endpoint ("Missing or invalid Authorization header").
+ */
+export function isConnectCallback(state: string | null, platform: SocialPlatformId): boolean {
+  return state === `connect_${platform}`;
+}
+
 export function readSocialConnectPending(): SocialConnectPending | null {
   if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem(PENDING_KEY);

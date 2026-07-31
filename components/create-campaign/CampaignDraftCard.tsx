@@ -58,7 +58,7 @@ export default function DraftCampaignCard({ campaign, onDelete }: DraftCampaignC
       <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={handleContinue}
-          className="flex items-center gap-1.5 px-3.5 py-2 border border-[#e8e6f0] rounded-lg text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors"
+          className="flex cursor-pointer items-center gap-1.5 px-3.5 py-2 border border-[#e8e6f0] rounded-lg text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors"
         >
           <Pencil size={13} />
           {isSubmitted ? 'Pay now' : 'Continue'}

@@ -11,3 +11,12 @@ export interface ExternalLinks {
   linkedin: string;
   youtube: string;
 }
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  status: 'published' | 'draft';
+  sortOrder: number;
+}

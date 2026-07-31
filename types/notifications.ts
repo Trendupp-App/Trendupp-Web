@@ -1,11 +1,12 @@
 export type NotificationCategory =
-  | 'newCampaigns'
-  | 'applicationUpdates'
-  | 'paymentAlerts'
-  | 'brandMessages'
-  | 'weeklySummary'
-  | 'marketingOffers'
-  | 'security';
+  | 'campaigns'
+  | 'applications'
+  | 'payments'
+  | 'chatDispute'
+  | 'account'
+  | 'security'
+  | 'opportunities'
+  | 'broadcast';
 
 export type NotificationPriority = 'critical' | 'high' | 'medium' | 'low';
 

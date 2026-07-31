@@ -1,6 +1,12 @@
 import apiClient from '@/lib/apiClient';
 import type { AuthUser } from '@/store/authStore';
-import type { CreatePortfolioItemResponse, GetPortfolioResponse } from '@/types/profile';
+import type {
+  CreatePortfolioItemResponse,
+  GetPortfolioResponse,
+  SupportTicketCategory,
+  SupportTicket,
+  CreateSupportTicketPayload,
+} from '@/types/profile';
 
 export interface UpdatePersonalInfoResponse extends Partial<AuthUser> {
   message?: string;
@@ -50,17 +56,27 @@ export const profileApi = {
     apiClient.post<{ message: string }>('/profile/deactivate', payload),
 
   getSupportTicketCategories: () =>
-    apiClient.get<GetSupportTicketCategoriesResponse>('/profile/support-ticket/categories'),
+    apiClient.get<SupportTicketCategory[]>('/profile/support-ticket/categories'),
 
   getSupportTickets: (id?: string) =>
-    apiClient.get<GetSupportTicketsResponse>('/profile/support-ticket', {
+    apiClient.get<SupportTicket[]>('/profile/support-ticket', {
       params: id ? { id } : undefined,
     }),
 
-  submitSupportTicket: (payload: FormData) =>
-    apiClient.post<SubmitSupportTicketResponse>('/profile/support-ticket', payload, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+  submitSupportTicket: (payload: CreateSupportTicketPayload) => {
+    const fd = new FormData();
+    fd.append('issueCategoryId', payload.issueCategoryId);
+    fd.append('subject', payload.subject);
+    fd.append('description', payload.description);
+    if (payload.attachment instanceof File) {
+      fd.append('attachment', payload.attachment);
+    }
+    // Do not set Content-Type explicitly — the browser must generate the
+    // multipart boundary itself, or the backend can't parse the body.
+    return apiClient.post<SupportTicket>('/profile/support-ticket', fd, {
+      headers: { 'Content-Type': undefined },
+    });
+  },
 
   getPortfolio: () => apiClient.get<GetPortfolioResponse>('/portfolio'),
 
@@ -72,31 +88,7 @@ export const profileApi = {
   deletePortfolioItem: (id: string) => apiClient.delete<{ message?: string }>(`/portfolio/${id}`),
 };
 
-export interface SubmitSupportTicketResponse {
-  message: string;
-  ticket?: SupportTicket;
-}
-
-export interface SupportTicket {
-  id: string;
-  category: string;
-  subject: string;
-  description: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed' | string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface GetSupportTicketsResponse {
-  message: string;
-  tickets?: SupportTicket[];
-  ticket?: SupportTicket;
-}
-
-export interface GetSupportTicketCategoriesResponse {
-  message: string;
-  categories: Array<string | { id: string; name: string }>;
-}
+export type { SupportTicket, SupportTicketCategory, CreateSupportTicketPayload };
 
 export interface DeactivateAccountPayload {
   password?: string;

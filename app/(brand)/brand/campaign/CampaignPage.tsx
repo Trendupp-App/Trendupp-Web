@@ -12,14 +12,18 @@ import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
 import { useMyCampaigns, useDeleteDraftCampaign } from '@/hooks/useCampaign';
 import FeedbackModal from '@/shared/FeedBackModal';
 
-type MainTab = 'draft' | 'live' | 'active' | 'completed';
+const DELETE_CONFIRM_PHRASE = 'I WANT TO DELETE';
+
+type MainTab = 'draft' | 'live' | 'active' | 'completed' | 'paused' | 'cancelled';
 type ActiveSubTab = 'in_progress' | 'content_review' | 'revision' | 'live_content' | 'all';
 
 const MAIN_TABS: { id: MainTab; label: string }[] = [
   { id: 'draft', label: 'Draft' },
   { id: 'live', label: 'Live' },
   { id: 'active', label: 'Active' },
+  { id: 'paused', label: 'Paused' },
   { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
 ];
 
 // Sub-tabs beyond "All" depend on `campaign.subStatus`, which the campaigns-list
@@ -34,7 +38,7 @@ const ACTIVE_SUB_TABS: { id: ActiveSubTab; label: string }[] = [
 
 const GRID_SKELETON_COUNT = 6;
 const DRAFT_SKELETON_COUNT = 3;
-const VALID_TABS: MainTab[] = ['draft', 'live', 'active', 'completed'];
+const VALID_TABS: MainTab[] = ['draft', 'live', 'active', 'completed', 'paused', 'cancelled'];
 
 export default function BrandCampaignsPage() {
   const router = useRouter();
@@ -50,7 +54,11 @@ export default function BrandCampaignsPage() {
 
   const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('all');
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const deleteDraft = useDeleteDraftCampaign(() => setPendingDeleteId(null));
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const deleteDraft = useDeleteDraftCampaign(() => {
+    setPendingDeleteId(null);
+    setDeleteConfirmText('');
+  });
 
   function handleTabClick(tab: MainTab) {
     setManualTab(tab);
@@ -83,6 +91,14 @@ export default function BrandCampaignsPage() {
     'completed',
     mainTab === 'completed',
   );
+  const { data: pausedCampaigns = [], isLoading: pausedLoading } = useMyCampaigns(
+    'paused',
+    mainTab === 'paused',
+  );
+  const { data: cancelledCampaigns = [], isLoading: cancelledLoading } = useMyCampaigns(
+    'cancelled',
+    mainTab === 'cancelled',
+  );
 
   const allDraftTabCampaigns = useMemo(() => {
     const byId = new Map<string, (typeof draftCampaigns)[number]>();
@@ -102,20 +118,24 @@ export default function BrandCampaignsPage() {
     allDraftTabCampaigns.length +
     liveCampaigns.length +
     activeCampaigns.length +
-    completedCampaigns.length;
+    completedCampaigns.length +
+    pausedCampaigns.length +
+    cancelledCampaigns.length;
 
   const tabCounts: Record<MainTab, number> = {
     draft: allDraftTabCampaigns.length,
     live: liveCampaigns.length,
     active: activeCampaigns.length,
     completed: completedCampaigns.length,
+    paused: pausedCampaigns.length,
+    cancelled: cancelledCampaigns.length,
   };
   function handleDeleteDraft(id: string) {
     setPendingDeleteId(id);
   }
 
   function handleConfirmDelete() {
-    if (!pendingDeleteId) return;
+    if (!pendingDeleteId || deleteConfirmText !== DELETE_CONFIRM_PHRASE) return;
     deleteDraft.mutate(pendingDeleteId);
   }
   const pendingDeleteCampaign = allDraftTabCampaigns.find((c) => c.id === pendingDeleteId);
@@ -266,6 +286,48 @@ export default function BrandCampaignsPage() {
         </>
       )}
 
+      {/* Paused tab */}
+      {mainTab === 'paused' && (
+        <>
+          {pausedLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: GRID_SKELETON_COUNT }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : pausedCampaigns.length === 0 ? (
+            <EmptyState message="No paused campaigns yet." />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pausedCampaigns.map((c) => (
+                <CampaignCard key={c.id} campaign={c} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Cancelled tab */}
+      {mainTab === 'cancelled' && (
+        <>
+          {cancelledLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: GRID_SKELETON_COUNT }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : cancelledCampaigns.length === 0 ? (
+            <EmptyState message="No cancelled campaigns yet." />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cancelledCampaigns.map((c) => (
+                <CampaignCard key={c.id} campaign={c} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
       {/* Confirm draft deletion */}
       {pendingDeleteId && (
         <FeedbackModal
@@ -281,15 +343,39 @@ export default function BrandCampaignsPage() {
             </>
           }
           actions={[
-            { label: 'cancel', onClick: () => setPendingDeleteId(null) },
+            {
+              label: 'cancel',
+              onClick: () => {
+                setPendingDeleteId(null);
+                setDeleteConfirmText('');
+              },
+            },
             {
               label: 'delete',
               variant: 'primary',
               onClick: handleConfirmDelete,
               loading: deleteDraft.isPending,
+              disabled: deleteConfirmText !== DELETE_CONFIRM_PHRASE,
             },
           ]}
-        />
+        >
+          <div className="w-full flex flex-col gap-1.5 text-left">
+            <p className="text-xs text-[#7a7a9a]">
+              Type <span className="font-semibold text-[#1a1a2e]">{DELETE_CONFIRM_PHRASE}</span> to
+              confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={DELETE_CONFIRM_PHRASE}
+              className="w-full px-3 py-2.5 border border-[#e8e6f0] rounded-xl text-sm text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-red-400"
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+            />
+          </div>
+        </FeedbackModal>
       )}
     </div>
   );

@@ -61,7 +61,7 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[480px] overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-[580px] overflow-y-auto">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-base font-semibold text-[#1a1a2e]">Notification</SheetTitle>
         </SheetHeader>

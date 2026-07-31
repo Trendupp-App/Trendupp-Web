@@ -83,6 +83,9 @@ export interface SupportTicket {
   description: string;
   status: string;
   createdAt: string;
+  issueCategoryId?: string;
+  issueCategory?: SupportTicketCategory;
+  attachmentUrl?: string | null;
 }
 
 export interface SupportTicketResponse {
@@ -162,6 +165,7 @@ export interface RawUserProfile {
   bankAccountNumber: string | null;
   bankAccountName: string | null;
   socialsConnected: SocialsConnected;
+  country: { id: string; name: string } | null;
   brandRepresentative: {
     firstName: string | null;
     lastName: string | null;

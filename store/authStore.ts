@@ -31,6 +31,7 @@ export interface AuthUser {
   bankAccountName: string | null;
   nationalityId?: string | null;
   countryId?: string | null;
+  country?: { id: string; name: string } | null;
   stateId?: string | null;
   city?: string | null;
   instagramUsername?: string | null;
@@ -49,6 +50,8 @@ export interface AuthUser {
   } | null;
   avgRating?: number | null;
   totalReviews?: number | null;
+  totalTokens?: number | null;
+  badge?: string | null;
 }
 
 interface AuthState {
@@ -56,7 +59,7 @@ interface AuthState {
   user: AuthUser | null;
   hasHydrated: boolean;
   setSession: (token: string, user: AuthUser) => void;
-  clearSession: () => void;
+  clearSession: (redirect?: boolean) => void;
   updateUser: (patch: Partial<AuthUser>) => void;
   setHasHydrated: (state: boolean) => void;
 }
@@ -68,9 +71,9 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       hasHydrated: false,
       setSession: (accessToken, user) => set({ accessToken, user }),
-      clearSession: () => {
+      clearSession: (redirect = true) => {
         set({ accessToken: null, user: null });
-        if (typeof window !== 'undefined') {
+        if (redirect && typeof window !== 'undefined') {
           window.location.href = '/signin';
         }
       },

@@ -6,10 +6,12 @@ import Sidebar from '@/shared/Sidebar';
 import Header from '@/shared/Header';
 import NotificationDrawer from '@/components/creator-dashboard/NotificationDrawer';
 import { useUnreadNotificationCount } from '@/hooks/useNotifications';
+import { hydrateFullProfile } from '@/hooks/useAuthMutations';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import PageLoader from '@/components/skeletons/PageLoader';
 import StreamChatProvider from '@/lib/providers/StreamChatProvider';
+import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed';
 
 const CREATOR_TITLES: Record<string, string> = {
   '/creator/dashboard': 'Dashboard',
@@ -42,13 +44,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, accessToken, hasHydrated } = useAuthStore();
+  const { user, accessToken, hasHydrated, updateUser } = useAuthStore();
   const { data: unreadCount = 0 } = useUnreadNotificationCount(hasHydrated && !!accessToken);
+  const { collapsed, toggle } = useSidebarCollapsed();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  // Sessions persisted from before a profile field was added (e.g. country,
+  // used for currency display) never pick it up otherwise — hydration only
+  // ran at login time. Refresh once per mount so existing sessions self-heal.
+  useEffect(() => {
+    if (hasHydrated && accessToken && user?.id) {
+      hydrateFullProfile(user.id, updateUser);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasHydrated, accessToken, user?.id]);
 
   useEffect(() => {
     if (hasHydrated && (!accessToken || !user)) {
@@ -65,7 +78,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Derived user shape for Header
   const headerUser = user
     ? {
-        displayName: `${user.firstName} ${user.lastName}`.trim(),
         initials: `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase(),
         avatarUrl: user.avatarUrl ?? undefined,
       }
@@ -80,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex h-dvh w-screen overflow-hidden bg-[#faf9fc] font-sans relative">
         {/* Left fixed Sidebar — desktop only */}
         <div className="hidden md:block">
-          <Sidebar />
+          <Sidebar collapsed={collapsed} onToggleCollapse={toggle} />
         </div>
 
         {/* Right content area */}

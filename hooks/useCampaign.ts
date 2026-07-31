@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { campaignApi } from '@/services/campaignApi';
@@ -11,6 +11,7 @@ import type {
   PaymentBreakdown,
   SubmitContentDraftPayload,
   SubmitLiveLinkPayload,
+  SubmitSocialImpactLiveLinkResponse,
 } from '@/types/campaign';
 import type { VetDraftPayload } from '@/types/submissions';
 import type { CreateDisputePayload } from '@/types/dispute';
@@ -114,7 +115,7 @@ export function useCampaignActivityTimeline(id: string | null, enabled: boolean 
   });
 }
 
-export function useApplyCampaign(onSuccess: () => void) {
+export function useApplyCampaign(onSuccess: (application?: CampaignApplicationDto) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: ApplyCampaignPayload }) =>
@@ -124,11 +125,57 @@ export function useApplyCampaign(onSuccess: () => void) {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       queryClient.invalidateQueries({ queryKey: ['campaign'] });
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });
-      onSuccess();
+      onSuccess(data.application);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       toast.error(err?.response?.data?.message ?? 'Could not submit application, please try again');
     },
+  });
+}
+
+export function useParticipateSocialImpact(
+  onSuccess: (application?: CampaignApplicationDto) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => campaignApi.participateSocialImpact(id),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ['social-impact-campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['social-impact-my-applications'] });
+      onSuccess(data.application);
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not join campaign, please try again');
+    },
+  });
+}
+
+export function useSubmitSocialImpactLiveLink(
+  onSuccess: (data: SubmitSocialImpactLiveLinkResponse) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, liveLink }: { id: string; liveLink: string }) =>
+      campaignApi.submitSocialImpactLiveLink(id, liveLink),
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ['social-impact-my-applications'] });
+      onSuccess(data);
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not submit live link, please try again');
+    },
+  });
+}
+
+export function useMySocialImpactApplications(
+  tab?: 'all' | 'pending' | 'accepted' | 'rejected',
+  enabled: boolean = true,
+) {
+  return useQuery({
+    queryKey: ['social-impact-my-applications', tab],
+    queryFn: () => campaignApi.getMySocialImpactApplications(tab).then((r) => r.data.data),
+    staleTime: 0,
+    enabled,
   });
 }
 
@@ -167,6 +214,28 @@ export function useApplication(id: string | null) {
     queryFn: () => campaignApi.getApplication(id!).then((r) => r.data.application),
     enabled: !!id,
     staleTime: 0,
+  });
+}
+
+export function useRespondToComment(applicationId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      campaignId,
+      creatorId,
+      response,
+    }: {
+      campaignId: string;
+      creatorId: string;
+      response: string;
+    }) => campaignApi.respondToComment(campaignId, creatorId, response),
+    onSuccess: () => {
+      toast.success('Response sent to creator');
+      queryClient.invalidateQueries({ queryKey: ['application', applicationId] });
+    },
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Could not send response, please try again');
+    },
   });
 }
 
@@ -326,6 +395,8 @@ export function useCreatorReviews(creatorId: string | null) {
 
 export function useCampaigns(
   params?: {
+    page?: number;
+    limit?: number;
     status?: CampaignStatus;
     sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
     platforms?: string[];
@@ -337,9 +408,27 @@ export function useCampaigns(
 ) {
   return useQuery({
     queryKey: ['campaigns', params],
-    queryFn: () => campaignApi.getCampaigns(params).then((r) => r.data.data),
+    queryFn: () => campaignApi.getCampaigns(params).then((r) => r.data),
     staleTime: 1000 * 30,
     enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useSocialImpactCampaigns(
+  params?: {
+    tab?: 'all' | 'active' | 'completed';
+    page?: number;
+    limit?: number;
+  },
+  enabled: boolean = true,
+) {
+  return useQuery({
+    queryKey: ['social-impact-campaigns', params],
+    queryFn: () => campaignApi.getSocialImpactCampaigns(params).then((r) => r.data),
+    staleTime: 1000 * 30,
+    enabled,
+    placeholderData: keepPreviousData,
   });
 }
 

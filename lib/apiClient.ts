@@ -1,6 +1,14 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    // Best-effort requests (e.g. hydrating extra profile data after login)
+    // shouldn't be able to log the user out if they happen to 401.
+    skipAuthRedirect?: boolean;
+  }
+}
+
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
@@ -44,13 +52,44 @@ function formatSingleMessage(msg: string): string {
   return formatted;
 }
 
+/** Routes a signed-out visitor may use — never bounce these to /signin. */
+const PUBLIC_PATH_PREFIXES = [
+  '/signin',
+  '/user-type',
+  '/creator/signup',
+  '/advertiser/signup',
+  '/forgot-password',
+  '/auth/callback',
+  '/terms',
+  '/privacy',
+  '/',
+];
+
+const isOnPublicPath = () => {
+  const path = window.location.pathname;
+  return PUBLIC_PATH_PREFIXES.some((p) => (p === '/' ? path === '/' : path.startsWith(p)));
+};
+
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
     const isAuthEndpoint = error.config?.url?.startsWith('/auth/');
-    if (error.response?.status === 401 && !isAuthEndpoint && typeof window !== 'undefined') {
-      useAuthStore.getState().clearSession();
-      // window.location.href = '/signin';
+    if (
+      error.response?.status === 401 &&
+      !isAuthEndpoint &&
+      !error.config?.skipAuthRedirect &&
+      typeof window !== 'undefined'
+    ) {
+      const hadSession = !!useAuthStore.getState().accessToken;
+      console.warn(
+        '[apiClient] 401 on',
+        error.config?.url,
+        '- clearing session and redirecting to /signin',
+      );
+      useAuthStore.getState().clearSession(false);
+      if (hadSession && !isOnPublicPath()) {
+        window.location.href = '/signin';
+      }
     }
 
     if (error.response?.data?.message) {

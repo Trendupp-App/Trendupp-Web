@@ -6,7 +6,11 @@ import ApplicationListItem from './ApplicationListItem';
 import ApplicationDetailSheet from './ApplicationDetailSheet';
 import FeedbackModal from '@/shared/FeedBackModal';
 import CreatorProfileSheet from '@/components/campaign-details/CreatorProfileSheet';
-import type { CampaignApplicationDto, ValidateSelectionResult } from '@/types/campaign';
+import type {
+  CampaignApplicationDto,
+  CampaignStatus,
+  ValidateSelectionResult,
+} from '@/types/campaign';
 import { useReviewApplicationsBatch, useValidateSelection } from '@/hooks/useCampaign';
 import { useQueryClient } from '@tanstack/react-query';
 interface ApplicationsTabProps {
@@ -14,6 +18,7 @@ interface ApplicationsTabProps {
   campaignTitle: string;
   applicationsForLive?: CampaignApplicationDto[];
   campaignCurrency?: string;
+  campaignStatus?: CampaignStatus;
 }
 
 type PendingAction = {
@@ -44,7 +49,9 @@ export default function ApplicationsTab({
   applicationsForLive,
   campaignTitle,
   campaignCurrency,
+  campaignStatus,
 }: ApplicationsTabProps) {
+  const actionsDisabled = campaignStatus === 'paused' || campaignStatus === 'cancelled';
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -142,8 +149,18 @@ export default function ApplicationsTab({
 
   return (
     <>
+      {actionsDisabled && (
+        <div className="mb-3 flex items-center gap-2 bg-[#fef2f2] border border-[#fee2e2] rounded-xl px-4 py-3">
+          <AlertCircle size={15} className="text-[#dc2626] shrink-0" />
+          <p className="text-xs font-medium text-[#b91c1c] capitalize">
+            This campaign has been {campaignStatus} — applications can no longer be accepted or
+            rejected.
+          </p>
+        </div>
+      )}
+
       {/* Bulk action bar */}
-      {selectedIds.size > 0 && (
+      {!actionsDisabled && selectedIds.size > 0 && (
         <div className="mb-3 bg-white border border-[#e8e6f0] rounded-xl px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
@@ -181,7 +198,7 @@ export default function ApplicationsTab({
             application={app}
             onView={handleView}
             selected={selectedIds.has(app.id)}
-            onToggleSelect={handleToggleSelect}
+            onToggleSelect={actionsDisabled ? undefined : handleToggleSelect}
             currency={campaignCurrency}
           />
         ))}

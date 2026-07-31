@@ -37,9 +37,17 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ComboBox } from '@/shared/ComboBox';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
+import {
+  IMPACT_BADGE_META,
+  isImpactBadgeName,
+  getImpactBadgeNameForTokens,
+} from '@/constants/impactBadges';
 import { useAuthStore } from '@/store/authStore';
 import { useCreatorReviews, useMyApplications } from '@/hooks/useCampaign';
+import { usePayoutDashboard } from '@/hooks/usePayout';
+import { formatCompactCurrency } from '@/utils/Utilities';
 import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
 import {
   useUserDetail,
@@ -54,6 +62,7 @@ import {
   useSupportTicketCategories,
   useSupportTickets,
   useSubmitSupportTicket,
+  useUpdateProfilePayout,
   usePortfolio,
   useCreatePortfolioItem,
   useDeletePortfolioItem,
@@ -66,9 +75,11 @@ import { useSocialConnections } from '@/hooks/useSocials';
 import CreatorTierCard from '@/components/creator-dashboard/CreatorTierCard';
 import { PASSWORD_REGEX, PASSWORD_REQUIREMENT_MESSAGE } from '@/lib/validations/passwordRules';
 import DeleteAccountModal from '@/shared/DeleteAccountModal';
-import { useContactInfo } from '@/hooks/useSettings';
+import { useContactInfo, useFaqs } from '@/hooks/useSettings';
 import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
 import { Skeleton } from '@/components/ui/skeleton';
+import BankDetailsCard from '@/components/dashboard/payout/BankDetailsCard';
+import BankChangeModal from '@/components/dashboard/payout/BankChangeModal';
 
 // ── TYPES & INTERFACES ───────────────────────────────────
 interface Platform {
@@ -85,7 +96,6 @@ interface CreatorProfile {
   rating: number;
   image: string;
   location: string;
-  earned: string;
   bio: string;
   niches: string[];
   badge: string;
@@ -190,7 +200,6 @@ const INITIAL_PROFILE: CreatorProfile = {
   rating: 4.9,
   image: '',
   location: 'Lagos, Nigeria',
-  earned: '₦847K',
   bio: 'Fashion & lifestyle creator based in Lagos 🌟 | Helping brands tell authentic stories through style.',
   niches: ['Fashion', 'Lifestyle', 'Beauty'],
   badge: 'Impact Advocate',
@@ -198,37 +207,10 @@ const INITIAL_PROFILE: CreatorProfile = {
   nationality: 'Nigeria',
 };
 
-const MOCK_FAQS = [
-  {
-    q: 'How does escrow payment work?',
-    a: 'When a brand approves your application, the campaign budget is locked in escrow. Funds are released to your wallet within 48 hours after you submit your content deliverables and the brand confirms receipt. You can withdraw payment on or after 30 days.',
-  },
-  {
-    q: 'How long does profile verification take?',
-    a: 'Profile verification typically takes between 24 to 48 hours. Our team reviews your connected social channels, engagement rates, and content quality to verify authenticity before approving your profile.',
-  },
-  {
-    q: 'Can I apply for multiple campaigns?',
-    a: 'Yes, you can apply for multiple campaigns simultaneously. However, we recommend only applying to campaigns that align well with your niche and target audience to maintain high engagement.',
-  },
-  {
-    q: "What happens if a brand doesn't approve my work?",
-    a: "If a brand has feedback or requests revisions, they will outline the changes needed. If there's an unresolved dispute, Trendupp's support team will step in as an arbitrator to review according to the campaign requirements.",
-  },
-  {
-    q: 'How do I withdraw my earnings?',
-    a: 'Once funds are cleared and available in your wallet, you can request a withdrawal directly to your linked bank account. Bank transfers are usually processed within 1-3 business days.',
-  },
-  {
-    q: 'What creator tiers are available?',
-    a: 'Trendupp features multiple creator tiers based on your follower count and engagement: Micro (1K-10K), Mid-tier (10K-100K), Macro (100K-1M), and Mega/Celebrity (1M+). Higher tiers unlock exclusive campaign opportunities.',
-  },
-];
-
 export default function CreatorProfilePage() {
   // Queries & Mutations
   const { user, updateUser } = useAuthStore();
-  const { data: countries } = useCountries();
+  const { data: countries, isLoading: loadingCountries } = useCountries();
   const { data: nationalities } = useNationalities();
 
   // States
@@ -251,24 +233,35 @@ export default function CreatorProfilePage() {
     return INITIAL_PROFILE;
   });
 
-  // Find country ID by name to load state list
-  const currentCountryObj = countries?.find(
-    (c) => c.name.toLowerCase() === profile.location.split(',')[1]?.trim().toLowerCase(),
-  );
-  const currentCountryId = currentCountryObj?.id;
-
-  const { data: states } = useStates(currentCountryId);
   const { data: allNiches } = useNiches();
   const { data: userDetail } = useUserDetail(user?.id || null);
+
+  // Derived straight from the saved user record (not from the display string
+  // below) so it stays correct immediately after a save, without depending on
+  // `profile.location` having already been re-parsed on a prior render.
+  const currentCountryId = (userDetail || user)?.countryId ?? undefined;
+  const { data: states } = useStates(currentCountryId);
   const { data: serverReviews } = useCreatorReviews(user?.id || null);
   const { data: myApps } = useMyApplications();
   const { data: socialConnections } = useSocialConnections();
+  const { data: payoutData } = usePayoutDashboard({ limit: 1 });
 
   const displayTier = (userDetail || user)?.assignedTier;
+
+  const impactUser = userDetail || user;
+  const impactBadgeName = isImpactBadgeName(impactUser?.badge)
+    ? impactUser.badge
+    : getImpactBadgeNameForTokens(impactUser?.totalTokens);
+  const impactBadgeMeta = impactBadgeName ? IMPACT_BADGE_META[impactBadgeName] : null;
 
   const completedCampaignsCount = myApps
     ? myApps.filter((app) => app.status === 'accepted').length
     : 0;
+
+  const earnedDisplay = formatCompactCurrency(
+    payoutData?.summary?.totalEarned ?? 0,
+    payoutData?.summary?.currency ?? 'NGN',
+  );
 
   const totalReachFollowers = (socialConnections ?? [])
     .filter((c) => c.connected)
@@ -479,7 +472,6 @@ export default function CreatorProfilePage() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [helpSearchQuery, setHelpSearchQuery] = useState('');
   const [expandedFaqIdx, setExpandedFaqIdx] = useState<number | null>(null);
-  const [userRating, setUserRating] = useState(0);
   const [helpStep, setHelpStep] = useState<'main' | 'ticket' | 'my-tickets'>('main');
   const [ticketCategory, setTicketCategory] = useState('Select a category');
   const [ticketCategoryId, setTicketCategoryId] = useState<string | null>(null);
@@ -489,14 +481,17 @@ export default function CreatorProfilePage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
-  const { data: serverCategories } = useSupportTicketCategories(isHelpOpen);
+  const { data: serverCategories, isLoading: categoriesLoading } =
+    useSupportTicketCategories(isHelpOpen);
   const { data: myTickets, isLoading: ticketsLoading } = useSupportTickets(
     isHelpOpen && helpStep === 'my-tickets',
   );
   const { data: contactInfo, isLoading: contactLoading } = useContactInfo(
     isHelpOpen && helpStep === 'main',
   );
+  const { data: faqs, isLoading: faqsLoading } = useFaqs(isHelpOpen && helpStep === 'main');
   const submitTicketMutation = useSubmitSupportTicket();
+  const { mutate: updatePayout } = useUpdateProfilePayout();
   // Action: Handle ticket attachments file selector change (store File objects)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -539,10 +534,10 @@ export default function CreatorProfilePage() {
     }
   }, [isAnalyticsOpen]);
 
-  const filteredFaqs = MOCK_FAQS.filter(
+  const filteredFaqs = (faqs ?? []).filter(
     (faq) =>
-      faq.q.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
-      faq.a.toLowerCase().includes(helpSearchQuery.toLowerCase()),
+      faq.question.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(helpSearchQuery.toLowerCase()),
   );
 
   // Modals
@@ -559,11 +554,14 @@ export default function CreatorProfilePage() {
   const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
   const [editAvatarPreview, setEditAvatarPreview] = useState<string>('');
   const [editCountry, setEditCountry] = useState('Nigeria');
+  const [editCountryId, setEditCountryId] = useState<string | undefined>();
   const [editState, setEditState] = useState('Lagos');
   const [editNationality, setEditNationality] = useState('Nigeria');
+  const { data: editStates = [] } = useStates(editCountryId);
   const [editBio, setEditBio] = useState('');
   const [editNiches, setEditNiches] = useState<string[]>([]);
-  const [editTab, setEditTab] = useState<'personal' | 'niche' | 'social'>('personal');
+  const [editTab, setEditTab] = useState<'personal' | 'niche' | 'social' | 'payment'>('personal');
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [avatarError, setAvatarError] = useState<string>('');
 
   // Action: Open Edit Profile Form Modal/Overlay
@@ -576,8 +574,12 @@ export default function CreatorProfilePage() {
 
     // Parse location
     const locParts = profile.location.split(',').map((s) => s.trim());
+    const initialCountry = locParts[1] || 'Nigeria';
     setEditState(locParts[0] || 'Lagos');
-    setEditCountry(locParts[1] || 'Nigeria');
+    setEditCountry(initialCountry);
+    setEditCountryId(
+      countries?.find((c) => c.name.toLowerCase() === initialCountry.trim().toLowerCase())?.id,
+    );
     setEditNationality(profile.nationality || 'Nigeria');
 
     setEditBio(profile.bio);
@@ -587,6 +589,14 @@ export default function CreatorProfilePage() {
     setEditAvatarPreview(profile.image);
     setAvatarError('');
     setIsEditProfileOpen(true);
+  };
+
+  // Action: Country changed in the edit form — reset state (it belongs to the
+  // old country) and load the new country's state list.
+  const handleEditCountryChange = (countryName: string) => {
+    setEditCountry(countryName);
+    setEditState('');
+    setEditCountryId(countries?.find((c) => c.name === countryName)?.id);
   };
 
   // Action: Save Profile Settings
@@ -625,14 +635,15 @@ export default function CreatorProfilePage() {
     );
     const nationalityId = nationalityObj?.id || '';
 
-    const stateObj = states?.find((s) => s.name.toLowerCase() === editState.trim().toLowerCase());
+    const stateObj = editStates.find(
+      (s) => s.name.toLowerCase() === editState.trim().toLowerCase(),
+    );
     const stateId = stateObj?.id || '';
 
     const formData = new FormData();
     formData.append('firstName', editFirstName.trim());
     formData.append('lastName', editLastName.trim());
     formData.append('username', editHandle.trim());
-    formData.append('email', editEmail.trim());
     formData.append('bio', editBio);
     if (nationalityId) formData.append('nationalityId', nationalityId);
     if (countryId) formData.append('countryId', countryId);
@@ -645,9 +656,15 @@ export default function CreatorProfilePage() {
     updatePersonalInfoMutation.mutate(formData, {
       onSuccess: ({ data }) => {
         const u = data?.user || data;
-        if (u) {
-          updateUser(u);
-        }
+        // Merge in the country/state/nationality IDs we already resolved
+        // locally rather than relying on the response echoing them back —
+        // guarantees the store is correct even if the API response omits them.
+        updateUser({
+          ...u,
+          ...(countryId && { countryId }),
+          ...(stateId && { stateId }),
+          ...(nationalityId && { nationalityId }),
+        });
         setProfile((prev) => ({
           ...prev,
           name: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() || prev.name,
@@ -655,6 +672,8 @@ export default function CreatorProfilePage() {
           email: u?.email || '',
           bio: u?.bio || '',
           image: u?.avatarUrl || prev.image,
+          location: editState ? `${editState}, ${editCountry}` : editCountry || prev.location,
+          nationality: editNationality || prev.nationality,
         }));
         setIsEditProfileOpen(false);
       },
@@ -696,19 +715,11 @@ export default function CreatorProfilePage() {
       {/* ── HEADER TITLE BAR (DESKTOP) ── */}
       <div className="hidden md:flex items-center justify-between" id="desktop-header-bar">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[28px] font-bold text-[#1a1a2e] tracking-tight">My profile</h1>
+          {/* <h1 className="text-[28px] font-bold text-[#1a1a2e] tracking-tight">My profile</h1> */}
           <p className="text-sm font-light text-[#7a7a9a]">
             Welcome back to your creator dashboard
           </p>
         </div>
-        <button
-          id="btn-sign-out"
-          onClick={() => alert('Signing out...')}
-          className="px-4 py-2 border border-red-100 bg-red-50/50 hover:bg-red-50 text-red-500 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
-        >
-          <LogOut size={14} />
-          Sign out
-        </button>
       </div>
 
       {/* ── MAIN CREATOR CARD ── */}
@@ -764,6 +775,22 @@ export default function CreatorProfilePage() {
               <MapPin size={11} className="text-white/40" />
               <span>{profile.location}</span>
             </div>
+
+            {/* Impact Badge */}
+            {impactBadgeMeta && (
+              <div
+                className={cn(
+                  'flex items-center justify-center md:justify-start gap-1.5 self-center md:self-start border rounded-full px-3 py-1 mt-2.5 w-fit',
+                  impactBadgeMeta.bg,
+                  impactBadgeMeta.border,
+                )}
+              >
+                <Image src={impactBadgeMeta.icon} alt="" width={13} height={14} />
+                <span className={cn('text-[10px] font-bold tracking-wide', impactBadgeMeta.text)}>
+                  {impactBadgeName}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -801,7 +828,7 @@ export default function CreatorProfilePage() {
               </span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-white text-base font-bold">{profile.earned}</span>
+              <span className="text-white text-base font-bold">{earnedDisplay}</span>
               <span className="text-[#7a7a9a] text-[9px] font-semibold uppercase tracking-wider">
                 Earnings
               </span>
@@ -860,7 +887,7 @@ export default function CreatorProfilePage() {
           <span className="text-[10px] font-bold text-[#9a99b0] uppercase tracking-wider">
             Earned
           </span>
-          <span className="text-base font-bold text-[#1a1a2e]">{profile.earned}</span>
+          <span className="text-base font-bold text-[#1a1a2e]">{earnedDisplay}</span>
         </div>
       </div>
 
@@ -1234,25 +1261,27 @@ export default function CreatorProfilePage() {
               <ChevronRight size={14} className="text-[#9a99b0] shrink-0" />
             </div>
 
-            {/* Analytics */}
-            <div
-              id="settings-item-analytics"
-              className="border border-[#e8e6f0]/70 rounded-2xl md:rounded-xl p-4 flex items-center justify-between bg-white hover:bg-[#faf9fc]/30 active:scale-[0.99] transition-all duration-200 cursor-pointer shadow-xs"
-              onClick={() => setIsAnalyticsOpen(true)}
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#fce7f3] flex items-center justify-center shrink-0 text-[#ec4899]">
-                  <BarChart2 size={18} />
+            {/* Analytics — disabled per request, see [[creator_analytics_settings_disabled]] */}
+            {false && (
+              <div
+                id="settings-item-analytics"
+                className="border border-[#e8e6f0]/70 rounded-2xl md:rounded-xl p-4 flex items-center justify-between bg-white hover:bg-[#faf9fc]/30 active:scale-[0.99] transition-all duration-200 cursor-pointer shadow-xs"
+                onClick={() => setIsAnalyticsOpen(true)}
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-[#fce7f3] flex items-center justify-center shrink-0 text-[#ec4899]">
+                    <BarChart2 size={18} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-[#1a1a2e]">Analytics</span>
+                    <span className="text-[10px] font-medium text-[#7a7a9a] mt-0.5">
+                      Performance across platforms
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#1a1a2e]">Analytics</span>
-                  <span className="text-[10px] font-medium text-[#7a7a9a] mt-0.5">
-                    Performance across platforms
-                  </span>
-                </div>
+                <ChevronRight size={14} className="text-[#9a99b0] shrink-0" />
               </div>
-              <ChevronRight size={14} className="text-[#9a99b0] shrink-0" />
-            </div>
+            )}
 
             {/* Help & Support */}
             <div
@@ -1484,7 +1513,7 @@ export default function CreatorProfilePage() {
               <span>Back</span>
             </button>
             <h3 className="text-sm font-bold text-[#1a1a2e]">Edit Profile</h3>
-            {editTab === 'social' ? (
+            {editTab === 'social' || editTab === 'payment' ? (
               <button
                 type="button"
                 onClick={handleCancelSettings}
@@ -1521,7 +1550,7 @@ export default function CreatorProfilePage() {
           {/* Tab Switcher */}
           <div className="px-4 md:px-6 mt-4 shrink-0">
             <div className="flex p-1 bg-[#f4f3f6] rounded-full md:rounded-xl w-full gap-1">
-              {(['personal', 'niche', 'social'] as const).map((tab) => (
+              {(['personal', 'niche', 'social', 'payment'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -1533,7 +1562,13 @@ export default function CreatorProfilePage() {
                       : 'text-[#7a7a9a] hover:text-[#1a1a2e]',
                   )}
                 >
-                  {tab === 'personal' ? 'Personal Info' : tab === 'niche' ? 'Niches' : 'Socials'}
+                  {tab === 'personal'
+                    ? 'Personal Info'
+                    : tab === 'niche'
+                      ? 'Niches'
+                      : tab === 'social'
+                        ? 'Socials'
+                        : 'Payment'}
                 </button>
               ))}
             </div>
@@ -1656,9 +1691,8 @@ export default function CreatorProfilePage() {
                         type="email"
                         placeholder="Email address"
                         value={editEmail}
-                        onChange={(e) => setEditEmail(e.target.value)}
-                        className="w-full h-10 border border-[#e8e6f0] rounded-xl pl-9 pr-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
-                        required
+                        disabled
+                        className="w-full h-10 border border-[#e8e6f0] rounded-xl pl-9 pr-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5] disabled:bg-[#faf9fc] disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -1668,24 +1702,14 @@ export default function CreatorProfilePage() {
                     <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                       Country of Residence
                     </label>
-                    <div className="relative w-full">
-                      <select
-                        value={editCountry}
-                        onChange={(e) => setEditCountry(e.target.value)}
-                        className="appearance-none bg-white w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 pr-8 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
-                      >
-                        <option value="Nigeria">Nigeria</option>
-                        <option value="Ghana">Ghana</option>
-                        <option value="Kenya">Kenya</option>
-                        <option value="South Africa">South Africa</option>
-                        <option value="United Kingdom">United Kingdom</option>
-                        <option value="United States">United States</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3.5 top-3.5 text-[#7a7a9a] pointer-events-none"
-                      />
-                    </div>
+                    <ComboBox
+                      options={(countries ?? []).map((c) => ({ value: c.name, label: c.name }))}
+                      value={editCountry}
+                      onValueChange={handleEditCountryChange}
+                      placeholder="Select Country"
+                      searchPlaceholder="Search country..."
+                      loading={loadingCountries}
+                    />
                   </div>
 
                   {/* State */}
@@ -1693,23 +1717,14 @@ export default function CreatorProfilePage() {
                     <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                       State
                     </label>
-                    <div className="relative w-full">
-                      <select
-                        value={editState}
-                        onChange={(e) => setEditState(e.target.value)}
-                        className="appearance-none bg-white w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 pr-8 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
-                      >
-                        <option value="Lagos">Lagos</option>
-                        <option value="Abuja">Abuja</option>
-                        <option value="Kano">Kano</option>
-                        <option value="Rivers">Rivers</option>
-                        <option value="Oyo">Oyo</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3.5 top-3.5 text-[#7a7a9a] pointer-events-none"
-                      />
-                    </div>
+                    <ComboBox
+                      options={editStates.map((s) => ({ value: s.name, label: s.name }))}
+                      value={editState}
+                      onValueChange={setEditState}
+                      placeholder="Select State"
+                      searchPlaceholder="Search state..."
+                      disabled={!editCountryId}
+                    />
                   </div>
 
                   {/* Nationality */}
@@ -1717,24 +1732,13 @@ export default function CreatorProfilePage() {
                     <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                       Nationality
                     </label>
-                    <div className="relative w-full">
-                      <select
-                        value={editNationality}
-                        onChange={(e) => setEditNationality(e.target.value)}
-                        className="appearance-none bg-white w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 pr-8 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
-                      >
-                        <option value="Nigeria">Nigeria</option>
-                        <option value="Ghanaian">Ghanaian</option>
-                        <option value="Kenyan">Kenyan</option>
-                        <option value="South African">South African</option>
-                        <option value="British">British</option>
-                        <option value="American">American</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3.5 top-3.5 text-[#7a7a9a] pointer-events-none"
-                      />
-                    </div>
+                    <ComboBox
+                      options={(nationalities ?? []).map((n) => ({ value: n.name, label: n.name }))}
+                      value={editNationality}
+                      onValueChange={setEditNationality}
+                      placeholder="Select Nationality"
+                      searchPlaceholder="Search nationality..."
+                    />
                   </div>
 
                   {/* Bio */}
@@ -1767,22 +1771,26 @@ export default function CreatorProfilePage() {
                       : ALL_NICHES_INDUSTRIES
                     ).map((niche) => {
                       const active = editNiches.includes(niche);
+                      const disabled = !active && editNiches.length >= 3;
                       return (
                         <button
                           key={niche}
                           type="button"
+                          disabled={disabled}
                           onClick={() => {
                             if (active) {
                               setEditNiches(editNiches.filter((n) => n !== niche));
-                            } else {
+                            } else if (editNiches.length < 3) {
                               setEditNiches([...editNiches, niche]);
                             }
                           }}
                           className={cn(
-                            'px-4 py-2 text-xs font-semibold rounded-full border transition-all cursor-pointer select-none',
+                            'px-4 py-2 text-xs font-semibold rounded-full border transition-all select-none',
                             active
-                              ? 'bg-brand-pink-light border-brand-pink text-brand-pink shadow-[0_1px_4px_rgba(215,23,111,0.1)]'
-                              : 'bg-[#f4f3f6] border-transparent text-[#5a5a7a] hover:bg-[#eae8ed]',
+                              ? 'cursor-pointer bg-brand-pink-light border-brand-pink text-brand-pink shadow-[0_1px_4px_rgba(215,23,111,0.1)]'
+                              : disabled
+                                ? 'cursor-not-allowed bg-[#f4f3f6] border-transparent text-[#c4c2d4]'
+                                : 'cursor-pointer bg-[#f4f3f6] border-transparent text-[#5a5a7a] hover:bg-[#eae8ed]',
                           )}
                         >
                           {niche}
@@ -1790,6 +1798,21 @@ export default function CreatorProfilePage() {
                       );
                     })}
                   </div>
+
+                  {editNiches.length === 0 && (
+                    <p className="text-[11px] text-[#9a99b0] text-center">Select 1 to 3 niches</p>
+                  )}
+                  {editNiches.length > 0 && editNiches.length < 3 && (
+                    <p className="text-[11px] text-[#9a99b0] text-center">
+                      You can select up to {3 - editNiches.length} more niche
+                      {3 - editNiches.length > 1 ? 's' : ''}
+                    </p>
+                  )}
+                  {editNiches.length === 3 && (
+                    <p className="text-[11px] text-[#9a99b0] text-center">
+                      Maximum of 3 niches selected
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -1809,10 +1832,25 @@ export default function CreatorProfilePage() {
                 <SocialsOAuthConnect />
               </div>
             )}
+
+            {/* TAB 4: PAYMENT */}
+            {editTab === 'payment' && (
+              <div className="flex flex-col gap-4">
+                <p className="text-xs text-[#7a7a9a] leading-relaxed font-light">
+                  Manage the bank account payouts are sent to.
+                </p>
+                <BankDetailsCard
+                  bankName={user?.bankName || ''}
+                  accountName={user?.bankAccountName || ''}
+                  accountNumber={user?.bankAccountNumber || ''}
+                  onChange={() => setIsBankModalOpen(true)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Sticky Save Button Footer */}
-          {editTab !== 'social' && (
+          {editTab !== 'social' && editTab !== 'payment' && (
             <div className="p-4 md:p-6 border-t border-[#e8e6f0] bg-white shrink-0 mt-auto">
               <button
                 type="button"
@@ -1833,6 +1871,22 @@ export default function CreatorProfilePage() {
           )}
         </div>
       </div>
+
+      <BankChangeModal
+        key={isBankModalOpen ? 'open' : 'closed'}
+        isOpen={isBankModalOpen}
+        onClose={() => setIsBankModalOpen(false)}
+        onSave={(values) =>
+          updatePayout({
+            bankId: values.bankId,
+            bankAccountNumber: values.accountNumber,
+            bankAccountName: values.accountName,
+          })
+        }
+        initialBankName={user?.bankName || ''}
+        initialAccountNumber={user?.bankAccountNumber || ''}
+        initialAccountName={user?.bankAccountName || ''}
+      />
 
       {/* ── 8. NOTIFICATION SETTINGS RESPONSIVE DRAWER ── */}
       <div
@@ -2084,64 +2138,66 @@ export default function CreatorProfilePage() {
 
           {/* Scrollable Form Content */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-6 scrollbar-thin">
-            {/* Section 1: ACCOUNT SECURITY */}
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider mb-2 block pl-1">
-                Account Security
-              </span>
-              <div className="border border-[#e8e6f0]/80 rounded-2xl bg-white overflow-hidden divide-y divide-[#e8e6f0]/50 shadow-xs">
-                {/* Item 1 */}
-                <div className="p-4 flex items-center justify-between bg-white">
-                  <div className="flex flex-col gap-0.5 pr-4">
-                    <span className="text-xs font-bold text-[#1a1a2e]">
-                      Two-Factor Authentication
-                    </span>
-                    <span className="text-[10px] font-light text-[#7a7a9a] leading-tight">
-                      Extra layer of sign-in protection
-                    </span>
+            {/* Section 1: ACCOUNT SECURITY — disabled pending backend support, see [[account_security_toggles_disabled]] */}
+            {false && (
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider mb-2 block pl-1">
+                  Account Security
+                </span>
+                <div className="border border-[#e8e6f0]/80 rounded-2xl bg-white overflow-hidden divide-y divide-[#e8e6f0]/50 shadow-xs">
+                  {/* Item 1 */}
+                  <div className="p-4 flex items-center justify-between bg-white">
+                    <div className="flex flex-col gap-0.5 pr-4">
+                      <span className="text-xs font-bold text-[#1a1a2e]">
+                        Two-Factor Authentication
+                      </span>
+                      <span className="text-[10px] font-light text-[#7a7a9a] leading-tight">
+                        Extra layer of sign-in protection
+                      </span>
+                    </div>
+                    <ToggleSwitch
+                      checked={twoFactorAuth}
+                      onChange={(checked) => {
+                        setTwoFactorAuth(checked);
+                        updateSecuritySettingsMutation.mutate({ twoFactorEnabled: checked });
+                      }}
+                    />
                   </div>
-                  <ToggleSwitch
-                    checked={twoFactorAuth}
-                    onChange={(checked) => {
-                      setTwoFactorAuth(checked);
-                      updateSecuritySettingsMutation.mutate({ twoFactorEnabled: checked });
-                    }}
-                  />
-                </div>
-                {/* Item 2 */}
-                <div className="p-4 flex items-center justify-between bg-white">
-                  <div className="flex flex-col gap-0.5 pr-4">
-                    <span className="text-xs font-bold text-[#1a1a2e]">Biometric Login</span>
-                    <span className="text-[10px] font-light text-[#7a7a9a] leading-tight">
-                      Use fingerprint or face ID
-                    </span>
+                  {/* Item 2 */}
+                  <div className="p-4 flex items-center justify-between bg-white">
+                    <div className="flex flex-col gap-0.5 pr-4">
+                      <span className="text-xs font-bold text-[#1a1a2e]">Biometric Login</span>
+                      <span className="text-[10px] font-light text-[#7a7a9a] leading-tight">
+                        Use fingerprint or face ID
+                      </span>
+                    </div>
+                    <ToggleSwitch
+                      checked={biometricLogin}
+                      onChange={(checked) => {
+                        setBiometricLogin(checked);
+                        updateSecuritySettingsMutation.mutate({ biometricLoginEnabled: checked });
+                      }}
+                    />
                   </div>
-                  <ToggleSwitch
-                    checked={biometricLogin}
-                    onChange={(checked) => {
-                      setBiometricLogin(checked);
-                      updateSecuritySettingsMutation.mutate({ biometricLoginEnabled: checked });
-                    }}
-                  />
-                </div>
-                {/* Item 3 */}
-                <div className="p-4 flex items-center justify-between bg-white">
-                  <div className="flex flex-col gap-0.5 pr-4">
-                    <span className="text-xs font-bold text-[#1a1a2e]">Login Alerts</span>
-                    <span className="text-[10px] font-light text-[#7a7a9a] leading-tight">
-                      Notify me of new sign-ins
-                    </span>
+                  {/* Item 3 */}
+                  <div className="p-4 flex items-center justify-between bg-white">
+                    <div className="flex flex-col gap-0.5 pr-4">
+                      <span className="text-xs font-bold text-[#1a1a2e]">Login Alerts</span>
+                      <span className="text-[10px] font-light text-[#7a7a9a] leading-tight">
+                        Notify me of new sign-ins
+                      </span>
+                    </div>
+                    <ToggleSwitch
+                      checked={loginAlerts}
+                      onChange={(checked) => {
+                        setLoginAlerts(checked);
+                        updateSecuritySettingsMutation.mutate({ loginAlertsEnabled: checked });
+                      }}
+                    />
                   </div>
-                  <ToggleSwitch
-                    checked={loginAlerts}
-                    onChange={(checked) => {
-                      setLoginAlerts(checked);
-                      updateSecuritySettingsMutation.mutate({ loginAlertsEnabled: checked });
-                    }}
-                  />
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Section 2: PASSWORD */}
             <div className="flex flex-col">
@@ -2165,6 +2221,9 @@ export default function CreatorProfilePage() {
                       placeholder="Enter current password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
+                      // "new-password" (not "current-password") is the standard trick to
+                      // stop browsers autofilling the user's saved password into this field.
+                      autoComplete="new-password"
                       className="w-full h-11 border border-[#e8e6f0] rounded-xl pl-10 pr-10 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
                     />
                     <button
@@ -2189,6 +2248,7 @@ export default function CreatorProfilePage() {
                       placeholder="Enter New password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
                       className="w-full h-11 border border-[#e8e6f0] rounded-xl pl-10 pr-10 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
                     />
                     <button
@@ -2213,6 +2273,7 @@ export default function CreatorProfilePage() {
                       placeholder="Confirm password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
                       className="w-full h-11 border border-[#e8e6f0] rounded-xl pl-10 pr-10 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
                     />
                     <button
@@ -2774,28 +2835,30 @@ export default function CreatorProfilePage() {
                     Contact Us
                   </span>
                   {contactLoading ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-2 gap-3">
                       {Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-[88px] rounded-2xl" />
+                        <Skeleton key={i} className="h-[104px] rounded-2xl" />
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-2 gap-3">
                       {/* Email Card */}
                       <div
                         onClick={() =>
                           contactInfo?.supportEmail &&
                           window.open(`mailto:${contactInfo.supportEmail}`)
                         }
-                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
                       >
-                        <div className="w-9 h-9 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
-                          <Mail size={16} />
+                        <div className="w-10 h-10 rounded-xl bg-[#fdf2f8] flex items-center justify-center text-[#db2777] shrink-0">
+                          <Mail size={17} />
                         </div>
-                        <span className="text-[10px] font-bold text-[#1a1a2e]">Email</span>
-                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
-                          {contactInfo?.supportEmail ?? '—'}
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-bold text-[#1a1a2e]">Email</span>
+                          <span className="text-[10px] font-medium text-[#7a7a9a] leading-snug break-words line-clamp-2">
+                            {contactInfo?.supportEmail ?? '—'}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Call Support Card */}
@@ -2804,46 +2867,52 @@ export default function CreatorProfilePage() {
                           contactInfo?.supportPhone &&
                           window.open(`tel:${contactInfo.supportPhone}`)
                         }
-                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
                       >
-                        <div className="w-9 h-9 rounded-xl bg-[#f5f3ff] flex items-center justify-center text-[#7c3aed] shrink-0">
-                          <Phone size={16} />
+                        <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] flex items-center justify-center text-[#7c3aed] shrink-0">
+                          <Phone size={17} />
                         </div>
-                        <span className="text-[10px] font-bold text-[#1a1a2e]">Call Support</span>
-                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight break-all">
-                          {contactInfo?.supportPhone ?? '—'}
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-bold text-[#1a1a2e]">Call Support</span>
+                          <span className="text-[10px] font-medium text-[#7a7a9a] leading-snug break-words line-clamp-2">
+                            {contactInfo?.supportPhone ?? '—'}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Submit Ticket Card */}
                       <div
                         id="help-card-submit-ticket"
                         onClick={() => setHelpStep('ticket')}
-                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
                       >
-                        <div className="w-9 h-9 rounded-xl bg-[#eff6ff] flex items-center justify-center text-[#2563eb] shrink-0">
-                          <FileText size={16} />
+                        <div className="w-10 h-10 rounded-xl bg-[#eff6ff] flex items-center justify-center text-[#2563eb] shrink-0">
+                          <FileText size={17} />
                         </div>
-                        <span className="text-[10px] font-bold text-[#1a1a2e]">
-                          Submit a Ticket
-                        </span>
-                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                          Response within 24 hrs
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-bold text-[#1a1a2e]">
+                            Submit a Ticket
+                          </span>
+                          <span className="text-[10px] font-medium text-[#7a7a9a] leading-snug">
+                            Response within 24 hrs
+                          </span>
+                        </div>
                       </div>
 
                       {/* My Tickets Card */}
                       <div
                         onClick={() => setHelpStep('my-tickets')}
-                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
+                        className="bg-white border border-[#e8e6f0]/70 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:border-brand-pink/30 hover:shadow-2xs active:scale-98 transition-all cursor-pointer select-none"
                       >
-                        <div className="w-9 h-9 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
-                          <Inbox size={16} />
+                        <div className="w-10 h-10 rounded-xl bg-[#f0fdf4] flex items-center justify-center text-[#16a34a] shrink-0">
+                          <Inbox size={17} />
                         </div>
-                        <span className="text-[10px] font-bold text-[#1a1a2e]">My Tickets</span>
-                        <span className="text-[8px] font-medium text-[#7a7a9a] leading-tight">
-                          Track submissions
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-bold text-[#1a1a2e]">My Tickets</span>
+                          <span className="text-[10px] font-medium text-[#7a7a9a] leading-snug">
+                            Track submissions
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2864,17 +2933,23 @@ export default function CreatorProfilePage() {
                     FAQ
                   </span>
                   <div className="flex flex-col gap-2.5">
-                    {filteredFaqs.length > 0 ? (
+                    {faqsLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-14 rounded-xl" />
+                      ))
+                    ) : filteredFaqs.length > 0 ? (
                       filteredFaqs.map((faq, idx) => {
                         const isExpanded = expandedFaqIdx === idx;
                         return (
                           <div
-                            key={idx}
+                            key={faq.id}
                             onClick={() => setExpandedFaqIdx(isExpanded ? null : idx)}
                             className="bg-white border border-[#e8e6f0]/70 rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-colors hover:bg-neutral-50/50"
                           >
                             <div className="flex items-center justify-between gap-3">
-                              <span className="text-[11px] font-bold text-[#1a1a2e]">{faq.q}</span>
+                              <span className="text-[11px] font-bold text-[#1a1a2e]">
+                                {faq.question}
+                              </span>
                               <ChevronRight
                                 size={14}
                                 className={cn(
@@ -2889,7 +2964,9 @@ export default function CreatorProfilePage() {
                                 isExpanded ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0',
                               )}
                             >
-                              <p className="text-[10px] text-[#5a5a7a] leading-relaxed">{faq.a}</p>
+                              <p className="text-[10px] text-[#5a5a7a] leading-relaxed">
+                                {faq.answer}
+                              </p>
                             </div>
                           </div>
                         );
@@ -2902,44 +2979,6 @@ export default function CreatorProfilePage() {
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Enjoying Trendupp review widget */}
-                <div className="bg-white border border-[#e8e6f0]/50 rounded-2xl p-5 flex flex-col items-center gap-4 text-center mt-auto shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
-                  <div className="flex flex-col gap-1">
-                    <h4 className="text-xs font-extrabold text-[#1a1a2e]">Enjoying Trendupp?</h4>
-                    <span className="text-[10px] text-[#7a7a9a]">Your review helps us grow</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setUserRating(star)}
-                        className="text-[#f59e0b] hover:scale-110 active:scale-95 transition-transform cursor-pointer"
-                      >
-                        <Star
-                          size={20}
-                          className={cn(
-                            'transition-all',
-                            (userRating === 0 ? true : star <= userRating)
-                              ? 'fill-[#f59e0b] text-[#f59e0b]'
-                              : 'text-[#e2e0e7] fill-none',
-                          )}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      alert(`Redirecting to app rating... Rating: ${userRating || 5} Stars`)
-                    }
-                    className="w-full py-2.5 bg-brand-pink hover:bg-opacity-95 text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer select-none text-center"
-                  >
-                    <span className="hidden md:inline">Rate us on playstore</span>
-                    <span className="inline md:hidden">Rate Us on App Store</span>
-                  </button>
                 </div>
               </>
             ) : helpStep === 'my-tickets' ? (
@@ -3011,7 +3050,9 @@ export default function CreatorProfilePage() {
                               {s.label}
                             </span>
                           </div>
-                          <span className="text-[10px] text-[#7a7a9a]">{t.category}</span>
+                          <span className="text-[10px] text-[#7a7a9a]">
+                            {t.issueCategory?.name ?? '—'}
+                          </span>
                           <span className="text-[9px] text-[#9a99b0] mt-0.5">
                             {new Date(t.createdAt).toLocaleDateString('en-GB', {
                               day: 'numeric',
@@ -3065,33 +3106,30 @@ export default function CreatorProfilePage() {
 
                       {isCategoryDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#e8e6f0] rounded-xl shadow-lg z-50 overflow-hidden">
-                          {(serverCategories
-                            ? serverCategories.map((c) =>
-                                typeof c === 'string'
-                                  ? { id: '', name: c }
-                                  : { id: c.id, name: c.name },
-                              )
-                            : [
-                                { id: '', name: 'Campaign Dispute' },
-                                { id: '', name: 'Payment & Wallet' },
-                                { id: '', name: 'Account Verification' },
-                                { id: '', name: 'Technical Issue' },
-                                { id: '', name: 'Other' },
-                              ]
-                          ).map((cat) => (
-                            <button
-                              key={cat.name}
-                              type="button"
-                              onClick={() => {
-                                setTicketCategory(cat.name);
-                                setTicketCategoryId(cat.id || null);
-                                setIsCategoryDropdownOpen(false);
-                              }}
-                              className="w-full text-left px-4 py-3 text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors cursor-pointer"
-                            >
-                              {cat.name}
-                            </button>
-                          ))}
+                          {categoriesLoading ? (
+                            <div className="px-4 py-3 text-xs text-[#9a99b0]">
+                              Loading categories…
+                            </div>
+                          ) : !serverCategories || serverCategories.length === 0 ? (
+                            <div className="px-4 py-3 text-xs text-[#9a99b0]">
+                              No categories available
+                            </div>
+                          ) : (
+                            serverCategories.map((cat) => (
+                              <button
+                                key={cat.id}
+                                type="button"
+                                onClick={() => {
+                                  setTicketCategory(cat.name);
+                                  setTicketCategoryId(cat.id);
+                                  setIsCategoryDropdownOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-3 text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors cursor-pointer"
+                              >
+                                {cat.name}
+                              </button>
+                            ))
+                          )}
                         </div>
                       )}
                     </div>
@@ -3183,7 +3221,7 @@ export default function CreatorProfilePage() {
                   type="button"
                   disabled={submitTicketMutation.isPending}
                   onClick={() => {
-                    if (ticketCategory === 'Select a category') {
+                    if (!ticketCategoryId) {
                       toast.error('Please select an issue category.');
                       return;
                     }
@@ -3196,27 +3234,26 @@ export default function CreatorProfilePage() {
                       return;
                     }
 
-                    const fd = new FormData();
-                    // API requires issueCategoryId (UUID); fall back to name if no UUID yet
-                    fd.append('issueCategoryId', ticketCategoryId ?? ticketCategory);
-                    fd.append('subject', ticketSubject.trim());
-                    fd.append('description', ticketDescription.trim());
-                    // Only the first file is sent (API accepts a single attachment)
-                    if (uploadedFiles.length > 0) {
-                      fd.append('attachment', uploadedFiles[0]);
-                    }
-
-                    submitTicketMutation.mutate(fd, {
-                      onSuccess: () => {
-                        // Reset form & return to main help view
-                        setTicketCategory('Select a category');
-                        setTicketCategoryId(null);
-                        setTicketSubject('');
-                        setTicketDescription('');
-                        setUploadedFiles([]);
-                        setHelpStep('main');
+                    submitTicketMutation.mutate(
+                      {
+                        issueCategoryId: ticketCategoryId,
+                        subject: ticketSubject.trim(),
+                        description: ticketDescription.trim(),
+                        // Only the first file is sent (API accepts a single attachment)
+                        ...(uploadedFiles.length > 0 ? { attachment: uploadedFiles[0] } : {}),
                       },
-                    });
+                      {
+                        onSuccess: () => {
+                          // Reset form & return to main help view
+                          setTicketCategory('Select a category');
+                          setTicketCategoryId(null);
+                          setTicketSubject('');
+                          setTicketDescription('');
+                          setUploadedFiles([]);
+                          setHelpStep('main');
+                        },
+                      },
+                    );
                   }}
                   className="w-full py-3 bg-brand-pink hover:bg-opacity-95 text-white rounded-xl text-xs font-bold active:scale-98 transition-all cursor-pointer select-none text-center disabled:opacity-50 flex items-center justify-center gap-2"
                 >

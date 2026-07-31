@@ -16,6 +16,7 @@ export interface FeedbackModalProps {
   iconColor?: string;
   message: React.ReactNode;
   actions: FeedbackModalAction[];
+  children?: React.ReactNode;
 }
 
 export default function FeedbackModal({
@@ -23,6 +24,7 @@ export default function FeedbackModal({
   iconColor = 'text-emerald-500',
   message,
   actions,
+  children,
 }: FeedbackModalProps) {
   const borderColor = iconColor.replace('text-', 'border-');
 
@@ -41,6 +43,8 @@ export default function FeedbackModal({
 
         {/* Message */}
         <p className="text-sm text-[#1a1a2e] leading-relaxed">{message}</p>
+
+        {children}
 
         {/* Actions */}
         <div className="flex gap-3 w-full mt-1">

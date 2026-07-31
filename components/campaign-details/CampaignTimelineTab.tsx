@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Clock } from 'lucide-react';
-import type { Campaign, CampaignTimeline } from '@/types/campaign';
+import type { Campaign, CampaignTimeline, CampaignTimelineStage } from '@/types/campaign';
 import { useCampaignActivityTimeline } from '@/hooks/useCampaign';
 import { formatTimeRemaining } from '@/lib/campaignTimelineStage';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,9 @@ function stageOrder(key: string): number {
 }
 
 function StageTracker({ timeline }: { timeline: CampaignTimeline }) {
-  const stages = Object.entries(timeline).sort(([a], [b]) => stageOrder(a) - stageOrder(b));
+  const stages = Object.entries(timeline)
+    .filter((entry): entry is [string, CampaignTimelineStage] => !!entry[1])
+    .sort(([a], [b]) => stageOrder(a) - stageOrder(b));
   if (stages.length === 0) return null;
 
   return (
