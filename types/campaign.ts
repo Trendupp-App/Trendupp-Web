@@ -47,8 +47,6 @@ export interface CampaignTimelineStage {
   startedDate: string | null;
 }
 
-// Keys are e.g. "stage0_escrow", "stage1_application_window" — see
-// lib/campaignTimelineStage.ts for how these are ordered/interpreted.
 export type CampaignTimeline = Record<string, CampaignTimelineStage | null>;
 
 export type CampaignStatus =

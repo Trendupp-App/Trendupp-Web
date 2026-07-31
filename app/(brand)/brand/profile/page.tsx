@@ -1,23 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import ProfileHeroBanner from '@/components/brand-profile/ProfileHeroBanner';
 import SocialPlatformCards from '@/shared/SocialPlatformCards';
 import SettingsList from '@/components/brand-profile/SettingsList';
-import ReviewRequestsList from '@/components/brand-profile/ReviewRequestsList';
 import EditProfileSheet from '@/components/brand-profile/EditProfileSheet';
 import NotificationsSheet from '@/components/brand-profile/NotificationsSheet';
 import PrivacySecuritySheet from '@/components/brand-profile/PrivacySecuritySheet';
 import HelpSupportSheet from '@/components/brand-profile/HelpSupportSheet';
 
-type ProfileTab = 'settings' | 'reviews';
 type SheetType = 'notifications' | 'security' | 'help' | null;
 
 export default function BrandProfilePage() {
   const user = useAuthStore((s) => s.user);
-  const [activeTab, setActiveTab] = useState<ProfileTab>('settings');
   const [editOpen, setEditOpen] = useState(false);
   const [openSheet, setOpenSheet] = useState<SheetType>(null);
 
@@ -64,38 +60,16 @@ export default function BrandProfilePage() {
           </div>
         )}
 
-        {/* Tab switcher */}
-        <div className="bg-[#f4f3f8] rounded-2xl p-1 flex items-center gap-1">
-          {(['settings', 'reviews'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                'flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                activeTab === tab
-                  ? 'bg-white text-brand-pink shadow-sm'
-                  : 'text-[#7a7a9a] hover:text-[#1a1a2e]',
-              )}
-            >
-              {tab === 'settings' ? 'Settings' : 'Review Requests'}
-            </button>
-          ))}
+        {/* Settings */}
+        <div className="flex flex-col gap-4">
+          <SettingsList onOpen={(id) => setOpenSheet(id as SheetType)} />
+          <p className="text-xs text-[#9a99b0] text-center">
+            Trendupp v1.0.0 ·{' '}
+            <a href="/terms" className="text-brand-pink hover:underline">
+              Terms and Privacy
+            </a>
+          </p>
         </div>
-
-        {/* Tab content */}
-        {activeTab === 'settings' ? (
-          <div className="flex flex-col gap-4">
-            <SettingsList onOpen={(id) => setOpenSheet(id as SheetType)} />
-            <p className="text-xs text-[#9a99b0] text-center">
-              Trendupp v1.0.0 ·{' '}
-              <a href="/terms" className="text-brand-pink hover:underline">
-                Terms and Privacy
-              </a>
-            </p>
-          </div>
-        ) : (
-          <ReviewRequestsList />
-        )}
       </div>
 
       {/* Sheets */}
