@@ -41,11 +41,12 @@ export default function SocialImpactSubmitLiveLinkModal({
     e.preventDefault();
     setError('');
 
-    if (!liveLink.trim()) {
+    const raw = liveLink.trim();
+    if (!raw) {
       setError('Please enter the live content URL');
       return;
     }
-    const normalizedLink = /^https?:\/\//i.test(liveLink) ? liveLink : `https://${liveLink}`;
+    const normalizedLink = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
     try {
       new URL(normalizedLink);
     } catch {
@@ -53,7 +54,7 @@ export default function SocialImpactSubmitLiveLinkModal({
       return;
     }
 
-    onSubmit(liveLink);
+    onSubmit(normalizedLink);
   }
 
   return (
