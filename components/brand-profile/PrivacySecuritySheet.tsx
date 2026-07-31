@@ -174,6 +174,9 @@ export default function PrivacySecuritySheet({ open, onOpenChange }: PrivacySecu
                           {...register(name)}
                           type="password"
                           placeholder={placeholder}
+                          // "new-password" (not "current-password") is the standard trick to
+                          // stop browsers autofilling the user's saved password into this field.
+                          autoComplete="new-password"
                           className={inputCls}
                         />
                       </div>
