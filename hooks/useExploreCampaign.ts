@@ -1,5 +1,10 @@
 import { useCampaigns } from '@/hooks/useCampaign';
-import { mapCampaign, filterCampaigns, sortCampaigns } from '@/lib/campaignMappers';
+import {
+  mapCampaign,
+  filterCampaigns,
+  sortCampaigns,
+  type DisplayCurrencyOptions,
+} from '@/lib/campaignMappers';
 import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
 
 type CampaignStatusFilter = 'all' | 'live' | 'past';
@@ -11,11 +16,13 @@ export function useExploreCampaigns({
   searchQuery,
   filters,
   page = 1,
+  displayOpts,
 }: {
   statusFilter: CampaignStatusFilter;
   searchQuery: string;
   filters: FilterState;
   page?: number;
+  displayOpts?: DisplayCurrencyOptions;
 }) {
   const { data: campaignsResponse, isLoading } = useCampaigns({
     status: statusFilter === 'all' ? undefined : statusFilter === 'live' ? 'live' : 'completed',
@@ -33,7 +40,7 @@ export function useExploreCampaigns({
   });
 
   const liveCampaigns = campaignsResponse?.data ?? [];
-  const mapped = liveCampaigns.map(mapCampaign);
+  const mapped = liveCampaigns.map((c) => mapCampaign(c, displayOpts));
   const filtered = filterCampaigns(mapped, { searchQuery, statusFilter, filters });
   const sorted = sortCampaigns(filtered, filters.sortBy);
 

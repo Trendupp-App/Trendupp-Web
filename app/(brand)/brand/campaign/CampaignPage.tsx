@@ -14,14 +14,16 @@ import FeedbackModal from '@/shared/FeedBackModal';
 
 const DELETE_CONFIRM_PHRASE = 'I WANT TO DELETE';
 
-type MainTab = 'draft' | 'live' | 'active' | 'completed';
+type MainTab = 'draft' | 'live' | 'active' | 'completed' | 'paused' | 'cancelled';
 type ActiveSubTab = 'in_progress' | 'content_review' | 'revision' | 'live_content' | 'all';
 
 const MAIN_TABS: { id: MainTab; label: string }[] = [
   { id: 'draft', label: 'Draft' },
   { id: 'live', label: 'Live' },
   { id: 'active', label: 'Active' },
+  { id: 'paused', label: 'Paused' },
   { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
 ];
 
 // Sub-tabs beyond "All" depend on `campaign.subStatus`, which the campaigns-list
@@ -36,7 +38,7 @@ const ACTIVE_SUB_TABS: { id: ActiveSubTab; label: string }[] = [
 
 const GRID_SKELETON_COUNT = 6;
 const DRAFT_SKELETON_COUNT = 3;
-const VALID_TABS: MainTab[] = ['draft', 'live', 'active', 'completed'];
+const VALID_TABS: MainTab[] = ['draft', 'live', 'active', 'completed', 'paused', 'cancelled'];
 
 export default function BrandCampaignsPage() {
   const router = useRouter();
@@ -89,6 +91,14 @@ export default function BrandCampaignsPage() {
     'completed',
     mainTab === 'completed',
   );
+  const { data: pausedCampaigns = [], isLoading: pausedLoading } = useMyCampaigns(
+    'paused',
+    mainTab === 'paused',
+  );
+  const { data: cancelledCampaigns = [], isLoading: cancelledLoading } = useMyCampaigns(
+    'cancelled',
+    mainTab === 'cancelled',
+  );
 
   const allDraftTabCampaigns = useMemo(() => {
     const byId = new Map<string, (typeof draftCampaigns)[number]>();
@@ -108,13 +118,17 @@ export default function BrandCampaignsPage() {
     allDraftTabCampaigns.length +
     liveCampaigns.length +
     activeCampaigns.length +
-    completedCampaigns.length;
+    completedCampaigns.length +
+    pausedCampaigns.length +
+    cancelledCampaigns.length;
 
   const tabCounts: Record<MainTab, number> = {
     draft: allDraftTabCampaigns.length,
     live: liveCampaigns.length,
     active: activeCampaigns.length,
     completed: completedCampaigns.length,
+    paused: pausedCampaigns.length,
+    cancelled: cancelledCampaigns.length,
   };
   function handleDeleteDraft(id: string) {
     setPendingDeleteId(id);
@@ -265,6 +279,48 @@ export default function BrandCampaignsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {completedCampaigns.map((c) => (
+                <CampaignCard key={c.id} campaign={c} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Paused tab */}
+      {mainTab === 'paused' && (
+        <>
+          {pausedLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: GRID_SKELETON_COUNT }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : pausedCampaigns.length === 0 ? (
+            <EmptyState message="No paused campaigns yet." />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pausedCampaigns.map((c) => (
+                <CampaignCard key={c.id} campaign={c} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Cancelled tab */}
+      {mainTab === 'cancelled' && (
+        <>
+          {cancelledLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: GRID_SKELETON_COUNT }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : cancelledCampaigns.length === 0 ? (
+            <EmptyState message="No cancelled campaigns yet." />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cancelledCampaigns.map((c) => (
                 <CampaignCard key={c.id} campaign={c} />
               ))}
             </div>

@@ -78,3 +78,45 @@ export function getCampaignDeadlineInfo(timeline?: CampaignTimeline): {
     daysRemaining: getRemainingDays(deadline),
   };
 }
+
+export interface TimelineStep {
+  key: string;
+  title: string;
+  subtext: string;
+  status: 'completed' | 'in_progress' | 'pending';
+}
+
+// Turns the raw stageN_... timeline map into an ordered, display-ready step
+// list — shared by the pre-apply Timeline tab and the post-apply success
+// screen so both read the exact same real `CampaignTimeline` data.
+export function buildTimelineSteps(
+  timeline: CampaignTimeline | undefined,
+  leadingStep?: TimelineStep,
+): TimelineStep[] {
+  const steps: TimelineStep[] = leadingStep ? [leadingStep] : [];
+  if (!timeline) return steps;
+
+  const stages = Object.entries(timeline)
+    .filter((entry): entry is [string, CampaignTimelineStage] => !!entry[1])
+    .sort(([a], [b]) => stageOrder(a) - stageOrder(b));
+
+  for (const [key, stage] of stages) {
+    const status: TimelineStep['status'] =
+      stage.status === 'completed'
+        ? 'completed'
+        : stage.status === 'in_progress'
+          ? 'in_progress'
+          : 'pending';
+
+    const subtext =
+      status === 'completed'
+        ? 'Completed'
+        : status === 'in_progress'
+          ? (formatTimeRemaining(stage.endedDate) ?? stage.intendedFor ?? 'In progress')
+          : (stage.intendedFor ?? 'Not started');
+
+    steps.push({ key, title: stage.goal, subtext, status });
+  }
+
+  return steps;
+}

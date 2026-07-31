@@ -55,7 +55,9 @@ export type CampaignStatus =
   | 'pending_payment'
   | 'live'
   | 'active'
-  | 'completed';
+  | 'completed'
+  | 'paused'
+  | 'cancelled';
 
 export interface ContentGuidelines {
   dos: string[];

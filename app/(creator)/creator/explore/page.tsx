@@ -23,6 +23,7 @@ import CreatorsList from '@/components/creator-dashboard/explore/CreatorList';
 import ExploreSearchAndFilter from '@/components/creator-dashboard/explore/ExploreSearchAndFilter';
 import { useExploreCampaigns } from '@/hooks/useExploreCampaign';
 import { useExploreCreators, useExploreBrands, useExploreSearch } from '@/hooks/useExplore';
+import { useDisplayCurrency } from '@/hooks/useExchangeRate';
 import {
   useSocialImpactCampaigns,
   useMySocialImpactApplications,
@@ -66,6 +67,9 @@ export default function ExplorePage() {
   const [socialImpactSheetOpen, setSocialImpactSheetOpen] = useState(false);
   const [participatedCampaign, setParticipatedCampaign] = useState<Campaign | null>(null);
 
+  const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
+  const displayOpts = { displayInNgn, usdToNgnRate };
+
   const {
     campaigns: sortedCampaigns,
     isLoading: campaignsLoadingRaw,
@@ -75,6 +79,7 @@ export default function ExplorePage() {
     searchQuery,
     filters: DEFAULT_CAMPAIGN_FILTERS,
     page: campaignPage,
+    displayOpts,
   });
 
   const { data: socialImpactResponse, isLoading: socialImpactLoading } = useSocialImpactCampaigns(
@@ -122,7 +127,9 @@ export default function ExplorePage() {
     isError: searchError,
   } = useExploreSearch(searchQuery, isSearching);
 
-  const searchCampaigns = (searchResults?.campaigns.data ?? []).map(mapCampaign);
+  const searchCampaigns = (searchResults?.campaigns.data ?? []).map((c) =>
+    mapCampaign(c, displayOpts),
+  );
   const searchCreators = searchResults?.creators.data ?? [];
   const searchBrands = searchResults?.brands.data ?? [];
 

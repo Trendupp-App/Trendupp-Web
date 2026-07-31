@@ -26,6 +26,7 @@ export default function LiveCampaignDetail({ campaign }: { campaign: Campaign })
           applicationsForLive={campaign.applications}
           campaignTitle={campaign.title}
           campaignCurrency={campaign.currency}
+          campaignStatus={campaign.status}
         />
       ) : (
         <CampaignTimelineTab campaign={campaign} />

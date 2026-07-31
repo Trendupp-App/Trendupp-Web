@@ -87,7 +87,9 @@ export default function CampaignCard({
                 ? 'bg-[#e6f9f1] text-[#00c37b]'
                 : status === 'submitted'
                   ? 'bg-[#eff6ff] text-[#2563eb]'
-                  : 'bg-[#fef3c7] text-[#d97706]',
+                  : status === 'cancelled'
+                    ? 'bg-[#fee2e2] text-[#dc2626]'
+                    : 'bg-[#fef3c7] text-[#d97706]',
             )}
           >
             {status || 'Live'}

@@ -1,7 +1,14 @@
-import type { Campaign } from '@/types/campaign';
+import type { Campaign, CampaignTimeline } from '@/types/campaign';
 import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
-import { formatCurrency } from '@/utils/Utilities';
+import { formatCurrency, convertUsdToNgn } from '@/utils/Utilities';
 import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
+
+// Passed down from useDisplayCurrency() so a Nigerian creator sees Naira
+// instead of a campaign's own currency, wherever that campaign's money is shown.
+export interface DisplayCurrencyOptions {
+  displayInNgn?: boolean;
+  usdToNgnRate?: number;
+}
 
 export interface MappedExploreCampaign {
   id: string;
@@ -31,12 +38,22 @@ export interface MappedExploreCampaign {
   contentGuidelines: { dos: string[]; donts: string[] };
   usageRights: string;
   successLooksLike: string;
+  timeline?: CampaignTimeline;
 }
 
 // Tiers only expose a *minimum* cost each (no per-tier maximum), so the
 // displayed range spans the lowest targeted tier's min cost to the highest
 // targeted tier's min cost — independent of the campaign's totalBudget.
-export function getCampaignBudgetRange(campaign: Campaign): {
+//
+// Tiers already carry both a Naira and a USD minimum cost, so displaying a
+// USD campaign's tier range in Naira for a Nigerian creator just means
+// reading the Naira column — no live FX rate needed. The one case that does
+// need a live rate is the no-tiers fallback below, since totalBudget only
+// exists in the campaign's own currency.
+export function getCampaignBudgetRange(
+  campaign: Campaign,
+  displayOpts?: DisplayCurrencyOptions,
+): {
   label: string;
   min: number;
   max: number;
@@ -46,8 +63,10 @@ export function getCampaignBudgetRange(campaign: Campaign): {
     : campaign.creatorCategory
       ? [campaign.creatorCategory]
       : [];
-  const currency = (campaign.currency ?? 'NGN').toUpperCase();
-  const isUsd = currency === 'USD';
+  const campaignCurrency = (campaign.currency ?? 'NGN').toUpperCase();
+  const displayInNgn = !!displayOpts?.displayInNgn;
+  const currency = displayInNgn ? 'NGN' : campaignCurrency;
+  const isUsd = !displayInNgn && campaignCurrency === 'USD';
   const isAmplify = campaign.goal !== 'Create Content';
 
   const values = tiers.map((t) =>
@@ -61,7 +80,10 @@ export function getCampaignBudgetRange(campaign: Campaign): {
   );
 
   if (values.length === 0) {
-    const budget = campaign.totalBudget;
+    let budget = campaign.totalBudget;
+    if (displayInNgn && campaignCurrency === 'USD' && displayOpts?.usdToNgnRate) {
+      budget = convertUsdToNgn(budget, displayOpts.usdToNgnRate);
+    }
     return { label: formatCurrency(budget, currency), min: budget, max: budget };
   }
 
@@ -74,17 +96,28 @@ export function getCampaignBudgetRange(campaign: Campaign): {
   return { label, min, max };
 }
 
-export function mapCampaign(c: Campaign): MappedExploreCampaign {
-  const currency = c.currency ?? 'NGN';
+export function mapCampaign(
+  c: Campaign,
+  displayOpts?: DisplayCurrencyOptions,
+): MappedExploreCampaign {
+  const campaignCurrency = (c.currency ?? 'NGN').toUpperCase();
+  const displayInNgn = !!displayOpts?.displayInNgn;
+  const currency = displayInNgn ? 'NGN' : campaignCurrency;
   const deadline = getCampaignDeadlineInfo(c.timeline);
-  const feeRange = getCampaignBudgetRange(c);
+  const feeRange = getCampaignBudgetRange(c, displayOpts);
+
+  let totalBudget = c.totalBudget;
+  if (displayInNgn && campaignCurrency === 'USD' && displayOpts?.usdToNgnRate) {
+    totalBudget = convertUsdToNgn(totalBudget, displayOpts.usdToNgnRate);
+  }
+
   return {
     id: c.id,
     title: c.title,
     brand: c.brand?.username || 'Unknown Brand',
-    budget: formatCurrency(c.totalBudget, currency),
-    budgetMin: c.totalBudget,
-    budgetMax: c.totalBudget,
+    budget: formatCurrency(totalBudget, currency),
+    budgetMin: totalBudget,
+    budgetMax: totalBudget,
     feeRangeLabel: feeRange.label,
     feeRangeMin: feeRange.min,
     feeRangeMax: feeRange.max,
@@ -112,6 +145,7 @@ export function mapCampaign(c: Campaign): MappedExploreCampaign {
     contentGuidelines: c.contentGuidelines || { dos: [], donts: [] },
     usageRights: c.usageRights || '',
     successLooksLike: c.successLooksLike || '',
+    timeline: c.timeline,
   };
 }
 

@@ -8,7 +8,10 @@ import { mapUserProfileToAuthUser } from '@/lib/mapUserProfile';
 import { useDebouncedValue } from './useDebounceValue';
 import { useRouter } from 'next/navigation';
 
-async function hydrateFullProfile(userId: string, updateUser: (patch: Partial<AuthUser>) => void) {
+export async function hydrateFullProfile(
+  userId: string,
+  updateUser: (patch: Partial<AuthUser>) => void,
+) {
   try {
     const { data: fullProfile } = await authApi.getUserProfile(userId);
     updateUser(mapUserProfileToAuthUser(fullProfile));

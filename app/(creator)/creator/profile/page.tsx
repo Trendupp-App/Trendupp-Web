@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ComboBox } from '@/shared/ComboBox';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import {
   IMPACT_BADGE_META,
@@ -209,7 +210,7 @@ const INITIAL_PROFILE: CreatorProfile = {
 export default function CreatorProfilePage() {
   // Queries & Mutations
   const { user, updateUser } = useAuthStore();
-  const { data: countries } = useCountries();
+  const { data: countries, isLoading: loadingCountries } = useCountries();
   const { data: nationalities } = useNationalities();
 
   // States
@@ -232,15 +233,14 @@ export default function CreatorProfilePage() {
     return INITIAL_PROFILE;
   });
 
-  // Find country ID by name to load state list
-  const currentCountryObj = countries?.find(
-    (c) => c.name.toLowerCase() === profile.location.split(',')[1]?.trim().toLowerCase(),
-  );
-  const currentCountryId = currentCountryObj?.id;
-
-  const { data: states } = useStates(currentCountryId);
   const { data: allNiches } = useNiches();
   const { data: userDetail } = useUserDetail(user?.id || null);
+
+  // Derived straight from the saved user record (not from the display string
+  // below) so it stays correct immediately after a save, without depending on
+  // `profile.location` having already been re-parsed on a prior render.
+  const currentCountryId = (userDetail || user)?.countryId ?? undefined;
+  const { data: states } = useStates(currentCountryId);
   const { data: serverReviews } = useCreatorReviews(user?.id || null);
   const { data: myApps } = useMyApplications();
   const { data: socialConnections } = useSocialConnections();
@@ -554,8 +554,10 @@ export default function CreatorProfilePage() {
   const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
   const [editAvatarPreview, setEditAvatarPreview] = useState<string>('');
   const [editCountry, setEditCountry] = useState('Nigeria');
+  const [editCountryId, setEditCountryId] = useState<string | undefined>();
   const [editState, setEditState] = useState('Lagos');
   const [editNationality, setEditNationality] = useState('Nigeria');
+  const { data: editStates = [] } = useStates(editCountryId);
   const [editBio, setEditBio] = useState('');
   const [editNiches, setEditNiches] = useState<string[]>([]);
   const [editTab, setEditTab] = useState<'personal' | 'niche' | 'social' | 'payment'>('personal');
@@ -572,8 +574,12 @@ export default function CreatorProfilePage() {
 
     // Parse location
     const locParts = profile.location.split(',').map((s) => s.trim());
+    const initialCountry = locParts[1] || 'Nigeria';
     setEditState(locParts[0] || 'Lagos');
-    setEditCountry(locParts[1] || 'Nigeria');
+    setEditCountry(initialCountry);
+    setEditCountryId(
+      countries?.find((c) => c.name.toLowerCase() === initialCountry.trim().toLowerCase())?.id,
+    );
     setEditNationality(profile.nationality || 'Nigeria');
 
     setEditBio(profile.bio);
@@ -583,6 +589,14 @@ export default function CreatorProfilePage() {
     setEditAvatarPreview(profile.image);
     setAvatarError('');
     setIsEditProfileOpen(true);
+  };
+
+  // Action: Country changed in the edit form — reset state (it belongs to the
+  // old country) and load the new country's state list.
+  const handleEditCountryChange = (countryName: string) => {
+    setEditCountry(countryName);
+    setEditState('');
+    setEditCountryId(countries?.find((c) => c.name === countryName)?.id);
   };
 
   // Action: Save Profile Settings
@@ -621,7 +635,9 @@ export default function CreatorProfilePage() {
     );
     const nationalityId = nationalityObj?.id || '';
 
-    const stateObj = states?.find((s) => s.name.toLowerCase() === editState.trim().toLowerCase());
+    const stateObj = editStates.find(
+      (s) => s.name.toLowerCase() === editState.trim().toLowerCase(),
+    );
     const stateId = stateObj?.id || '';
 
     const formData = new FormData();
@@ -640,9 +656,15 @@ export default function CreatorProfilePage() {
     updatePersonalInfoMutation.mutate(formData, {
       onSuccess: ({ data }) => {
         const u = data?.user || data;
-        if (u) {
-          updateUser(u);
-        }
+        // Merge in the country/state/nationality IDs we already resolved
+        // locally rather than relying on the response echoing them back —
+        // guarantees the store is correct even if the API response omits them.
+        updateUser({
+          ...u,
+          ...(countryId && { countryId }),
+          ...(stateId && { stateId }),
+          ...(nationalityId && { nationalityId }),
+        });
         setProfile((prev) => ({
           ...prev,
           name: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() || prev.name,
@@ -650,6 +672,8 @@ export default function CreatorProfilePage() {
           email: u?.email || '',
           bio: u?.bio || '',
           image: u?.avatarUrl || prev.image,
+          location: editState ? `${editState}, ${editCountry}` : editCountry || prev.location,
+          nationality: editNationality || prev.nationality,
         }));
         setIsEditProfileOpen(false);
       },
@@ -1678,24 +1702,14 @@ export default function CreatorProfilePage() {
                     <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                       Country of Residence
                     </label>
-                    <div className="relative w-full">
-                      <select
-                        value={editCountry}
-                        onChange={(e) => setEditCountry(e.target.value)}
-                        className="appearance-none bg-white w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 pr-8 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
-                      >
-                        <option value="Nigeria">Nigeria</option>
-                        <option value="Ghana">Ghana</option>
-                        <option value="Kenya">Kenya</option>
-                        <option value="South Africa">South Africa</option>
-                        <option value="United Kingdom">United Kingdom</option>
-                        <option value="United States">United States</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3.5 top-3.5 text-[#7a7a9a] pointer-events-none"
-                      />
-                    </div>
+                    <ComboBox
+                      options={(countries ?? []).map((c) => ({ value: c.name, label: c.name }))}
+                      value={editCountry}
+                      onValueChange={handleEditCountryChange}
+                      placeholder="Select Country"
+                      searchPlaceholder="Search country..."
+                      loading={loadingCountries}
+                    />
                   </div>
 
                   {/* State */}
@@ -1703,23 +1717,14 @@ export default function CreatorProfilePage() {
                     <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                       State
                     </label>
-                    <div className="relative w-full">
-                      <select
-                        value={editState}
-                        onChange={(e) => setEditState(e.target.value)}
-                        className="appearance-none bg-white w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 pr-8 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
-                      >
-                        <option value="Lagos">Lagos</option>
-                        <option value="Abuja">Abuja</option>
-                        <option value="Kano">Kano</option>
-                        <option value="Rivers">Rivers</option>
-                        <option value="Oyo">Oyo</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3.5 top-3.5 text-[#7a7a9a] pointer-events-none"
-                      />
-                    </div>
+                    <ComboBox
+                      options={editStates.map((s) => ({ value: s.name, label: s.name }))}
+                      value={editState}
+                      onValueChange={setEditState}
+                      placeholder="Select State"
+                      searchPlaceholder="Search state..."
+                      disabled={!editCountryId}
+                    />
                   </div>
 
                   {/* Nationality */}
@@ -1727,24 +1732,13 @@ export default function CreatorProfilePage() {
                     <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
                       Nationality
                     </label>
-                    <div className="relative w-full">
-                      <select
-                        value={editNationality}
-                        onChange={(e) => setEditNationality(e.target.value)}
-                        className="appearance-none bg-white w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 pr-8 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
-                      >
-                        <option value="Nigeria">Nigeria</option>
-                        <option value="Ghanaian">Ghanaian</option>
-                        <option value="Kenyan">Kenyan</option>
-                        <option value="South African">South African</option>
-                        <option value="British">British</option>
-                        <option value="American">American</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3.5 top-3.5 text-[#7a7a9a] pointer-events-none"
-                      />
-                    </div>
+                    <ComboBox
+                      options={(nationalities ?? []).map((n) => ({ value: n.name, label: n.name }))}
+                      value={editNationality}
+                      onValueChange={setEditNationality}
+                      placeholder="Select Nationality"
+                      searchPlaceholder="Search nationality..."
+                    />
                   </div>
 
                   {/* Bio */}

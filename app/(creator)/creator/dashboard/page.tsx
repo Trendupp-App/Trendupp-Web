@@ -16,8 +16,10 @@ import { useAuthStore } from '@/store/authStore';
 import { formatCurrency } from '@/utils/Utilities';
 import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
 import { getCampaignBudgetRange } from '@/lib/campaignMappers';
+import { useDisplayCurrency } from '@/hooks/useExchangeRate';
+import { convertUsdToNgn } from '@/utils/Utilities';
 
-type FilterType = 'all' | 'live' | 'past';
+type FilterType = 'all' | 'live' | 'past' | 'paused' | 'cancelled';
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
@@ -25,10 +27,17 @@ export default function CreatorDashboardPage() {
   const isProfileCompleted = user?.onboardingPercentage === 100;
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
+  const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
 
   // Fetch campaigns from backend
+  const statusForFilter: Record<Exclude<FilterType, 'all'>, Campaign['status']> = {
+    live: 'live',
+    past: 'completed',
+    paused: 'paused',
+    cancelled: 'cancelled',
+  };
   const { data: campaignsResponse, isLoading } = useCampaigns({
-    status: activeFilter === 'all' ? undefined : activeFilter === 'live' ? 'live' : 'completed',
+    status: activeFilter === 'all' ? undefined : statusForFilter[activeFilter],
     page: 1,
     limit: 6,
   });
@@ -36,14 +45,23 @@ export default function CreatorDashboardPage() {
 
   const mappedCampaigns = liveCampaigns.map((c: Campaign) => {
     const deadline = getCampaignDeadlineInfo(c.timeline);
-    const feeRange = getCampaignBudgetRange(c);
+    const feeRange = getCampaignBudgetRange(c, { displayInNgn, usdToNgnRate });
+
+    const campaignCurrency = (c.currency ?? 'NGN').toUpperCase();
+    const displayCurrency = displayInNgn ? 'NGN' : campaignCurrency;
+    let totalBudget = c.totalBudget;
+    if (displayInNgn && campaignCurrency === 'USD' && usdToNgnRate) {
+      totalBudget = convertUsdToNgn(totalBudget, usdToNgnRate);
+    }
+
     return {
       id: c.id,
       title: c.title,
       brand: c.brand?.username || 'Unknown Brand',
-      budget: formatCurrency(c.totalBudget, c.currency ?? 'NGN'),
-      budgetMin: c.totalBudget,
-      budgetMax: c.totalBudget,
+      budget: formatCurrency(totalBudget, displayCurrency),
+      budgetMin: totalBudget,
+      budgetMax: totalBudget,
+      currency: displayCurrency,
       feeRangeLabel: feeRange.label,
       feeRangeMin: feeRange.min,
       feeRangeMax: feeRange.max,
@@ -70,6 +88,7 @@ export default function CreatorDashboardPage() {
       contentGuidelines: c.contentGuidelines || { dos: [], donts: [] },
       usageRights: c.usageRights || '',
       successLooksLike: c.successLooksLike || '',
+      timeline: c.timeline,
     };
   });
 
@@ -112,7 +131,7 @@ export default function CreatorDashboardPage() {
         {/* Filter Headers */}
         <div className="flex items-center justify-between border-b border-[#e8e6f0]/40 pb-4 overflow-hidden">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide shrink-0 max-w-full">
-            {(['all', 'live', 'past'] as const).map((filter) => (
+            {(['all', 'live', 'past', 'paused', 'cancelled'] as const).map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
@@ -126,6 +145,8 @@ export default function CreatorDashboardPage() {
                 {filter === 'all' && 'All'}
                 {filter === 'live' && 'Live Campaigns'}
                 {filter === 'past' && 'Past Campaigns'}
+                {filter === 'paused' && 'Paused Campaigns'}
+                {filter === 'cancelled' && 'Cancelled Campaigns'}
               </button>
             ))}
           </div>
@@ -136,7 +157,13 @@ export default function CreatorDashboardPage() {
           <div className="flex items-center gap-2 text-[#1a1a2e]">
             <span className="text-base sm:text-lg">🔥</span>
             <h3 className="text-base font-bold tracking-tight">
-              {activeFilter === 'past' ? 'Past Campaigns' : 'Live Campaigns'}
+              {activeFilter === 'past'
+                ? 'Past Campaigns'
+                : activeFilter === 'paused'
+                  ? 'Paused Campaigns'
+                  : activeFilter === 'cancelled'
+                    ? 'Cancelled Campaigns'
+                    : 'Live Campaigns'}
             </h3>
           </div>
           <button

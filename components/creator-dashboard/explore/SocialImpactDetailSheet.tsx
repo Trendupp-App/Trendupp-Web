@@ -225,7 +225,18 @@ export default function SocialImpactDetailSheet({
                 </div>
               )}
 
-              {showSubmitLiveLink &&
+              {(campaign.status === 'paused' || campaign.status === 'cancelled') && (
+                <div className="bg-[#fef2f2] border border-[#fee2e2] rounded-xl p-3.5 flex items-center gap-2 text-left">
+                  <X size={15} className="text-[#dc2626] shrink-0" />
+                  <p className="text-xs font-medium text-[#b91c1c] capitalize">
+                    This campaign has been {campaign.status} by the brand.
+                  </p>
+                </div>
+              )}
+
+              {campaign.status !== 'paused' &&
+                campaign.status !== 'cancelled' &&
+                showSubmitLiveLink &&
                 (hasSubmittedLiveLink ? (
                   <button
                     disabled
@@ -244,7 +255,9 @@ export default function SocialImpactDetailSheet({
                   </button>
                 ))}
 
-              {!hideParticipateButton &&
+              {campaign.status !== 'paused' &&
+                campaign.status !== 'cancelled' &&
+                !hideParticipateButton &&
                 (hasApplied ? (
                   <button
                     disabled

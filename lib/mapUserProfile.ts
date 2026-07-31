@@ -22,5 +22,6 @@ export function mapUserProfileToAuthUser(raw: RawUserProfile): Partial<AuthUser>
     bankAccountNumber: raw.bankAccountNumber,
     bankAccountName: raw.bankAccountName,
     brandRepresentative: raw.brandRepresentative,
+    country: raw.country,
   };
 }

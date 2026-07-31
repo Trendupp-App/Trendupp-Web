@@ -3,63 +3,21 @@
 import { X, Check, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { CampaignTimeline, CampaignTimelineStage } from '@/types/campaign';
-import { formatTimeRemaining } from '@/lib/campaignTimelineStage';
+import type { CampaignTimeline } from '@/types/campaign';
+import { buildTimelineSteps } from '@/lib/campaignTimelineStage';
 
 interface ApplicationSuccessViewProps {
   timeline?: CampaignTimeline;
   onClose: () => void;
 }
 
-function stageOrder(key: string): number {
-  const match = key.match(/^stage(\d+)/);
-  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-}
-
-interface Step {
-  key: string;
-  title: string;
-  subtext: string;
-  status: 'completed' | 'in_progress' | 'pending';
-}
-
-function buildSteps(timeline?: CampaignTimeline): Step[] {
-  const steps: Step[] = [
-    {
-      key: 'application-received',
-      title: 'Application Received',
-      subtext: 'Now',
-      status: 'completed',
-    },
-  ];
-
-  if (!timeline) return steps;
-
-  const stages = Object.entries(timeline).sort(([a], [b]) => stageOrder(a) - stageOrder(b));
-
-  for (const [key, stage] of stages as [string, CampaignTimelineStage][]) {
-    const status: Step['status'] =
-      stage.status === 'completed'
-        ? 'completed'
-        : stage.status === 'in_progress'
-          ? 'in_progress'
-          : 'pending';
-
-    const subtext =
-      status === 'completed'
-        ? 'Completed'
-        : status === 'in_progress'
-          ? (formatTimeRemaining(stage.endedDate) ?? stage.intendedFor ?? 'In progress')
-          : (stage.intendedFor ?? 'Not started');
-
-    steps.push({ key, title: stage.goal, subtext, status });
-  }
-
-  return steps;
-}
-
 export default function ApplicationSuccessView({ timeline, onClose }: ApplicationSuccessViewProps) {
-  const steps = buildSteps(timeline);
+  const steps = buildTimelineSteps(timeline, {
+    key: 'application-received',
+    title: 'Application Received',
+    subtext: 'Now',
+    status: 'completed',
+  });
 
   return (
     <>
