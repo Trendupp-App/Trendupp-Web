@@ -2221,6 +2221,9 @@ export default function CreatorProfilePage() {
                       placeholder="Enter current password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
+                      // "new-password" (not "current-password") is the standard trick to
+                      // stop browsers autofilling the user's saved password into this field.
+                      autoComplete="new-password"
                       className="w-full h-11 border border-[#e8e6f0] rounded-xl pl-10 pr-10 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
                     />
                     <button
@@ -2245,6 +2248,7 @@ export default function CreatorProfilePage() {
                       placeholder="Enter New password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
                       className="w-full h-11 border border-[#e8e6f0] rounded-xl pl-10 pr-10 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
                     />
                     <button
@@ -2269,6 +2273,7 @@ export default function CreatorProfilePage() {
                       placeholder="Confirm password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
                       className="w-full h-11 border border-[#e8e6f0] rounded-xl pl-10 pr-10 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium placeholder-[#b0afc5]"
                     />
                     <button
