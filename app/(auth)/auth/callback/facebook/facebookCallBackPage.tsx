@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import AuthLayout from '@/components/auth/AuthLayout';
 import VerifyLoader from '@/components/skeletons/verifyLoader';
 import {
+  isConnectCallback,
   readSocialConnectPending,
   clearSocialConnectPending,
   completeSocialConnect,
@@ -35,7 +36,16 @@ export default function FacebookCallbackPage() {
     // This redirect URI is shared with the "connect socials" flow — a pending
     // connect state means this callback links an account, not a sign-in.
     const pendingConnect = readSocialConnectPending();
-    if (pendingConnect?.platform === 'facebook') {
+    // Authoritative: only the state echoed back by the platform decides this
+    // is a connect callback. A stale pending entry from an abandoned connect
+    // must never hijack a sign-in — clear it and continue as login.
+    const isConnectFlow =
+      isConnectCallback(state, 'facebook') && pendingConnect?.platform === 'facebook';
+    if (!isConnectFlow && pendingConnect?.platform === 'facebook') {
+      clearSocialConnectPending();
+    }
+
+    if (isConnectFlow && pendingConnect) {
       if (hasExchanged.current) return;
       clearSocialConnectPending();
       const returnTo = pendingConnect.returnTo || '/';
