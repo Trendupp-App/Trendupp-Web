@@ -30,8 +30,14 @@ import { CampaignApplicationDto, Campaign } from '@/types/campaign';
 import { useBrandNames } from '@/hooks/useBrandNames';
 import { useAuthStore } from '@/store/authStore';
 import { getRewardTokensForTier } from '@/constants/creatorTiers';
-import { formatCurrency } from '@/utils/Utilities';
+import { formatCurrency, convertForDisplay } from '@/utils/Utilities';
 import { getActiveDeadline } from '@/lib/campaignTimelineStage';
+import { useDisplayCurrency } from '@/hooks/useExchangeRate';
+
+interface DisplayCurrencyOpts {
+  displayInNgn?: boolean;
+  usdToNgnRate?: number;
+}
 
 interface SubmissionItem {
   id?: string;
@@ -43,6 +49,7 @@ interface SubmissionItem {
 function mapAppToWorkCampaign(
   app: CampaignApplicationDto,
   brandNameById: Record<string, string> = {},
+  displayOpts: DisplayCurrencyOpts = {},
 ): WorkCampaign {
   const campaign = app.campaign || ({} as Campaign);
   const brandName =
@@ -100,15 +107,22 @@ function mapAppToWorkCampaign(
     | SubmissionItem
     | undefined;
 
+  const { amount: displayBudget, currency: displayCurrency } = convertForDisplay(
+    campaign.totalBudget || 0,
+    campaign.currency ?? 'NGN',
+    displayOpts,
+  );
+
   return {
     id: app.id,
     campaignId: campaign.id,
+    campaignStatus: campaign.status,
     submissionId: latestSubmission?.id,
     title: campaign.title || 'Untitled Campaign',
     brand: brandName,
-    currency: campaign.currency ?? 'NGN',
-    budgetMinMax: formatCurrency(campaign.totalBudget || 0, campaign.currency ?? 'NGN'),
-    budgetString: formatCurrency(campaign.totalBudget || 0, campaign.currency ?? 'NGN'),
+    currency: displayCurrency,
+    budgetMinMax: formatCurrency(displayBudget, displayCurrency),
+    budgetString: formatCurrency(displayBudget, displayCurrency),
     daysLeft,
     daysLeftNumber,
     status,
@@ -121,7 +135,7 @@ function mapAppToWorkCampaign(
     niches: campaign.creatorNiche?.name ? [campaign.creatorNiche.name] : [],
     goal: campaign.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
     createdAt: app.createdAt,
-    budgetMax: campaign.totalBudget || 0,
+    budgetMax: displayBudget,
     actualAmount: app.feeRequest,
     revisionComment,
     deliverables: campaign.deliverables || [],
@@ -147,6 +161,7 @@ export default function MyWorkPage() {
   const { user } = useAuthStore();
   const { data: creatorCategories = [] } = useCreatorCategories();
   const myRewardTokens = getRewardTokensForTier(creatorCategories, user?.assignedTier);
+  const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
 
   const initialTab: PrimaryTab = useMemo(
     () => (searchParams.get('tab') === 'social-impact' ? 'Social impact' : 'Active'),
@@ -195,7 +210,9 @@ export default function MyWorkPage() {
   const brandIds = myApps.map((app) => app.campaign?.brandId);
   const { nameById: brandNameById } = useBrandNames(brandIds);
 
-  const campaigns = myApps.map((app) => mapAppToWorkCampaign(app, brandNameById));
+  const campaigns = myApps.map((app) =>
+    mapAppToWorkCampaign(app, brandNameById, { displayInNgn, usdToNgnRate }),
+  );
 
   // Handle link submission (moves campaign to "Under Review")
   const handleSubmitLink = (link: string) => {

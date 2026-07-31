@@ -18,6 +18,7 @@ import {
   useRaiseDispute,
   useApproveLivePost,
 } from '@/hooks/useCampaign';
+import { ensureHttpUrl } from '@/utils/Utilities';
 import UserAvatar from '@/shared/UserAvatar';
 import SubmissionCardSkeleton from '@/components/skeletons/SubmissionCardSkeleton';
 import FeedbackModal from '@/shared/FeedBackModal';
@@ -190,8 +191,19 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
 
   const isCampaignFullyComplete =
     !!submissions && submissions.length > 0 && submissions.every((s) => s.status === 'done');
+  const actionsDisabled = campaign.status === 'paused' || campaign.status === 'cancelled';
   return (
     <div className="flex flex-col gap-4">
+      {actionsDisabled && (
+        <div className="flex items-start gap-3 bg-[#fef2f2] rounded-lg px-4 py-3.5">
+          <Info size={16} className="text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm text-[#b91c1c] leading-relaxed capitalize">
+            This campaign has been {campaign.status}. Deliverables are read-only and no further
+            action can be taken.
+          </p>
+        </div>
+      )}
+
       {isCampaignFullyComplete ? (
         <div className="flex items-start gap-3 bg-emerald-50 rounded-lg px-4 py-3.5">
           <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
@@ -304,7 +316,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
                 <p className="text-xs font-semibold text-[#9a99b0] mb-1">CONTENT LINK</p>
 
                 <a
-                  href={sub.draftLink!}
+                  href={ensureHttpUrl(sub.draftLink!)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
@@ -375,7 +387,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
                         </p>
 
                         <a
-                          href={entry.url}
+                          href={ensureHttpUrl(entry.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
@@ -387,7 +399,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
                     ))}
                   </div>
 
-                  {!isCampaignComplete && (
+                  {!isCampaignComplete && !actionsDisabled && (
                     <div className="px-4 py-3 border-t border-[#e8e6f0] bg-[#faf9fc]">
                       <button
                         onClick={() => handleRequestLiveApproval(sub.id, creatorName)}
@@ -402,7 +414,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
               )}
 
               {/* First review — Approve or Request revision */}
-              {sub.status === 'pending_approval' && (
+              {!actionsDisabled && sub.status === 'pending_approval' && (
                 <div className="flex items-center gap-3 pt-1">
                   <button
                     onClick={() => handleRequestApprove(sub.id, creatorName)}
@@ -422,7 +434,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
               )}
 
               {/* After resubmission — Approve or Resolve conflict (revision quota is spent) */}
-              {isRevisionSent && (
+              {!actionsDisabled && isRevisionSent && (
                 <div className="flex items-center gap-3 pt-1">
                   <button
                     onClick={() => handleRequestApprove(sub.id, creatorName)}
@@ -442,7 +454,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
               )}
 
               {/* Leave a review — once this creator's deliverable is fully complete */}
-              {sub.status === 'done' && (
+              {!actionsDisabled && sub.status === 'done' && (
                 <div className="pt-1">
                   <button
                     onClick={() => handleOpenReview(sub, creatorName)}

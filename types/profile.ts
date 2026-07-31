@@ -165,6 +165,7 @@ export interface RawUserProfile {
   bankAccountNumber: string | null;
   bankAccountName: string | null;
   socialsConnected: SocialsConnected;
+  country: { id: string; name: string } | null;
   brandRepresentative: {
     firstName: string | null;
     lastName: string | null;

@@ -96,10 +96,12 @@ export function ComboBox({
           />
           <CommandList
             ref={listRef}
-            className="auth-scrollbar"
-            style={{
-              maxHeight: 'min(16rem, var(--radix-popover-content-available-height, 16rem))',
-            }}
+            className="auth-scrollbar max-h-64"
+            // This ComboBox is often opened from inside a modal Dialog/Sheet, whose
+            // scroll lock (react-remove-scroll) can swallow wheel events meant for
+            // this portaled popover's own list. Stop propagation so the browser's
+            // native scroll on the list itself always wins.
+            onWheel={(e) => e.stopPropagation()}
           >
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>

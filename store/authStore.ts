@@ -31,6 +31,7 @@ export interface AuthUser {
   bankAccountName: string | null;
   nationalityId?: string | null;
   countryId?: string | null;
+  country?: { id: string; name: string } | null;
   stateId?: string | null;
   city?: string | null;
   instagramUsername?: string | null;

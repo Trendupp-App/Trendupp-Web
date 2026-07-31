@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useCampaignPlatforms, useApplyCampaign } from '@/hooks/useCampaign';
 import ApplicationSuccessView from './ApplicationSuccessView';
 import type { CampaignTimeline } from '@/types/campaign';
+import { buildTimelineSteps } from '@/lib/campaignTimelineStage';
 
 export interface MappedCampaign {
   id: string;
@@ -15,6 +16,7 @@ export interface MappedCampaign {
   brand: string;
   budget: string;
   budgetMax?: number;
+  currency?: string;
   feeRangeLabel?: string;
   feeRangeMin?: number;
   feeRangeMax?: number;
@@ -32,6 +34,7 @@ export interface MappedCampaign {
   usageRights?: string;
   successLooksLike?: string;
   status?: string;
+  timeline?: CampaignTimeline;
 }
 
 interface CampaignDetailsDrawerProps {
@@ -105,6 +108,11 @@ export default function CampaignDetailsDrawer({
     onClose();
   };
 
+  // campaign.feeRangeMin/Max/Label already arrive display-currency-converted
+  // (see useDisplayCurrency + mapCampaign/getCampaignBudgetRange), so this
+  // just compares against whatever was handed in — no conversion here.
+  const displayFeeRangeLabel = campaign?.feeRangeLabel ?? campaign?.budget;
+
   const isFormValid = contentTitle.length >= 20 && feeRequest.trim() !== '';
   const feeRequestNumber = Number(feeRequest.replace(/[^0-9]/g, '')) || 0;
   const feeExceedsBudget =
@@ -149,6 +157,8 @@ export default function CampaignDetailsDrawer({
   };
 
   if (!campaign) return null;
+
+  const timelineSteps = buildTimelineSteps(campaign.timeline);
 
   return (
     <div
@@ -444,85 +454,42 @@ export default function CampaignDetailsDrawer({
                 {activeTab === 'timeline' && (
                   <div className="flex flex-col gap-5">
                     <h4 className="text-[13px] font-bold text-[#1a1a2e] mb-1">Campaign Timeline</h4>
-                    <div className="flex flex-col gap-6 pl-8 ml-3 border-l border-[#e8e6f0]/75 relative select-none">
-                      {/* Step 1 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                          <Check size={10} className="stroke-[3]" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Brief issued</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            May 28, 2026
-                          </span>
-                        </div>
+                    {timelineSteps.length === 0 ? (
+                      <p className="text-xs font-light text-[#9a99b0] leading-relaxed">
+                        Timeline details aren&apos;t available for this campaign yet.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-6 pl-8 ml-3 border-l border-[#e8e6f0]/75 relative select-none">
+                        {timelineSteps.map((step) => (
+                          <div key={step.key} className="relative">
+                            <div
+                              className={cn(
+                                'absolute -left-[42px] top-0.5 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center select-none',
+                                step.status === 'completed'
+                                  ? 'bg-[#00c37b] text-white'
+                                  : step.status === 'in_progress'
+                                    ? 'bg-brand-pink text-white'
+                                    : 'bg-[#e8e6f0] text-[#9a99b0]',
+                              )}
+                            >
+                              {step.status === 'completed' ? (
+                                <Check size={10} className="stroke-[3]" />
+                              ) : step.status === 'in_progress' ? (
+                                <Clock size={10} />
+                              ) : (
+                                <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <h4 className="text-xs font-bold text-[#1a1a2e]">{step.title}</h4>
+                              <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
+                                {step.subtext}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-
-                      {/* Step 2 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#00c37b] border-2 border-white flex items-center justify-center text-white select-none">
-                          <Check size={10} className="stroke-[3]" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Escrow confirmed</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            May 30, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 3 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Content deadline</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 5, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 4 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Brand review (48h)</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 7, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 5 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Post live deadline</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 10, 2026
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Step 6 */}
-                      <div className="relative">
-                        <div className="absolute -left-[42px] top-0.5 w-5 h-5 rounded-full bg-[#e8e6f0] border-2 border-white flex items-center justify-center text-[#9a99b0] select-none">
-                          <div className="w-1.5 h-1.5 bg-[#9a99b0] rounded-full" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <h4 className="text-xs font-bold text-[#1a1a2e]">Payment release</h4>
-                          <span className="text-[10px] text-[#9a99b0] font-light mt-0.5">
-                            June 11, 2026
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -752,18 +719,16 @@ export default function CampaignDetailsDrawer({
                     />
                   </div>
                   <span className="text-[10px] text-[#7a7a9a] font-light leading-none px-0.5 mt-0.5">
-                    Range: {campaign.feeRangeLabel ?? campaign.budget}
+                    Range: {displayFeeRangeLabel}
                   </span>
                   {feeExceedsBudget && (
                     <span className="text-[10px] text-red-500 font-medium leading-relaxed px-0.5 mt-0.5">
-                      This exceeds the campaign&apos;s budget of{' '}
-                      {campaign.feeRangeLabel ?? campaign.budget}
+                      This exceeds the campaign&apos;s budget of {displayFeeRangeLabel}
                     </span>
                   )}
                   {feeBelowRange && (
                     <span className="text-[10px] text-red-500 font-medium leading-relaxed px-0.5 mt-0.5">
-                      This is below the recommended range of{' '}
-                      {campaign.feeRangeLabel ?? campaign.budget}
+                      This is below the recommended range of {displayFeeRangeLabel}
                     </span>
                   )}
                 </div>

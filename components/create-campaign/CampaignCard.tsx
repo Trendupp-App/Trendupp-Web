@@ -48,6 +48,16 @@ const STATUS_CONFIG: Record<
     badgeCls: 'text-slate-600 border-slate-200',
     ctaLabel: 'View summary',
   },
+  paused: {
+    label: 'Paused',
+    badgeCls: 'text-amber-600 border-amber-100',
+    ctaLabel: 'View progress',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    badgeCls: 'text-red-600 border-red-100',
+    ctaLabel: 'View summary',
+  },
   submitted: {
     label: 'Submitted',
     badgeCls: 'text-purple-600 border-purple-100',

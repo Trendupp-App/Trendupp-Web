@@ -55,6 +55,30 @@ export function formatCompactCurrency(amount: number, currency = 'USD'): string 
   return `${symbol}${compact}`;
 }
 
+// Converts a USD amount to NGN using a live rate (see hooks/useExchangeRate.ts).
+// Kept as a pure function so the conversion math is testable independent of
+// the fetch that supplies the rate.
+export function convertUsdToNgn(amountUsd: number, usdToNgnRate: number): number {
+  return Math.round(amountUsd * usdToNgnRate);
+}
+
+// General-purpose wrapper around convertUsdToNgn for money coming from an API
+// in an arbitrary source currency (payout balances, transactions, escrow —
+// anywhere the amount isn't already routed through campaignMappers). Mirrors
+// the same displayInNgn/usdToNgnRate shape used across the app so call sites
+// built on useDisplayCurrency() can pass its result straight through.
+export function convertForDisplay(
+  amount: number,
+  sourceCurrency: string,
+  opts: { displayInNgn?: boolean; usdToNgnRate?: number },
+): { amount: number; currency: string } {
+  const normalized = (sourceCurrency || 'NGN').toUpperCase();
+  if (opts.displayInNgn && normalized === 'USD' && opts.usdToNgnRate) {
+    return { amount: convertUsdToNgn(amount, opts.usdToNgnRate), currency: 'NGN' };
+  }
+  return { amount, currency: opts.displayInNgn ? 'NGN' : normalized };
+}
+
 // Strips everything but digits — use on the raw input value before storing
 // in form state, so the stored value stays a plain numeric string.
 export function stripNonDigits(value: string): string {
@@ -66,6 +90,13 @@ export function formatNumberWithCommas(value: string): string {
   if (!value) return '';
   const num = Number(value);
   return Number.isNaN(num) ? '' : num.toLocaleString('en-US');
+}
+
+// Backend-submitted links (draft/live content URLs) aren't guaranteed to include
+// a protocol. Without one, an <a href> treats the value as relative to the
+// current page instead of navigating out — this normalizes it so clicks work.
+export function ensureHttpUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
 export function estimateReadTime(html: string): string {

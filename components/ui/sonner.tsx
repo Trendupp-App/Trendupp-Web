@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { Toaster as Sonner, type ToasterProps } from 'sonner';
+import { toast, Toaster as Sonner, type ToasterProps } from 'sonner';
 import {
   CircleCheckIcon,
   InfoIcon,
@@ -9,6 +9,17 @@ import {
   OctagonXIcon,
   Loader2Icon,
 } from 'lucide-react';
+
+// Error toasts tend to carry more to read than a quick "Saved!", so give
+// them longer on screen than Sonner's 4s default. `toast` is a shared
+// singleton (every `import { toast } from 'sonner'` across the app gets
+// this same object), so patching `.error` here — where the Toaster is
+// already configured — applies everywhere without touching every call site.
+const ERROR_TOAST_DURATION = 6000;
+type ErrorArgs = Parameters<typeof toast.error>;
+const originalError = toast.error;
+toast.error = (message: ErrorArgs[0], data?: ErrorArgs[1]) =>
+  originalError(message, { duration: ERROR_TOAST_DURATION, ...data });
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = 'system' } = useTheme();

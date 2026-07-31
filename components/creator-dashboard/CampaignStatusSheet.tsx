@@ -91,6 +91,8 @@ export default function CampaignStatusSheet({
   if (!campaign) return null;
 
   const showTimer = campaign.status !== 'Payment released' && campaign.status !== 'Declined';
+  const isPausedOrCancelled =
+    campaign.campaignStatus === 'paused' || campaign.campaignStatus === 'cancelled';
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -287,7 +289,17 @@ export default function CampaignStatusSheet({
 
           {/* Actions */}
           <div className="mt-5 flex flex-col gap-3">
-            {campaign.status === 'In progress' && (
+            {isPausedOrCancelled && (
+              <div className="bg-[#fef2f2] border border-[#fee2e2] rounded-2xl p-4 flex items-center gap-2 text-left">
+                <AlertCircle size={15} className="text-[#dc2626] shrink-0" />
+                <p className="text-xs font-medium text-[#b91c1c] capitalize">
+                  This campaign has been {campaign.campaignStatus} by the brand. No further action
+                  can be taken on it right now.
+                </p>
+              </div>
+            )}
+
+            {!isPausedOrCancelled && campaign.status === 'In progress' && (
               <button
                 onClick={() => onSubmitLink?.(campaign)}
                 className="w-full bg-brand-pink hover:bg-brand-pink/95 text-white text-xs font-bold py-3.5 rounded-2xl transition-all shadow-[0_2px_8px_rgba(215,23,111,0.15)] flex items-center justify-center gap-1.5 cursor-pointer"
@@ -297,7 +309,7 @@ export default function CampaignStatusSheet({
               </button>
             )}
 
-            {campaign.status === 'Revision requested' && (
+            {!isPausedOrCancelled && campaign.status === 'Revision requested' && (
               <button
                 onClick={() => onSubmitLink?.(campaign)}
                 className="w-full border border-amber-500/80 bg-amber-50/50 hover:bg-amber-50 text-amber-700 text-xs font-bold py-3.5 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
@@ -307,7 +319,7 @@ export default function CampaignStatusSheet({
               </button>
             )}
 
-            {campaign.status === 'Approved' && (
+            {!isPausedOrCancelled && campaign.status === 'Approved' && (
               <button
                 onClick={() => onSubmitProof?.(campaign)}
                 className="w-full bg-brand-pink hover:bg-brand-pink/95 text-white text-xs font-bold py-3.5 rounded-2xl transition-all shadow-[0_2px_8px_rgba(215,23,111,0.15)] flex items-center justify-center gap-1.5 cursor-pointer"
@@ -317,7 +329,7 @@ export default function CampaignStatusSheet({
               </button>
             )}
 
-            {campaign.status === 'Selected' && (
+            {!isPausedOrCancelled && campaign.status === 'Selected' && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onAcceptOffer?.(campaign)}
@@ -342,7 +354,7 @@ export default function CampaignStatusSheet({
               <ChevronRight size={14} />
             </button>
 
-            {onRaiseDispute && campaign.status !== 'Payment released' && (
+            {!isPausedOrCancelled && onRaiseDispute && campaign.status !== 'Payment released' && (
               <button
                 onClick={() => onRaiseDispute(campaign)}
                 className="w-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 text-xs font-semibold py-3.5 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
