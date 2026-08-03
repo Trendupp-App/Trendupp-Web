@@ -42,6 +42,7 @@ export default function UserAvatar({ avatarUrl, initials, className, size = 36 }
           src={resolvedUrl}
           alt="User avatar"
           fill
+          sizes={`${size}px`}
           className="object-cover"
           onError={() => setImgError(true)}
         />

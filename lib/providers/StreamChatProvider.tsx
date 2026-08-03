@@ -173,14 +173,19 @@ export default function StreamChatProvider({ children }: { children: React.React
 
     const connect = async () => {
       try {
-        await client.connectUser(
-          {
-            id: user.id,
-            name: `${user.firstName} ${user.lastName}`.trim(),
-            image: user.avatarUrl || undefined,
-          },
-          token,
-        );
+        // Already connected as this user (e.g. React Strict Mode's dev-only
+        // double-invoke of this effect) — reuse the existing connection
+        // instead of calling connectUser again.
+        if (client.userID !== user.id) {
+          await client.connectUser(
+            {
+              id: user.id,
+              name: `${user.firstName} ${user.lastName}`.trim(),
+              image: user.avatarUrl || undefined,
+            },
+            token,
+          );
+        }
         if (isSubscribed) {
           setChatClient(client);
           setIsConnected(true);
@@ -200,13 +205,28 @@ export default function StreamChatProvider({ children }: { children: React.React
 
     return () => {
       isSubscribed = false;
-      client.disconnectUser().then(() => {
-        setChatClient(null);
-        setIsConnected(false);
-      });
+      // Only disconnect if connectUser for this user actually completed. Without
+      // this guard, Strict Mode's synchronous mount->cleanup->mount cycle fires
+      // this cleanup while the first connectUser call is still in flight, which
+      // disconnects the singleton client out from under the second (real) connect
+      // and leaves it with no user tokens set — surfacing as "Both secret and user
+      // tokens are not set" the next time a channel is watched.
+      if (client.userID === user.id) {
+        client.disconnectUser().then(() => {
+          setChatClient(null);
+          setIsConnected(false);
+        });
+      }
     };
+    // Deliberately keyed on user?.id rather than the whole `user` object: the
+    // creator/brand layout re-hydrates the full profile once per mount (see
+    // hydrateFullProfile), which replaces `user` with a new object reference for
+    // unrelated field updates (avatar, country, etc.). Depending on the full
+    // object reconnects the GetStream client every time that happens, racing any
+    // in-flight channel operation (e.g. the messages page's channel.watch()) and
+    // surfacing as "Both secret and user tokens are not set".
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken, user, tokenData]);
+  }, [accessToken, user?.id, tokenData]);
 
   // Derived error combining token fetch error and connection error
   const displayError = error || (tokenError ? 'Could not fetch GetStream credentials' : null);

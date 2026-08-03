@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   Info,
   ExternalLink,
   CheckCircle2,
+  MessageCircle,
   MessageCircleWarning,
   ShieldCheck,
   Star,
@@ -24,6 +26,7 @@ import SubmissionCardSkeleton from '@/components/skeletons/SubmissionCardSkeleto
 import FeedbackModal from '@/shared/FeedBackModal';
 import RequestRevisionModal from '@/components/campaign-details/RequestRevisionModal';
 import ResolveConflictModal from '@/components/campaign-details/ResolveConflictModal';
+import RaiseDisputeModal from '@/components/campaign-details/RaiseDisputeModal';
 import { cn } from '@/lib/utils';
 import { useCreateReview } from '@/hooks/useCampaign';
 import LeaveReviewModal from '@/components/campaign-details/LeaveReviewModal';
@@ -99,6 +102,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
   const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
   const [pendingRevision, setPendingRevision] = useState<PendingRevision | null>(null);
   const [pendingDispute, setPendingDispute] = useState<PendingDispute | null>(null);
+  const [showRaiseDispute, setShowRaiseDispute] = useState(false);
 
   const [feedbackCache, setFeedbackCache] = useState<Record<string, string>>({});
 
@@ -152,6 +156,13 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
     );
   }
 
+  function handleSendGeneralDispute(creatorId: string, reason: string) {
+    raiseDispute.mutate(
+      { campaignId: campaign.id, creatorId, reason },
+      { onSuccess: () => setShowRaiseDispute(false) },
+    );
+  }
+
   function handleRequestLiveApproval(submissionId: string, creatorName: string) {
     setPendingLiveApproval({ submissionId, creatorName });
   }
@@ -192,6 +203,20 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
   const isCampaignFullyComplete =
     !!submissions && submissions.length > 0 && submissions.every((s) => s.status === 'done');
   const actionsDisabled = campaign.status === 'paused' || campaign.status === 'cancelled';
+
+  const disputeCreators = submissions
+    ? Array.from(
+        new Map(
+          submissions.map((s) => [
+            s.creator.id,
+            { id: s.creator.id, name: `${s.creator.firstName} ${s.creator.lastName}`.trim() },
+          ]),
+        ).values(),
+      )
+    : [];
+  const canRaiseDispute =
+    !actionsDisabled && !isCampaignFullyComplete && disputeCreators.length > 0;
+
   return (
     <div className="flex flex-col gap-4">
       {actionsDisabled && (
@@ -223,6 +248,18 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
             Brands have 48 hours to review submitted content. Countdown starts when a creator drops
             their submission.
           </p>
+        </div>
+      )}
+
+      {canRaiseDispute && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowRaiseDispute(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-[#f4f3f6] text-[#4a4a6a] border border-[#e8e6f0] hover:bg-[#ece9f4] transition-colors cursor-pointer"
+          >
+            <MessageCircle size={14} />
+            Raise a dispute
+          </button>
         </div>
       )}
 
@@ -555,6 +592,24 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
         open={!!viewingCreatorId}
         onOpenChange={(open) => !open && setViewingCreatorId(null)}
       />
+
+      {/* Floating chat bubble — takes you to the Messages/disputes interface */}
+      <Link
+        href="/brand/messages"
+        className="fixed bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+        aria-label="Go to messages"
+      >
+        <MessageCircle size={20} className="fill-current text-white" />
+      </Link>
+
+      {showRaiseDispute && (
+        <RaiseDisputeModal
+          creators={disputeCreators}
+          isSubmitting={raiseDispute.isPending}
+          onClose={() => setShowRaiseDispute(false)}
+          onSend={handleSendGeneralDispute}
+        />
+      )}
     </div>
   );
 }

@@ -466,6 +466,10 @@ export default function MyWorkPage() {
           setSelectedCampaign(null);
           setSubmitProofCampaign(c);
         }}
+        onRaiseDispute={(c) => {
+          setSelectedCampaign(null);
+          setDisputeCampaign(c);
+        }}
       />
 
       {/* Submit Draft Link Modal */}
