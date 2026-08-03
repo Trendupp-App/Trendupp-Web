@@ -13,6 +13,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ensureHttpUrl } from '@/utils/Utilities';
 import type { WorkCampaign } from './WorkCampaignCard';
@@ -462,16 +463,25 @@ export default function WorkDetailsDrawer({
               {!isPausedOrCancelled && campaign.status !== 'Payment released' && (
                 <button
                   onClick={() => onRaiseDispute?.(campaign)}
-                  className="absolute bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                  aria-label="Raise a campaign dispute"
+                  className="w-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 text-xs font-semibold py-3 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <MessageCircle size={20} className="fill-current text-white" />
+                  <MessageCircle size={14} />
+                  Raise a dispute
                 </button>
               )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Floating chat bubble — takes you to the Messages/disputes interface */}
+      <Link
+        href="/creator/messages"
+        className="fixed bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+        aria-label="Go to messages"
+      >
+        <MessageCircle size={20} className="fill-current text-white" />
+      </Link>
     </div>
   );
 }

@@ -45,6 +45,7 @@ const BRAND_NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/brand/dashboard', icon: LayoutDashboard },
   { label: 'Campaigns', href: '/brand/campaign', icon: Megaphone },
   { label: 'Explore', href: '/brand/explore', icon: Compass },
+  { label: 'Messages', href: '/brand/messages', icon: MessageSquare },
   { label: 'Payout', href: '/brand/payout', icon: Wallet },
   { label: 'My Profile', href: '/brand/profile', icon: User },
 ];
