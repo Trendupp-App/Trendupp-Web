@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 
-export type PrimaryTab = 'Active' | 'Applied' | 'Done' | 'Social impact';
+export type PrimaryTab = 'Active' | 'Applied' | 'Done' | 'Paused/Cancelled' | 'Social impact';
 
 interface WorkTabsProps {
   activeTab: PrimaryTab;
@@ -13,6 +13,7 @@ interface WorkTabsProps {
     active: number;
     applied: number;
     done: number;
+    pausedCancelled: number;
     socialImpact: number;
     activeSub: {
       All: number;
@@ -26,6 +27,11 @@ interface WorkTabsProps {
       Accepted: number;
       Pending: number;
       Rejected: number;
+    };
+    pausedCancelledSub: {
+      All: number;
+      Paused: number;
+      Cancelled: number;
     };
     socialImpactSub: {
       All: number;
@@ -56,6 +62,12 @@ export default function WorkTabs({
     { label: 'Accepted', count: counts.appliedSub.Accepted },
     { label: 'Pending', count: counts.appliedSub.Pending },
     { label: 'Rejected', count: counts.appliedSub.Rejected },
+  ];
+
+  const pausedCancelledSubPills = [
+    { label: 'All', count: counts.pausedCancelledSub.All },
+    { label: 'Paused', count: counts.pausedCancelledSub.Paused },
+    { label: 'Cancelled', count: counts.pausedCancelledSub.Cancelled },
   ];
 
   const socialImpactSubPills = [
@@ -113,6 +125,20 @@ export default function WorkTabs({
         </button>
         <button
           onClick={() => {
+            onTabChange('Paused/Cancelled');
+            onSubFilterChange('All');
+          }}
+          className={cn(
+            'flex-1 md:flex-none text-center pb-3 text-sm font-semibold transition-all border-b-2 px-6 focus:outline-none cursor-pointer',
+            activeTab === 'Paused/Cancelled'
+              ? 'border-brand-pink text-brand-pink'
+              : 'border-transparent text-[#7a7a9a] hover:text-[#5a5a7a]',
+          )}
+        >
+          Paused/Cancelled ({counts.pausedCancelled})
+        </button>
+        <button
+          onClick={() => {
             onTabChange('Social impact');
             onSubFilterChange('All');
           }}
@@ -148,6 +174,22 @@ export default function WorkTabs({
 
           {activeTab === 'Applied' &&
             appliedSubPills.map((pill) => (
+              <button
+                key={pill.label}
+                onClick={() => onSubFilterChange(pill.label)}
+                className={cn(
+                  'px-4 py-2 h-9 text-xs font-semibold rounded-full border transition-all whitespace-nowrap focus:outline-none cursor-pointer flex items-center justify-center',
+                  activeSubFilter === pill.label
+                    ? 'bg-brand-pink text-white border-brand-pink shadow-[0_2px_8px_rgba(215,23,111,0.15)]'
+                    : 'bg-white text-[#7a7a9a] border-[#e8e6f0]/70 hover:border-brand-pink/30 hover:text-brand-pink',
+                )}
+              >
+                {pill.label} ({pill.count})
+              </button>
+            ))}
+
+          {activeTab === 'Paused/Cancelled' &&
+            pausedCancelledSubPills.map((pill) => (
               <button
                 key={pill.label}
                 onClick={() => onSubFilterChange(pill.label)}

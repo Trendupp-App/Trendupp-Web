@@ -208,6 +208,7 @@ export default function StepDetails({
           onChange={(vals) => setValue('creatorTierIds', vals, { shouldValidate: true })}
           placeholder="Select tier"
           loading={categoriesLoading}
+          max={3}
         />
         {errors.creatorTierIds && (
           <p className="text-[11px] text-red-400">{errors.creatorTierIds.message}</p>
@@ -238,6 +239,7 @@ export default function StepDetails({
           onChange={(vals) => setValue('creatorNicheIds', vals, { shouldValidate: true })}
           placeholder="Select niche"
           loading={nichesLoading}
+          max={3}
         />
         {errors.creatorNicheIds && (
           <p className="text-[11px] text-red-400">{errors.creatorNicheIds.message}</p>

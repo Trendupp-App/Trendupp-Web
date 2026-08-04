@@ -18,11 +18,17 @@ export const stepDetailsSchema = z
       .min(1, 'Budget is required')
       .refine((v) => !isNaN(Number(v)) && Number(v) > 0, 'Enter a valid budget'),
 
-    creatorTierIds: z.array(z.string()).min(1, 'Please select at least one creator tier'),
+    creatorTierIds: z
+      .array(z.string())
+      .min(1, 'Please select at least one creator tier')
+      .max(3, 'Select up to 3 creator tiers'),
     // creatorTier: z.string().min(1, 'Please select a creator tier'),
 
     platforms: z.array(z.string()).min(1, 'Select at least one platform'),
-    creatorNicheIds: z.array(z.string()).min(1, 'Please select at least one niche'),
+    creatorNicheIds: z
+      .array(z.string())
+      .min(1, 'Please select at least one niche')
+      .max(3, 'Select up to 3 niches'),
     // creatorNicheId: z.string().min(1, 'Please select a niche'),
     amplificationAsset: z.string().optional(),
   })

@@ -282,10 +282,15 @@ export default function MyWorkPage() {
 
   const doneCount = campaigns.filter((c) => c.status === 'Payment released').length;
 
+  const pausedCancelledCount = campaigns.filter(
+    (c) => c.campaignStatus === 'paused' || c.campaignStatus === 'cancelled',
+  ).length;
+
   const counts = {
     active: activeCount,
     applied: appliedCount,
     done: doneCount,
+    pausedCancelled: pausedCancelledCount,
     socialImpact: socialImpactApps.length,
     activeSub: {
       All: activeCount,
@@ -299,6 +304,11 @@ export default function MyWorkPage() {
       Accepted: campaigns.filter((c) => c.status === 'Selected').length,
       Pending: campaigns.filter((c) => c.status === 'Pending').length,
       Rejected: campaigns.filter((c) => c.status === 'Declined').length,
+    },
+    pausedCancelledSub: {
+      All: pausedCancelledCount,
+      Paused: campaigns.filter((c) => c.campaignStatus === 'paused').length,
+      Cancelled: campaigns.filter((c) => c.campaignStatus === 'cancelled').length,
     },
     socialImpactSub: {
       All: socialImpactApps.length,
@@ -344,6 +354,16 @@ export default function MyWorkPage() {
 
       if (activeTab === 'Done') {
         return c.status === 'Payment released';
+      }
+
+      if (activeTab === 'Paused/Cancelled') {
+        const isPausedOrCancelled =
+          c.campaignStatus === 'paused' || c.campaignStatus === 'cancelled';
+        if (!isPausedOrCancelled) return false;
+
+        if (activeSubFilter === 'Paused') return c.campaignStatus === 'paused';
+        if (activeSubFilter === 'Cancelled') return c.campaignStatus === 'cancelled';
+        return true;
       }
 
       return true;

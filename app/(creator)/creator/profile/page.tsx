@@ -360,6 +360,12 @@ export default function CreatorProfilePage() {
             : countryName
           : prev.location;
 
+        let nationalityName = prev.nationality;
+        if (activeUser.nationalityId && nationalities) {
+          const nObj = nationalities.find((n) => n.id === activeUser.nationalityId);
+          if (nObj) nationalityName = nObj.name;
+        }
+
         return {
           ...prev,
           name: `${activeUser.firstName} ${activeUser.lastName}`.trim(),
@@ -368,6 +374,7 @@ export default function CreatorProfilePage() {
           bio: activeUser.bio || '',
           image: activeUser.avatarUrl || INITIAL_PROFILE.image,
           location: location,
+          nationality: nationalityName,
           rating: activeUser.avgRating || 0,
           niches:
             activeUser.niches && activeUser.niches.length > 0
@@ -377,7 +384,7 @@ export default function CreatorProfilePage() {
       });
       /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }, [userDetail, user, countries, states]);
+  }, [userDetail, user, countries, states, nationalities]);
 
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updateNichesMutation = useUpdateProfileNiches();

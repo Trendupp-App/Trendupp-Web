@@ -9,6 +9,7 @@ import { useCampaignPlatforms, useApplyCampaign } from '@/hooks/useCampaign';
 import ApplicationSuccessView from './ApplicationSuccessView';
 import type { CampaignTimeline } from '@/types/campaign';
 import { buildTimelineSteps } from '@/lib/campaignTimelineStage';
+import { getCurrencySymbol } from '@/utils/Utilities';
 
 export interface MappedCampaign {
   id: string;
@@ -112,6 +113,7 @@ export default function CampaignDetailsDrawer({
   // (see useDisplayCurrency + mapCampaign/getCampaignBudgetRange), so this
   // just compares against whatever was handed in — no conversion here.
   const displayFeeRangeLabel = campaign?.feeRangeLabel ?? campaign?.budget;
+  const currencySymbol = getCurrencySymbol(campaign?.currency);
 
   const isFormValid = contentTitle.length >= 20 && feeRequest.trim() !== '';
   const feeRequestNumber = Number(feeRequest.replace(/[^0-9]/g, '')) || 0;
@@ -696,11 +698,11 @@ export default function CampaignDetailsDrawer({
                 {/* Fee Request */}
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="feeRequest" className="text-xs font-bold text-[#1a1a2e]">
-                    Fee Request (₦) *
+                    Fee Request ({currencySymbol}) *
                   </label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-xs text-[#7a7a9a] select-none font-medium">
-                      ₦
+                      {currencySymbol}
                     </span>
                     <input
                       id="feeRequest"
