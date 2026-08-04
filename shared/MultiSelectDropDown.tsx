@@ -20,6 +20,8 @@ interface MultiSelectDropdownProps {
   placeholder?: string;
   loading?: boolean;
   disabled?: boolean;
+  /** Caps how many options can be selected at once; further picks are ignored until one is deselected. */
+  max?: number;
 }
 
 export function MultiSelectDropdown({
@@ -29,9 +31,11 @@ export function MultiSelectDropdown({
   placeholder = 'Select',
   loading,
   disabled,
+  max,
 }: MultiSelectDropdownProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const atMax = max !== undefined && selected.length >= max;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -44,9 +48,9 @@ export function MultiSelectDropdown({
   }, []);
 
   function toggleValue(value: string) {
-    const next = selected.includes(value)
-      ? selected.filter((v) => v !== value)
-      : [...selected, value];
+    const isSelected = selected.includes(value);
+    if (!isSelected && atMax) return;
+    const next = isSelected ? selected.filter((v) => v !== value) : [...selected, value];
     onChange(next);
   }
 
@@ -113,22 +117,32 @@ export function MultiSelectDropdown({
 
       {open && !loading && (
         <div className="absolute z-20 mt-1.5 w-full max-h-64 overflow-y-auto bg-white border border-[#e8e6f0] rounded-md shadow-lg py-2">
+          {max !== undefined && (
+            <p className="px-3 pb-2 text-[11px] text-[#9a99b0]">
+              {selected.length}/{max} selected
+            </p>
+          )}
           {options.length === 0 ? (
             <p className="px-3 py-2 text-sm text-[#9a99b0]">No options available</p>
           ) : (
             options.map((option) => {
               const checked = selected.includes(option.value);
+              const isDisabled = atMax && !checked;
               const isRich = option.sublabel !== undefined || option.meta !== undefined;
 
               if (!isRich) {
                 return (
                   <label
                     key={option.value}
-                    className="flex items-center gap-3 px-3 py-2 text-sm text-[#1a1a2e] hover:bg-[#faf9fc] cursor-pointer"
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2 text-sm text-[#1a1a2e] hover:bg-[#faf9fc] cursor-pointer',
+                      isDisabled && 'opacity-40 cursor-not-allowed hover:bg-transparent',
+                    )}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
+                      disabled={isDisabled}
                       onChange={() => toggleValue(option.value)}
                       className="w-4 h-4 rounded border-[#e8e6f0] accent-brand-pink focus:ring-brand-pink/20"
                     />
@@ -141,12 +155,14 @@ export function MultiSelectDropdown({
                 <button
                   key={option.value}
                   type="button"
+                  disabled={isDisabled}
                   onClick={() => toggleValue(option.value)}
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
                     checked
                       ? 'bg-brand-pink/10 text-brand-pink'
                       : 'text-[#1a1a2e] hover:bg-[#faf9fc]',
+                    isDisabled && 'opacity-40 cursor-not-allowed hover:bg-transparent',
                   )}
                 >
                   <span

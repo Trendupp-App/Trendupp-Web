@@ -43,7 +43,7 @@ export function getActiveDeadline(timeline?: CampaignTimeline): string | null {
   return current.stage.endedDate;
 }
 
-// Forward-looking countdown formatter — "2d left" / "5h left" / "Ending soon" / "Ended".
+// Forward-looking countdown formatter — "2d 5h left" / "5h left" / "Ending soon" / "Ended".
 // (utils/Utilities.ts's formatRelativeTime is past-tense only — "2 hours ago" —
 // wrong direction for a deadline countdown.)
 export function formatTimeRemaining(endedDate: string | null | undefined): string | null {
@@ -53,8 +53,8 @@ export function formatTimeRemaining(endedDate: string | null | undefined): strin
   const diff = ts - Date.now();
   if (diff <= 0) return 'Ended';
   const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (diffDays > 0) return `${diffDays}d left`;
-  const diffHours = Math.floor(diff / (1000 * 60 * 60));
+  const diffHours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (diffDays > 0) return `${diffDays}d ${diffHours}h left`;
   if (diffHours > 0) return `${diffHours}h left`;
   return 'Ending soon';
 }

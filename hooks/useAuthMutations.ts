@@ -68,7 +68,11 @@ export function useLogin() {
       await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      clearSession();
+      // false: this is a failed *login* attempt, not a real session being torn
+      // down — there's nothing to redirect away from, and clearSession's default
+      // hard `window.location.href` reload would wipe the page (and the error
+      // toast) out from under the user before they can read it.
+      clearSession(false);
       toast.error(err?.response?.data?.message ?? 'Login failed');
     },
   });
@@ -152,7 +156,11 @@ export function useGoogleAuth() {
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       void signOut({ redirect: false });
-      clearSession();
+      // false: this is a failed *login* attempt, not a real session being torn
+      // down — there's nothing to redirect away from, and clearSession's default
+      // hard `window.location.href` reload would wipe the page (and the error
+      // toast) out from under the user before they can read it.
+      clearSession(false);
       toast.error(err?.response?.data?.message ?? 'Google auth failed');
     },
   });
@@ -173,7 +181,11 @@ export function useTiktokAuth() {
       await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      clearSession();
+      // false: this is a failed *login* attempt, not a real session being torn
+      // down — there's nothing to redirect away from, and clearSession's default
+      // hard `window.location.href` reload would wipe the page (and the error
+      // toast) out from under the user before they can read it.
+      clearSession(false);
       toast.error(err?.response?.data?.message ?? 'TikTok auth failed');
     },
   });
@@ -194,7 +206,11 @@ export function useInstagramAuth() {
       await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      clearSession();
+      // false: this is a failed *login* attempt, not a real session being torn
+      // down — there's nothing to redirect away from, and clearSession's default
+      // hard `window.location.href` reload would wipe the page (and the error
+      // toast) out from under the user before they can read it.
+      clearSession(false);
       toast.error(err?.response?.data?.message ?? 'Instagram auth failed');
     },
   });
@@ -215,7 +231,11 @@ export function useFacebookAuth() {
       await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      clearSession();
+      // false: this is a failed *login* attempt, not a real session being torn
+      // down — there's nothing to redirect away from, and clearSession's default
+      // hard `window.location.href` reload would wipe the page (and the error
+      // toast) out from under the user before they can read it.
+      clearSession(false);
       toast.error(err?.response?.data?.message ?? 'Facebook auth failed');
     },
   });
@@ -236,7 +256,11 @@ export function useAppleAuth() {
       await hydrateFullProfile(data.user.id, updateUser);
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      clearSession();
+      // false: this is a failed *login* attempt, not a real session being torn
+      // down — there's nothing to redirect away from, and clearSession's default
+      // hard `window.location.href` reload would wipe the page (and the error
+      // toast) out from under the user before they can read it.
+      clearSession(false);
       toast.error(err?.response?.data?.message ?? 'Apple auth failed');
     },
   });
