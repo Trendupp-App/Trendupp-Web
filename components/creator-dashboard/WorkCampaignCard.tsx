@@ -39,6 +39,7 @@ export interface WorkCampaign {
   actualAmount?: number;
   niches?: string[];
   goal?: 'Content Creation' | 'Amplification' | null;
+  amplificationAsset?: string | null;
   createdAt?: string;
   budgetMax?: number;
   daysLeftNumber?: number;
