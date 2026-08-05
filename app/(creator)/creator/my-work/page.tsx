@@ -219,50 +219,50 @@ export default function MyWorkPage() {
   const handleSubmitLink = (link: string) => {
     if (!submitLinkCampaign) return;
 
-    if (submitLinkCampaign.campaignId && submitLinkCampaign.id) {
-      submitDraft.mutate(
-        {
-          id: submitLinkCampaign.campaignId,
-          appId: submitLinkCampaign.id,
-          payload: { draftLink: link },
-        },
-        {
-          onSuccess: () => {
-            setSubmitLinkCampaign(null);
-          },
-        },
-      );
-    } else {
-      toast.success('Mock Content draft link submitted successfully! (Staging Fallback)');
-      setSubmitLinkCampaign(null);
+    if (!submitLinkCampaign.campaignId || !submitLinkCampaign.id) {
+      toast.error('Could not submit — missing campaign details. Please refresh and try again.');
+      return;
     }
+
+    submitDraft.mutate(
+      {
+        id: submitLinkCampaign.campaignId,
+        appId: submitLinkCampaign.id,
+        payload: { draftLink: link },
+      },
+      {
+        onSuccess: () => {
+          setSubmitLinkCampaign(null);
+        },
+      },
+    );
   };
 
   const handleSubmitProof = (entries: LiveLinkEntry[]) => {
     if (!submitProofCampaign) return;
 
-    if (submitProofCampaign.campaignId && submitProofCampaign.submissionId) {
-      const liveLink = entries.reduce<Record<string, string>>((acc, entry) => {
-        acc[entry.platform] = entry.link;
-        return acc;
-      }, {});
-
-      submitProof.mutate(
-        {
-          id: submitProofCampaign.campaignId,
-          submissionId: submitProofCampaign.submissionId,
-          payload: { liveLink },
-        },
-        {
-          onSuccess: () => {
-            setSubmitProofCampaign(null);
-          },
-        },
-      );
-    } else {
-      toast.success('Mock Proof of posting submitted successfully! (Staging Fallback)');
-      setSubmitProofCampaign(null);
+    if (!submitProofCampaign.campaignId || !submitProofCampaign.submissionId) {
+      toast.error('Could not submit — missing campaign details. Please refresh and try again.');
+      return;
     }
+
+    const liveLink = entries.reduce<Record<string, string>>((acc, entry) => {
+      acc[entry.platform] = entry.link;
+      return acc;
+    }, {});
+
+    submitProof.mutate(
+      {
+        id: submitProofCampaign.campaignId,
+        submissionId: submitProofCampaign.submissionId,
+        payload: { liveLink },
+      },
+      {
+        onSuccess: () => {
+          setSubmitProofCampaign(null);
+        },
+      },
+    );
   };
   const handleAcceptOffer = (campaign: WorkCampaign) => {
     toast.success(`Offer for "${campaign.title}" accepted!`);

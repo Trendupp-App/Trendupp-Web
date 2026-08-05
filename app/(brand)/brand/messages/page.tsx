@@ -41,6 +41,7 @@ export default function BrandMessagesPage() {
   const [inputText, setInputText] = useState('');
   const [isChannelLoading, setIsChannelLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const getCampaignTitle = (campaignId: string) => {
     const campaign = myCampaigns?.find((c) => c.id === campaignId);
@@ -180,15 +181,28 @@ export default function BrandMessagesPage() {
     scrollToBottom();
   }, [messages, activeDisputeId]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendCurrentMessage = async () => {
     if (!inputText.trim() || !activeChannel) return;
     try {
       const textToSend = inputText;
       setInputText('');
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
       await activeChannel.sendMessage({ text: textToSend });
     } catch (err) {
       console.error('Failed to send message:', err);
+    }
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendCurrentMessage();
+  };
+
+  // Enter sends the message; Shift+Enter inserts a newline, like most chat apps.
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendCurrentMessage();
     }
   };
 
@@ -268,15 +282,21 @@ export default function BrandMessagesPage() {
       return (
         <form
           onSubmit={handleSendMessage}
-          className="p-4 border-t border-[#e8e6f0]/60 bg-white flex gap-3 select-none shrink-0"
+          className="p-4 border-t border-[#e8e6f0]/60 bg-white flex items-end gap-3 select-none shrink-0"
         >
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
+            rows={1}
             placeholder="Type a message to other parties and admins..."
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+            }}
+            onKeyDown={handleTextareaKeyDown}
             disabled={!isConnected || isChannelLoading}
-            className="flex-1 border border-[#e8e6f0] focus:border-brand-pink rounded-2xl px-4 py-2.5 text-xs outline-none bg-white text-[#1a1a2e]"
+            className="flex-1 border border-[#e8e6f0] focus:border-brand-pink rounded-2xl px-4 py-2.5 text-xs outline-none bg-white text-[#1a1a2e] resize-none max-h-[120px] leading-relaxed auth-scrollbar"
           />
           <button
             type="submit"
