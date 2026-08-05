@@ -196,6 +196,12 @@ export function useMyApplications(enabled: boolean = true) {
       }),
     staleTime: 0,
     enabled,
+    // A brand reviewing a submission (approve/request revision/reject) happens
+    // in a completely separate session — there's no client-side cache to
+    // invalidate from here. Refetching on focus is the practical stand-in: the
+    // creator's "My Work" list picks up the brand's decision as soon as they
+    // switch back to this tab, without needing a manual refresh.
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -203,7 +209,8 @@ export function useMyCampaigns(status?: CampaignStatus, enabled: boolean = true)
   return useQuery({
     queryKey: ['my-campaigns', status],
     queryFn: () => campaignApi.getMyCampaigns(status).then((r) => r.data),
-    staleTime: 1000 * 30,
+    staleTime: 0,
+    refetchOnMount: 'always',
     enabled,
   });
 }

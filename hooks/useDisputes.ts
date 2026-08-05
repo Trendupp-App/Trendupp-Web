@@ -8,7 +8,8 @@ export function useDisputes(enabled: boolean = true) {
   return useQuery({
     queryKey: ['disputes'],
     queryFn: () => disputeApi.getDisputes().then((r) => r.data),
-    staleTime: 1000 * 30,
+    staleTime: 0,
+    refetchOnMount: 'always',
     enabled,
   });
 }
@@ -21,6 +22,7 @@ export function useDisputeDetails(id: string | null, enabled: boolean = true) {
       return disputeApi.getDisputeDetails(id).then((r) => r.data);
     },
     staleTime: 1000 * 30,
+    refetchOnMount: 'always',
     enabled: enabled && !!id,
   });
 }
