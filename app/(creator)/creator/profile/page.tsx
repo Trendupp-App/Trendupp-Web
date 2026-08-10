@@ -8,7 +8,6 @@ import {
   Plus,
   Trash2,
   Edit2,
-  LogOut,
   Award,
   Search,
   ChevronLeft,
@@ -1307,26 +1306,6 @@ export default function CreatorProfilePage() {
                   <span className="text-xs font-bold text-[#1a1a2e]">Help & Support</span>
                   <span className="text-[10px] font-medium text-[#7a7a9a] mt-0.5">
                     FAQs, live chat, contact us
-                  </span>
-                </div>
-              </div>
-              <ChevronRight size={14} className="text-[#9a99b0] shrink-0" />
-            </div>
-
-            {/* Sign Out (Mobile Only) */}
-            <div
-              id="settings-item-signout"
-              className="border border-[#e8e6f0]/70 rounded-2xl p-4 flex items-center justify-between bg-white hover:bg-[#faf9fc]/30 active:scale-[0.99] transition-all duration-200 cursor-pointer shadow-xs md:hidden"
-              onClick={() => alert('Signing out...')}
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#fee2e2] flex items-center justify-center shrink-0 text-[#ef4444]">
-                  <LogOut size={18} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#1a1a2e]">Sign Out</span>
-                  <span className="text-[10px] font-medium text-[#7a7a9a] mt-0.5">
-                    Log out of your account
                   </span>
                 </div>
               </div>
