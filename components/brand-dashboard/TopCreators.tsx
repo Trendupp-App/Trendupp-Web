@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Users, Star, MessageSquare } from 'lucide-react';
+import { Users, Star, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useTopPerformers } from '@/hooks/useProfile';
 import type { TopPerformerCreator } from '@/types/creator';
+import CreatorProfileSheet from '@/components/campaign-details/CreatorProfileSheet';
 
 type CreatorTier = 'Nano' | 'Micro' | 'Macro' | 'Mega';
 
@@ -42,15 +43,27 @@ function totalFollowers(c: TopPerformerCreator): number {
 
 interface CreatorCardProps {
   creator: TopPerformerCreator;
+  onClick: () => void;
 }
 
-function CreatorCard({ creator }: CreatorCardProps) {
+function CreatorCard({ creator, onClick }: CreatorCardProps) {
   const name = `${creator.firstName} ${creator.lastName}`.trim() || creator.username || 'Creator';
   const initials = name.slice(0, 1).toUpperCase();
   const styleKey = tierStyleKey(creator.assignedTier);
 
   return (
-    <div className="flex-1 min-w-[200px] bg-white border border-[#f0eef8] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="flex-1 min-w-[200px] bg-white border border-[#f0eef8] rounded-2xl p-4 flex flex-col gap-3 shadow-sm cursor-pointer hover:border-brand-pink/40 hover:shadow-md transition-all"
+    >
       <div className="flex items-center gap-2.5">
         <div className="w-10 h-10 rounded-full bg-[#f0eef8] overflow-hidden shrink-0">
           {creator.avatarUrl ? (
@@ -122,9 +135,16 @@ function CreatorCard({ creator }: CreatorCardProps) {
 export default function TopCreatorsSection() {
   const { data: creators = [], isLoading, isError } = useTopPerformers();
   const [page, setPage] = useState(0);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
+  const [creatorSheetOpen, setCreatorSheetOpen] = useState(false);
   const perPage = 3;
   const totalPages = Math.ceil(creators.length / perPage);
   const visible = creators.slice(page * perPage, page * perPage + perPage);
+
+  function handleViewCreator(creator: TopPerformerCreator) {
+    setSelectedCreatorId(creator.id);
+    setCreatorSheetOpen(true);
+  }
 
   return (
     <div className="bg-white border border-[#f0eef8] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
@@ -136,7 +156,7 @@ export default function TopCreatorsSection() {
           </p>
         </div>
         <Link
-          href="/brand/explore"
+          href="/brand/explore?tab=creators"
           className="text-sm text-[#9a99b0] hover:text-brand-pink transition-colors"
         >
           See all
@@ -162,27 +182,40 @@ export default function TopCreatorsSection() {
         <>
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
             {visible.map((c) => (
-              <CreatorCard key={c.id} creator={c} />
+              <CreatorCard key={c.id} creator={c} onClick={() => handleViewCreator(c)} />
             ))}
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center gap-1.5 pt-1">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i)}
-                  className={cn(
-                    'rounded-full transition-all duration-300',
-                    i === page ? 'w-4 h-1.5 bg-brand-pink' : 'w-1.5 h-1.5 bg-[#e0ddef]',
-                  )}
-                  aria-label={`Page ${i + 1}`}
-                />
-              ))}
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="w-7 h-7 flex items-center justify-center rounded-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Previous creators"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page === totalPages - 1}
+                className="w-7 h-7 flex items-center justify-center rounded-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Next creators"
+              >
+                <ChevronRight size={14} />
+              </button>
             </div>
           )}
         </>
       )}
+
+      <CreatorProfileSheet
+        creatorId={selectedCreatorId}
+        open={creatorSheetOpen}
+        onOpenChange={setCreatorSheetOpen}
+      />
     </div>
   );
 }

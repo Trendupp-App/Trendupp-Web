@@ -45,6 +45,7 @@ interface CampaignOverviewTabProps {
 
 export default function CampaignOverviewTab({ campaign }: CampaignOverviewTabProps) {
   const platforms = campaign.preferredPlatforms ?? [];
+  const niches = campaign.creatorNiches ?? [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,9 +76,11 @@ export default function CampaignOverviewTab({ campaign }: CampaignOverviewTabPro
         <InfoBox
           label="Niche"
           value={
-            campaign?.creatorNiche?.name ? (
+            niches.length > 0 ? (
               <div className="flex flex-wrap gap-1.5 mt-0.5">
-                <NicheBadge key={campaign.creatorNiche.id} name={campaign.creatorNiche.name} />
+                {niches.map((n) => (
+                  <NicheBadge key={n.id} name={n.name} />
+                ))}
               </div>
             ) : (
               '—'

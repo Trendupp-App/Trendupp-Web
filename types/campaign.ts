@@ -59,6 +59,10 @@ export type CampaignStatus =
   | 'paused'
   | 'cancelled';
 
+// Query-only filter value — not a real campaign status, just tells the
+// /campaigns endpoint to return campaigns regardless of status.
+export type CampaignStatusFilter = CampaignStatus | 'all';
+
 export interface ContentGuidelines {
   dos: string[];
   donts: string[];
@@ -106,14 +110,14 @@ export interface Campaign extends BaseEntity {
   timeline?: CampaignTimeline;
   approvedAt?: string | null;
   urlIsLive?: boolean | null;
-  creatorNiche?: {
-    id?: string;
+  creatorNiches?: {
+    id: string;
     createdAt?: string;
     updatedAt?: string;
     deletedAt?: string | null;
-    name?: string;
+    name: string;
     order?: number;
-  };
+  }[];
   paymentBreakdown?: PaymentBreakdown & {
     breakdownItems: { name: string; type: string; value: number; amount: number }[];
   };

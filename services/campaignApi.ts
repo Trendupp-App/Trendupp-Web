@@ -6,6 +6,7 @@ import type {
   CampaignsPagination,
   CampaignActivityTimeline,
   CampaignStatus,
+  CampaignStatusFilter,
   CreateCampaignPayload,
   CreateCampaignResponse,
   PatchCampaignPayload,
@@ -95,7 +96,7 @@ export const campaignApi = {
   getCampaigns: (params?: {
     page?: number;
     limit?: number;
-    status?: CampaignStatus;
+    status?: CampaignStatusFilter;
     sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
     platforms?: string[];
     niches?: string[];

@@ -111,7 +111,12 @@ export default function WorkDetailsDrawer({
           </div>
 
           {/* Stats row */}
-          <div className="border border-[#e8e6f0] rounded-2xl grid grid-cols-3 divide-x divide-[#e8e6f0]">
+          <div
+            className={cn(
+              'border border-[#e8e6f0] rounded-2xl grid divide-x divide-[#e8e6f0]',
+              campaign.goal ? 'grid-cols-4' : 'grid-cols-3',
+            )}
+          >
             <div className="flex flex-col gap-0.5 p-3.5">
               <span className="text-[10px] text-[#9a99b0]">Budget</span>
               <span className="text-sm font-bold text-brand-pink">{campaign.budgetString}</span>
@@ -120,10 +125,12 @@ export default function WorkDetailsDrawer({
               <span className="text-[10px] text-[#9a99b0]">Platform</span>
               <span className="text-sm font-bold text-[#1a1a2e]">{campaign.platform}</span>
             </div>
-            {/* <div className="flex flex-col gap-0.5 p-3.5">
-              <span className="text-[10px] text-[#9a99b0]">Niche</span>
-              <span className="text-sm font-bold text-[#1a1a2e]">{campaign.niches[0] ?? '—'}</span>
-            </div> */}
+            {campaign.goal && (
+              <div className="flex flex-col gap-0.5 p-3.5">
+                <span className="text-[10px] text-[#9a99b0]">Goal</span>
+                <span className="text-sm font-bold text-[#1a1a2e]">{campaign.goal}</span>
+              </div>
+            )}
             <div className="flex flex-col gap-0.5 p-3.5">
               <span className="text-[10px] text-[#9a99b0]">Applied</span>
               <span className="text-sm font-bold text-[#1a1a2e]">{campaign.applicationsCount}</span>

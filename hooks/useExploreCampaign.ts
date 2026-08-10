@@ -25,7 +25,7 @@ export function useExploreCampaigns({
   displayOpts?: DisplayCurrencyOptions;
 }) {
   const { data: campaignsResponse, isLoading } = useCampaigns({
-    status: statusFilter === 'all' ? undefined : statusFilter === 'live' ? 'live' : 'completed',
+    status: statusFilter === 'all' ? 'all' : statusFilter === 'live' ? 'live' : 'completed',
     sortBy:
       filters.sortBy === 'Newest'
         ? 'newest'

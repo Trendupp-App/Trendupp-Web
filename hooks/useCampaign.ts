@@ -6,6 +6,7 @@ import type {
   ApplyCampaignPayload,
   CampaignApplicationDto,
   CampaignStatus,
+  CampaignStatusFilter,
   CreateCampaignPayload,
   PatchCampaignPayload,
   PaymentBreakdown,
@@ -404,7 +405,7 @@ export function useCampaigns(
   params?: {
     page?: number;
     limit?: number;
-    status?: CampaignStatus;
+    status?: CampaignStatusFilter;
     sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
     platforms?: string[];
     niches?: string[];

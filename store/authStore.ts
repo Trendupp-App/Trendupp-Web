@@ -33,6 +33,7 @@ export interface AuthUser {
   countryId?: string | null;
   country?: { id: string; name: string } | null;
   stateId?: string | null;
+  state?: { id: string; name: string } | null;
   city?: string | null;
   instagramUsername?: string | null;
   instagramFollowers?: number | null;

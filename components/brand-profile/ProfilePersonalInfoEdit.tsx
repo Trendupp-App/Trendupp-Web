@@ -41,9 +41,12 @@ interface ProfilePersonalInfoEditProps {
 
 export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfoEditProps) {
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>();
+  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>(
+    user?.countryId ?? undefined,
+  );
   const [avatarError, setAvatarError] = useState<string>('');
   const { data: countries = [], isLoading: loadingCountries } = useCountries();
   const selectedCountryId = userSelectedCountryId;
@@ -63,6 +66,7 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
       brandName: user?.username ?? '',
       email: user?.email ?? '',
       bio: user?.bio ?? '',
+      country: user?.country?.name ?? '',
     },
   });
 
@@ -101,20 +105,38 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
 
   function onSubmit(values: Values) {
     if (avatarError) return;
-    const countryId = values.country
-      ? countries.find((c) => c.name === values.country)?.id
+    const countryObj = values.country
+      ? countries.find((c) => c.name === values.country)
       : undefined;
-    const stateId = values.state ? states.find((s) => s.name === values.state)?.id : undefined;
+    const stateObj = values.state ? states.find((s) => s.name === values.state) : undefined;
 
     updatePersonalInfo(
       {
         ...(values.brandName && { username: values.brandName }),
         ...(values.bio && { bio: values.bio }),
-        ...(countryId && { countryId }),
-        ...(stateId && { stateId }),
+        ...(countryObj && { countryId: countryObj.id }),
+        ...(stateObj && { stateId: stateObj.id }),
         ...(avatarFile && { avatar: avatarFile }),
       },
-      { onSuccess: () => onSaved?.() },
+      {
+        onSuccess: () => {
+          // The API response doesn't echo country/state back, so the global
+          // auth store (which pages like campaign creation read `countryId`
+          // from for currency selection) would otherwise stay stale until a
+          // full reload. We already resolved these from the picked names
+          // above, so patch the store with them directly.
+          if (countryObj) {
+            updateUser({
+              countryId: countryObj.id,
+              country: { id: countryObj.id, name: countryObj.name },
+            });
+          }
+          if (stateObj) {
+            updateUser({ stateId: stateObj.id, state: { id: stateObj.id, name: stateObj.name } });
+          }
+          onSaved?.();
+        },
+      },
     );
   }
 

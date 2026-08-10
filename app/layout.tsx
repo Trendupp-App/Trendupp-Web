@@ -30,6 +30,7 @@ const slussen = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://trendupp-web.vercel.app'),
   title: {
     default: 'Trendupp',
     template: '%s | Trendupp',
@@ -46,6 +47,12 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     siteName: 'Trendupp',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Trendupp — The Creator Marketing Platform',
+    description:
+      'Trendupp connects creators with brands for paid campaigns. Discover opportunities, apply, and earn — all in one place.',
   },
 };
 
