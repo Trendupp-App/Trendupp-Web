@@ -55,6 +55,18 @@ export function useVerifyOtp() {
   });
 }
 
+// Verifies a password-reset OTP without touching the session — unlike
+// useVerifyOtp (signup), the user isn't logging in here, just proving they
+// own the email before they're allowed to pick a new password.
+export function useVerifyResetOtp() {
+  return useMutation({
+    mutationFn: authApi.verifyOtp,
+    onError: (err: AxiosError<{ message?: string }>) => {
+      toast.error(err?.response?.data?.message ?? 'Invalid or expired code');
+    },
+  });
+}
+
 export function useLogin() {
   const clearSession = useAuthStore((s) => s.clearSession);
   const setSession = useAuthStore((s) => s.setSession);

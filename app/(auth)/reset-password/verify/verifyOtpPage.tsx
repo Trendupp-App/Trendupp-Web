@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import AuthLayout from '@/components/auth/AuthLayout';
 import OtpInput from '@/components/auth/OtpInput';
 import { BackButton } from '@/shared/BackButton';
-import { useForgotPassword } from '@/hooks/useAuthMutations';
+import { useForgotPassword, useVerifyResetOtp } from '@/hooks/useAuthMutations';
 
 export default function ResetVerifyPage() {
   const [otp, setOtp] = useState('');
@@ -16,13 +16,19 @@ export default function ResetVerifyPage() {
   const params = useSearchParams();
   const email = params.get('email') ?? 'your email';
   const forgotPassword = useForgotPassword();
+  const verifyOtp = useVerifyResetOtp();
 
   async function handleSubmit() {
     if (otp.length < 6) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setLoading(false);
-    router.push(`/reset-password/new?email=${encodeURIComponent(email)}&code=${otp}`);
+    try {
+      await verifyOtp.mutateAsync({ email, code: otp });
+      router.push(`/reset-password/new?email=${encodeURIComponent(email)}`);
+    } catch {
+      // error toast already handled by useVerifyResetOtp's onError
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleResend() {
