@@ -101,7 +101,7 @@ export const authApi = {
   forgotPassword: (email: string) =>
     apiClient.post<MessageResponse>('/auth/password/forgot', { email }),
 
-  resetPassword: (data: { email: string; code: string; newPassword: string }) =>
+  resetPassword: (data: { email: string; newPassword: string }) =>
     apiClient.post<MessageResponse>('/auth/password/reset', data),
 
   googleAuth: (data: GoogleAuthPayload) => apiClient.post<AuthResponse>('/auth/google', data),
