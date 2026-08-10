@@ -193,6 +193,12 @@ export default function WorkCampaignCard({
             {campaign.title}
           </h4>
 
+          {campaign.goal && (
+            <span className="text-[9px] sm:text-[10px] font-semibold text-[#4c49d8] bg-[#eef0ff] px-2 py-0.5 rounded-full w-fit">
+              {campaign.goal}
+            </span>
+          )}
+
           <span className="text-[16px] font-extrabold text-[#1a1a2e] mt-1">
             {formatCurrency(campaign.actualAmount ?? 300000, campaign.currency ?? 'NGN')}
           </span>

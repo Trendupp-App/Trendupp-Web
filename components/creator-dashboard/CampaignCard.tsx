@@ -15,6 +15,7 @@ interface CampaignCardProps {
   hideApplied?: boolean;
   status?: string;
   hasApplied?: boolean;
+  goal?: string;
 }
 
 export default function CampaignCard({
@@ -28,6 +29,7 @@ export default function CampaignCard({
   hideApplied = false,
   status,
   hasApplied = false,
+  goal,
 }: CampaignCardProps) {
   const isClosed = daysLeft.toLowerCase() === 'closed';
 
@@ -110,6 +112,11 @@ export default function CampaignCard({
             </span>
           </div>
           <p className="text-[11px] sm:text-xs font-light text-[#7a7a9a]">{brand}</p>
+          {goal && (
+            <span className="text-[9px] sm:text-[10px] font-semibold text-[#4c49d8] bg-[#eef0ff] px-2 py-0.5 rounded-full w-fit">
+              {goal}
+            </span>
+          )}
         </div>
 
         {/* Budget & Applied count */}

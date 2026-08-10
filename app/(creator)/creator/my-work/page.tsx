@@ -132,7 +132,7 @@ function mapAppToWorkCampaign(
     image:
       campaign.coverImage ||
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    niches: campaign.creatorNiche?.name ? [campaign.creatorNiche.name] : [],
+    niches: campaign.creatorNiches?.map((n) => n.name) ?? [],
     goal: campaign.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
     amplificationAsset: campaign.amplificationAsset ?? null,
     createdAt: app.createdAt,

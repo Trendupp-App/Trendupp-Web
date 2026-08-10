@@ -1434,24 +1434,14 @@ export default function CreatorProfilePage() {
                 )}
               </div>
             </div>
-
-            {/* Separator */}
-            <div className="flex items-center gap-3">
-              <hr className="flex-1 border-[#e8e6f0]" />
-              <span className="text-[10px] font-bold text-[#9a99b0] uppercase tracking-wider select-none">
-                or
-              </span>
-              <hr className="flex-1 border-[#e8e6f0]" />
-            </div>
-
-            {/* Social Media Link Input */}
+            {/* Portfolio Link Input */}
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1">
-                Social media link
+                Portfolio link
               </label>
               <input
                 type="text"
-                placeholder="https://drive.google.com/..."
+                placeholder="https://"
                 value={socialMediaLink}
                 onChange={(e) => setSocialMediaLink(e.target.value)}
                 className="w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"

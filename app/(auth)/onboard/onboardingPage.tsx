@@ -91,8 +91,8 @@ const ADVERTISER_STEP_META: Record<AdvertiserStepId, { title: string; subtitle: 
     subtitle: 'Connect your social accounts to access more opportunities',
   },
   payout: {
-    title: 'Payout details',
-    subtitle: 'Add your payout details to fund and run campaigns',
+    title: 'Refund details',
+    subtitle: 'Add your bank details so any unused campaign funds can be refunded to you',
   },
   complete: {
     title: '',

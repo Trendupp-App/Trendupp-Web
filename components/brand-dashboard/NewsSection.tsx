@@ -69,7 +69,7 @@ export default function TopNewsSection() {
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-[#1a1a2e]">Top news</h2>
         <Link
-          href="/brand/news"
+          href="/brand/explore?tab=news"
           className="text-sm text-[#9a99b0] hover:text-brand-pink transition-colors"
         >
           See all

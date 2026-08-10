@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/authStore';
 
 // Third-party FX rate lookup — not our backend, so this deliberately bypasses
 // apiClient (wrong baseURL/auth headers for an external host).
@@ -29,9 +28,11 @@ export function useUsdToNgnRate(enabled: boolean = true) {
 
 // Single source of truth for "should we show this creator NGN instead of the
 // campaign's own currency" — Nigerian creators only, for now.
+// Reverted: creators now always see the campaign's own currency, regardless
+// of country. Left displayInNgn hardcoded to false rather than ripping out
+// every call site so the conversion can be re-enabled by flipping this back.
 export function useDisplayCurrency() {
-  const user = useAuthStore((s) => s.user);
-  const displayInNgn = user?.country?.name?.toLowerCase() === 'nigeria';
+  const displayInNgn = false;
   const { data: usdToNgnRate, isLoading: isLoadingRate } = useUsdToNgnRate(displayInNgn);
   return { displayInNgn, usdToNgnRate, isLoadingRate };
 }

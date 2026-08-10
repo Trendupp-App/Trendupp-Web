@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ExploreHeader from '@/components/BrandExplore/ExploreHeader';
 import ExploreSearchBar from '@/components/BrandExplore/ExploreSearchBar';
 import ExploreTabs, { type ExploreTab } from '@/components/BrandExplore/ExploreTabs';
@@ -15,15 +16,25 @@ import type { ExploreCreator, ExploreBrand } from '@/types/explore';
 import CampaignsExploreTab from '@/components/BrandExplore/CampaignExploreTab';
 import { useCampaigns } from '@/hooks/useCampaign';
 import CampaignsPagination from '@/shared/CampaignsPagination';
+import CampaignFilterPillRow, { type CampaignStatusFilter } from '@/shared/CampaignFilterPillRow';
 import ExploreSearchResults from '@/components/BrandExplore/ExploreSearchResults';
 import CampaignDetailsSheet from '@/components/BrandExplore/CampaignDetailsSheet';
 import { Campaign } from '@/types/campaign';
 
+const VALID_TABS: ExploreTab[] = ['campaigns', 'creators', 'brands', 'news'];
+
 export default function ExplorePage() {
-  const [activeTab, setActiveTab] = useState<ExploreTab>('campaigns');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab: ExploreTab = VALID_TABS.includes(tabParam as ExploreTab)
+    ? (tabParam as ExploreTab)
+    : 'campaigns';
+
+  const [activeTab, setActiveTab] = useState<ExploreTab>(initialTab);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
   const [campaignPage, setCampaignPage] = useState(1);
+  const [activeCampaignFilter, setActiveCampaignFilter] = useState<CampaignStatusFilter>('all');
   const isSearching = searchValue.trim().length > 0;
 
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
@@ -40,7 +51,16 @@ export default function ExplorePage() {
     isLoading: campaignsLoading,
     isError: campaignsError,
   } = useCampaigns(
-    { status: 'live', page: campaignPage, limit: 12 },
+    {
+      status:
+        activeCampaignFilter === 'all'
+          ? 'all'
+          : activeCampaignFilter === 'live'
+            ? 'live'
+            : 'completed',
+      page: campaignPage,
+      limit: 12,
+    },
     !isSearching && activeTab === 'campaigns',
   );
   const campaigns = campaignsResponse?.data;
@@ -67,6 +87,11 @@ export default function ExplorePage() {
   function handleTabChange(tab: ExploreTab) {
     setActiveTab(tab);
     setActiveCategoryId(null);
+    setCampaignPage(1);
+  }
+
+  function handleCampaignFilterChange(filter: CampaignStatusFilter) {
+    setActiveCampaignFilter(filter);
     setCampaignPage(1);
   }
 
@@ -106,6 +131,10 @@ export default function ExplorePage() {
         <>
           {activeTab === 'campaigns' && (
             <>
+              <CampaignFilterPillRow
+                active={activeCampaignFilter}
+                onChange={handleCampaignFilterChange}
+              />
               <CampaignsExploreTab
                 campaigns={campaigns}
                 isLoading={campaignsLoading}

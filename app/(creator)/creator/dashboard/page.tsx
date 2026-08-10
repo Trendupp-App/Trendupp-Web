@@ -10,7 +10,7 @@ import CampaignDetailsDrawer, {
   MappedCampaign,
 } from '@/components/creator-dashboard/CampaignDetailsDrawer';
 import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
-import { useCampaigns, useMyApplications } from '@/hooks/useCampaign';
+import { useCampaigns, useMyApplications, useCreatorCategories } from '@/hooks/useCampaign';
 import { Campaign } from '@/types/campaign';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -29,6 +29,7 @@ export default function CreatorDashboardPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
   const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
+  const { data: creatorCategories = [] } = useCreatorCategories();
 
   // Fetch campaigns from backend
   const statusForFilter: Record<Exclude<FilterType, 'all'>, Campaign['status']> = {
@@ -47,7 +48,12 @@ export default function CreatorDashboardPage() {
 
   const mappedCampaigns = liveCampaigns.map((c: Campaign) => {
     const deadline = getCampaignDeadlineInfo(c.timeline);
-    const feeRange = getCampaignBudgetRange(c, { displayInNgn, usdToNgnRate });
+    const feeRange = getCampaignBudgetRange(c, {
+      displayInNgn,
+      usdToNgnRate,
+      creatorCategories,
+      assignedTier: user?.assignedTier,
+    });
 
     const campaignCurrency = (c.currency ?? 'NGN').toUpperCase();
     const displayCurrency = displayInNgn ? 'NGN' : campaignCurrency;
@@ -75,7 +81,7 @@ export default function CreatorDashboardPage() {
       image:
         c.coverImage ||
         'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-      niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
+      niches: c.creatorNiches?.map((n) => n.name) ?? [],
       platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
       status: (c.status === 'active' || c.status === 'live'
         ? 'live'
@@ -211,6 +217,7 @@ export default function CreatorDashboardPage() {
                         image={campaign.image}
                         hideApplied={true}
                         status={campaign.status}
+                        goal={campaign.goal}
                       />
                     </div>
                   ))}
@@ -234,6 +241,7 @@ export default function CreatorDashboardPage() {
                         image={campaign.image}
                         status={campaign.status}
                         hasApplied={campaign.hasApplied}
+                        goal={campaign.goal}
                       />
                     </div>
                   ))}
@@ -259,6 +267,7 @@ export default function CreatorDashboardPage() {
                     image={campaign.image}
                     status={campaign.status}
                     hasApplied={campaign.hasApplied}
+                    goal={campaign.goal}
                   />
                 </div>
               ))}

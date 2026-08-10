@@ -30,6 +30,7 @@ export default function CampaignsGrid({
               image={campaign.image}
               status={campaign.status}
               hasApplied={campaign.hasApplied}
+              goal={campaign.goal}
             />
           </div>
         ))

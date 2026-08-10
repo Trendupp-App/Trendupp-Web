@@ -10,9 +10,7 @@ import CreatorProfileSheet from '@/components/campaign-details/CreatorProfileShe
 import BrandProfileSheet from '@/components/BrandExplore/BrandProfileSheet';
 
 import MainTabs, { type MainTab } from '@/components/creator-dashboard/explore/MainTabs';
-import CampaignFilterPillRow, {
-  type CampaignStatusFilter,
-} from '@/components/creator-dashboard/explore/CampaignFilterPillRow';
+import CampaignFilterPillRow, { type CampaignStatusFilter } from '@/shared/CampaignFilterPillRow';
 import CampaignsGrid from '@/components/creator-dashboard/explore/CampaignsGrid';
 import CampaignsPagination from '@/shared/CampaignsPagination';
 import SocialImpactGrid from '@/components/creator-dashboard/explore/SocialImpactGrid';
@@ -24,10 +22,12 @@ import ExploreSearchAndFilter from '@/components/creator-dashboard/explore/Explo
 import { useExploreCampaigns } from '@/hooks/useExploreCampaign';
 import { useExploreCreators, useExploreBrands, useExploreSearch } from '@/hooks/useExplore';
 import { useDisplayCurrency } from '@/hooks/useExchangeRate';
+import { useAuthStore } from '@/store/authStore';
 import {
   useSocialImpactCampaigns,
   useMySocialImpactApplications,
   useMyApplications,
+  useCreatorCategories,
 } from '@/hooks/useCampaign';
 import { useNiches, useIndustries } from '@/hooks/useOnboardingQueries';
 import { mapCampaign } from '@/lib/campaignMappers';
@@ -68,7 +68,9 @@ export default function ExplorePage() {
   const [participatedCampaign, setParticipatedCampaign] = useState<Campaign | null>(null);
 
   const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
-  const displayOpts = { displayInNgn, usdToNgnRate };
+  const { data: creatorCategories = [] } = useCreatorCategories();
+  const assignedTier = useAuthStore((s) => s.user?.assignedTier);
+  const displayOpts = { displayInNgn, usdToNgnRate, creatorCategories, assignedTier };
 
   const {
     campaigns: sortedCampaigns,
