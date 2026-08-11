@@ -78,6 +78,13 @@ export interface State extends BaseEntity {
   nationalityId: string;
 }
 
+export interface MarketingBudget extends BaseEntity {
+  value: string;
+  currency: 'USD' | 'NGN';
+  minValue: number;
+  maxValue: number | null;
+}
+
 export interface CreatorProfilePayload {
   username: string;
   countryId: string;
