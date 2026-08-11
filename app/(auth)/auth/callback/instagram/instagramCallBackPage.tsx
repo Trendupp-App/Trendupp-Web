@@ -49,7 +49,7 @@ export default function InstagramCallbackPage() {
       hasExchanged.current = true;
       completeSocialConnect(code, pendingConnect)
         .then((result) => {
-          toast.success(`${result.message} — you are now a ${result.tier}`);
+          toast.success(`${result.message}`);
           router.replace(returnTo);
         })
         .catch((err: { response?: { data?: { message?: string } } }) => {

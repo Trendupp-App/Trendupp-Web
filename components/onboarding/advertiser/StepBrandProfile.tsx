@@ -19,11 +19,10 @@ import {
 import { schema, Values } from '@/lib/validations/advertiserProfileSchema';
 import { AdvertiserOnboardingData, BrandProfilePayload } from '@/types/Onboarding';
 import Image from 'next/image';
-import { useCountries, useStates } from '@/hooks/useOnboardingQueries';
+import { useCountries, useStates, useMarketingBudgets } from '@/hooks/useOnboardingQueries';
 import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
 import { toast } from 'sonner';
 import { ComboBox } from '@/shared/ComboBox';
-import { formatNumberWithCommas, stripNonDigits } from '@/utils/Utilities';
 interface Props {
   onNext: (data: Partial<AdvertiserOnboardingData>) => void;
   defaultValues?: Partial<Values>;
@@ -57,8 +56,9 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
 
   const logo = useWatch({ control, name: 'logo' });
   const country = useWatch({ control, name: 'country' });
-  const monthlyBudget = useWatch({ control, name: 'monthlyBudget' }) ?? '';
-  const currencySymbol = country && country !== 'Nigeria' ? '$' : '₦';
+  const budgetCurrency = country && country !== 'Nigeria' ? 'USD' : 'NGN';
+  const { data: marketingBudgets = [], isLoading: loadingBudgets } =
+    useMarketingBudgets(budgetCurrency);
 
   useEffect(() => {
     if (!defaultValues?.brandName && user?.username) {
@@ -78,11 +78,10 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
   function handleCountryChange(countryName: string) {
     setValue('country', countryName, { shouldValidate: true });
     setValue('state', '', { shouldValidate: true });
+    // Budget ranges are currency-specific, so a stale selection from the
+    // previous country's currency can't carry over.
+    setValue('monthlyBudget', '', { shouldValidate: true });
     setUserSelectedCountryId(countries.find((c) => c.name === countryName)?.id);
-  }
-
-  function handleMonthlyBudgetChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setValue('monthlyBudget', stripNonDigits(e.target.value), { shouldValidate: true });
   }
 
   function onSubmit(values: Values) {
@@ -226,19 +225,21 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
       {/* Monthly budget */}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Monthly budget</Label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-light text-[#1a1a2e]">
-            {currencySymbol}
-          </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={formatNumberWithCommas(monthlyBudget)}
-            onChange={handleMonthlyBudgetChange}
-            placeholder="Enter monthly budget"
-            className="w-full border border-[#e8e6f0] rounded-md h-10 pl-7 pr-3 text-xs font-light focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
-          />
-        </div>
+        <Select
+          onValueChange={(v) => setValue('monthlyBudget', v, { shouldValidate: true })}
+          defaultValue={defaultValues?.monthlyBudget}
+        >
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
+            <SelectValue placeholder={loadingBudgets ? 'Loading…' : 'Select monthly budget'} />
+          </SelectTrigger>
+          <SelectContent>
+            {marketingBudgets.map((b) => (
+              <SelectItem key={b.id} value={b.value}>
+                {b.value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {errors.monthlyBudget && (
           <p className="text-[11px] text-red-400">{errors.monthlyBudget.message}</p>
         )}

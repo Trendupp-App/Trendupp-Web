@@ -56,7 +56,7 @@ export default function SocialConnectCallback({ platform, fallbackPath = '/' }: 
 
     completeSocialConnect(code, pending)
       .then((result) => {
-        toast.success(`${result.message} — you are now a ${result.tier}`);
+        toast.success(`${result.message}`);
         router.replace(returnTo);
       })
       .catch((err: { response?: { data?: { message?: string } } }) => {

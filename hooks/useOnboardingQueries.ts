@@ -37,6 +37,14 @@ export function useStates(countryId?: string) {
   });
 }
 
+export function useMarketingBudgets(currency?: 'USD' | 'NGN') {
+  return useQuery({
+    queryKey: ['marketing-budgets', currency],
+    queryFn: () => onboardingApi.getMarketingBudgets(currency).then((r) => r.data),
+    staleTime: 1000 * 60 * 60,
+  });
+}
+
 export function useNiches() {
   return useQuery({
     queryKey: ['niches'],
