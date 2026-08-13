@@ -551,6 +551,7 @@ export default function CreatorProfilePage() {
   const [newPortfolioTitle, setNewPortfolioTitle] = useState('');
   const [socialMediaLink, setSocialMediaLink] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFileError, setUploadedFileError] = useState('');
 
   // Settings Edit State (Temporary Form Buffer)
   const [editFirstName, setEditFirstName] = useState('');
@@ -705,6 +706,7 @@ export default function CreatorProfilePage() {
       onSuccess: () => {
         setNewPortfolioTitle('');
         setUploadedFile(null);
+        setUploadedFileError('');
         setSocialMediaLink('');
         setIsAddModalOpen(false);
       },
@@ -1393,9 +1395,17 @@ export default function CreatorProfilePage() {
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      setUploadedFile(file);
+                    if (!file) return;
+                    const MAX_BYTES = 5 * 1024 * 1024;
+                    if (file.size > MAX_BYTES) {
+                      setUploadedFileError(
+                        `Image is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed size is 5MB.`,
+                      );
+                      e.target.value = '';
+                      return;
                     }
+                    setUploadedFileError('');
+                    setUploadedFile(file);
                   }}
                 />
                 <UploadCloud size={24} className="text-brand-pink" />
@@ -1406,12 +1416,13 @@ export default function CreatorProfilePage() {
                 ) : (
                   <>
                     <span className="text-xs font-bold text-[#1a1a2e]">Tap to upload files</span>
-                    <span className="text-[9px] text-[#9a99b0] font-light">
-                      PNG, JPG up to 10MB
-                    </span>
+                    <span className="text-[9px] text-[#9a99b0] font-light">PNG, JPG up to 5MB</span>
                   </>
                 )}
               </div>
+              {uploadedFileError && (
+                <p className="text-[11px] text-red-400 text-center">{uploadedFileError}</p>
+              )}
             </div>
             {/* Portfolio Link Input */}
             <div className="flex flex-col gap-1.5 w-full">
@@ -1444,6 +1455,7 @@ export default function CreatorProfilePage() {
                   setIsAddModalOpen(false);
                   setNewPortfolioTitle('');
                   setUploadedFile(null);
+                  setUploadedFileError('');
                   setSocialMediaLink('');
                 }}
                 className="flex-1 py-3 bg-[#f4f3f6] hover:bg-[#e8e6f0] text-[#7a7a9a] rounded-xl text-xs font-bold cursor-pointer active:scale-98 transition-all"
