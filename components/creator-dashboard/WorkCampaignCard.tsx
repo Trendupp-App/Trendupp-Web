@@ -53,7 +53,10 @@ export interface WorkCampaign {
   usageRights: string;
   successLooksLike: string;
   draftLink?: string | null;
-  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string }> | null;
+  // A link only carries the richer { url, isLive, checkedAt } shape once the
+  // backend's async live-URL check has run against it — freshly submitted
+  // links arrive as a bare string until then.
+  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string } | string> | null;
   contentIdea?: string;
   applicationsCount: number;
   campaignComment?: { comment: string; response: string | null } | null;

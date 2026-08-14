@@ -13,7 +13,10 @@ export interface LiveLinkEntry {
   checkedAt: string;
 }
 
-export type LiveLinkMap = Record<string, LiveLinkEntry>;
+// A link only carries the richer { url, isLive, checkedAt } shape once the
+// backend's async live-URL check has run against it — freshly submitted
+// links arrive as a bare string until then.
+export type LiveLinkMap = Record<string, LiveLinkEntry | string>;
 
 export interface CampaignSubmission {
   id: string;
