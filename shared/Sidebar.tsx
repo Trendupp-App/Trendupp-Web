@@ -75,7 +75,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   return (
     <aside
       className={cn(
-        'relative h-screen bg-[#fef2f6] border-r border-[#fae2ec] flex flex-col overflow-hidden py-6 px-4 shrink-0 transition-[width] duration-300',
+        'relative h-dvh bg-[#fef2f6] border-r border-[#fae2ec] flex flex-col overflow-hidden py-6 px-4 shrink-0 transition-[width] duration-300',
         collapsed ? 'w-20' : 'w-[260px]',
       )}
     >
