@@ -44,7 +44,7 @@ interface SubmissionItem {
   status: string;
   brandFeedback?: string;
   draftLink?: string | null;
-  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string }> | null;
+  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string } | string> | null;
 }
 function mapAppToWorkCampaign(
   app: CampaignApplicationDto,

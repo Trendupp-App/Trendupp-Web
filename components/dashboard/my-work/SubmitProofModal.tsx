@@ -215,10 +215,6 @@ export default function SubmitProofModal({
                 </div>
               ))}
 
-              <span className="text-[10px] text-[#9a99b0] font-light">
-                If a link is broken or invalid, you have 24hrs to resubmit.
-              </span>
-
               {error && (
                 <div className="flex items-center gap-1 text-[#dc2626] text-[10px]">
                   <AlertCircle size={12} />

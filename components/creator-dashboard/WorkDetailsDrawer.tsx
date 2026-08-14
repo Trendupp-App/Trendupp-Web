@@ -449,20 +449,23 @@ export default function WorkDetailsDrawer({
                     </span>
                   </div>
                   <div className="flex flex-col gap-2">
-                    {Object.entries(campaign.liveLink!).map(([platform, entry]) => (
-                      <div key={platform} className="flex flex-col gap-0.5">
-                        <span className="text-[10px] text-[#9a99b0] capitalize">{platform}</span>
-                        <a
-                          href={ensureHttpUrl(entry.url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
-                        >
-                          {entry.url}
-                          <ExternalLink size={13} className="shrink-0" />
-                        </a>
-                      </div>
-                    ))}
+                    {Object.entries(campaign.liveLink!).map(([platform, entry]) => {
+                      const url = typeof entry === 'string' ? entry : entry.url;
+                      return (
+                        <div key={platform} className="flex flex-col gap-0.5">
+                          <span className="text-[10px] text-[#9a99b0] capitalize">{platform}</span>
+                          <a
+                            href={ensureHttpUrl(url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                          >
+                            {url}
+                            <ExternalLink size={13} className="shrink-0" />
+                          </a>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

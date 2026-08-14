@@ -13,7 +13,7 @@ export default function ProfileHeroBanner({ onEditProfile }: ProfileHeroBannerPr
 
   const displayName = user?.username ?? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 
-  const location = [user?.city, user?.state?.name, user?.country?.name].filter(Boolean).join(', ');
+  const location = [user?.state?.name, user?.country?.name].filter(Boolean).join(', ');
 
   return (
     <div className="relative bg-[#0d0d2b] rounded-2xl px-6 py-8 flex items-center gap-5">

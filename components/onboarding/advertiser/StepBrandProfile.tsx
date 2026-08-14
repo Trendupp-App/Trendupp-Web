@@ -38,6 +38,7 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
     userSelectedCountryId ?? countries.find((c) => c.name === defaultValues?.country)?.id;
   const { data: states = [] } = useStates(selectedCountryId);
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
   const { mutate: updateProfile, isPending } = useUpdateProfile();
 
   const {
@@ -85,17 +86,17 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
   }
 
   function onSubmit(values: Values) {
-    const countryId = countries.find((c) => c.name === values.country)?.id;
-    const stateId = states.find((s) => s.name === values.state)?.id;
+    const countryObj = countries.find((c) => c.name === values.country);
+    const stateObj = states.find((s) => s.name === values.state);
 
-    if (!countryId || !stateId) {
+    if (!countryObj || !stateObj) {
       toast.error('Please select a valid country and state');
       return;
     }
 
     const payload: BrandProfilePayload = {
-      countryId,
-      stateId,
+      countryId: countryObj.id,
+      stateId: stateObj.id,
       ...(values.brandName && { brandName: values.brandName }),
       ...(values.city && { city: values.city }),
       ...(values.bio && { bio: values.bio }),
@@ -104,7 +105,21 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
       ...(logoFile && { avatar: logoFile }),
     };
 
-    updateProfile(payload, { onSuccess: () => onNext(values) });
+    updateProfile(payload, {
+      onSuccess: () => {
+        // The onboarding response doesn't echo country/state back, so the
+        // global auth store (which pages like campaign creation read
+        // `countryId` from for currency selection) would otherwise stay
+        // stale until a fresh login/reload re-hydrates the full profile.
+        updateUser({
+          countryId: countryObj.id,
+          country: { id: countryObj.id, name: countryObj.name },
+          stateId: stateObj.id,
+          state: { id: stateObj.id, name: stateObj.name },
+        });
+        onNext(values);
+      },
+    });
   }
 
   return (
