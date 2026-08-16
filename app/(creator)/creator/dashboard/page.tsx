@@ -20,24 +20,24 @@ import { getCampaignBudgetRange } from '@/lib/campaignMappers';
 import { useDisplayCurrency } from '@/hooks/useExchangeRate';
 import { convertUsdToNgn } from '@/utils/Utilities';
 
-type FilterType = 'all' | 'live' | 'past';
+type FilterType = 'live' | 'past';
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const isProfileCompleted = user?.onboardingPercentage === 100;
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('live');
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
   const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
   const { data: creatorCategories = [] } = useCreatorCategories();
 
   // Fetch campaigns from backend
-  const statusForFilter: Record<Exclude<FilterType, 'all'>, Campaign['status']> = {
+  const statusForFilter: Record<FilterType, Campaign['status']> = {
     live: 'live',
     past: 'completed',
   };
   const { data: campaignsResponse, isLoading } = useCampaigns({
-    status: activeFilter === 'all' ? undefined : statusForFilter[activeFilter],
+    status: statusForFilter[activeFilter],
     page: 1,
     limit: 6,
   });
@@ -104,7 +104,6 @@ export default function CreatorDashboardPage() {
   const filteredCampaigns = mappedCampaigns.filter((campaign) => {
     // Paused/cancelled campaigns belong on the My Work page, not the home dashboard.
     if (campaign.status === 'paused' || campaign.status === 'cancelled') return false;
-    if (activeFilter === 'all') return true;
     return campaign.status === activeFilter;
   });
 
@@ -142,7 +141,7 @@ export default function CreatorDashboardPage() {
         {/* Filter Headers */}
         <div className="flex items-center justify-between border-b border-[#e8e6f0]/40 pb-4 overflow-hidden">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide shrink-0 max-w-full">
-            {(['all', 'live', 'past'] as const).map((filter) => (
+            {(['live', 'past'] as const).map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
@@ -153,7 +152,6 @@ export default function CreatorDashboardPage() {
                     : 'bg-[#f0edf7]/65 text-[#5a5a7a] hover:bg-[#f0edf7]',
                 )}
               >
-                {filter === 'all' && 'All'}
                 {filter === 'live' && 'Live Campaigns'}
                 {filter === 'past' && 'Past Campaigns'}
               </button>
@@ -198,55 +196,28 @@ export default function CreatorDashboardPage() {
           <div>
             {/* Mobile View */}
             <div className="lg:hidden w-full select-none">
-              {activeFilter === 'all' ? (
-                /* Horizontal scrolling list for "All" active tab */
-                <div className="flex flex-row overflow-x-auto gap-4 w-full pb-4 scrollbar-hide">
-                  {filteredCampaigns.map((campaign) => (
-                    <div
-                      key={campaign.id}
-                      className="w-[220px] shrink-0 cursor-pointer"
-                      onClick={() => setSelectedCampaign(campaign)}
-                    >
-                      <CampaignCard
-                        title={campaign.title}
-                        brand={campaign.brand}
-                        budget={campaign.budget}
-                        daysLeft=""
-                        tier={campaign.tier}
-                        appliedCount={campaign.appliedCount}
-                        image={campaign.image}
-                        hideApplied={true}
-                        status={campaign.status}
-                        goal={campaign.goal}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* Vertical stack list for "Live" or "Past" active tabs */
-                <div className="flex flex-col gap-4 w-full pb-4">
-                  {filteredCampaigns.map((campaign) => (
-                    <div
-                      key={campaign.id}
-                      className="w-full cursor-pointer"
-                      onClick={() => setSelectedCampaign(campaign)}
-                    >
-                      <CampaignCard
-                        title={campaign.title}
-                        brand={campaign.brand}
-                        budget={campaign.budget}
-                        daysLeft={campaign.daysLeft}
-                        tier={campaign.tier}
-                        appliedCount={campaign.appliedCount}
-                        image={campaign.image}
-                        status={campaign.status}
-                        hasApplied={campaign.hasApplied}
-                        goal={campaign.goal}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-col gap-4 w-full pb-4">
+                {filteredCampaigns.map((campaign) => (
+                  <div
+                    key={campaign.id}
+                    className="w-full cursor-pointer"
+                    onClick={() => setSelectedCampaign(campaign)}
+                  >
+                    <CampaignCard
+                      title={campaign.title}
+                      brand={campaign.brand}
+                      budget={campaign.budget}
+                      daysLeft={campaign.daysLeft}
+                      tier={campaign.tier}
+                      appliedCount={campaign.appliedCount}
+                      image={campaign.image}
+                      status={campaign.status}
+                      hasApplied={campaign.hasApplied}
+                      goal={campaign.goal}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Desktop View: Grid for all tabs */}
