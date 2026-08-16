@@ -156,11 +156,20 @@ export default function ExplorePage() {
     setSocialImpactPage(1);
   }
 
+  // Paginated lists only ever hold one page's worth of items — the real
+  // count across all pages comes from the server's pagination.total, not the
+  // length of what happens to be on the current page. Search results aren't
+  // paginated, so their .length already is the real count.
+  const campaignsCount = isSearching
+    ? displayedCampaigns.length
+    : (campaignsPagination?.total ?? displayedCampaigns.length);
+  const socialImpactCount = socialImpactPagination?.total ?? socialImpactCampaigns.length;
+
   const countLabel =
     activeTab === 'campaigns'
-      ? `${displayedCampaigns.length} campaign${displayedCampaigns.length !== 1 ? 's' : ''}`
+      ? `${campaignsCount} campaign${campaignsCount !== 1 ? 's' : ''}`
       : activeTab === 'social-impact'
-        ? `${socialImpactCampaigns.length} campaign${socialImpactCampaigns.length !== 1 ? 's' : ''}`
+        ? `${socialImpactCount} campaign${socialImpactCount !== 1 ? 's' : ''}`
         : activeTab === 'brands'
           ? `${displayedBrands.length} brand${displayedBrands.length !== 1 ? 's' : ''}`
           : `${displayedCreators.length} creator${displayedCreators.length !== 1 ? 's' : ''}`;
