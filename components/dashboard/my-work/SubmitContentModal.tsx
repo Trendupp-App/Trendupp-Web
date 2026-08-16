@@ -50,7 +50,7 @@ export default function SubmitContentModal({
     try {
       new URL(normalizedLink);
     } catch {
-      setError('Please enter a valid URL (e.g. https://drive.google.com/...)');
+      setError('Please enter a valid URL )');
       return;
     }
 
@@ -108,7 +108,7 @@ export default function SubmitContentModal({
                 />
                 <Input
                   type="text"
-                  placeholder="https://drive.google.com/..."
+                  placeholder="submit your content link here"
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                   className="border-[#e8e6f0] h-11 text-xs font-light pl-10 focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"

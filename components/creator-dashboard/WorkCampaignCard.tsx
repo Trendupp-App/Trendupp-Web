@@ -39,6 +39,7 @@ export interface WorkCampaign {
   actualAmount?: number;
   niches?: string[];
   goal?: 'Content Creation' | 'Amplification' | null;
+  amplificationAsset?: string | null;
   createdAt?: string;
   budgetMax?: number;
   daysLeftNumber?: number;
@@ -52,7 +53,10 @@ export interface WorkCampaign {
   usageRights: string;
   successLooksLike: string;
   draftLink?: string | null;
-  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string }> | null;
+  // A link only carries the richer { url, isLive, checkedAt } shape once the
+  // backend's async live-URL check has run against it — freshly submitted
+  // links arrive as a bare string until then.
+  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string } | string> | null;
   contentIdea?: string;
   applicationsCount: number;
   campaignComment?: { comment: string; response: string | null } | null;
@@ -191,6 +195,12 @@ export default function WorkCampaignCard({
           <h4 className="text-[15px] font-bold text-[#1a1a2e] leading-snug group-hover:text-brand-pink transition-colors">
             {campaign.title}
           </h4>
+
+          {campaign.goal && (
+            <span className="text-[9px] sm:text-[10px] font-semibold text-[#4c49d8] bg-[#eef0ff] px-2 py-0.5 rounded-full w-fit">
+              {campaign.goal}
+            </span>
+          )}
 
           <span className="text-[16px] font-extrabold text-[#1a1a2e] mt-1">
             {formatCurrency(campaign.actualAmount ?? 300000, campaign.currency ?? 'NGN')}

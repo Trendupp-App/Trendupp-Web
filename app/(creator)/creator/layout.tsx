@@ -27,6 +27,7 @@ const BRAND_TITLES: Record<string, string> = {
   '/brand/campaigns': 'Campaigns',
   '/brand/explore': 'Explore',
   '/brand/news': 'News',
+  '/brand/messages': 'Messages',
   '/brand/payout': 'Payout',
   '/brand/profile': 'My profile',
 };

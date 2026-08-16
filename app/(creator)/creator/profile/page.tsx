@@ -8,7 +8,6 @@ import {
   Plus,
   Trash2,
   Edit2,
-  LogOut,
   Award,
   Search,
   ChevronLeft,
@@ -360,6 +359,12 @@ export default function CreatorProfilePage() {
             : countryName
           : prev.location;
 
+        let nationalityName = prev.nationality;
+        if (activeUser.nationalityId && nationalities) {
+          const nObj = nationalities.find((n) => n.id === activeUser.nationalityId);
+          if (nObj) nationalityName = nObj.name;
+        }
+
         return {
           ...prev,
           name: `${activeUser.firstName} ${activeUser.lastName}`.trim(),
@@ -368,6 +373,7 @@ export default function CreatorProfilePage() {
           bio: activeUser.bio || '',
           image: activeUser.avatarUrl || INITIAL_PROFILE.image,
           location: location,
+          nationality: nationalityName,
           rating: activeUser.avgRating || 0,
           niches:
             activeUser.niches && activeUser.niches.length > 0
@@ -377,7 +383,7 @@ export default function CreatorProfilePage() {
       });
       /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }, [userDetail, user, countries, states]);
+  }, [userDetail, user, countries, states, nationalities]);
 
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updateNichesMutation = useUpdateProfileNiches();
@@ -545,6 +551,7 @@ export default function CreatorProfilePage() {
   const [newPortfolioTitle, setNewPortfolioTitle] = useState('');
   const [socialMediaLink, setSocialMediaLink] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFileError, setUploadedFileError] = useState('');
 
   // Settings Edit State (Temporary Form Buffer)
   const [editFirstName, setEditFirstName] = useState('');
@@ -699,6 +706,7 @@ export default function CreatorProfilePage() {
       onSuccess: () => {
         setNewPortfolioTitle('');
         setUploadedFile(null);
+        setUploadedFileError('');
         setSocialMediaLink('');
         setIsAddModalOpen(false);
       },
@@ -1306,26 +1314,6 @@ export default function CreatorProfilePage() {
               <ChevronRight size={14} className="text-[#9a99b0] shrink-0" />
             </div>
 
-            {/* Sign Out (Mobile Only) */}
-            <div
-              id="settings-item-signout"
-              className="border border-[#e8e6f0]/70 rounded-2xl p-4 flex items-center justify-between bg-white hover:bg-[#faf9fc]/30 active:scale-[0.99] transition-all duration-200 cursor-pointer shadow-xs md:hidden"
-              onClick={() => alert('Signing out...')}
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#fee2e2] flex items-center justify-center shrink-0 text-[#ef4444]">
-                  <LogOut size={18} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#1a1a2e]">Sign Out</span>
-                  <span className="text-[10px] font-medium text-[#7a7a9a] mt-0.5">
-                    Log out of your account
-                  </span>
-                </div>
-              </div>
-              <ChevronRight size={14} className="text-[#9a99b0] shrink-0" />
-            </div>
-
             {/* Mobile Footer */}
             <div className="text-[10px] text-[#9a99b0] text-center font-medium mt-6 py-2 md:hidden">
               Trendupp v1.0.0 ·{' '}
@@ -1407,9 +1395,17 @@ export default function CreatorProfilePage() {
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      setUploadedFile(file);
+                    if (!file) return;
+                    const MAX_BYTES = 5 * 1024 * 1024;
+                    if (file.size > MAX_BYTES) {
+                      setUploadedFileError(
+                        `Image is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed size is 5MB.`,
+                      );
+                      e.target.value = '';
+                      return;
                     }
+                    setUploadedFileError('');
+                    setUploadedFile(file);
                   }}
                 />
                 <UploadCloud size={24} className="text-brand-pink" />
@@ -1420,31 +1416,22 @@ export default function CreatorProfilePage() {
                 ) : (
                   <>
                     <span className="text-xs font-bold text-[#1a1a2e]">Tap to upload files</span>
-                    <span className="text-[9px] text-[#9a99b0] font-light">
-                      PNG, JPG up to 10MB
-                    </span>
+                    <span className="text-[9px] text-[#9a99b0] font-light">PNG, JPG up to 5MB</span>
                   </>
                 )}
               </div>
+              {uploadedFileError && (
+                <p className="text-[11px] text-red-400 text-center">{uploadedFileError}</p>
+              )}
             </div>
-
-            {/* Separator */}
-            <div className="flex items-center gap-3">
-              <hr className="flex-1 border-[#e8e6f0]" />
-              <span className="text-[10px] font-bold text-[#9a99b0] uppercase tracking-wider select-none">
-                or
-              </span>
-              <hr className="flex-1 border-[#e8e6f0]" />
-            </div>
-
-            {/* Social Media Link Input */}
+            {/* Portfolio Link Input */}
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider pl-1">
-                Social media link
+                Portfolio link
               </label>
               <input
                 type="text"
-                placeholder="https://drive.google.com/..."
+                placeholder="https://"
                 value={socialMediaLink}
                 onChange={(e) => setSocialMediaLink(e.target.value)}
                 className="w-full h-10 border border-[#e8e6f0] rounded-xl px-3.5 text-xs text-[#1a1a2e] focus:outline-none focus:ring-1 focus:ring-brand-pink/30 font-medium"
@@ -1468,6 +1455,7 @@ export default function CreatorProfilePage() {
                   setIsAddModalOpen(false);
                   setNewPortfolioTitle('');
                   setUploadedFile(null);
+                  setUploadedFileError('');
                   setSocialMediaLink('');
                 }}
                 className="flex-1 py-3 bg-[#f4f3f6] hover:bg-[#e8e6f0] text-[#7a7a9a] rounded-xl text-xs font-bold cursor-pointer active:scale-98 transition-all"

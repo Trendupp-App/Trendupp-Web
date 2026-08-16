@@ -44,7 +44,7 @@ interface SubmissionItem {
   status: string;
   brandFeedback?: string;
   draftLink?: string | null;
-  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string }> | null;
+  liveLink?: Record<string, { url: string; isLive: boolean; checkedAt: string } | string> | null;
 }
 function mapAppToWorkCampaign(
   app: CampaignApplicationDto,
@@ -132,8 +132,9 @@ function mapAppToWorkCampaign(
     image:
       campaign.coverImage ||
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    niches: campaign.creatorNiche?.name ? [campaign.creatorNiche.name] : [],
+    niches: campaign.creatorNiches?.map((n) => n.name) ?? [],
     goal: campaign.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
+    amplificationAsset: campaign.amplificationAsset ?? null,
     createdAt: app.createdAt,
     budgetMax: displayBudget,
     actualAmount: app.feeRequest,
@@ -218,50 +219,50 @@ export default function MyWorkPage() {
   const handleSubmitLink = (link: string) => {
     if (!submitLinkCampaign) return;
 
-    if (submitLinkCampaign.campaignId && submitLinkCampaign.id) {
-      submitDraft.mutate(
-        {
-          id: submitLinkCampaign.campaignId,
-          appId: submitLinkCampaign.id,
-          payload: { draftLink: link },
-        },
-        {
-          onSuccess: () => {
-            setSubmitLinkCampaign(null);
-          },
-        },
-      );
-    } else {
-      toast.success('Mock Content draft link submitted successfully! (Staging Fallback)');
-      setSubmitLinkCampaign(null);
+    if (!submitLinkCampaign.campaignId || !submitLinkCampaign.id) {
+      toast.error('Could not submit — missing campaign details. Please refresh and try again.');
+      return;
     }
+
+    submitDraft.mutate(
+      {
+        id: submitLinkCampaign.campaignId,
+        appId: submitLinkCampaign.id,
+        payload: { draftLink: link },
+      },
+      {
+        onSuccess: () => {
+          setSubmitLinkCampaign(null);
+        },
+      },
+    );
   };
 
   const handleSubmitProof = (entries: LiveLinkEntry[]) => {
     if (!submitProofCampaign) return;
 
-    if (submitProofCampaign.campaignId && submitProofCampaign.submissionId) {
-      const liveLink = entries.reduce<Record<string, string>>((acc, entry) => {
-        acc[entry.platform] = entry.link;
-        return acc;
-      }, {});
-
-      submitProof.mutate(
-        {
-          id: submitProofCampaign.campaignId,
-          submissionId: submitProofCampaign.submissionId,
-          payload: { liveLink },
-        },
-        {
-          onSuccess: () => {
-            setSubmitProofCampaign(null);
-          },
-        },
-      );
-    } else {
-      toast.success('Mock Proof of posting submitted successfully! (Staging Fallback)');
-      setSubmitProofCampaign(null);
+    if (!submitProofCampaign.campaignId || !submitProofCampaign.submissionId) {
+      toast.error('Could not submit — missing campaign details. Please refresh and try again.');
+      return;
     }
+
+    const liveLink = entries.reduce<Record<string, string>>((acc, entry) => {
+      acc[entry.platform] = entry.link;
+      return acc;
+    }, {});
+
+    submitProof.mutate(
+      {
+        id: submitProofCampaign.campaignId,
+        submissionId: submitProofCampaign.submissionId,
+        payload: { liveLink },
+      },
+      {
+        onSuccess: () => {
+          setSubmitProofCampaign(null);
+        },
+      },
+    );
   };
   const handleAcceptOffer = (campaign: WorkCampaign) => {
     toast.success(`Offer for "${campaign.title}" accepted!`);
@@ -282,10 +283,15 @@ export default function MyWorkPage() {
 
   const doneCount = campaigns.filter((c) => c.status === 'Payment released').length;
 
+  const pausedCancelledCount = campaigns.filter(
+    (c) => c.campaignStatus === 'paused' || c.campaignStatus === 'cancelled',
+  ).length;
+
   const counts = {
     active: activeCount,
     applied: appliedCount,
     done: doneCount,
+    pausedCancelled: pausedCancelledCount,
     socialImpact: socialImpactApps.length,
     activeSub: {
       All: activeCount,
@@ -299,6 +305,11 @@ export default function MyWorkPage() {
       Accepted: campaigns.filter((c) => c.status === 'Selected').length,
       Pending: campaigns.filter((c) => c.status === 'Pending').length,
       Rejected: campaigns.filter((c) => c.status === 'Declined').length,
+    },
+    pausedCancelledSub: {
+      All: pausedCancelledCount,
+      Paused: campaigns.filter((c) => c.campaignStatus === 'paused').length,
+      Cancelled: campaigns.filter((c) => c.campaignStatus === 'cancelled').length,
     },
     socialImpactSub: {
       All: socialImpactApps.length,
@@ -344,6 +355,16 @@ export default function MyWorkPage() {
 
       if (activeTab === 'Done') {
         return c.status === 'Payment released';
+      }
+
+      if (activeTab === 'Paused/Cancelled') {
+        const isPausedOrCancelled =
+          c.campaignStatus === 'paused' || c.campaignStatus === 'cancelled';
+        if (!isPausedOrCancelled) return false;
+
+        if (activeSubFilter === 'Paused') return c.campaignStatus === 'paused';
+        if (activeSubFilter === 'Cancelled') return c.campaignStatus === 'cancelled';
+        return true;
       }
 
       return true;
@@ -465,6 +486,10 @@ export default function MyWorkPage() {
         onSubmitProof={(c) => {
           setSelectedCampaign(null);
           setSubmitProofCampaign(c);
+        }}
+        onRaiseDispute={(c) => {
+          setSelectedCampaign(null);
+          setDisputeCampaign(c);
         }}
       />
 

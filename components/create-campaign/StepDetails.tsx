@@ -21,6 +21,7 @@ import {
   formatTierFollowerRange,
   formatMinCostLabel,
   formatMinCostUsdLabel,
+  getCurrencySymbol,
 } from '@/utils/Utilities';
 import { useAuthStore } from '@/store/authStore';
 import FieldLabel from './FieldLabel';
@@ -49,6 +50,7 @@ export default function StepDetails({
   const { data: countries = [] } = useCountries();
   const user = useAuthStore((s) => s.user);
   const isNigerianBrand = countries.find((c) => c.id === user?.countryId)?.name === 'Nigeria';
+  const budgetCurrencySymbol = getCurrencySymbol(isNigerianBrand ? 'NGN' : 'USD');
 
   const {
     register,
@@ -181,14 +183,19 @@ export default function StepDetails({
       {/* Total budget */}
       <div className="flex flex-col gap-1.5">
         <FieldLabel label="Total budget" required />
-        <input
-          type="text"
-          inputMode="numeric"
-          value={budget ? Number(budget).toLocaleString('en-US') : ''}
-          onChange={handleBudgetChange}
-          placeholder="Enter amount"
-          className={inputCls}
-        />
+        <div className="relative flex items-center">
+          <span className="absolute left-3 text-sm text-[#9a99b0] select-none font-light">
+            {budgetCurrencySymbol}
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={budget ? Number(budget).toLocaleString('en-US') : ''}
+            onChange={handleBudgetChange}
+            placeholder="Enter amount"
+            className={cn(inputCls, 'pl-7')}
+          />
+        </div>
         {errors.budget && <p className="text-[11px] text-red-400">{errors.budget.message}</p>}
       </div>
 
@@ -238,6 +245,7 @@ export default function StepDetails({
           onChange={(vals) => setValue('creatorNicheIds', vals, { shouldValidate: true })}
           placeholder="Select niche"
           loading={nichesLoading}
+          max={3}
         />
         {errors.creatorNicheIds && (
           <p className="text-[11px] text-red-400">{errors.creatorNicheIds.message}</p>

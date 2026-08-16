@@ -9,6 +9,8 @@ import { useCampaignPlatforms, useApplyCampaign } from '@/hooks/useCampaign';
 import ApplicationSuccessView from './ApplicationSuccessView';
 import type { CampaignTimeline } from '@/types/campaign';
 import { buildTimelineSteps } from '@/lib/campaignTimelineStage';
+import { getCurrencySymbol } from '@/utils/Utilities';
+import { ComboBox } from '@/shared/ComboBox';
 
 export interface MappedCampaign {
   id: string;
@@ -27,6 +29,7 @@ export interface MappedCampaign {
   image: string;
   niches?: string[];
   platforms?: string[];
+  goal?: string;
   campaignBrief?: string;
   deliverables?: string[];
   contentDirection?: string[];
@@ -60,7 +63,18 @@ export default function CampaignDetailsDrawer({
   const [comments, setComments] = useState('');
   const [appliedTimeline, setAppliedTimeline] = useState<CampaignTimeline | undefined>();
 
-  const { data: platformsList = [] } = useCampaignPlatforms();
+  const { data: platformsList = [], isLoading: platformsLoading } = useCampaignPlatforms();
+
+  // Backend platform names aren't consistently cased (e.g. "facebook" vs
+  // "Instagram") — capitalize just the first letter for display so labels
+  // read consistently without mangling names like "TikTok".
+  const platformLabel = (name: string) =>
+    name === 'Twitter' ? 'Twitter / X' : name.charAt(0).toUpperCase() + name.slice(1);
+  const platformOptions = platformsList.map((p) => ({
+    value: p.name,
+    label: platformLabel(p.name),
+  }));
+  const secondaryPlatformOptions = [{ value: 'None', label: 'None' }, ...platformOptions];
 
   const applyMutation = useApplyCampaign((application) => {
     setAppliedTimeline(application?.campaign?.timeline);
@@ -112,6 +126,7 @@ export default function CampaignDetailsDrawer({
   // (see useDisplayCurrency + mapCampaign/getCampaignBudgetRange), so this
   // just compares against whatever was handed in — no conversion here.
   const displayFeeRangeLabel = campaign?.feeRangeLabel ?? campaign?.budget;
+  const currencySymbol = getCurrencySymbol(campaign?.currency);
 
   const isFormValid = contentTitle.length >= 20 && feeRequest.trim() !== '';
   const feeRequestNumber = Number(feeRequest.replace(/[^0-9]/g, '')) || 0;
@@ -279,27 +294,51 @@ export default function CampaignDetailsDrawer({
                       </div>
                     </div>
 
-                    {/* Info cards grid: Niche, Platform, Creator Tier */}
-                    <div className="grid grid-cols-3 gap-2.5 w-full">
+                    {/* Info cards grid: Goal, Niche, Platform, Creator Tier */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full">
+                      {campaign.goal && (
+                        <div className="bg-white border border-[#e8e6f0]/60 rounded-xl p-3.5 flex flex-col gap-1 min-w-0">
+                          <span className="text-[10px] text-[#9a99b0] font-light leading-none">
+                            Goal
+                          </span>
+                          <span className="text-xs font-bold text-[#1a1a2e] leading-none mt-0.5 truncate">
+                            {campaign.goal}
+                          </span>
+                        </div>
+                      )}
                       <div className="bg-white border border-[#e8e6f0]/60 rounded-xl p-3.5 flex flex-col gap-1 min-w-0">
                         <span className="text-[10px] text-[#9a99b0] font-light leading-none">
                           Niche
                         </span>
-                        <span className="text-xs font-bold text-[#1a1a2e] leading-none mt-0.5 truncate">
-                          {campaign.niches?.[0] ?? 'Fashion'}
-                        </span>
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {(campaign.niches?.length ? campaign.niches : ['Fashion']).map((n) => (
+                            <span
+                              key={n}
+                              className="text-[10px] font-bold text-[#1a1a2e] leading-none px-1.5 py-1 rounded-md bg-[#f4f3f6]"
+                            >
+                              {n}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                       <div className="bg-white border border-[#e8e6f0]/60 rounded-xl p-3.5 flex flex-col gap-1 min-w-0">
                         <span className="text-[10px] text-[#9a99b0] font-light leading-none">
                           Platform
                         </span>
-                        <div className="flex items-center gap-1 mt-0.5 min-w-0">
-                          <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] flex items-center justify-center text-white shrink-0">
-                            <div className="w-1.5 h-1.5 rounded-full border border-white" />
-                          </div>
-                          <span className="text-xs font-bold text-[#1a1a2e] leading-none truncate">
-                            {campaign.platforms?.[0] ?? 'Instagram'}
-                          </span>
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {(campaign.platforms?.length ? campaign.platforms : ['Instagram']).map(
+                            (p) => (
+                              <span
+                                key={p}
+                                className="flex items-center gap-1 text-[10px] font-bold text-[#1a1a2e] leading-none px-1.5 py-1 rounded-md bg-[#f4f3f6]"
+                              >
+                                <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] flex items-center justify-center text-white shrink-0">
+                                  <div className="w-1 h-1 rounded-full border border-white" />
+                                </div>
+                                {p}
+                              </span>
+                            ),
+                          )}
                         </div>
                       </div>
                       <div className="bg-white border border-[#e8e6f0]/60 rounded-xl p-3.5 flex flex-col gap-1 min-w-0">
@@ -624,83 +663,42 @@ export default function CampaignDetailsDrawer({
                 {/* Platform select dropdowns */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="primaryPlatform" className="text-xs font-bold text-[#1a1a2e]">
-                      Primary Platform
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="primaryPlatform"
-                        value={primaryPlatform}
-                        onChange={(e) => setPrimaryPlatform(e.target.value)}
-                        className="border border-[#e8e6f0] focus:border-brand-pink rounded-xl p-3 text-xs w-full outline-none appearance-none bg-white text-[#1a1a2e] pr-8 cursor-pointer"
-                      >
-                        <option value="Instagram">Instagram</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="YouTube">YouTube</option>
-                        <option value="Twitter">Twitter / X</option>
-                      </select>
-                      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#7a7a9a]">
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <label className="text-xs font-bold text-[#1a1a2e]">Primary Platform</label>
+                    <ComboBox
+                      options={platformOptions}
+                      value={primaryPlatform}
+                      onValueChange={(val) => val && setPrimaryPlatform(val)}
+                      placeholder="Select platform"
+                      searchPlaceholder="Search platforms…"
+                      emptyText="No platform found."
+                      loading={platformsLoading}
+                      triggerClassName="rounded-xl text-xs"
+                    />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="secondaryPlatform" className="text-xs font-bold text-[#1a1a2e]">
-                      Secondary (optional)
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="secondaryPlatform"
-                        value={secondaryPlatform}
-                        onChange={(e) => setSecondaryPlatform(e.target.value)}
-                        className="border border-[#e8e6f0] focus:border-brand-pink rounded-xl p-3 text-xs w-full outline-none appearance-none bg-white text-[#1a1a2e] pr-8 cursor-pointer"
-                      >
-                        <option value="None">None</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="YouTube">YouTube</option>
-                        <option value="Twitter">Twitter / X</option>
-                      </select>
-                      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#7a7a9a]">
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <label className="text-xs font-bold text-[#1a1a2e]">Secondary (optional)</label>
+                    <ComboBox
+                      options={secondaryPlatformOptions}
+                      value={secondaryPlatform}
+                      onValueChange={(val) => setSecondaryPlatform(val || 'None')}
+                      placeholder="Select platform"
+                      searchPlaceholder="Search platforms…"
+                      emptyText="No platform found."
+                      loading={platformsLoading}
+                      triggerClassName="rounded-xl text-xs"
+                    />
                   </div>
                 </div>
 
                 {/* Fee Request */}
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="feeRequest" className="text-xs font-bold text-[#1a1a2e]">
-                    Fee Request (₦) *
+                    Fee Request ({currencySymbol}) *
                   </label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-xs text-[#7a7a9a] select-none font-medium">
-                      ₦
+                      {currencySymbol}
                     </span>
                     <input
                       id="feeRequest"

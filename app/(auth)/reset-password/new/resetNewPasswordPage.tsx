@@ -19,7 +19,6 @@ export default function NewPasswordPage() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get('email') ?? '';
-  const code = params.get('code') ?? '';
   const resetPassword = useResetPassword();
 
   const {
@@ -31,7 +30,7 @@ export default function NewPasswordPage() {
   });
 
   async function onSubmit(values: NewPasswordValues) {
-    await resetPassword.mutateAsync({ email, code, newPassword: values.password });
+    await resetPassword.mutateAsync({ email, newPassword: values.password });
     router.push('/signin');
   }
 

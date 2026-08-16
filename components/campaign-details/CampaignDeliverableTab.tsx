@@ -5,6 +5,8 @@ import {
   Info,
   ExternalLink,
   CheckCircle2,
+  XCircle,
+  MessageCircle,
   MessageCircleWarning,
   ShieldCheck,
   Star,
@@ -24,6 +26,7 @@ import SubmissionCardSkeleton from '@/components/skeletons/SubmissionCardSkeleto
 import FeedbackModal from '@/shared/FeedBackModal';
 import RequestRevisionModal from '@/components/campaign-details/RequestRevisionModal';
 import ResolveConflictModal from '@/components/campaign-details/ResolveConflictModal';
+import RaiseDisputeModal from '@/components/campaign-details/RaiseDisputeModal';
 import { cn } from '@/lib/utils';
 import { useCreateReview } from '@/hooks/useCampaign';
 import LeaveReviewModal from '@/components/campaign-details/LeaveReviewModal';
@@ -99,6 +102,7 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
   const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
   const [pendingRevision, setPendingRevision] = useState<PendingRevision | null>(null);
   const [pendingDispute, setPendingDispute] = useState<PendingDispute | null>(null);
+  const [showRaiseDispute, setShowRaiseDispute] = useState(false);
 
   const [feedbackCache, setFeedbackCache] = useState<Record<string, string>>({});
 
@@ -152,6 +156,13 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
     );
   }
 
+  function handleSendGeneralDispute(creatorId: string, reason: string) {
+    raiseDispute.mutate(
+      { campaignId: campaign.id, creatorId, reason },
+      { onSuccess: () => setShowRaiseDispute(false) },
+    );
+  }
+
   function handleRequestLiveApproval(submissionId: string, creatorName: string) {
     setPendingLiveApproval({ submissionId, creatorName });
   }
@@ -192,6 +203,20 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
   const isCampaignFullyComplete =
     !!submissions && submissions.length > 0 && submissions.every((s) => s.status === 'done');
   const actionsDisabled = campaign.status === 'paused' || campaign.status === 'cancelled';
+
+  const disputeCreators = submissions
+    ? Array.from(
+        new Map(
+          submissions.map((s) => [
+            s.creator.id,
+            { id: s.creator.id, name: `${s.creator.firstName} ${s.creator.lastName}`.trim() },
+          ]),
+        ).values(),
+      )
+    : [];
+  const canRaiseDispute =
+    !actionsDisabled && !isCampaignFullyComplete && disputeCreators.length > 0;
+
   return (
     <div className="flex flex-col gap-4">
       {actionsDisabled && (
@@ -312,24 +337,26 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
               </div>
 
               {/* Original content link */}
-              <div className="border border-[#e8e6f0] rounded-lg px-4 py-3">
-                <p className="text-xs font-semibold text-[#9a99b0] mb-1">CONTENT LINK</p>
+              {!isRevisionSent && (
+                <div className="border border-[#e8e6f0] rounded-lg px-4 py-3">
+                  <p className="text-xs font-semibold text-[#9a99b0] mb-1">CONTENT LINK</p>
 
-                <a
-                  href={ensureHttpUrl(sub.draftLink!)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
-                >
-                  {sub.draftLink}
-                  <ExternalLink size={13} className="shrink-0" />
-                </a>
-                {sub.application.contentIdea && (
-                  <p className="text-sm text-[#9a99b0] mt-1">
-                    &quot;{sub.application.contentIdea}&quot;
-                  </p>
-                )}
-              </div>
+                  <a
+                    href={ensureHttpUrl(sub.draftLink!)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                  >
+                    {sub.draftLink}
+                    <ExternalLink size={13} className="shrink-0" />
+                  </a>
+                  {sub.application.contentIdea && (
+                    <p className="text-sm text-[#9a99b0] mt-1">
+                      &quot;{sub.application.contentIdea}&quot;
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Revision request feedback (shown for both request_revision and revision-sent) */}
               {(isFirstRevisionRequest || isRevisionSent) && originalFeedback && (
@@ -380,33 +407,45 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
                   </div>
 
                   <div className="flex flex-col divide-y divide-[#e8e6f0]">
-                    {liveLinkEntries.map(([platformKey, entry]) => (
-                      <div key={platformKey} className="px-4 py-3">
-                        <p className="text-xs text-[#9a99b0] mb-0.5">
-                          {PLATFORM_LABELS[platformKey] ?? platformKey}
-                        </p>
+                    {liveLinkEntries.map(([platformKey, entry]) => {
+                      const url = typeof entry === 'string' ? entry : entry.url;
+                      return (
+                        <div key={platformKey} className="px-4 py-3">
+                          <p className="text-xs text-[#9a99b0] mb-0.5">
+                            {PLATFORM_LABELS[platformKey] ?? platformKey}
+                          </p>
 
-                        <a
-                          href={ensureHttpUrl(entry.url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
-                        >
-                          {entry.url}
-                          <ExternalLink size={13} className="shrink-0" />
-                        </a>
-                      </div>
-                    ))}
+                          <a
+                            href={ensureHttpUrl(url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                          >
+                            {url}
+                            <ExternalLink size={13} className="shrink-0" />
+                          </a>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {!isCampaignComplete && !actionsDisabled && (
-                    <div className="px-4 py-3 border-t border-[#e8e6f0] bg-[#faf9fc]">
+                    <div className="px-4 py-3 border-t border-[#e8e6f0] bg-[#faf9fc] flex items-center gap-3">
                       <button
                         onClick={() => handleRequestLiveApproval(sub.id, creatorName)}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-colors cursor-pointer"
                       >
                         <CheckCircle2 size={14} />
                         Approve & complete campaign
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleOpenResolveConflict(sub.id, creatorName, sub.creator.id)
+                        }
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-colors cursor-pointer"
+                      >
+                        <XCircle size={14} />
+                        Reject
                       </button>
                     </div>
                   )}
@@ -555,6 +594,25 @@ export default function CampaignDeliverablesTab({ campaign }: CampaignDeliverabl
         open={!!viewingCreatorId}
         onOpenChange={(open) => !open && setViewingCreatorId(null)}
       />
+
+      {/* Floating chat bubble — opens the raise-a-dispute modal */}
+      <button
+        onClick={() => canRaiseDispute && setShowRaiseDispute(true)}
+        disabled={!canRaiseDispute}
+        className="fixed bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-40 disabled:pointer-events-none disabled:hover:scale-100"
+        aria-label="Raise a dispute"
+      >
+        <MessageCircle size={20} className="fill-current text-white" />
+      </button>
+
+      {showRaiseDispute && (
+        <RaiseDisputeModal
+          creators={disputeCreators}
+          isSubmitting={raiseDispute.isPending}
+          onClose={() => setShowRaiseDispute(false)}
+          onSend={handleSendGeneralDispute}
+        />
+      )}
     </div>
   );
 }

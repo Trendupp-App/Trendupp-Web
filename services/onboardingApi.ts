@@ -4,6 +4,7 @@ import {
   Country,
   Nationality,
   State,
+  MarketingBudget,
   UpdateProfilePayload,
   UpdateProfileResponse,
   Niche,
@@ -30,6 +31,11 @@ export const onboardingApi = {
 
   getStates: (countryId: string) =>
     apiClient.get<State[]>(`/users/onboarding/countries/${countryId}/states`),
+
+  getMarketingBudgets: (currency?: 'USD' | 'NGN') =>
+    apiClient.get<MarketingBudget[]>('/users/onboarding/marketing-budgets', {
+      params: currency ? { currency } : undefined,
+    }),
 
   updateProfile: (payload: UpdateProfilePayload) => {
     const formData = new FormData();

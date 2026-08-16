@@ -11,8 +11,12 @@ import {
   ShieldCheck,
   CheckCircle2,
   MessageCircle,
+  Copy,
+  Megaphone,
 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ensureHttpUrl } from '@/utils/Utilities';
 import type { WorkCampaign } from './WorkCampaignCard';
@@ -55,6 +59,13 @@ export default function WorkDetailsDrawer({
   const hasLiveLink = campaign.liveLink && Object.keys(campaign.liveLink).length > 0;
   const isPausedOrCancelled =
     campaign.campaignStatus === 'paused' || campaign.campaignStatus === 'cancelled';
+  const isAmplify = campaign.goal === 'Amplification';
+
+  function handleCopyAmplificationAsset() {
+    if (!campaign?.amplificationAsset) return;
+    navigator.clipboard.writeText(campaign.amplificationAsset);
+    toast.success('Link copied to clipboard!');
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
@@ -100,7 +111,12 @@ export default function WorkDetailsDrawer({
           </div>
 
           {/* Stats row */}
-          <div className="border border-[#e8e6f0] rounded-2xl grid grid-cols-3 divide-x divide-[#e8e6f0]">
+          <div
+            className={cn(
+              'border border-[#e8e6f0] rounded-2xl grid divide-x divide-[#e8e6f0]',
+              campaign.goal ? 'grid-cols-4' : 'grid-cols-3',
+            )}
+          >
             <div className="flex flex-col gap-0.5 p-3.5">
               <span className="text-[10px] text-[#9a99b0]">Budget</span>
               <span className="text-sm font-bold text-brand-pink">{campaign.budgetString}</span>
@@ -109,10 +125,12 @@ export default function WorkDetailsDrawer({
               <span className="text-[10px] text-[#9a99b0]">Platform</span>
               <span className="text-sm font-bold text-[#1a1a2e]">{campaign.platform}</span>
             </div>
-            {/* <div className="flex flex-col gap-0.5 p-3.5">
-              <span className="text-[10px] text-[#9a99b0]">Niche</span>
-              <span className="text-sm font-bold text-[#1a1a2e]">{campaign.niches[0] ?? '—'}</span>
-            </div> */}
+            {campaign.goal && (
+              <div className="flex flex-col gap-0.5 p-3.5">
+                <span className="text-[10px] text-[#9a99b0]">Goal</span>
+                <span className="text-sm font-bold text-[#1a1a2e]">{campaign.goal}</span>
+              </div>
+            )}
             <div className="flex flex-col gap-0.5 p-3.5">
               <span className="text-[10px] text-[#9a99b0]">Applied</span>
               <span className="text-sm font-bold text-[#1a1a2e]">{campaign.applicationsCount}</span>
@@ -155,6 +173,33 @@ export default function WorkDetailsDrawer({
                   {campaign.guidelines || 'No brief provided.'}
                 </p>
               </div>
+
+              {isAmplify && campaign.amplificationAsset && (
+                <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2">
+                  <h4 className="text-sm font-bold text-[#1a1a2e] flex items-center gap-1.5">
+                    <Megaphone size={14} />
+                    Content to Amplify
+                  </h4>
+                  <div className="flex items-center gap-2 bg-[#f4f3f6] rounded-xl px-3 py-2.5">
+                    <a
+                      href={ensureHttpUrl(campaign.amplificationAsset)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 text-xs font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                    >
+                      {campaign.amplificationAsset}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleCopyAmplificationAsset}
+                      className="shrink-0 w-7 h-7 rounded-lg bg-white border border-[#e8e6f0] flex items-center justify-center text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 transition-colors cursor-pointer"
+                      aria-label="Copy link"
+                    >
+                      <Copy size={13} />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2">
                 <h4 className="text-sm font-bold text-[#1a1a2e]">Deliverables</h4>
@@ -404,20 +449,23 @@ export default function WorkDetailsDrawer({
                     </span>
                   </div>
                   <div className="flex flex-col gap-2">
-                    {Object.entries(campaign.liveLink!).map(([platform, entry]) => (
-                      <div key={platform} className="flex flex-col gap-0.5">
-                        <span className="text-[10px] text-[#9a99b0] capitalize">{platform}</span>
-                        <a
-                          href={ensureHttpUrl(entry.url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
-                        >
-                          {entry.url}
-                          <ExternalLink size={13} className="shrink-0" />
-                        </a>
-                      </div>
-                    ))}
+                    {Object.entries(campaign.liveLink!).map(([platform, entry]) => {
+                      const url = typeof entry === 'string' ? entry : entry.url;
+                      return (
+                        <div key={platform} className="flex flex-col gap-0.5">
+                          <span className="text-[10px] text-[#9a99b0] capitalize">{platform}</span>
+                          <a
+                            href={ensureHttpUrl(url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                          >
+                            {url}
+                            <ExternalLink size={13} className="shrink-0" />
+                          </a>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -462,16 +510,25 @@ export default function WorkDetailsDrawer({
               {!isPausedOrCancelled && campaign.status !== 'Payment released' && (
                 <button
                   onClick={() => onRaiseDispute?.(campaign)}
-                  className="absolute bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                  aria-label="Raise a campaign dispute"
+                  className="w-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 text-xs font-semibold py-3 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <MessageCircle size={20} className="fill-current text-white" />
+                  <MessageCircle size={14} />
+                  Raise a dispute
                 </button>
               )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Floating chat bubble — takes you to the Messages/disputes interface */}
+      <Link
+        href="/creator/messages"
+        className="fixed bottom-6 right-6 z-30 w-11 h-11 bg-brand-pink hover:bg-brand-pink/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+        aria-label="Go to messages"
+      >
+        <MessageCircle size={20} className="fill-current text-white" />
+      </Link>
     </div>
   );
 }

@@ -22,7 +22,10 @@ export const stepDetailsSchema = z
     // creatorTier: z.string().min(1, 'Please select a creator tier'),
 
     platforms: z.array(z.string()).min(1, 'Select at least one platform'),
-    creatorNicheIds: z.array(z.string()).min(1, 'Please select at least one niche'),
+    creatorNicheIds: z
+      .array(z.string())
+      .min(1, 'Please select at least one niche')
+      .max(3, 'Select up to 3 niches'),
     // creatorNicheId: z.string().min(1, 'Please select a niche'),
     amplificationAsset: z.string().optional(),
   })

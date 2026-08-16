@@ -40,8 +40,12 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   EUR: '€',
 };
 
+export function getCurrencySymbol(currency = 'USD'): string {
+  return CURRENCY_SYMBOLS[currency.toUpperCase()] ?? `${currency.toUpperCase()} `;
+}
+
 export function formatCurrency(amount: number, currency = 'USD'): string {
-  const symbol = CURRENCY_SYMBOLS[currency.toUpperCase()] ?? `${currency.toUpperCase()} `;
+  const symbol = getCurrencySymbol(currency);
   return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 

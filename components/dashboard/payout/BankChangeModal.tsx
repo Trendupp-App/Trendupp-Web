@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { BankCombobox } from '@/shared/BankComboBox';
-import { X, Check, Landmark, AlertCircle } from 'lucide-react';
+import { X, Landmark, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/store/authStore';
 import { useBanks } from '@/hooks/useOnboardingQueries';
 
 interface BankChangeModalProps {
@@ -33,27 +32,12 @@ export default function BankChangeModal({
   initialAccountNumber = '',
   initialAccountName = '',
 }: BankChangeModalProps) {
-  const { user } = useAuthStore();
   const [step, setStep] = useState<'input' | 'confirm'>('input');
 
   const [bankId, setBankId] = useState('');
   const [bankName, setBankName] = useState(initialBankName);
   const [accountNumber, setAccountNumber] = useState(initialAccountNumber);
   const [accountName, setAccountName] = useState(initialAccountName);
-
-  const [isResolving, setIsResolving] = useState(false);
-  const [isVerified, setIsVerified] = useState(!!initialAccountName);
-
-  const resolveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Clear timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (resolveTimerRef.current) {
-        clearTimeout(resolveTimerRef.current);
-      }
-    };
-  }, []);
 
   // The backend never sends back the bank's id, only its display name, so when a
   // creator already has a bank on file we have to re-resolve its id by name — otherwise
@@ -68,40 +52,21 @@ export default function BankChangeModal({
     matchedBanks?.find((bank) => bank.name.toLowerCase() === initialBankName.toLowerCase())?.id ||
     '';
 
-  const resolveAccount = (num: string, name: string) => {
-    if (resolveTimerRef.current) {
-      clearTimeout(resolveTimerRef.current);
-      resolveTimerRef.current = null;
-    }
-
-    if (num.length === 10 && name) {
-      setIsResolving(true);
-      setIsVerified(false);
-      resolveTimerRef.current = setTimeout(() => {
-        setIsResolving(false);
-        setIsVerified(true);
-        const resolvedName = user ? `${user.firstName} ${user.lastName}` : 'Alex Okafor';
-        setAccountName(resolvedName);
-      }, 1200);
-    } else {
-      setIsResolving(false);
-      setIsVerified(false);
-    }
-  };
+  // There's no bank-account name-enquiry endpoint on the backend, so the account
+  // holder name can't be verified — it has to be entered by the user rather than
+  // guessed (previously this defaulted to the logged-in user's own first/last
+  // name, which for a brand account is blank and silently submitted a
+  // whitespace-only name to the backend).
+  const isComplete =
+    !!resolvedBankId && accountNumber.length === 10 && accountName.trim().length > 0;
 
   const handleBankChange = (bank: { id: string; name: string }) => {
     setBankName(bank.name);
     setBankId(bank.id);
-    resolveAccount(accountNumber, bank.name);
-  };
-
-  const handleAccountNumberChange = (val: string) => {
-    setAccountNumber(val);
-    resolveAccount(val, bankName);
   };
 
   const handleContinue = () => {
-    if (isVerified && resolvedBankId) {
+    if (isComplete) {
       setStep('confirm');
     }
   };
@@ -111,7 +76,7 @@ export default function BankChangeModal({
       bankId: resolvedBankId,
       bankName,
       accountNumber,
-      accountName,
+      accountName: accountName.trim(),
     });
     onClose();
   };
@@ -165,37 +130,32 @@ export default function BankChangeModal({
                   inputMode="numeric"
                   placeholder="10-digit account number"
                   value={accountNumber}
-                  onChange={(e) => handleAccountNumberChange(e.target.value.replace(/[^0-9]/g, ''))}
+                  onChange={(e) => setAccountNumber(e.target.value.replace(/[^0-9]/g, ''))}
                   className="border-[#e8e6f0] h-11 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
                 />
               </div>
 
-              {/* Status messages */}
-              {isResolving && (
-                <div className="text-[10.5px] text-[#7a7a9a] italic flex items-center gap-1.5 px-0.5">
-                  <span className="w-3.5 h-3.5 border-2 border-[#7a7a9a] border-t-transparent rounded-full animate-spin shrink-0" />
-                  <span>Resolving account name...</span>
-                </div>
-              )}
-
-              {isVerified && (
-                <div className="flex gap-2.5 bg-[#00c37b]/5 border border-[#00c37b]/15 rounded-xl p-3.5 text-xs text-[#00c37b]">
-                  <Check size={16} className="shrink-0 mt-0.5" />
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-bold">Account verified</span>
-                    <span className="text-[10.5px] font-light mt-0.5">{accountName}</span>
-                  </div>
-                </div>
-              )}
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                  Account Holder Name
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Name on the bank account"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  className="border-[#e8e6f0] h-11 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+                />
+              </div>
             </div>
 
             {/* Bottom action button */}
             <Button
               onClick={handleContinue}
-              disabled={!isVerified}
+              disabled={!isComplete}
               className={cn(
                 'w-full text-white font-semibold text-[13px] py-5.5 rounded-xl transition-all border-none mt-1 shadow-sm flex items-center justify-center gap-1.5',
-                isVerified
+                isComplete
                   ? 'bg-brand-pink hover:bg-brand-pink/95 cursor-pointer'
                   : 'bg-zinc-200 hover:bg-zinc-200 text-zinc-400 cursor-not-allowed shadow-none',
               )}

@@ -13,6 +13,8 @@ export default function ProfileHeroBanner({ onEditProfile }: ProfileHeroBannerPr
 
   const displayName = user?.username ?? `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 
+  const location = [user?.state?.name, user?.country?.name].filter(Boolean).join(', ');
+
   return (
     <div className="relative bg-[#0d0d2b] rounded-2xl px-6 py-8 flex items-center gap-5">
       {/* Avatar */}
@@ -41,10 +43,10 @@ export default function ProfileHeroBanner({ onEditProfile }: ProfileHeroBannerPr
             {(user as UpdatePersonalInfoPayload).websiteUrl}
           </p>
         )}
-        {(user as UpdatePersonalInfoPayload)?.city && (
+        {location && (
           <p className="flex items-center gap-1 text-xs text-white/60 mt-0.5">
             <MapPin size={11} />
-            {(user as UpdatePersonalInfoPayload).city}
+            {location}
           </p>
         )}
       </div>

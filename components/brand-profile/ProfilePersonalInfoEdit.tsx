@@ -17,10 +17,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ComboBox } from '@/shared/ComboBox';
-import { useCountries, useStates } from '@/hooks/useOnboardingQueries';
-import { useUpdatePersonalInfo } from '@/hooks/useBrandProfileMutations';
+import { useCountries, useStates, useMarketingBudgets } from '@/hooks/useOnboardingQueries';
+import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
 import { useAuthStore } from '@/store/authStore';
-import { formatNumberWithCommas, stripNonDigits } from '@/utils/Utilities';
+import type { BrandProfilePayload } from '@/types/Onboarding';
+import { toast } from 'sonner';
 
 const schema = z.object({
   avatar: z.string().optional(),
@@ -41,15 +42,18 @@ interface ProfilePersonalInfoEditProps {
 
 export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfoEditProps) {
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>();
+  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>(
+    user?.countryId ?? undefined,
+  );
   const [avatarError, setAvatarError] = useState<string>('');
   const { data: countries = [], isLoading: loadingCountries } = useCountries();
   const selectedCountryId = userSelectedCountryId;
   const { data: states = [] } = useStates(selectedCountryId);
 
-  const { mutate: updatePersonalInfo, isPending } = useUpdatePersonalInfo();
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
 
   const {
     register,
@@ -63,13 +67,15 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
       brandName: user?.username ?? '',
       email: user?.email ?? '',
       bio: user?.bio ?? '',
+      country: user?.country?.name ?? '',
     },
   });
 
   const avatar = useWatch({ control, name: 'avatar' });
   const country = useWatch({ control, name: 'country' });
-  const monthlyBudget = useWatch({ control, name: 'monthlyBudget' }) ?? '';
-  const currencySymbol = country && country !== 'Nigeria' ? '$' : '₦';
+  const budgetCurrency = country && country !== 'Nigeria' ? 'USD' : 'NGN';
+  const { data: marketingBudgets = [], isLoading: loadingBudgets } =
+    useMarketingBudgets(budgetCurrency);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -92,30 +98,59 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
   function handleCountryChange(countryName: string) {
     setValue('country', countryName, { shouldValidate: true });
     setValue('state', '', { shouldValidate: true });
+    // Budget ranges are currency-specific, so a stale selection from the
+    // previous country's currency can't carry over.
+    setValue('monthlyBudget', '', { shouldValidate: true });
     setUserSelectedCountryId(countries.find((c) => c.name === countryName)?.id);
-  }
-
-  function handleMonthlyBudgetChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setValue('monthlyBudget', stripNonDigits(e.target.value), { shouldValidate: true });
   }
 
   function onSubmit(values: Values) {
     if (avatarError) return;
-    const countryId = values.country
-      ? countries.find((c) => c.name === values.country)?.id
+    const countryObj = values.country
+      ? countries.find((c) => c.name === values.country)
       : undefined;
-    const stateId = values.state ? states.find((s) => s.name === values.state)?.id : undefined;
+    const stateObj = values.state ? states.find((s) => s.name === values.state) : undefined;
 
-    updatePersonalInfo(
-      {
-        ...(values.brandName && { username: values.brandName }),
-        ...(values.bio && { bio: values.bio }),
-        ...(countryId && { countryId }),
-        ...(stateId && { stateId }),
-        ...(avatarFile && { avatar: avatarFile }),
+    // The onboarding profile endpoint requires countryId/stateId on every
+    // call, even when this edit is only touching an unrelated field — fall
+    // back to what's already on file if the picker wasn't touched this time.
+    const countryId = countryObj?.id ?? user?.countryId ?? undefined;
+    const stateId = stateObj?.id ?? user?.stateId ?? undefined;
+
+    if (!countryId || !stateId) {
+      toast.error('Please select a valid country and state');
+      return;
+    }
+
+    const payload: BrandProfilePayload = {
+      countryId,
+      stateId,
+      ...(values.brandName && { brandName: values.brandName }),
+      ...(values.bio && { bio: values.bio }),
+      ...(values.websiteUrl && { websiteUrl: values.websiteUrl }),
+      ...(values.monthlyBudget && { monthlyBudget: values.monthlyBudget }),
+      ...(avatarFile && { avatar: avatarFile }),
+    };
+
+    updateProfile(payload, {
+      onSuccess: () => {
+        // The API response doesn't echo country/state back, so the global
+        // auth store (which pages like campaign creation read `countryId`
+        // from for currency selection) would otherwise stay stale until a
+        // full reload. We already resolved these from the picked names
+        // above, so patch the store with them directly.
+        if (countryObj) {
+          updateUser({
+            countryId: countryObj.id,
+            country: { id: countryObj.id, name: countryObj.name },
+          });
+        }
+        if (stateObj) {
+          updateUser({ stateId: stateObj.id, state: { id: stateObj.id, name: stateObj.name } });
+        }
+        onSaved?.();
       },
-      { onSuccess: () => onSaved?.() },
-    );
+    });
   }
 
   const avatarSrc = avatar ?? user?.avatarUrl ?? null;
@@ -227,19 +262,18 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
 
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Monthly Marketing Budget</Label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-light text-[#1a1a2e]">
-            {currencySymbol}
-          </span>
-          <Input
-            type="text"
-            inputMode="numeric"
-            value={formatNumberWithCommas(monthlyBudget)}
-            onChange={handleMonthlyBudgetChange}
-            placeholder="400,000"
-            className="border-[#e8e6f0] h-10 pl-7 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
-          />
-        </div>
+        <Select onValueChange={(v) => setValue('monthlyBudget', v, { shouldValidate: true })}>
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30">
+            <SelectValue placeholder={loadingBudgets ? 'Loading…' : 'Select monthly budget'} />
+          </SelectTrigger>
+          <SelectContent>
+            {marketingBudgets.map((b) => (
+              <SelectItem key={b.id} value={b.value}>
+                {b.value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Button

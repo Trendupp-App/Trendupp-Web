@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, MessageCircle, AlertCircle, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDisputes, useDisputeDetails } from '@/hooks/useDisputes';
-import { useMyApplications } from '@/hooks/useCampaign';
-import type { CampaignApplicationDto } from '@/types/campaign';
+import { useMyCampaigns } from '@/hooks/useCampaign';
+import { useCreatorProfile } from '@/hooks/useProfile';
 import { useStreamChat } from '@/lib/providers/StreamChatProvider';
 import { useAuthStore } from '@/store/authStore';
 import type { Channel } from 'stream-chat';
@@ -21,11 +21,18 @@ interface StreamMessage {
   };
 }
 
-export default function MessagesPage() {
+function DisputeCreatorName({ creatorId }: { creatorId: string }) {
+  const { data } = useCreatorProfile(creatorId);
+  if (!data) return <>Creator</>;
+  return <>{`${data.firstName} ${data.lastName}`.trim() || data.username}</>;
+}
+
+export default function BrandMessagesPage() {
   const { data: disputes, isLoading } = useDisputes();
   const [activeDisputeId, setActiveDisputeId] = useState<string | null>(null);
   const { data: activeDispute } = useDisputeDetails(activeDisputeId);
-  const { data: myApps } = useMyApplications();
+  const { data: myCampaigns } = useMyCampaigns();
+  const { data: activeCreatorProfile } = useCreatorProfile(activeDispute?.creatorId ?? null);
 
   const { client, isConnected } = useStreamChat();
   const { user } = useAuthStore();
@@ -37,20 +44,16 @@ export default function MessagesPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const getCampaignTitle = (campaignId: string) => {
-    const app = myApps?.find(
-      (a: CampaignApplicationDto) => a.campaignId === campaignId || a.campaign?.id === campaignId,
-    );
-    return app?.campaign?.title || `Campaign ${campaignId.slice(0, 8)}`;
+    const campaign = myCampaigns?.find((c) => c.id === campaignId);
+    return campaign?.title || `Campaign ${campaignId.slice(0, 8)}`;
   };
 
-  const getBrandName = (campaignId: string) => {
-    const app = myApps?.find(
-      (a: CampaignApplicationDto) => a.campaignId === campaignId || a.campaign?.id === campaignId,
+  const getActiveCreatorName = () => {
+    if (!activeCreatorProfile) return 'Creator';
+    return (
+      `${activeCreatorProfile.firstName} ${activeCreatorProfile.lastName}`.trim() ||
+      activeCreatorProfile.username
     );
-    if (app?.campaign?.brand) {
-      return `${app.campaign.brand.firstName} ${app.campaign.brand.lastName}`;
-    }
-    return 'Unknown Brand';
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -347,7 +350,7 @@ export default function MessagesPage() {
           <div className="bg-[#fff0f5] border border-[#fcecf3] rounded-2xl p-4 flex gap-3 text-left">
             <MessageCircle className="w-5 h-5 text-brand-pink shrink-0 mt-0.5" />
             <span className="text-[10.5px] font-medium text-[#8b1a47] leading-relaxed">
-              Disputes must be raised from the campaign details view in My Work. Active and pending
+              Disputes must be raised from a campaign&apos;s Deliverables tab. Active and pending
               disputes are displayed below.
             </span>
           </div>
@@ -396,6 +399,9 @@ export default function MessagesPage() {
                       </span>
                     </div>
                     <p className="text-[10.5px] font-light text-[#7a7a9a] truncate mt-1">
+                      With <DisputeCreatorName creatorId={dispute.creatorId} />
+                    </p>
+                    <p className="text-[10.5px] font-light text-[#9a99b0] truncate">
                       {dispute.reason}
                     </p>
                   </div>
@@ -438,7 +444,7 @@ export default function MessagesPage() {
                     Campaign dispute: {getCampaignTitle(activeDispute.campaignId)}
                   </span>
                   <span className="text-[9.5px] font-light text-[#7a7a9a]">
-                    Disputed Campaign Escrow • {getBrandName(activeDispute.campaignId)}
+                    Disputed Campaign Escrow • {getActiveCreatorName()}
                   </span>
                 </div>
               </div>
@@ -470,7 +476,7 @@ export default function MessagesPage() {
                       <strong>Campaign:</strong> {getCampaignTitle(activeDispute.campaignId)}
                     </p>
                     <p className="mb-2">
-                      <strong>Brand:</strong> {getBrandName(activeDispute.campaignId)}
+                      <strong>Creator:</strong> {getActiveCreatorName()}
                     </p>
                     <p className="mb-2">
                       <strong>Escalated Reason:</strong> {activeDispute.reason}

@@ -6,6 +6,9 @@ import StepFooter from './StepFooter';
 import { type Step1Values } from '@/lib/validations/createCampaignSchemas';
 import type { Step2Values } from '@/lib/validations/createCampaignSchemas';
 import { useCreatorCategories, useCampaignPlatforms } from '@/hooks/useCampaign';
+import { useCountries } from '@/hooks/useOnboardingQueries';
+import { useAuthStore } from '@/store/authStore';
+import { getCurrencySymbol } from '@/utils/Utilities';
 
 interface StepReviewProps {
   step1: Step1Values;
@@ -82,6 +85,10 @@ export default function StepReview({
 }: StepReviewProps) {
   const { data: creatorCategories = [] } = useCreatorCategories();
   const { data: platforms = [] } = useCampaignPlatforms();
+  const { data: countries = [] } = useCountries();
+  const user = useAuthStore((s) => s.user);
+  const isNigerianBrand = countries.find((c) => c.id === user?.countryId)?.name === 'Nigeria';
+  const budgetCurrencySymbol = getCurrencySymbol(isNigerianBrand ? 'NGN' : 'USD');
 
   const selectedTierId = step1.creatorTierIds[0];
   const tierName = creatorCategories.find((c) => c.id === selectedTierId)?.name ?? selectedTierId;
@@ -104,7 +111,11 @@ export default function StepReview({
         <ReviewRow label="Goal" value={step1.goal} />
         <ReviewRow
           label="Budget"
-          value={step1.budget ? `₦${Number(step1.budget).toLocaleString()}` : undefined}
+          value={
+            step1.budget
+              ? `${budgetCurrencySymbol}${Number(step1.budget).toLocaleString()}`
+              : undefined
+          }
         />
         <ReviewRow label="Creator tier" value={tierName} />
         <ReviewRow label="Platforms" value={platformNames} />

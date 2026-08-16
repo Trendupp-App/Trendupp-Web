@@ -1,13 +1,18 @@
-import type { Campaign, CampaignTimeline } from '@/types/campaign';
+import type { Campaign, CampaignTimeline, CreatorCategory } from '@/types/campaign';
 import type { FilterState } from '@/components/creator-dashboard/CampaignFilterModal';
 import { formatCurrency, convertUsdToNgn } from '@/utils/Utilities';
 import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
+import { CREATOR_TIER_ORDER, parseTierName } from '@/constants/creatorTiers';
 
 // Passed down from useDisplayCurrency() so a Nigerian creator sees Naira
 // instead of a campaign's own currency, wherever that campaign's money is shown.
+// creatorCategories/assignedTier are the applying creator's own tier context,
+// used to bound the fee-request range (see getCampaignBudgetRange below).
 export interface DisplayCurrencyOptions {
   displayInNgn?: boolean;
   usdToNgnRate?: number;
+  creatorCategories?: CreatorCategory[];
+  assignedTier?: string | null;
 }
 
 export interface MappedExploreCampaign {
@@ -41,15 +46,17 @@ export interface MappedExploreCampaign {
   timeline?: CampaignTimeline;
 }
 
-// Tiers only expose a *minimum* cost each (no per-tier maximum), so the
-// displayed range spans the lowest targeted tier's min cost to the highest
-// targeted tier's min cost — independent of the campaign's totalBudget.
+// A creator's fee-request range is bounded by their own tier, not by
+// whichever tiers the campaign happens to target: it spans that creator's
+// own tier's min cost up to the *next* tier's min cost (e.g. a Nano creator
+// sees [Nano min, Micro min]). The top tier has no tier above it, so its
+// range collapses to a single value — its own min cost.
 //
 // Tiers already carry both a Naira and a USD minimum cost, so displaying a
 // USD campaign's tier range in Naira for a Nigerian creator just means
 // reading the Naira column — no live FX rate needed. The one case that does
-// need a live rate is the no-tiers fallback below, since totalBudget only
-// exists in the campaign's own currency.
+// need a live rate is the no-tier-context fallback below, since totalBudget
+// only exists in the campaign's own currency.
 export function getCampaignBudgetRange(
   campaign: Campaign,
   displayOpts?: DisplayCurrencyOptions,
@@ -58,42 +65,47 @@ export function getCampaignBudgetRange(
   min: number;
   max: number;
 } {
-  const tiers = campaign.creatorCategories?.length
-    ? campaign.creatorCategories
-    : campaign.creatorCategory
-      ? [campaign.creatorCategory]
-      : [];
   const campaignCurrency = (campaign.currency ?? 'NGN').toUpperCase();
   const displayInNgn = !!displayOpts?.displayInNgn;
   const currency = displayInNgn ? 'NGN' : campaignCurrency;
   const isUsd = !displayInNgn && campaignCurrency === 'USD';
   const isAmplify = campaign.goal !== 'Create Content';
 
-  const values = tiers.map((t) =>
+  const costFor = (tier: CreatorCategory) =>
     isAmplify
       ? isUsd
-        ? t.minCostAmplifyUsd
-        : t.minCostAmplifyNaira
+        ? tier.minCostAmplifyUsd
+        : tier.minCostAmplifyNaira
       : isUsd
-        ? t.minCostCreateUsd
-        : t.minCostCreateNaira,
-  );
+        ? tier.minCostCreateUsd
+        : tier.minCostCreateNaira;
 
-  if (values.length === 0) {
-    let budget = campaign.totalBudget;
-    if (displayInNgn && campaignCurrency === 'USD' && displayOpts?.usdToNgnRate) {
-      budget = convertUsdToNgn(budget, displayOpts.usdToNgnRate);
-    }
-    return { label: formatCurrency(budget, currency), min: budget, max: budget };
+  const allTiers = displayOpts?.creatorCategories ?? [];
+  const ownTierName = parseTierName(displayOpts?.assignedTier);
+  const ownTier = allTiers.find((t) => t.name.toLowerCase() === ownTierName.toLowerCase());
+
+  if (ownTier) {
+    const nextTierName = CREATOR_TIER_ORDER[CREATOR_TIER_ORDER.indexOf(ownTierName) + 1];
+    const nextTier = nextTierName
+      ? allTiers.find((t) => t.name.toLowerCase() === nextTierName.toLowerCase())
+      : undefined;
+
+    const min = costFor(ownTier);
+    const max = nextTier ? costFor(nextTier) : min;
+    const label =
+      min === max
+        ? formatCurrency(min, currency)
+        : `${formatCurrency(min, currency)} - ${formatCurrency(max, currency)}`;
+    return { label, min, max };
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const label =
-    min === max
-      ? formatCurrency(min, currency)
-      : `${formatCurrency(min, currency)} - ${formatCurrency(max, currency)}`;
-  return { label, min, max };
+  // No tier context available (categories still loading, or no assigned
+  // tier yet) — fall back to the campaign's own total budget.
+  let budget = campaign.totalBudget;
+  if (displayInNgn && campaignCurrency === 'USD' && displayOpts?.usdToNgnRate) {
+    budget = convertUsdToNgn(budget, displayOpts.usdToNgnRate);
+  }
+  return { label: formatCurrency(budget, currency), min: budget, max: budget };
 }
 
 export function mapCampaign(
@@ -129,7 +141,7 @@ export function mapCampaign(
     image:
       c.coverImage ||
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    niches: c.creatorNiche?.name ? [c.creatorNiche.name] : [],
+    niches: c.creatorNiches?.map((n) => n.name) ?? [],
     platforms: c.preferredPlatforms?.map((p) => p.name) || [],
     status:
       c.status === 'active' || c.status === 'live'
