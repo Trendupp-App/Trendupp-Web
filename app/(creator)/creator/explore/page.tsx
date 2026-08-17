@@ -12,7 +12,7 @@ import BrandProfileSheet from '@/components/BrandExplore/BrandProfileSheet';
 import MainTabs, { type MainTab } from '@/components/creator-dashboard/explore/MainTabs';
 import CampaignFilterPillRow, { type CampaignStatusFilter } from '@/shared/CampaignFilterPillRow';
 import CampaignsGrid from '@/components/creator-dashboard/explore/CampaignsGrid';
-import CampaignsPagination from '@/shared/CampaignsPagination';
+import InfiniteScrollSentinel from '@/shared/InfiniteScrollSentinel';
 import SocialImpactGrid from '@/components/creator-dashboard/explore/SocialImpactGrid';
 import SocialImpactDetailSheet from '@/components/creator-dashboard/explore/SocialImpactDetailSheet';
 import SocialImpactSuccessModal from '@/components/creator-dashboard/explore/SocialImpactSuccessModal';
@@ -24,7 +24,7 @@ import { useExploreCreators, useExploreBrands, useExploreSearch } from '@/hooks/
 import { useDisplayCurrency } from '@/hooks/useExchangeRate';
 import { useAuthStore } from '@/store/authStore';
 import {
-  useSocialImpactCampaigns,
+  useSocialImpactCampaignsInfinite,
   useMySocialImpactApplications,
   useMyApplications,
   useCreatorCategories,
@@ -45,15 +45,12 @@ export default function ExplorePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<MainTab>('campaigns');
   const [activeCampaignFilter, setActiveCampaignFilter] = useState<CampaignStatusFilter>('all');
-  const [campaignPage, setCampaignPage] = useState(1);
-  const [socialImpactPage, setSocialImpactPage] = useState(1);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const isSearching = searchQuery.trim().length > 0;
 
   function handleCampaignFilterChange(filter: CampaignStatusFilter) {
     setActiveCampaignFilter(filter);
-    setCampaignPage(1);
   }
 
   const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
@@ -74,22 +71,30 @@ export default function ExplorePage() {
 
   const {
     campaigns: sortedCampaigns,
+    total: campaignsTotal,
     isLoading: campaignsLoadingRaw,
-    pagination: campaignsPagination,
+    isFetchingNextPage: campaignsFetchingNext,
+    hasNextPage: campaignsHasNextPage,
+    fetchNextPage: fetchNextCampaignsPage,
   } = useExploreCampaigns({
     statusFilter: activeCampaignFilter,
     searchQuery,
     filters: DEFAULT_CAMPAIGN_FILTERS,
-    page: campaignPage,
     displayOpts,
+    enabled: !isSearching && activeTab === 'campaigns',
   });
 
-  const { data: socialImpactResponse, isLoading: socialImpactLoading } = useSocialImpactCampaigns(
-    { page: socialImpactPage, limit: 12 },
+  const {
+    campaigns: socialImpactCampaigns,
+    total: socialImpactTotal,
+    isLoading: socialImpactLoading,
+    isFetchingNextPage: socialImpactFetchingNext,
+    hasNextPage: socialImpactHasNextPage,
+    fetchNextPage: fetchNextSocialImpactPage,
+  } = useSocialImpactCampaignsInfinite(
+    { limit: 12 },
     !isSearching && activeTab === 'social-impact',
   );
-  const socialImpactCampaigns = socialImpactResponse?.data ?? [];
-  const socialImpactPagination = socialImpactResponse?.pagination;
 
   const { data: mySocialImpactApplications = [] } = useMySocialImpactApplications(
     undefined,
@@ -153,17 +158,14 @@ export default function ExplorePage() {
   function handleTabChange(tab: MainTab) {
     setActiveTab(tab);
     setActiveCategoryId(null);
-    setSocialImpactPage(1);
   }
 
-  // Paginated lists only ever hold one page's worth of items — the real
-  // count across all pages comes from the server's pagination.total, not the
-  // length of what happens to be on the current page. Search results aren't
-  // paginated, so their .length already is the real count.
-  const campaignsCount = isSearching
-    ? displayedCampaigns.length
-    : (campaignsPagination?.total ?? displayedCampaigns.length);
-  const socialImpactCount = socialImpactPagination?.total ?? socialImpactCampaigns.length;
+  // Infinite-scrolled lists only ever hold what's been loaded so far — the
+  // real count across everything comes from the server's `total`, not how
+  // many items have loaded into the list up to this point. Search results
+  // aren't paginated, so their .length already is the real count.
+  const campaignsCount = isSearching ? displayedCampaigns.length : campaignsTotal;
+  const socialImpactCount = socialImpactTotal;
 
   const countLabel =
     activeTab === 'campaigns'
@@ -228,10 +230,10 @@ export default function ExplorePage() {
             onSelect={setSelectedCampaign}
           />
           {!isSearching && (
-            <CampaignsPagination
-              page={campaignPage}
-              totalPages={campaignsPagination?.pages ?? 1}
-              onPageChange={setCampaignPage}
+            <InfiniteScrollSentinel
+              onIntersect={fetchNextCampaignsPage}
+              enabled={!!campaignsHasNextPage}
+              isLoading={campaignsFetchingNext}
             />
           )}
         </>
@@ -249,10 +251,10 @@ export default function ExplorePage() {
             onParticipated={(campaign) => setParticipatedCampaign(campaign)}
           />
           {!isSearching && (
-            <CampaignsPagination
-              page={socialImpactPage}
-              totalPages={socialImpactPagination?.pages ?? 1}
-              onPageChange={setSocialImpactPage}
+            <InfiniteScrollSentinel
+              onIntersect={fetchNextSocialImpactPage}
+              enabled={!!socialImpactHasNextPage}
+              isLoading={socialImpactFetchingNext}
             />
           )}
         </>

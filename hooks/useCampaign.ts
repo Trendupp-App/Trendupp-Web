@@ -1,4 +1,10 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+  keepPreviousData,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { campaignApi } from '@/services/campaignApi';
@@ -438,6 +444,99 @@ export function useSocialImpactCampaigns(
     enabled,
     placeholderData: keepPreviousData,
   });
+}
+
+// A single page's row count can't be trusted as "N unique campaigns" — the
+// backend's LIMIT/OFFSET pagination sometimes repeats or drops rows across
+// pages (seen live: total 12, limit 12, pages 1, but only 4 rows in `data`).
+// Accumulating pages, de-duping by id, and comparing the unique count against
+// the trustworthy `total` field sidesteps that instability instead of
+// trusting page-by-page arithmetic. MAX_INFINITE_PAGES is a safety valve in
+// case the backend bug ever prevents the unique count from reaching `total`.
+const MAX_INFINITE_PAGES = 50;
+
+export function useCampaignsInfinite(
+  params: {
+    limit?: number;
+    status?: CampaignStatusFilter;
+    sortBy?: 'newest' | 'highest_budget' | 'closing_soon';
+    platforms?: string[];
+    niches?: string[];
+    nicheIds?: string[];
+    goal?: string;
+  },
+  enabled: boolean = true,
+) {
+  const limit = params.limit ?? 12;
+  const query = useInfiniteQuery({
+    queryKey: ['campaigns-infinite', { ...params, limit }],
+    queryFn: ({ pageParam }) =>
+      campaignApi.getCampaigns({ ...params, limit, page: pageParam }).then((r) => r.data),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (allPages.length >= MAX_INFINITE_PAGES) return undefined;
+      const uniqueCount = new Set(allPages.flatMap((p) => p.data.map((c) => c.id))).size;
+      return uniqueCount < lastPage.pagination.total ? allPages.length + 1 : undefined;
+    },
+    enabled,
+    staleTime: 1000 * 30,
+  });
+
+  const seen = new Set<string>();
+  const campaigns = (query.data?.pages.flatMap((p) => p.data) ?? []).filter((c) => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  });
+
+  return {
+    campaigns,
+    total: query.data?.pages[0]?.pagination.total ?? 0,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isFetchingNextPage: query.isFetchingNextPage,
+    hasNextPage: !!query.hasNextPage,
+    fetchNextPage: query.fetchNextPage,
+  };
+}
+
+export function useSocialImpactCampaignsInfinite(
+  params: { tab?: 'all' | 'active' | 'completed'; limit?: number } = {},
+  enabled: boolean = true,
+) {
+  const limit = params.limit ?? 12;
+  const query = useInfiniteQuery({
+    queryKey: ['social-impact-campaigns-infinite', { ...params, limit }],
+    queryFn: ({ pageParam }) =>
+      campaignApi
+        .getSocialImpactCampaigns({ ...params, limit, page: pageParam })
+        .then((r) => r.data),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (allPages.length >= MAX_INFINITE_PAGES) return undefined;
+      const uniqueCount = new Set(allPages.flatMap((p) => p.data.map((c) => c.id))).size;
+      return uniqueCount < lastPage.pagination.total ? allPages.length + 1 : undefined;
+    },
+    enabled,
+    staleTime: 1000 * 30,
+  });
+
+  const seen = new Set<string>();
+  const campaigns = (query.data?.pages.flatMap((p) => p.data) ?? []).filter((c) => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  });
+
+  return {
+    campaigns,
+    total: query.data?.pages[0]?.pagination.total ?? 0,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isFetchingNextPage: query.isFetchingNextPage,
+    hasNextPage: !!query.hasNextPage,
+    fetchNextPage: query.fetchNextPage,
+  };
 }
 
 export function useDeleteDraftCampaign(onSuccess?: () => void) {

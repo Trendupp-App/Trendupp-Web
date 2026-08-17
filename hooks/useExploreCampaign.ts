@@ -1,4 +1,4 @@
-import { useCampaigns } from '@/hooks/useCampaign';
+import { useCampaignsInfinite } from '@/hooks/useCampaign';
 import {
   mapCampaign,
   filterCampaigns,
@@ -15,53 +15,49 @@ export function useExploreCampaigns({
   statusFilter,
   searchQuery,
   filters,
-  page = 1,
   displayOpts,
+  enabled = true,
 }: {
   statusFilter: CampaignStatusFilter;
   searchQuery: string;
   filters: FilterState;
-  page?: number;
   displayOpts?: DisplayCurrencyOptions;
+  enabled?: boolean;
 }) {
-  const { data: campaignsResponse, isLoading } = useCampaigns({
-    status: statusFilter === 'all' ? 'all' : statusFilter === 'live' ? 'live' : 'completed',
-    sortBy:
-      filters.sortBy === 'Newest'
-        ? 'newest'
-        : filters.sortBy === 'Highest Budget'
-          ? 'highest_budget'
-          : 'closing_soon',
-    platforms: filters.platforms.length > 0 ? filters.platforms : undefined,
-    niches: filters.niches.length > 0 ? filters.niches : undefined,
-    goal: filters.campaignGoal || undefined,
-    page,
-    limit: CAMPAIGNS_PAGE_SIZE,
-  });
+  const {
+    campaigns: liveCampaigns,
+    total,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useCampaignsInfinite(
+    {
+      status: statusFilter === 'all' ? 'all' : statusFilter === 'live' ? 'live' : 'completed',
+      sortBy:
+        filters.sortBy === 'Newest'
+          ? 'newest'
+          : filters.sortBy === 'Highest Budget'
+            ? 'highest_budget'
+            : 'closing_soon',
+      platforms: filters.platforms.length > 0 ? filters.platforms : undefined,
+      niches: filters.niches.length > 0 ? filters.niches : undefined,
+      goal: filters.campaignGoal || undefined,
+      limit: CAMPAIGNS_PAGE_SIZE,
+    },
+    enabled,
+  );
 
-  const liveCampaigns = campaignsResponse?.data ?? [];
   const mapped = liveCampaigns.map((c) => mapCampaign(c, displayOpts));
   const filtered = filterCampaigns(mapped, { searchQuery, statusFilter, filters });
   const sorted = sortCampaigns(filtered, filters.sortBy);
 
-  // The API's own `pages` is sometimes computed from the requested limit
-  // rather than the number of rows it actually sends back (seen live: total
-  // 12, limit 12, pages 1, but only 4 rows in `data`). Recompute pages from
-  // what actually came back so pagination reflects reality regardless of
-  // whatever page size the backend effectively enforces server-side.
-  const rawPagination = campaignsResponse?.pagination;
-  const effectivePageSize = liveCampaigns.length || rawPagination?.limit || CAMPAIGNS_PAGE_SIZE;
-  const pagination = rawPagination
-    ? {
-        ...rawPagination,
-        pages: Math.max(rawPagination.pages, Math.ceil(rawPagination.total / effectivePageSize)),
-      }
-    : undefined;
-
   return {
     campaigns: sorted,
-    allMapped: mapped,
+    total,
     isLoading,
-    pagination,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
   };
 }
