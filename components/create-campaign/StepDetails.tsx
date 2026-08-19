@@ -15,7 +15,8 @@ import {
 import { CAMPAIGN_GOALS } from '@/types/campaign';
 import { useCampaignPlatforms, useCreatorCategories } from '@/hooks/useCampaign';
 import { ComboBox } from '@/shared/ComboBox';
-import { useNiches, useCountries } from '@/hooks/useOnboardingQueries';
+import { useNiches } from '@/hooks/useOnboardingQueries';
+import { useUserDetail } from '@/hooks/useProfile';
 import { MultiSelectDropdown } from '@/shared/MultiSelectDropDown';
 import {
   formatTierFollowerRange,
@@ -47,9 +48,11 @@ export default function StepDetails({
   const { data: platforms = [], isLoading: platformsLoading } = useCampaignPlatforms();
   const { data: creatorCategories = [], isLoading: categoriesLoading } = useCreatorCategories();
   const { data: niches = [], isLoading: nichesLoading } = useNiches();
-  const { data: countries = [] } = useCountries();
-  const user = useAuthStore((s) => s.user);
-  const isNigerianBrand = countries.find((c) => c.id === user?.countryId)?.name === 'Nigeria';
+  const authUser = useAuthStore((s) => s.user);
+  // Fetched fresh from the API rather than trusting the (possibly stale)
+  // Zustand-cached auth user, since currency depends on the brand's country.
+  const { data: freshUser } = useUserDetail(authUser?.id ?? null);
+  const isNigerianBrand = freshUser?.country?.name === 'Nigeria';
   const budgetCurrencySymbol = getCurrencySymbol(isNigerianBrand ? 'NGN' : 'USD');
 
   const {
