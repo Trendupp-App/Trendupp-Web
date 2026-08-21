@@ -1,0 +1,260 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Flame } from 'lucide-react';
+import CompletenessCard from '@/components/creator-dashboard/CompletenessCard';
+import BannerCarousel from '@/components/creator-dashboard/BannerCarousel';
+import CampaignCard from '@/components/creator-dashboard/CampaignCard';
+import CampaignDetailsDrawer, {
+  MappedCampaign,
+} from '@/components/creator-dashboard/CampaignDetailsDrawer';
+import CampaignCardSkeleton from '@/components/skeletons/CampaignCard';
+import { useCampaigns, useMyApplications, useCreatorCategories } from '@/hooks/useCampaign';
+import { Campaign } from '@/types/campaign';
+import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
+import { formatCurrency } from '@/utils/Utilities';
+import { getCampaignDeadlineInfo } from '@/lib/campaignTimelineStage';
+import { getCampaignBudgetRange } from '@/lib/campaignMappers';
+import { useDisplayCurrency } from '@/hooks/useExchangeRate';
+import { convertUsdToNgn } from '@/utils/Utilities';
+
+type FilterType = 'live' | 'past';
+
+export default function CreatorDashboardPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const isProfileCompleted = user?.onboardingPercentage === 100;
+  const [activeFilter, setActiveFilter] = useState<FilterType>('live');
+  const [selectedCampaign, setSelectedCampaign] = useState<MappedCampaign | null>(null);
+  const { displayInNgn, usdToNgnRate } = useDisplayCurrency();
+  const { data: creatorCategories = [] } = useCreatorCategories();
+
+  // Fetch campaigns from backend
+  const statusForFilter: Record<FilterType, Campaign['status']> = {
+    live: 'live',
+    past: 'completed',
+  };
+  const { data: campaignsResponse, isLoading } = useCampaigns({
+    status: statusForFilter[activeFilter],
+    page: 1,
+    limit: 6,
+  });
+  const liveCampaigns = campaignsResponse?.data ?? [];
+
+  const { data: myApplications = [] } = useMyApplications();
+  const appliedCampaignIds = new Set(myApplications.map((app) => app.campaignId));
+
+  const mappedCampaigns = liveCampaigns.map((c: Campaign) => {
+    const deadline = getCampaignDeadlineInfo(c.timeline);
+    const feeRange = getCampaignBudgetRange(c, {
+      displayInNgn,
+      usdToNgnRate,
+      creatorCategories,
+      assignedTier: user?.assignedTier,
+    });
+
+    const campaignCurrency = (c.currency ?? 'NGN').toUpperCase();
+    const displayCurrency = displayInNgn ? 'NGN' : campaignCurrency;
+    let totalBudget = c.totalBudget;
+    if (displayInNgn && campaignCurrency === 'USD' && usdToNgnRate) {
+      totalBudget = convertUsdToNgn(totalBudget, usdToNgnRate);
+    }
+
+    return {
+      id: c.id,
+      title: c.title,
+      brand: c.brand?.username || 'Unknown Brand',
+      budget: formatCurrency(totalBudget, displayCurrency),
+      budgetMin: totalBudget,
+      budgetMax: totalBudget,
+      currency: displayCurrency,
+      feeRangeLabel: feeRange.label,
+      feeRangeMin: feeRange.min,
+      feeRangeMax: feeRange.max,
+      daysLeft: deadline.label ?? 'Closed',
+      daysLeftNumber: deadline.daysRemaining,
+      tier: c.creatorCategory?.name || 'Nano',
+      appliedCount: c.applicationsCount?.total || 0,
+      hasApplied: appliedCampaignIds.has(c.id),
+      image:
+        c.coverImage ||
+        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+      niches: c.creatorNiches?.map((n) => n.name) ?? [],
+      platforms: c.preferredPlatforms?.map((p: { name: string }) => p.name) || [],
+      status: (c.status === 'active' || c.status === 'live'
+        ? 'live'
+        : c.status === 'completed'
+          ? 'past'
+          : c.status) as string,
+      isSocialImpact: false,
+      goal: c.goal === 'Create Content' ? 'Content Creation' : 'Amplification',
+      createdAt: c.createdAt,
+      campaignBrief: c.campaignBrief || 'No brief provided.',
+      deliverables: c.deliverables || [],
+      contentDirection: c.contentDirection || [],
+      contentGuidelines: c.contentGuidelines || { dos: [], donts: [] },
+      usageRights: c.usageRights || '',
+      successLooksLike: c.successLooksLike || '',
+      timeline: c.timeline,
+    };
+  });
+
+  const filteredCampaigns = mappedCampaigns.filter((campaign) => {
+    // Paused/cancelled campaigns belong on the My Work page, not the home dashboard.
+    if (campaign.status === 'paused' || campaign.status === 'cancelled') return false;
+    return campaign.status === activeFilter;
+  });
+
+  return (
+    <div className="flex flex-col gap-8 w-full pb-12 select-none">
+      {/* Welcome Message */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1.5 text-left">
+          <h1 className="text-[28px] font-bold text-[#1a1a2e] tracking-tight">
+            Hey, {user?.firstName || 'Creator'}
+          </h1>
+          <p className="text-sm font-light text-[#7a7a9a]">
+            Welcome back to your creator dashboard
+          </p>
+        </div>
+      </div>
+
+      {/* Row 1: Banner / Completeness */}
+      <div className={cn('grid gap-6 items-stretch', !isProfileCompleted && 'lg:grid-cols-12')}>
+        {!isProfileCompleted && (
+          <div className="lg:col-span-5">
+            <CompletenessCard
+              percentage={user?.onboardingPercentage || 0}
+              onCompleteClick={() => router.push('/onboard')}
+            />
+          </div>
+        )}
+        <div className={cn(!isProfileCompleted && 'lg:col-span-7')}>
+          <BannerCarousel />
+        </div>
+      </div>
+
+      {/* Row 2: Campaigns Filters & Action Row */}
+      <div className="flex flex-col gap-5 mt-2">
+        {/* Filter Headers */}
+        <div className="flex items-center justify-between border-b border-[#e8e6f0]/40 pb-4 overflow-hidden">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide shrink-0 max-w-full">
+            {(['live', 'past'] as const).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={cn(
+                  'px-5 py-2.5 text-xs font-semibold rounded-2xl transition-all border-none cursor-pointer shrink-0 outline-none select-none',
+                  activeFilter === filter
+                    ? 'bg-brand-pink text-white shadow-[0_2px_8px_rgba(215,23,111,0.15)]'
+                    : 'bg-[#f0edf7]/65 text-[#5a5a7a] hover:bg-[#f0edf7]',
+                )}
+              >
+                {filter === 'live' && 'Live Campaigns'}
+                {filter === 'past' && 'Past Campaigns'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Section Header */}
+        <div className="flex items-center justify-between mt-1 mb-0.5">
+          <div className="flex items-center gap-2 text-[#1a1a2e]">
+            <Flame size={18} className="text-orange-500 fill-orange-500" />
+            <h3 className="text-base font-bold tracking-tight">
+              {activeFilter === 'past' ? 'Past Campaigns' : 'Live Campaigns'}
+            </h3>
+          </div>
+          <button
+            onClick={() => router.push('/creator/explore')}
+            className="flex items-center gap-1 text-xs font-semibold text-brand-pink hover:underline cursor-pointer border-none bg-transparent outline-none"
+          >
+            <span>See all</span>
+            <span className="text-[10px] font-bold">&gt;</span>
+          </button>
+        </div>
+
+        {/* Dynamic Display based on Active Filter */}
+        {isLoading ? (
+          <div>
+            {/* Mobile View Skeleton */}
+            <div className="lg:hidden flex flex-col gap-4 w-full pb-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+            {/* Desktop View Skeleton */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-x-6 gap-y-4 w-full pb-4 select-none">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <CampaignCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div>
+            {/* Mobile View */}
+            <div className="lg:hidden w-full select-none">
+              <div className="flex flex-col gap-4 w-full pb-4">
+                {filteredCampaigns.map((campaign) => (
+                  <div
+                    key={campaign.id}
+                    className="w-full cursor-pointer"
+                    onClick={() => setSelectedCampaign(campaign)}
+                  >
+                    <CampaignCard
+                      title={campaign.title}
+                      brand={campaign.brand}
+                      budget={campaign.budget}
+                      daysLeft={campaign.daysLeft}
+                      tier={campaign.tier}
+                      appliedCount={campaign.appliedCount}
+                      image={campaign.image}
+                      status={campaign.status}
+                      hasApplied={campaign.hasApplied}
+                      goal={campaign.goal}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop View: Grid for all tabs */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-x-6 gap-y-4 w-full pb-4 select-none">
+              {filteredCampaigns.map((campaign) => (
+                <div
+                  key={campaign.id}
+                  className="w-full cursor-pointer"
+                  onClick={() => setSelectedCampaign(campaign)}
+                >
+                  <CampaignCard
+                    title={campaign.title}
+                    brand={campaign.brand}
+                    budget={campaign.budget}
+                    daysLeft={campaign.daysLeft}
+                    tier={campaign.tier}
+                    appliedCount={campaign.appliedCount}
+                    image={campaign.image}
+                    status={campaign.status}
+                    hasApplied={campaign.hasApplied}
+                    goal={campaign.goal}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <CampaignDetailsDrawer
+        isOpen={!!selectedCampaign}
+        onClose={() => setSelectedCampaign(null)}
+        campaign={
+          selectedCampaign
+            ? mappedCampaigns.find((c) => c.id === selectedCampaign.id) || selectedCampaign
+            : null
+        }
+      />
+    </div>
+  );
+}
