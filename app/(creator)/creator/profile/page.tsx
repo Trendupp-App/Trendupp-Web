@@ -223,10 +223,7 @@ export default function CreatorProfilePage() {
         email: user.email,
         bio: user.bio || '',
         image: user.avatarUrl || INITIAL_PROFILE.image,
-        niches:
-          user.niches && user.niches.length > 0
-            ? user.niches.map((n) => n.name)
-            : INITIAL_PROFILE.niches,
+        niches: user.niches && user.niches.length > 0 ? user.niches.map((n) => n.name) : [],
       };
     }
     return INITIAL_PROFILE;
@@ -378,7 +375,7 @@ export default function CreatorProfilePage() {
           niches:
             activeUser.niches && activeUser.niches.length > 0
               ? activeUser.niches.map((n) => n.name)
-              : INITIAL_PROFILE.niches,
+              : [],
         };
       });
       /* eslint-enable react-hooks/set-state-in-effect */
