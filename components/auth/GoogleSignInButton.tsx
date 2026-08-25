@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useGoogleAuth } from '@/hooks/useAuthMutations';
 import { FaSpinner } from 'react-icons/fa6';
 import { toast } from 'sonner';
+import { useAuthProviderEnabled } from '@/hooks/useAuthProviders';
 
 const PENDING_KEY = 'google_auth_pending';
 const PENDING_MAX_AGE_MS = 5 * 60 * 1000;
@@ -68,6 +69,7 @@ export const GoogleSignInButton = forwardRef<SocialSignInHandle, Props>(function
   const hasExchanged = useRef(false);
   const [isExchanging, setIsExchanging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const providerEnabled = useAuthProviderEnabled('google');
 
   useEffect(() => {
     onPendingChange?.(isExchanging || exchangeGoogleToken.isPending);
@@ -154,6 +156,10 @@ export const GoogleSignInButton = forwardRef<SocialSignInHandle, Props>(function
   }
 
   useImperativeHandle(ref, () => ({ trigger: handleClick }));
+
+  // Backend kill-switch: hidden entirely when the provider is disabled
+  // for this page's mode (signin vs signup). Enforced server-side too.
+  if (!providerEnabled) return null;
 
   return (
     <button

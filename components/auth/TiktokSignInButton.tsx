@@ -4,6 +4,7 @@ import { forwardRef, useImperativeHandle, useState } from 'react';
 import { generateCodeVerifier, generateCodeChallenge } from '@/lib/pkce';
 import type { SocialSignInHandle } from './GoogleSignInButton';
 import { FaSpinner } from 'react-icons/fa6';
+import { useAuthProviderEnabled } from '@/hooks/useAuthProviders';
 
 const TIKTOK_PENDING_KEY = 'tiktok_auth_pending';
 const TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY!;
@@ -22,6 +23,7 @@ export const TiktokSignInButton = forwardRef<SocialSignInHandle, Props>(function
   ref,
 ) {
   const [loading, setLoading] = useState(false);
+  const providerEnabled = useAuthProviderEnabled('tiktok');
   async function handleClick(options?: { skipTermsCheck?: boolean }) {
     if (disabled) return;
 
@@ -55,6 +57,10 @@ export const TiktokSignInButton = forwardRef<SocialSignInHandle, Props>(function
   }
 
   useImperativeHandle(ref, () => ({ trigger: handleClick }));
+
+  // Backend kill-switch: hidden entirely when the provider is disabled
+  // for this page's mode (signin vs signup). Enforced server-side too.
+  if (!providerEnabled) return null;
 
   return (
     <button
