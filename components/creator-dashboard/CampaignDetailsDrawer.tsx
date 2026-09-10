@@ -219,7 +219,7 @@ export default function CampaignDetailsDrawer({
                     <span>•</span>
                     <span className="flex items-center gap-1">
                       <Clock size={11} className="text-white/75" />
-                      {campaign.daysLeft} left
+                      {campaign.daysLeft}
                     </span>
                   </p>
                 </div>
@@ -547,7 +547,7 @@ export default function CampaignDetailsDrawer({
                   onClick={() => setDrawerMode('apply')}
                   className="w-full bg-brand-pink text-white font-semibold text-[15px] py-6.5 rounded-xl hover:bg-brand-pink/95 shadow-[0_6px_22px_rgba(215,23,111,0.22)] active:scale-[0.99] transition-all select-none border-none shrink-0 mt-4 cursor-pointer"
                 >
-                  Apply Now - 38h left →
+                  Apply Now - {campaign.daysLeft} →
                 </Button>
               ) : (
                 <Button
@@ -587,7 +587,7 @@ export default function CampaignDetailsDrawer({
               {/* Top right deadline pill */}
               <div className="py-1 px-2.5 bg-red-50 text-red-500 border border-red-100 rounded-full flex items-center gap-1 text-[10px] font-bold shrink-0">
                 <Clock size={11} className="stroke-[2.5]" />
-                <span>1d 14h left</span>
+                <span>{campaign.daysLeft}</span>
               </div>
             </div>
 
