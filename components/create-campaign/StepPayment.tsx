@@ -115,8 +115,8 @@ export default function StepPayment({
             className="mt-0.5 w-4 h-4 accent-brand-pink shrink-0 cursor-pointer"
           />
           <span className="text-sm font-light text-[#4a4a6a] leading-relaxed">
-            I agree to receive promotional emails, update, product announcement, and campaign
-            opportunities from Trendupp <span className="text-red-500">*</span>
+            I have read and understand funds will be held in escrow until campaign conditions are
+            met. <span className="text-red-500">*</span>
           </span>
         </label>
 

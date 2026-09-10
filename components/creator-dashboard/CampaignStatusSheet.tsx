@@ -17,7 +17,7 @@ import {
   Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { WorkCampaign } from './WorkCampaignCard';
+import { canRaiseDispute, type WorkCampaign } from './WorkCampaignCard';
 import { formatCurrency, ensureHttpUrl } from '@/utils/Utilities';
 
 interface CampaignStatusSheetProps {
@@ -392,7 +392,7 @@ export default function CampaignStatusSheet({
               <ChevronRight size={14} />
             </button>
 
-            {!isPausedOrCancelled && onRaiseDispute && campaign.status !== 'Payment released' && (
+            {!isPausedOrCancelled && onRaiseDispute && canRaiseDispute(campaign.status) && (
               <button
                 onClick={() => onRaiseDispute(campaign)}
                 className="w-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 text-xs font-semibold py-3.5 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
