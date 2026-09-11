@@ -25,5 +25,15 @@ export function mapUserProfileToAuthUser(raw: RawUserProfile): Partial<AuthUser>
     country: raw.country,
     state: raw.state,
     city: raw.city,
+    instagramUsername: raw.instagramUsername,
+    instagramFollowers: raw.instagramFollowers,
+    tiktokUsername: raw.tiktokUsername,
+    tiktokFollowers: raw.tiktokFollowers,
+    youtubeUsername: raw.youtubeUsername,
+    youtubeFollowers: raw.youtubeFollowers,
+    twitterUsername: raw.twitterUsername,
+    twitterFollowers: raw.twitterFollowers,
+    facebookUsername: raw.facebookUsername,
+    facebookFollowers: raw.facebookFollowers,
   };
 }
