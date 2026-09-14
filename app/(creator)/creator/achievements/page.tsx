@@ -49,7 +49,7 @@ export default function AchievementsPage() {
       <div className="hidden md:flex flex-col gap-1">
         <h1 className="text-[28px] font-bold text-[#1a1a2e] tracking-tight">Achievements</h1>
         <p className="text-sm font-light text-[#7a7a9a]">
-          Track your Impact badge progress and Social Impact campaign activity.
+          Track your Social Impact Badge Activity & Status
         </p>
       </div>
 

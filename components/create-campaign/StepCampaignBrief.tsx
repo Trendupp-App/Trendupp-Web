@@ -117,7 +117,7 @@ export default function StepCampaignBrief({
     <form className="flex flex-col gap-6">
       {/* Campaign brief */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Campaign brief" tooltip={FIELD_TOOLTIPS.campaignBrief} required />
+        <FieldLabel label="Campaign Brief" tooltip={FIELD_TOOLTIPS.campaignBrief} required />
         <textarea
           {...register('brief')}
           rows={4}
@@ -141,7 +141,7 @@ export default function StepCampaignBrief({
       />
 
       <ListField
-        label="Content direction"
+        label="Content Direction"
         tooltip={FIELD_TOOLTIPS.contentDirection}
         required
         placeholder="e.g. Show yourself actively using the product outdoors"
@@ -154,7 +154,7 @@ export default function StepCampaignBrief({
       />
 
       <ListField
-        label="Content guidelines - Do's"
+        label="Content Guidelines - Do's"
         tooltip={FIELD_TOOLTIPS.dos}
         required
         placeholder="e.g. Use natural lighting throughout the video"
@@ -167,7 +167,7 @@ export default function StepCampaignBrief({
       />
 
       <ListField
-        label="Content guidelines - Dont's"
+        label="Content Guidelines - Don'ts"
         tooltip={FIELD_TOOLTIPS.donts}
         required
         placeholder="e.g. Do not feature or mention competitor products"

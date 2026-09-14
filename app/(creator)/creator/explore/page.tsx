@@ -179,12 +179,21 @@ export default function ExplorePage() {
   return (
     <div className="flex flex-col gap-0 w-full pb-16 select-none">
       {/* Title + search + filter chrome (mobile/desktop) — see note below */}
-      <div className="hidden md:flex flex-col gap-1 mb-5 shrink-0">
+      <div className="hidden md:flex items-center gap-2 mb-5 shrink-0">
         <h1 className="text-2xl font-bold text-[#1a1a2e] tracking-tight">Explore</h1>
+        <h1 className="text-2xl font-bold text-[#1a1a2e] tracking-tight">
+          {activeTab === 'campaigns'
+            ? 'Campaigns'
+            : activeTab === 'social-impact'
+              ? 'Social Impact'
+              : activeTab === 'brands'
+                ? 'Brands'
+                : 'Creators'}
+        </h1>
       </div>
 
-      <div className="flex flex-col gap-1 mb-1 shrink-0">
-        <h1 className="text-xl md:text-2xl font-bold text-[#1a1a2e] tracking-tight">
+      <div className="flex md:hidden flex-col gap-1 mb-1 shrink-0">
+        <h1 className="text-xl font-bold text-[#1a1a2e] tracking-tight">
           {activeTab === 'campaigns'
             ? 'Campaigns'
             : activeTab === 'social-impact'

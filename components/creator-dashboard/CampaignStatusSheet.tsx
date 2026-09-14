@@ -207,7 +207,7 @@ export default function CampaignStatusSheet({
                   Publish your content on{' '}
                   <span className="font-bold">the agreed social platform(s)</span>, submit proof of
                   posting below. The post must remain on your social media for at least{' '}
-                  <span className="font-bold"> 3months</span> before payment is released.
+                  <span className="font-bold">3 months</span>.
                 </p>
               </div>
             )}

@@ -83,7 +83,19 @@ export default function WelcomePage() {
             Welcome to Trendupp! 🎉
           </h1>
           <p className="text-sm font-light text-text-secondary text-center mb-8">
-            Your account is ready. You can start exploring campaigns right now.
+            {isAdvertiser ? (
+              <>
+                <span className="text-brand-pink font-medium">You are all set.</span> Get started
+                with your first campaign.
+              </>
+            ) : (
+              <>
+                <span className="text-brand-pink font-medium">
+                  You are officially a Trendupper.
+                </span>{' '}
+                Start exploring paid campaigns.
+              </>
+            )}
           </p>
 
           {/* Profile completion card */}

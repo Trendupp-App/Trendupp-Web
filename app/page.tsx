@@ -84,16 +84,16 @@ export default function Home() {
           <div className="max-w-5xl mx-auto px-6 py-14 grid gap-8 sm:grid-cols-3">
             {[
               {
-                title: 'For brands',
-                body: 'Create a campaign brief, set a budget and fund it into escrow. Review creator applications, approve content drafts, and only release payment when the post is live.',
+                title: 'Advertisers',
+                body: 'Access a wide pool of verified African creators across regions, tiers, niches and platforms fit for your brand campaign.',
               },
               {
-                title: 'For creators',
-                body: 'Connect your Instagram, TikTok, YouTube, X or Facebook account to verify your audience, apply to campaigns that match your niche and tier, submit content and get paid on approval.',
+                title: 'Creators',
+                body: 'Discover campaigns, create content, amplify, and get paid.',
               },
               {
-                title: 'Protected payments',
-                body: 'Campaign budgets are held in escrow. Creators are paid automatically when their live post is approved; unused budget is refunded to the brand.',
+                title: 'One marketplace',
+                body: 'Trendupp manages the entire campaign journey from briefs and approvals to secure payments; so Advertisers and Creators can focus on what they do best.',
               },
             ].map((f) => (
               <div key={f.title}>

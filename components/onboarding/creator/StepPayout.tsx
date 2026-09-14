@@ -53,9 +53,10 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
       <div className="flex gap-2 bg-red-50 border border-red-100 rounded-xl p-3.5">
         <AlertCircle size={16} className="text-red-400 mt-0.5 shrink-0" />
         <p className="text-xs text-red-500 leading-relaxed">
-          Your account name must match the name on your Trendupp profile. If your profile says
-          &apos;Alex Okafor&apos;, your bank account must also be registered under &apos;Alex
-          Okafor&apos; or a close variation. Mismatched names will delay your payouts.
+          Your account name must match your Trendupp profile. If your Trendupp profile says
+          &ldquo;Mensah Akinboye Mandela&rdquo;, your bank account should be registered under
+          &ldquo;Ciroma Chukwuma&rdquo; or a close variation. Mismatched names will delay your
+          payouts.
         </p>
       </div>
 
