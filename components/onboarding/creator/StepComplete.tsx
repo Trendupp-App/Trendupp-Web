@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 
 interface Props {
   userName?: string;
+  isAdvertiser?: boolean;
   onGoToDashboard: () => void;
 }
 
-export default function StepComplete({ userName, onGoToDashboard }: Props) {
+export default function StepComplete({ isAdvertiser, onGoToDashboard }: Props) {
   return (
     <div className="flex flex-col items-center w-full py-8">
       {/* Success icon */}
@@ -21,7 +22,7 @@ export default function StepComplete({ userName, onGoToDashboard }: Props) {
       </p>
       <h1 className="text-2xl font-light text-[#1a1a2e] text-center mb-2">Profile Verified</h1>
       <p className="text-sm font-light text-[#7a7a9a] text-center mb-10">
-        Hey {userName ?? 'there'}! Your profile has been verified
+        {isAdvertiser ? 'Get started with your first campaign!' : 'You can now start earning!'}
       </p>
 
       <Button

@@ -84,7 +84,7 @@ export default function StepPayment({
               </div>
             </div>
             <div className="flex items-center justify-between px-5 py-4 border-t border-[#e8e6f0] bg-[#faf9fc]">
-              <span className="text-sm font-medium text-[#1a1a2e]">Total to pay</span>
+              <span className="text-sm font-medium text-[#1a1a2e]">Total to Pay</span>
               <span className="text-lg font-semibold text-brand-pink">
                 {fmt(breakdown.totalToPay)}
               </span>

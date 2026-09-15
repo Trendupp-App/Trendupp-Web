@@ -169,8 +169,7 @@ export default function CreatorSignupPage() {
             <div className="max-w-[500px] w-full flex flex-col">
               <h1 className="text-xl font-extralight text-[#1a1a2e] text-center mb-1">Sign up</h1>
               <p className="text-sm font-light text-text-secondary text-center mb-4">
-                Get started with an account on{' '}
-                <span className="text-brand-pink font-medium">Trendupp</span>
+                Get started with your Creator account.
               </p>
 
               <div className="flex items-center justify-center gap-3 mb-4">

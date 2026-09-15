@@ -70,7 +70,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
     : 'U';
 
   const avatarUrl = user?.avatarUrl ?? '';
-  const roleLabel = isBrand ? 'Brand' : 'Creator';
+  const roleLabel = isBrand ? 'Advertiser' : 'Creator';
 
   return (
     <aside

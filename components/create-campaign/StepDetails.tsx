@@ -113,7 +113,7 @@ export default function StepDetails({
     <form onSubmit={handleSubmit(handleSubmitWithFile)} className="flex flex-col gap-5">
       {/* Cover image */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-[#1a1a2e]">Cover image</label>
+        <label className="text-sm font-medium text-[#1a1a2e]">Cover Image</label>
         <div
           onClick={() => fileRef.current?.click()}
           className={cn(
@@ -149,14 +149,14 @@ export default function StepDetails({
 
       {/* Campaign title */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Campaign title" required />
+        <FieldLabel label="Campaign Title" required />
         <input {...register('title')} placeholder="Enter campaign title" className={inputCls} />
         {errors.title && <p className="text-[11px] text-red-400">{errors.title.message}</p>}
       </div>
 
       {/* Campaign goal */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Campaign goal" required />
+        <FieldLabel label="Campaign Goal" required />
         <ComboBox
           options={CAMPAIGN_GOALS.map((g) => ({ value: g, label: g }))}
           value={selectedGoal}
@@ -170,7 +170,7 @@ export default function StepDetails({
         {errors.goal && <p className="text-[11px] text-red-400">{errors.goal.message}</p>}
         {selectedGoal === 'Amplify Content' && (
           <div className="flex flex-col gap-1.5 mt-2">
-            <FieldLabel label="Link to content for amplification" required />
+            <FieldLabel label="Link to Content for Amplification" required />
             <input
               {...register('amplificationAsset')}
               placeholder="https://drive.google.com/..."
@@ -185,7 +185,7 @@ export default function StepDetails({
 
       {/* Total budget */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Total budget" required />
+        <FieldLabel label="Total Budget" required />
         <div className="relative flex items-center">
           <span className="absolute left-3 text-sm text-[#9a99b0] select-none font-light">
             {budgetCurrencySymbol}
@@ -204,7 +204,7 @@ export default function StepDetails({
 
       {/* Creator tier — from API */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Creator tier" required />
+        <FieldLabel label="Creator Tier" required />
         <MultiSelectDropdown
           options={creatorCategories.map((cat) => ({
             value: cat.id,
@@ -241,7 +241,7 @@ export default function StepDetails({
 
       {/* Creator niche — multiselect */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel label="Creator niche" tooltip={FIELD_TOOLTIPS.creatorNiche} required />
+        <FieldLabel label="Creator Niche" tooltip={FIELD_TOOLTIPS.creatorNiche} required />
         <MultiSelectDropdown
           options={niches.map((n) => ({ value: n.id, label: n.name }))}
           selected={selectedNicheIds}

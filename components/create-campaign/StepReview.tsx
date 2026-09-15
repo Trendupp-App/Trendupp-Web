@@ -106,7 +106,7 @@ export default function StepReview({
       )}
 
       {/* Section 1: Campaign details */}
-      <ReviewSection title="Campaign details" onEdit={() => onEdit(1)}>
+      <ReviewSection title="Campaign Details" onEdit={() => onEdit(1)}>
         <ReviewRow label="Title" value={step1.title} />
         <ReviewRow label="Goal" value={step1.goal} />
         <ReviewRow
@@ -117,18 +117,18 @@ export default function StepReview({
               : undefined
           }
         />
-        <ReviewRow label="Creator tier" value={tierName} />
+        <ReviewRow label="Creator Tier" value={tierName} />
         <ReviewRow label="Platforms" value={platformNames} />
       </ReviewSection>
 
       {/* Section 2: Campaign brief */}
-      <ReviewSection title="Campaign brief" onEdit={() => onEdit(2)}>
+      <ReviewSection title="Campaign Brief" onEdit={() => onEdit(2)}>
         <div className="flex flex-col gap-1">
           <span className="text-sm text-[#9a99b0] font-light">Brief</span>
           <p className="text-sm text-[#1a1a2e] font-light leading-relaxed">{step2.brief}</p>
         </div>
         <ReviewList label="Deliverables" items={step2.deliverables} />
-        <ReviewList label="Content direction" items={step2.contentDirection} />
+        <ReviewList label="Content Direction" items={step2.contentDirection} />
         <ReviewList label="Do's" items={step2.dos} />
         <ReviewList label="Don'ts" items={step2.donts} />
       </ReviewSection>

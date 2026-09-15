@@ -52,16 +52,16 @@ const ADVERTISER_STEPS: AdvertiserStepId[] = [
 const CREATOR_STEP_META: Record<CreatorStepId, { title: string; subtitle: string }> = {
   profile: {
     title: "Let's build your profile",
-    subtitle: 'This is what brands will see when they view your creator page',
+    subtitle: 'Create a profile that gets you noticed by Advertisers.',
   },
   niche: {
     title: 'Niche',
-    subtitle: 'Choose a minimum of 1 and a maximum of 3 Niches',
+    subtitle: 'Choose a minimum of 1 and a maximum of 3',
   },
   socials: {
     title: 'Connect your socials',
     subtitle:
-      'Link at least 1 and up to 3 of your accounts securely, to verify your social profile and tier',
+      'The more accounts you connect, the higher your tier level (Nano, Micro, Macro & Mega)',
   },
   payout: {
     title: 'Payout details',
@@ -75,15 +75,15 @@ const CREATOR_STEP_META: Record<CreatorStepId, { title: string; subtitle: string
 
 const ADVERTISER_STEP_META: Record<AdvertiserStepId, { title: string; subtitle: string }> = {
   profile: {
-    title: "Let's build your profile",
-    subtitle: 'This is what creators will see when they view your brand page',
+    title: 'Build Your Profile',
+    subtitle: 'Add your business details to start connecting with Creators.',
   },
   industry: {
     title: 'Industry',
     subtitle: 'Choose a minimum of 1, and a maximum of 3 industries for your brand',
   },
   representative: {
-    title: 'Brand representative',
+    title: 'Brand Representative',
     subtitle: 'Add the contact information of your brand representative.',
   },
   socials: {
@@ -308,7 +308,11 @@ export default function OnboardingPage() {
         )}
 
         {currentStepId === 'complete' && (
-          <StepComplete userName={userName} onGoToDashboard={goToDashboard} />
+          <StepComplete
+            userName={userName}
+            isAdvertiser={isAdvertiser}
+            onGoToDashboard={goToDashboard}
+          />
         )}
       </div>
     </AuthLayout>
