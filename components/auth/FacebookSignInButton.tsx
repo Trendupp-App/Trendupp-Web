@@ -3,6 +3,7 @@
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import type { SocialSignInHandle } from './GoogleSignInButton';
 import { FaSpinner } from 'react-icons/fa6';
+import { useAuthProviderEnabled } from '@/hooks/useAuthProviders';
 
 const FACEBOOK_PENDING_KEY = 'facebook_auth_pending';
 
@@ -21,6 +22,7 @@ export const FacebookSignInButton = forwardRef<SocialSignInHandle, Props>(
     ref,
   ) {
     const [loading, setLoading] = useState(false);
+    const providerEnabled = useAuthProviderEnabled('facebook');
     function handleClick(options?: { skipTermsCheck?: boolean }) {
       if (disabled) return;
 
@@ -50,6 +52,10 @@ export const FacebookSignInButton = forwardRef<SocialSignInHandle, Props>(
     }
 
     useImperativeHandle(ref, () => ({ trigger: handleClick }));
+
+    // Backend kill-switch: hidden entirely when the provider is disabled
+    // for this page's mode (signin vs signup). Enforced server-side too.
+    if (!providerEnabled) return null;
 
     return (
       <button

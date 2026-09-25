@@ -46,7 +46,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useCreatorReviews, useMyApplications } from '@/hooks/useCampaign';
 import { usePayoutDashboard } from '@/hooks/usePayout';
-import { formatCompactCurrency } from '@/utils/Utilities';
+import { formatCompactCurrency, ensureHttpUrl } from '@/utils/Utilities';
 import { useCountries, useNationalities, useStates, useNiches } from '@/hooks/useOnboardingQueries';
 import {
   useUserDetail,
@@ -223,10 +223,7 @@ export default function CreatorProfilePage() {
         email: user.email,
         bio: user.bio || '',
         image: user.avatarUrl || INITIAL_PROFILE.image,
-        niches:
-          user.niches && user.niches.length > 0
-            ? user.niches.map((n) => n.name)
-            : INITIAL_PROFILE.niches,
+        niches: user.niches && user.niches.length > 0 ? user.niches.map((n) => n.name) : [],
       };
     }
     return INITIAL_PROFILE;
@@ -378,7 +375,7 @@ export default function CreatorProfilePage() {
           niches:
             activeUser.niches && activeUser.niches.length > 0
               ? activeUser.niches.map((n) => n.name)
-              : INITIAL_PROFILE.niches,
+              : [],
         };
       });
       /* eslint-enable react-hooks/set-state-in-effect */
@@ -1044,6 +1041,18 @@ export default function CreatorProfilePage() {
                     {/* Dark gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
+                    {/* Whole-card link — opens the portfolio URL in a new tab */}
+                    {item.link && (
+                      <a
+                        href={ensureHttpUrl(item.link)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 z-1 cursor-pointer"
+                        aria-label={`Open ${item.title} in a new tab`}
+                        title={item.link}
+                      />
+                    )}
+
                     {/* Title Text at Bottom */}
                     <span className="absolute bottom-3 left-4 text-xs font-bold text-white tracking-wide">
                       {item.title}
@@ -1054,7 +1063,7 @@ export default function CreatorProfilePage() {
                       id={`btn-delete-portfolio-${item.id}`}
                       onClick={() => handleDeletePortfolioItem(item.id)}
                       disabled={deletePortfolioItemMutation.isPending}
-                      className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px] disabled:opacity-40"
+                      className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-black/40 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-[2px] disabled:opacity-40"
                       title="Delete Item"
                     >
                       <Trash2 size={13} />

@@ -46,7 +46,7 @@ export default function VerifyPage() {
         <BackButton className="absolute top-4" />
         <div className="w-full max-w-[500px] flex flex-col items-center">
           <h1 className="text-2xl font-extralight text-[#1a1a2e] text-center mb-2">
-            Enter verification code
+            Almost There!
           </h1>
           <p className="text-sm font-light text-text-secondary text-center mb-1">
             Enter the verification code that was sent to

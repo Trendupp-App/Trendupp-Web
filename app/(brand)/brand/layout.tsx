@@ -6,6 +6,7 @@ import Sidebar from '@/shared/Sidebar';
 import Header from '@/shared/Header';
 import NotificationDrawer from '@/components/brand-profile/NotificationDrawer';
 import { useUnreadNotificationCount } from '@/hooks/useNotifications';
+import { hydrateFullProfile } from '@/hooks/useAuthMutations';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import PageLoader from '@/components/skeletons/PageLoader';
@@ -43,13 +44,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, accessToken, hasHydrated } = useAuthStore();
+  const { user, accessToken, hasHydrated, updateUser } = useAuthStore();
   const { data: unreadCount = 0 } = useUnreadNotificationCount(hasHydrated && !!accessToken);
   const { collapsed, toggle } = useSidebarCollapsed();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  // Sessions persisted from before a profile field was added (e.g. the social
+  // username/follower fields) never pick it up otherwise — hydration only ran
+  // at login time. Refresh once per mount so existing sessions self-heal.
+  useEffect(() => {
+    if (hasHydrated && accessToken && user?.id) {
+      hydrateFullProfile(user.id, updateUser);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasHydrated, accessToken, user?.id]);
 
   useEffect(() => {
     if (hasHydrated && (!accessToken || !user)) {

@@ -222,8 +222,7 @@ export default function MessagesPage() {
             <span>Mediation Channel Active</span>
           </div>
           <p className="text-[11px] font-light text-[#5a5a7a] leading-relaxed">
-            Mediation has been activated by the administrator. Chat messages sent here are visible
-            to the creator, the brand, and the mediation admin.
+            Dispute has been filed. Chat messages sent here are visible to the affected parties.
           </p>
           <div className="text-[10px] font-light text-[#7a7a9a] border-t border-[#e8e6f0]/40 pt-2 flex flex-col gap-1">
             <p>
@@ -347,8 +346,8 @@ export default function MessagesPage() {
           <div className="bg-[#fff0f5] border border-[#fcecf3] rounded-2xl p-4 flex gap-3 text-left">
             <MessageCircle className="w-5 h-5 text-brand-pink shrink-0 mt-0.5" />
             <span className="text-[10.5px] font-medium text-[#8b1a47] leading-relaxed">
-              Disputes must be raised from the campaign details view in My Work. Active and pending
-              disputes are displayed below.
+              Active and pending disputes will be displayed here. To raise a new dispute, go to the
+              campaign details page in My Work.
             </span>
           </div>
         </div>

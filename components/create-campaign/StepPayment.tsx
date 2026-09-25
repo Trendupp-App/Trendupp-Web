@@ -84,7 +84,7 @@ export default function StepPayment({
               </div>
             </div>
             <div className="flex items-center justify-between px-5 py-4 border-t border-[#e8e6f0] bg-[#faf9fc]">
-              <span className="text-sm font-medium text-[#1a1a2e]">Total to pay</span>
+              <span className="text-sm font-medium text-[#1a1a2e]">Total to Pay</span>
               <span className="text-lg font-semibold text-brand-pink">
                 {fmt(breakdown.totalToPay)}
               </span>
@@ -115,8 +115,8 @@ export default function StepPayment({
             className="mt-0.5 w-4 h-4 accent-brand-pink shrink-0 cursor-pointer"
           />
           <span className="text-sm font-light text-[#4a4a6a] leading-relaxed">
-            I agree to receive promotional emails, update, product announcement, and campaign
-            opportunities from Trendupp <span className="text-red-500">*</span>
+            I have read and understand funds will be held in escrow until campaign conditions are
+            met. <span className="text-red-500">*</span>
           </span>
         </label>
 

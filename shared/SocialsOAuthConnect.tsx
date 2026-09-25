@@ -109,13 +109,7 @@ export default function SocialsOAuthConnect({
                   </span>
                 )}
               </p>
-              {card.connected ? (
-                <p className="text-xs text-[#9a99b0]">{card.username}</p>
-              ) : (
-                <p className="text-xs text-[#9a99b0]">
-                  Requires {card.minFollowers.toLocaleString()}+ followers
-                </p>
-              )}
+              {card.connected && <p className="text-xs text-[#9a99b0]">{card.username}</p>}
             </div>
           </div>
 

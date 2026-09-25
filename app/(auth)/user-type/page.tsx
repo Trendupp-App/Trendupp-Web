@@ -64,8 +64,8 @@ export default function AccountTypePage() {
             value="creator"
             selected={selected === 'creator'}
             icon={User}
-            title="I am a creator"
-            description="Discover paid campaigns, apply to brands, earn guaranteed payments"
+            title="I am a Creator"
+            description="Start applying for campaigns and get paid for your approved work."
             onSelect={(val) => setSelected(val as AccountType)}
           />
 
@@ -73,8 +73,8 @@ export default function AccountTypePage() {
             value="advertiser"
             selected={selected === 'advertiser'}
             icon={BriefcaseBusiness}
-            title="I am an advertiser"
-            description="Post campaigns, find verified creators, manage content and payments"
+            title="I am an Advertiser"
+            description="Create campaigns, select the right creators within your budget, and get results."
             onSelect={(val) => setSelected(val as AccountType)}
           />
         </div>

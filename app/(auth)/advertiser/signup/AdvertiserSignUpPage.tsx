@@ -164,8 +164,7 @@ export default function AdvertiserSignupPage() {
             <div className="max-w-[500px] w-full flex flex-col">
               <h1 className="text-xl font-extralight text-[#1a1a2e] text-center mb-1">Sign up</h1>
               <p className="text-sm font-light text-text-secondary text-center mb-4">
-                Get started with an account on{' '}
-                <span className="text-brand-pink font-medium">Trendupp</span>
+                Get started with your Advertiser account.
               </p>
 
               <div className="flex items-center justify-center gap-3 mb-4">
@@ -230,12 +229,12 @@ export default function AdvertiserSignupPage() {
                 {/* Brand Name */}
                 <div className="grid grid-cols-1 gap-3">
                   <div className="flex flex-col gap-1">
-                    <Label className="text-sm font-light text-[#1a1a2e]">Brand name</Label>
+                    <Label className="text-sm font-light text-[#1a1a2e]">Business Name</Label>
                     <div className="relative">
                       <User size={15} className={iconCls} />
                       <Input
                         {...register('brandName')}
-                        placeholder="Enter Brand Name"
+                        placeholder="Enter Business Name"
                         className={`pl-9 ${inputCls}`}
                       />
                     </div>

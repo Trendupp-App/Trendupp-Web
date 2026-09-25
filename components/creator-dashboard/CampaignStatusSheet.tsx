@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { toast } from 'sonner';
 import { Drawer, DrawerContent, DrawerClose } from '@/components/ui/drawer';
 import {
   X,
@@ -12,10 +13,12 @@ import {
   FileText,
   ChevronRight,
   MessageCircle,
+  Megaphone,
+  Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { WorkCampaign } from './WorkCampaignCard';
-import { formatCurrency } from '@/utils/Utilities';
+import { canRaiseDispute, type WorkCampaign } from './WorkCampaignCard';
+import { formatCurrency, ensureHttpUrl } from '@/utils/Utilities';
 
 interface CampaignStatusSheetProps {
   campaign: WorkCampaign | null;
@@ -93,6 +96,13 @@ export default function CampaignStatusSheet({
   const showTimer = campaign.status !== 'Payment released' && campaign.status !== 'Declined';
   const isPausedOrCancelled =
     campaign.campaignStatus === 'paused' || campaign.campaignStatus === 'cancelled';
+  const isAmplify = campaign.goal === 'Amplification';
+
+  function handleCopyAmplificationAsset() {
+    if (!campaign?.amplificationAsset) return;
+    navigator.clipboard.writeText(campaign.amplificationAsset);
+    toast.success('Link copied to clipboard!');
+  }
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -197,7 +207,7 @@ export default function CampaignStatusSheet({
                   Publish your content on{' '}
                   <span className="font-bold">the agreed social platform(s)</span>, submit proof of
                   posting below. The post must remain on your social media for at least{' '}
-                  <span className="font-bold"> 3months</span> before payment is released.
+                  <span className="font-bold">3 months</span>.
                 </p>
               </div>
             )}
@@ -256,6 +266,34 @@ export default function CampaignStatusSheet({
               </>
             )}
           </div>
+
+          {/* Amplification asset — only relevant for Amplify Content campaigns */}
+          {isAmplify && campaign.amplificationAsset && (
+            <div className="mt-5 border border-[#e8e6f0] rounded-2xl p-4 flex flex-col gap-2 text-left">
+              <h4 className="text-sm font-bold text-[#1a1a2e] flex items-center gap-1.5">
+                <Megaphone size={14} />
+                Content to Amplify
+              </h4>
+              <div className="flex items-center gap-2 bg-[#f4f3f6] rounded-xl px-3 py-2.5">
+                <a
+                  href={ensureHttpUrl(campaign.amplificationAsset)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-xs font-medium text-[#1a1a2e] hover:text-brand-pink break-all"
+                >
+                  {campaign.amplificationAsset}
+                </a>
+                <button
+                  type="button"
+                  onClick={handleCopyAmplificationAsset}
+                  className="shrink-0 w-7 h-7 rounded-lg bg-white border border-[#e8e6f0] flex items-center justify-center text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 transition-colors cursor-pointer"
+                  aria-label="Copy link"
+                >
+                  <Copy size={13} />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Comments from creator + brand response */}
           {campaign.campaignComment && (
@@ -354,7 +392,7 @@ export default function CampaignStatusSheet({
               <ChevronRight size={14} />
             </button>
 
-            {!isPausedOrCancelled && onRaiseDispute && campaign.status !== 'Payment released' && (
+            {!isPausedOrCancelled && onRaiseDispute && canRaiseDispute(campaign.status) && (
               <button
                 onClick={() => onRaiseDispute(campaign)}
                 className="w-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 text-xs font-semibold py-3.5 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"

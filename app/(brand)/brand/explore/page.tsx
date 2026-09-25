@@ -14,14 +14,15 @@ import { useExploreCreators, useExploreBrands, useExploreSearch } from '@/hooks/
 import { useNiches, useIndustries } from '@/hooks/useOnboardingQueries';
 import type { ExploreCreator, ExploreBrand } from '@/types/explore';
 import CampaignsExploreTab from '@/components/BrandExplore/CampaignExploreTab';
-import { useCampaigns } from '@/hooks/useCampaign';
-import CampaignsPagination from '@/shared/CampaignsPagination';
+import { useCampaignsInfinite } from '@/hooks/useCampaign';
+import InfiniteScrollSentinel from '@/shared/InfiniteScrollSentinel';
 import CampaignFilterPillRow, { type CampaignStatusFilter } from '@/shared/CampaignFilterPillRow';
 import ExploreSearchResults from '@/components/BrandExplore/ExploreSearchResults';
 import CampaignDetailsSheet from '@/components/BrandExplore/CampaignDetailsSheet';
 import { Campaign } from '@/types/campaign';
 
 const VALID_TABS: ExploreTab[] = ['campaigns', 'creators', 'brands', 'news'];
+const CAMPAIGNS_PAGE_SIZE = 12;
 
 export default function ExplorePage() {
   const searchParams = useSearchParams();
@@ -33,7 +34,6 @@ export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState<ExploreTab>(initialTab);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
-  const [campaignPage, setCampaignPage] = useState(1);
   const [activeCampaignFilter, setActiveCampaignFilter] = useState<CampaignStatusFilter>('all');
   const isSearching = searchValue.trim().length > 0;
 
@@ -47,10 +47,13 @@ export default function ExplorePage() {
   const { data: industries } = useIndustries();
 
   const {
-    data: campaignsResponse,
+    campaigns,
     isLoading: campaignsLoading,
     isError: campaignsError,
-  } = useCampaigns(
+    isFetchingNextPage: campaignsFetchingNext,
+    hasNextPage: campaignsHasNextPage,
+    fetchNextPage: fetchNextCampaignsPage,
+  } = useCampaignsInfinite(
     {
       status:
         activeCampaignFilter === 'all'
@@ -58,13 +61,10 @@ export default function ExplorePage() {
           : activeCampaignFilter === 'live'
             ? 'live'
             : 'completed',
-      page: campaignPage,
-      limit: 12,
+      limit: CAMPAIGNS_PAGE_SIZE,
     },
     !isSearching && activeTab === 'campaigns',
   );
-  const campaigns = campaignsResponse?.data;
-  const campaignsPagination = campaignsResponse?.pagination;
 
   const {
     data: creators,
@@ -87,12 +87,10 @@ export default function ExplorePage() {
   function handleTabChange(tab: ExploreTab) {
     setActiveTab(tab);
     setActiveCategoryId(null);
-    setCampaignPage(1);
   }
 
   function handleCampaignFilterChange(filter: CampaignStatusFilter) {
     setActiveCampaignFilter(filter);
-    setCampaignPage(1);
   }
 
   function handleViewCreator(creator: ExploreCreator) {
@@ -140,10 +138,10 @@ export default function ExplorePage() {
                 isLoading={campaignsLoading}
                 isError={campaignsError}
               />
-              <CampaignsPagination
-                page={campaignPage}
-                totalPages={campaignsPagination?.pages ?? 1}
-                onPageChange={setCampaignPage}
+              <InfiniteScrollSentinel
+                onIntersect={fetchNextCampaignsPage}
+                enabled={!!campaignsHasNextPage}
+                isLoading={campaignsFetchingNext}
               />
             </>
           )}

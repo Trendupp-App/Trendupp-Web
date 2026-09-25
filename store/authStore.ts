@@ -43,6 +43,8 @@ export interface AuthUser {
   youtubeFollowers?: number | null;
   twitterUsername?: string | null;
   twitterFollowers?: number | null;
+  facebookUsername?: string | null;
+  facebookFollowers?: number | null;
   brandRepresentative: {
     firstName: string | null;
     lastName: string | null;

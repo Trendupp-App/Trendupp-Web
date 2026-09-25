@@ -19,7 +19,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ensureHttpUrl } from '@/utils/Utilities';
-import type { WorkCampaign } from './WorkCampaignCard';
+import { canRaiseDispute, type WorkCampaign } from './WorkCampaignCard';
 
 type DrawerTab = 'overview' | 'requirement' | 'timeline' | 'deliverables';
 
@@ -507,7 +507,7 @@ export default function WorkDetailsDrawer({
                   Submit Proof of Posting
                 </button>
               )}
-              {!isPausedOrCancelled && campaign.status !== 'Payment released' && (
+              {!isPausedOrCancelled && canRaiseDispute(campaign.status) && (
                 <button
                   onClick={() => onRaiseDispute?.(campaign)}
                   className="w-full border border-[#e8e6f0] text-[#7a7a9a] hover:text-brand-pink hover:border-brand-pink/30 text-xs font-semibold py-3 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"

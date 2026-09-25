@@ -95,6 +95,22 @@ function getStatusLabel(status: WorkCampaign['status']) {
   return status;
 }
 
+// A creator can only dispute a campaign they're actively engaged on — accepted
+// offer with work underway, submitted, in revision, or approved awaiting proof.
+// Never before a brand decision ('Pending'), never after a rejection
+// ('Declined') or an unaccepted offer ('Selected'), and never after settlement
+// ('Payment released').
+const DISPUTABLE_STATUSES: WorkCampaign['status'][] = [
+  'In progress',
+  'Under review',
+  'Revision requested',
+  'Approved',
+];
+
+export function canRaiseDispute(status: WorkCampaign['status']) {
+  return DISPUTABLE_STATUSES.includes(status);
+}
+
 // Single CTA per status — every status opens the same CampaignStatusSheet.
 function getPrimaryAction(status: WorkCampaign['status'], campaignStatus?: CampaignStatus) {
   if (campaignStatus === 'paused' || campaignStatus === 'cancelled') {
