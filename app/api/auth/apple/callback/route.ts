@@ -12,6 +12,29 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const FORWARDED_KEYS = ['id_token', 'code', 'state', 'user', 'error'] as const;
 
+/**
+ * Absolute origin to redirect back to.
+ *
+ * `request.url` is unreliable here: on AWS the Next server runs inside Lambda
+ * behind CloudFront, so the incoming URL arrives as the internal address
+ * (http://localhost:3000/...) and redirecting against it sends the browser to
+ * localhost. Vercel rewrites it to the public URL, which is why this only
+ * broke in production. Prefer the configured public origin, then the
+ * proxy-forwarded host, and only fall back to request.url for local dev.
+ */
+function resolveOrigin(request: NextRequest): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL;
+  if (configured) return configured.replace(/\/$/, '');
+
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  if (host) {
+    const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+    return `${proto}://${host}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 export async function POST(request: NextRequest) {
   const form = await request.formData();
   const params = new URLSearchParams();
@@ -20,7 +43,7 @@ export async function POST(request: NextRequest) {
     if (typeof value === 'string' && value) params.set(key, value);
   }
   return NextResponse.redirect(
-    new URL(`/auth/callback/apple#${params.toString()}`, request.url),
+    new URL(`/auth/callback/apple#${params.toString()}`, resolveOrigin(request)),
     303,
   );
 }
@@ -34,7 +57,7 @@ export function GET(request: NextRequest) {
     if (value) params.set(key, value);
   }
   return NextResponse.redirect(
-    new URL(`/auth/callback/apple#${params.toString()}`, request.url),
+    new URL(`/auth/callback/apple#${params.toString()}`, resolveOrigin(request)),
     303,
   );
 }

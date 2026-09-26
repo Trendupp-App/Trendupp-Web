@@ -85,6 +85,15 @@ export default function TiktokCallbackPage() {
 
     if (!code || hasExchanged.current) return;
 
+    // `hasExchanged` is a ref, so a remount resets it — and by then the
+    // pending entry read below has already been consumed. The second pass
+    // would report "Session expired" and redirect to /signin, aborting the
+    // token exchange that is still in flight. Persisting the guard makes
+    // that pass exit quietly instead. Keyed by the authorization code, so a
+    // retry with a fresh code still gets a fresh guard.
+    const exchangeGuardKey = `${TIKTOK_PENDING_KEY}_exchanged_${code}`;
+    if (sessionStorage.getItem(exchangeGuardKey)) return;
+
     const raw = localStorage.getItem(TIKTOK_PENDING_KEY);
     if (!raw) {
       toast.error('Session expired, please try again');
@@ -102,6 +111,7 @@ export default function TiktokCallbackPage() {
     }
 
     hasExchanged.current = true;
+    sessionStorage.setItem(exchangeGuardKey, '1');
     localStorage.removeItem(TIKTOK_PENDING_KEY);
 
     exchangeTiktokToken.mutate(
