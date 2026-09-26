@@ -48,7 +48,11 @@ const OAUTH_CONFIG: Record<SocialPlatformId, PlatformOAuthConfig> = {
   instagram: {
     clientId: process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID,
     authorizeUrl: 'https://www.instagram.com/oauth/authorize',
-    scope: 'instagram_business_basic',
+    // manage_insights is required for the /{media}/insights edge that powers
+    // campaign post metrics (reach, saves, shares). Without it the token is
+    // basic-only and every insights call fails, which also blocks Meta's
+    // "1 API call required" test gate during App Review.
+    scope: 'instagram_business_basic,instagram_business_manage_insights',
     clientIdParam: 'client_id',
     usesPkce: false,
   },
