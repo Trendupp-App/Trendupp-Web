@@ -68,20 +68,29 @@ const OAUTH_CONFIG: Record<SocialPlatformId, PlatformOAuthConfig> = {
     usesPkce: true, // PKCE is mandatory for X OAuth 2.0
   },
   facebook: {
-    clientId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+    // Connect runs on the Meta app that carries the Pages permissions, which
+    // uses Facebook Login for Business: permissions come from a server-side
+    // Configuration (config_id), not from `scope`. Sending both is invalid,
+    // so `scope` is empty here and omitted from the authorize URL.
+    clientId: process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID
+      ? (process.env.NEXT_PUBLIC_FACEBOOK_CONNECT_APP_ID ?? process.env.NEXT_PUBLIC_FACEBOOK_APP_ID)
+      : process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
     authorizeUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
-    scope: 'public_profile,pages_show_list,pages_read_engagement',
+    scope: process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID ? '' : 'public_profile,email',
     clientIdParam: 'client_id',
     usesPkce: false,
+    ...(process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID
+      ? { extraParams: { config_id: process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID } }
+      : {}),
   },
 };
 
 /**
- * Platforms currently live for social connect. Instagram/TikTok/Twitter keep
- * their OAuth config above (ready for later) but are intentionally kept out
- * of this list so they show as "Coming soon" — only YouTube is enabled.
+ * Platforms currently live for social connect. Only X/Twitter is held back —
+ * it has no client id configured in any environment, so it stays out of this
+ * list and renders as "Coming soon".
  */
-const ENABLED_PLATFORMS: SocialPlatformId[] = ['youtube', 'facebook'];
+const ENABLED_PLATFORMS: SocialPlatformId[] = ['youtube', 'facebook', 'instagram', 'tiktok'];
 
 /** Whether real OAuth can start for this platform (enabled + client id configured). */
 export function isOAuthConfigured(platform: SocialPlatformId): boolean {
@@ -131,7 +140,8 @@ export async function beginSocialConnect(
 
   const params = new URLSearchParams({
     [config.clientIdParam]: config.clientId,
-    scope: config.scope,
+    // Login for Business rejects a request carrying both scope and config_id.
+    ...(config.scope ? { scope: config.scope } : {}),
     response_type: 'code',
     redirect_uri: redirectUri,
     state: `connect_${platform}`,
