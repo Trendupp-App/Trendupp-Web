@@ -36,6 +36,23 @@ interface PlatformOAuthConfig {
   extraParams?: Record<string, string>;
 }
 
+/**
+ * Facebook app identifiers, with literal fallbacks.
+ *
+ * TEMPORARY: these three are not set in the Amplify build environment, so Next
+ * could not inline them and the deployed bundle shipped
+ * `client_id=undefined` — Facebook answered "Invalid app ID" and both login and
+ * connect were dead in production. They are public client identifiers (they are
+ * visible in the client bundle by design), so committing them leaks nothing.
+ *
+ * The env var still wins where it is set. Once these exist in Amplify, delete
+ * the fallbacks so the values live in one place again.
+ */
+export const FACEBOOK_LOGIN_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID ?? '4532375297024234';
+const FACEBOOK_CONNECT_APP_ID =
+  process.env.NEXT_PUBLIC_FACEBOOK_CONNECT_APP_ID ?? '1703625600933591';
+const FACEBOOK_CONFIG_ID = process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID ?? '4549781155256507';
+
 const OAUTH_CONFIG: Record<SocialPlatformId, PlatformOAuthConfig> = {
   tiktok: {
     clientId: process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY,
@@ -76,16 +93,12 @@ const OAUTH_CONFIG: Record<SocialPlatformId, PlatformOAuthConfig> = {
     // uses Facebook Login for Business: permissions come from a server-side
     // Configuration (config_id), not from `scope`. Sending both is invalid,
     // so `scope` is empty here and omitted from the authorize URL.
-    clientId: process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID
-      ? (process.env.NEXT_PUBLIC_FACEBOOK_CONNECT_APP_ID ?? process.env.NEXT_PUBLIC_FACEBOOK_APP_ID)
-      : process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+    clientId: FACEBOOK_CONFIG_ID ? FACEBOOK_CONNECT_APP_ID : FACEBOOK_LOGIN_APP_ID,
     authorizeUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
-    scope: process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID ? '' : 'public_profile,email',
+    scope: FACEBOOK_CONFIG_ID ? '' : 'public_profile,email',
     clientIdParam: 'client_id',
     usesPkce: false,
-    ...(process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID
-      ? { extraParams: { config_id: process.env.NEXT_PUBLIC_FACEBOOK_CONFIG_ID } }
-      : {}),
+    ...(FACEBOOK_CONFIG_ID ? { extraParams: { config_id: FACEBOOK_CONFIG_ID } } : {}),
   },
 };
 

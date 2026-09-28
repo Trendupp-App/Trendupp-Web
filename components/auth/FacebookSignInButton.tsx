@@ -4,6 +4,7 @@ import { forwardRef, useImperativeHandle, useState } from 'react';
 import type { SocialSignInHandle } from './GoogleSignInButton';
 import { FaSpinner } from 'react-icons/fa6';
 import { useAuthProviderEnabled } from '@/hooks/useAuthProviders';
+import { FACEBOOK_LOGIN_APP_ID } from '@/lib/socialConnect';
 
 const FACEBOOK_PENDING_KEY = 'facebook_auth_pending';
 
@@ -41,7 +42,7 @@ export const FacebookSignInButton = forwardRef<SocialSignInHandle, Props>(
       );
 
       const params = new URLSearchParams({
-        client_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID!,
+        client_id: FACEBOOK_LOGIN_APP_ID,
         redirect_uri: redirectUri,
         response_type: 'code',
         scope: 'public_profile,email',
