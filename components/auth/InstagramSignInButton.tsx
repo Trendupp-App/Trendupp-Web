@@ -43,13 +43,13 @@ export const InstagramSignInButton = forwardRef<SocialSignInHandle, Props>(
       const params = new URLSearchParams({
         client_id: process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID!,
         redirect_uri: redirectUri,
-        scope: [
-          'instagram_business_basic',
-          'instagram_business_manage_messages',
-          'instagram_business_manage_comments',
-          'instagram_business_content_publish',
-          'instagram_business_manage_insights',
-        ].join(','),
+        // Only the two permissions Trendupp actually uses, and the only two in
+        // App Review. Messaging, comments and content_publish were requested
+        // here but used nowhere in the server — and content_publish is a write
+        // scope, so the consent screen advertised posting on the creator's
+        // behalf while the privacy policy and the App Review notes both say
+        // Trendupp never posts. That contradiction is a rejection risk.
+        scope: ['instagram_business_basic', 'instagram_business_manage_insights'].join(','),
         response_type: 'code',
         state: role,
       });
