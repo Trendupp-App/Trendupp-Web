@@ -1,41 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Phone, FileText, ChevronDown, ChevronRight, MapPin, Inbox } from 'lucide-react';
+import { Mail, Phone, FileText, MapPin, Inbox } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContactInfo, useFaqs } from '@/hooks/useSettings';
 import ConnectWithUsSection from '@/shared/ConnectWithUsSection';
 import SubmitTicketView from './SubmitTicketView';
 import MyTicketsView from './MyTicketsView';
+import FaqItem from '@/components/support/FaqItem';
 
 interface HelpSupportSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border border-[#e8e6f0] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full cursor-pointer flex items-center justify-between px-4 py-3.5 text-left hover:bg-[#faf9fc] transition-colors"
-      >
-        <span className="text-sm font-medium text-[#1a1a2e] pr-4">{q}</span>
-        {open ? (
-          <ChevronDown size={16} className="text-[#9a99b0] shrink-0" />
-        ) : (
-          <ChevronRight size={16} className="text-[#9a99b0] shrink-0" />
-        )}
-      </button>
-      {open && (
-        <div className="px-4 pb-4 text-sm text-[#4a4a6a] leading-relaxed border-t border-[#e8e6f0] pt-3">
-          {a}
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function HelpSupportSheet({ open, onOpenChange }: HelpSupportSheetProps) {

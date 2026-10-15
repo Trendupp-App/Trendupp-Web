@@ -59,6 +59,16 @@
       transform: translateX(100%);
     }
   }
+
+  --animate-slide-progress: slide-progress var(--slide-duration, 6s) linear forwards;
+  @keyframes slide-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
 }
 
 :root {

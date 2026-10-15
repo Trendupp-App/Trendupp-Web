@@ -7,9 +7,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { NewsArticle } from '@/types/news';
 import { formatRelativeTime, estimateReadTime } from '@/utils/Utilities';
-
-const FALLBACK_COVER_IMAGE =
-  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80';
+import NewsCoverImage from './NewsCoverImage';
 
 interface NewsDetailsDrawerProps {
   isOpen: boolean;
@@ -91,13 +89,11 @@ export default function NewsDetailsDrawer({ isOpen, onClose, article }: NewsDeta
         <div className="flex-1 overflow-y-auto auth-scrollbar px-6 md:px-8 pb-10 select-none flex flex-col">
           {/* Hero Image Section (Nested inside padding, rounded, not full-bleed) */}
           <div className="relative w-full h-[200px] md:h-[240px] rounded-[24px] overflow-hidden bg-zinc-100 shrink-0 mb-5">
-            <Image
-              src={article.coverImage || FALLBACK_COVER_IMAGE}
+            <NewsCoverImage
+              key={article.id}
+              src={article.coverImage}
               alt={article.title}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 560px) 100vw, 560px"
+              category={article.category}
             />
             {/* Subtle gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none" />
