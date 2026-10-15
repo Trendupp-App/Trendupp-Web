@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Flame } from 'lucide-react';
 import CompletenessCard from '@/components/creator-dashboard/CompletenessCard';
 import BannerCarousel from '@/components/creator-dashboard/BannerCarousel';
+import QuickActions from '@/components/creator-dashboard/QuickActions';
 import CampaignCard from '@/components/creator-dashboard/CampaignCard';
 import CampaignDetailsDrawer, {
   MappedCampaign,
@@ -109,8 +110,8 @@ export default function CreatorDashboardPage() {
 
   return (
     <div className="flex flex-col gap-8 w-full pb-12 select-none">
-      {/* Welcome Message */}
-      <div className="flex items-center justify-between">
+      {/* Welcome Message + quick actions */}
+      <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5 text-left">
           <h1 className="text-[28px] font-bold text-[#1a1a2e] tracking-tight">
             Hey, {user?.firstName || 'Creator'}
@@ -119,6 +120,7 @@ export default function CreatorDashboardPage() {
             Welcome back to your creator dashboard
           </p>
         </div>
+        <QuickActions />
       </div>
 
       {/* Row 1: Banner / Completeness */}

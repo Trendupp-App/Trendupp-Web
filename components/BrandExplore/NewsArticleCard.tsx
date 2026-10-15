@@ -1,9 +1,7 @@
 import type { NewsArticle } from '@/types/news';
 import { cn } from '@/lib/utils';
 import { formatRelativeTime, estimateReadTime } from '@/utils/Utilities';
-
-const FALLBACK_COVER_IMAGE =
-  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80';
+import NewsCoverImage from '@/components/dashboard/news/NewsCoverImage';
 
 function categoryStyles(category: string) {
   switch (category) {
@@ -36,23 +34,23 @@ export default function NewsArticleCard({
           onClick();
         }
       }}
-      className="bg-white border border-[#e8e6f0] rounded-2xl overflow-hidden flex flex-col cursor-pointer hover:shadow-sm transition-shadow"
+      className="bg-white border border-[#e8e6f0] rounded-2xl overflow-hidden flex flex-col h-full cursor-pointer hover:shadow-sm transition-shadow"
     >
-      <div className="relative aspect-[16/10] bg-zinc-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={article.coverImage || FALLBACK_COVER_IMAGE}
-          alt={article.title}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative aspect-[16/10] shrink-0 overflow-hidden bg-zinc-100">
+        <NewsCoverImage src={article.coverImage} alt={article.title} category={article.category} />
         <span className="absolute bottom-3 right-3 text-[10px] font-medium text-white bg-black/50 px-2.5 py-1 rounded-full">
           {estimateReadTime(article.content)}
         </span>
       </div>
-      <div className="p-4 flex flex-col gap-2">
-        <p className="text-sm font-bold text-[#1a1a2e] leading-snug">{article.title}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-[#5a5a7a]">
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        <p
+          className="text-sm font-bold text-[#1a1a2e] leading-snug line-clamp-2"
+          title={article.title}
+        >
+          {article.title}
+        </p>
+        <div className="flex items-center justify-between gap-2 mt-auto">
+          <span className="text-xs text-[#5a5a7a] truncate min-w-0">
             <span className="text-brand-pink font-semibold">
               {article.author.firstName} {article.author.lastName}
             </span>

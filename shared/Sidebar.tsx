@@ -16,6 +16,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Trophy,
+  Headset,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -23,12 +25,21 @@ import UserAvatar from './UserAvatar';
 import FeedbackModal from '@/shared/FeedBackModal';
 import { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import HelpSupportSheet from '@/components/brand-profile/HelpSupportSheet';
+import FaqSheet from '@/components/support/FaqSheet';
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-}
+type SupportSheet = 'help' | 'faq';
+
+// Items either navigate (href) or open a support sheet in place (sheet)
+type NavItem = { label: string; icon: React.ElementType } & (
+  | { href: string; sheet?: never }
+  | { sheet: SupportSheet; href?: never }
+);
+
+const SUPPORT_NAV_ITEMS: NavItem[] = [
+  { label: 'Help & Support', sheet: 'help', icon: Headset },
+  { label: 'FAQs', sheet: 'faq', icon: HelpCircle },
+];
 
 const CREATOR_NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/creator/dashboard', icon: LayoutDashboard },
@@ -38,6 +49,7 @@ const CREATOR_NAV_ITEMS: NavItem[] = [
   { label: 'Messages', href: '/creator/messages', icon: MessageSquare },
   { label: 'Payout', href: '/creator/payout', icon: Wallet },
   { label: 'Achievements', href: '/creator/achievements', icon: Trophy },
+  ...SUPPORT_NAV_ITEMS,
   { label: 'My Profile', href: '/creator/profile', icon: User },
 ];
 
@@ -47,6 +59,7 @@ const BRAND_NAV_ITEMS: NavItem[] = [
   { label: 'Explore', href: '/brand/explore', icon: Compass },
   { label: 'Messages', href: '/brand/messages', icon: MessageSquare },
   { label: 'Payout', href: '/brand/payout', icon: Wallet },
+  ...SUPPORT_NAV_ITEMS,
   { label: 'My Profile', href: '/brand/profile', icon: User },
 ];
 
@@ -59,6 +72,7 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
   const pathname = usePathname();
   const { user, clearSession } = useAuthStore();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [openSheet, setOpenSheet] = useState<SupportSheet | null>(null);
 
   const isBrand = user?.role === 'brand';
   const navItems = isBrand ? BRAND_NAV_ITEMS : CREATOR_NAV_ITEMS;
@@ -128,19 +142,20 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
       <nav className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive = item.sheet
+            ? openSheet === item.sheet
+            : pathname === item.href || pathname.startsWith(item.href + '/');
 
-          const link = (
-            <Link
-              href={item.href}
-              className={cn(
-                'flex items-center rounded-xl transition-all duration-200 group',
-                collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3 text-sm',
-                isActive
-                  ? 'bg-white text-brand-pink font-medium shadow-[0_2px_8px_-3px_rgba(215,23,111,0.08)]'
-                  : 'text-[#7a7a9a] hover:bg-white/60 hover:text-brand-pink',
-              )}
-            >
+          const itemClassName = cn(
+            'flex items-center rounded-xl transition-all duration-200 group w-full cursor-pointer',
+            collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3 text-sm',
+            isActive
+              ? 'bg-white text-brand-pink font-medium shadow-[0_2px_8px_-3px_rgba(215,23,111,0.08)]'
+              : 'text-[#7a7a9a] hover:bg-white/60 hover:text-brand-pink',
+          );
+
+          const content = (
+            <>
               <Icon
                 size={18}
                 className={cn(
@@ -149,6 +164,22 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
                 )}
               />
               {!collapsed && item.label}
+            </>
+          );
+
+          const link = item.sheet ? (
+            <button
+              type="button"
+              onClick={() => setOpenSheet(item.sheet)}
+              aria-haspopup="dialog"
+              aria-label={collapsed ? item.label : undefined}
+              className={itemClassName}
+            >
+              {content}
+            </button>
+          ) : (
+            <Link href={item.href} className={itemClassName}>
+              {content}
             </Link>
           );
 
@@ -190,6 +221,15 @@ export default function Sidebar({ collapsed = false, onToggleCollapse }: Sidebar
           </button>
         )}
       </div>
+      <HelpSupportSheet
+        open={openSheet === 'help'}
+        onOpenChange={(v) => !v && setOpenSheet(null)}
+      />
+      <FaqSheet
+        open={openSheet === 'faq'}
+        onOpenChange={(v) => !v && setOpenSheet(null)}
+        onContactSupport={() => setOpenSheet('help')}
+      />
       {showLogoutConfirm && (
         <FeedbackModal
           icon={LogOut}
