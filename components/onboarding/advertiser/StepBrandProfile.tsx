@@ -23,6 +23,8 @@ import { useCountries, useStates, useMarketingBudgets } from '@/hooks/useOnboard
 import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
 import { toast } from 'sonner';
 import { ComboBox } from '@/shared/ComboBox';
+import { GENDER_OPTIONS } from '@/constants/gender';
+
 interface Props {
   onNext: (data: Partial<AdvertiserOnboardingData>) => void;
   defaultValues?: Partial<Values>;
@@ -57,6 +59,7 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
 
   const logo = useWatch({ control, name: 'logo' });
   const country = useWatch({ control, name: 'country' });
+  const gender = useWatch({ control, name: 'gender' });
   const budgetCurrency = country && country !== 'Nigeria' ? 'USD' : 'NGN';
   const { data: marketingBudgets = [], isLoading: loadingBudgets } =
     useMarketingBudgets(budgetCurrency);
@@ -97,6 +100,7 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
     const payload: BrandProfilePayload = {
       countryId: countryObj.id,
       stateId: stateObj.id,
+      gender: values.gender,
       ...(values.brandName && { brandName: values.brandName }),
       ...(values.city && { city: values.city }),
       ...(values.bio && { bio: values.bio }),
@@ -166,6 +170,27 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
           placeholder="Enter Brand Name"
           className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
         />
+      </div>
+
+      {/* Gender */}
+      <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">Gender</Label>
+        <Select
+          value={gender}
+          onValueChange={(v) => setValue('gender', v, { shouldValidate: true })}
+        >
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
+            <SelectValue placeholder="Select Gender" />
+          </SelectTrigger>
+          <SelectContent>
+            {GENDER_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.gender && <p className="text-[11px] text-red-400">{errors.gender.message}</p>}
       </div>
 
       {/* Country */}

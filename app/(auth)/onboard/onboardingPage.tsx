@@ -235,6 +235,7 @@ export default function OnboardingPage() {
             onNext={advance}
             defaultValues={{
               username: data.username,
+              gender: data.gender,
               nationality: data.nationality,
               country: data.country,
               state: data.state,
@@ -255,6 +256,7 @@ export default function OnboardingPage() {
             defaultValues={{
               logo: data.avatarUrl,
               // brandName: data.brandName,
+              gender: data.gender,
               bio: data.bio,
               country: data.country,
               state: data.state,

@@ -23,6 +23,7 @@ import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
 import { toast } from 'sonner';
 import { ComboBox } from '@/shared/ComboBox';
 import Image from 'next/image';
+import { GENDER_OPTIONS } from '@/constants/gender';
 
 interface Props {
   onNext: (data: Partial<CreatorOnboardingData>) => void;
@@ -59,6 +60,7 @@ export default function StepCreatorProfile({ onNext, defaultValues }: Props) {
   });
 
   const photo = useWatch({ control, name: 'photo' });
+  const gender = useWatch({ control, name: 'gender' });
   const nationality = useWatch({ control, name: 'nationality' });
   const country = useWatch({ control, name: 'country' });
   useEffect(() => {
@@ -97,6 +99,7 @@ export default function StepCreatorProfile({ onNext, defaultValues }: Props) {
       username: values.username,
       countryId,
       stateId,
+      gender: values.gender,
       ...(nationalityId && { nationalityId }),
       ...(values.bio && { bio: values.bio }),
       ...(photoFile && { avatar: photoFile }),
@@ -149,6 +152,27 @@ export default function StepCreatorProfile({ onNext, defaultValues }: Props) {
           className="border-[#e8e6f0] h-10 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
         />
         {errors.username && <p className="text-[11px] text-red-400">{errors.username.message}</p>}
+      </div>
+
+      {/* Gender */}
+      <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">Gender</Label>
+        <Select
+          value={gender}
+          onValueChange={(v) => setValue('gender', v, { shouldValidate: true })}
+        >
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
+            <SelectValue placeholder="Select Gender" />
+          </SelectTrigger>
+          <SelectContent>
+            {GENDER_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.gender && <p className="text-[11px] text-red-400">{errors.gender.message}</p>}
       </div>
 
       {/* Nationality */}
