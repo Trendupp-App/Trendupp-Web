@@ -2,6 +2,7 @@ export type CreatorOnboardingData = {
   // Step 1 - Profile
   photo?: string;
   username?: string;
+  gender?: string;
   nationality?: string;
   country?: string;
   state?: string;
@@ -28,6 +29,7 @@ export interface AdvertiserOnboardingData {
   // StepProfile
   avatarUrl?: string;
   brandName?: string;
+  gender?: string;
   bio?: string;
   country?: string;
   state?: string;
@@ -89,6 +91,7 @@ export interface CreatorProfilePayload {
   username: string;
   countryId: string;
   stateId: string;
+  gender: string;
   nationalityId?: string;
   bio?: string;
   avatar?: File;
@@ -97,6 +100,7 @@ export interface CreatorProfilePayload {
 export interface BrandProfilePayload {
   countryId: string;
   stateId: string;
+  gender?: string;
   brandName?: string;
   city?: string;
   bio?: string;

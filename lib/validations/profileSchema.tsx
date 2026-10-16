@@ -6,6 +6,7 @@ export const schema = z.object({
     .min(3, 'Username must be at least 3 characters')
     .max(20, 'Username must be at most 20 characters')
     .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores allowed'),
+  gender: z.string().min(1, 'Select your gender'),
   nationality: z.string().min(1, 'Select your nationality'),
   country: z.string().min(1, 'Select your country'),
   state: z.string().min(1, 'Select your state'),
