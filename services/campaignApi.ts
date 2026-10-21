@@ -21,7 +21,6 @@ import type {
   SubmitContentDraftResponse,
   SubmitLiveLinkPayload,
   SubmitLiveLinkResponse,
-  ValidateSelectionResult,
 } from '@/types/campaign';
 import { CampaignSubmission, VetDraftPayload } from '@/types/submissions';
 import type { CreateDisputePayload } from '@/types/dispute';
@@ -151,20 +150,17 @@ export const campaignApi = {
 
   getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
 
-  validateSelection: (campaignId: string, applicationIds: string[]) =>
-    apiClient.post<ValidateSelectionResult>(`/campaigns/${campaignId}/validate-selection`, {
-      applicationIds,
-    }),
+  // Toggles the brand's pick: a pending application becomes 'selected', a selected one goes
+  // back to 'pending'. The backend rejects a pick that would exceed the campaign budget.
+  toggleApplicationSelection: (campaignId: string, applicationId: string) =>
+    apiClient.patch<{ message: string; application: CampaignApplicationDto }>(
+      `/campaigns/${campaignId}/applications/${applicationId}`,
+      { status: 'selected' },
+    ),
 
-  reviewApplicationsBatch: (
-    campaignId: string,
-    applicationIds: string[],
-    status: 'accepted' | 'rejected',
-  ) =>
-    apiClient.patch<{
-      message: string;
-      applications: { id: string; status: 'accepted' | 'rejected' }[];
-    }>(`/campaigns/${campaignId}/applications`, { applicationIds, status }),
+  // Locks in the selected creators and moves the campaign to 'active'
+  activateCampaign: (campaignId: string) =>
+    apiClient.post<{ message?: string }>(`/campaigns/${campaignId}/activate`),
 
   getSubmissions: (campaignId: string) =>
     apiClient.get<{ submissions: CampaignSubmission[] }>(`/campaigns/${campaignId}/submissions`),

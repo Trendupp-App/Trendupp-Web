@@ -1,18 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, AlertCircle, CircleCheck, CircleX, X, Loader2 } from 'lucide-react';
+import { AlertCircle, Lock, Rocket, X } from 'lucide-react';
 import ApplicationListItem from './ApplicationListItem';
 import ApplicationDetailSheet from './ApplicationDetailSheet';
 import FeedbackModal from '@/shared/FeedBackModal';
 import CreatorProfileSheet from '@/components/campaign-details/CreatorProfileSheet';
-import type {
-  CampaignApplicationDto,
-  CampaignStatus,
-  ValidateSelectionResult,
-} from '@/types/campaign';
-import { useReviewApplicationsBatch, useValidateSelection } from '@/hooks/useCampaign';
-import { useQueryClient } from '@tanstack/react-query';
+import type { CampaignApplicationDto, CampaignStatus } from '@/types/campaign';
+import { useActivateCampaign, useToggleApplicationSelection } from '@/hooks/useCampaign';
+import { cn } from '@/lib/utils';
+
 interface ApplicationsTabProps {
   campaignId: string;
   campaignTitle: string;
@@ -20,13 +17,6 @@ interface ApplicationsTabProps {
   campaignCurrency?: string;
   campaignStatus?: CampaignStatus;
 }
-
-type PendingAction = {
-  type: 'accept' | 'reject';
-  applications: CampaignApplicationDto[];
-} | null;
-
-type BudgetCheck = { status: 'loading' | 'done'; data?: ValidateSelectionResult } | null;
 
 function creatorName(app: CampaignApplicationDto) {
   return `${app?.creator?.firstName ?? ''} ${app?.creator?.lastName ?? ''}`.trim();
@@ -52,32 +42,24 @@ export default function ApplicationsTab({
   campaignStatus,
 }: ApplicationsTabProps) {
   const actionsDisabled = campaignStatus === 'paused' || campaignStatus === 'cancelled';
-  const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [budgetCheck, setBudgetCheck] = useState<BudgetCheck>(null);
+  // Applications with a select/unselect request in flight
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [profileCreatorId, setProfileCreatorId] = useState<string | null>(null);
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
-  const [resultDialog, setResultDialog] = useState<{
-    type: 'accept' | 'reject';
-    applications: CampaignApplicationDto[];
-  } | null>(null);
+  const [confirmActivate, setConfirmActivate] = useState(false);
 
-  const { mutate: reviewApplicationsBatch, isPending: isReviewing } = useReviewApplicationsBatch(
-    campaignId,
-    (applicationIds) => {
-      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-      applicationIds.forEach((id) => {
-        queryClient.invalidateQueries({ queryKey: ['application', id] });
-      });
-    },
-  );
-
-  const { mutate: validateSelection } = useValidateSelection(campaignId);
+  const { mutate: toggleSelection } = useToggleApplicationSelection(campaignId);
+  const { mutate: activateCampaign, isPending: isActivating } = useActivateCampaign(campaignId);
 
   const applications = applicationsForLive || [];
+  // Selection is persisted server-side, so it survives reloads and other devices
+  const selectedApplications = applications.filter((app) => app.status === 'selected');
+  const selectedTotal = selectedApplications.reduce((sum, app) => sum + (app.feeRequest || 0), 0);
+  const currency = campaignCurrency ?? 'NGN';
+  const isToggling = togglingIds.size > 0;
+  const canActivate = selectedApplications.length > 0 && !isToggling && !isActivating;
 
   function handleView(application: CampaignApplicationDto) {
     setSelected(application?.id);
@@ -91,60 +73,31 @@ export default function ApplicationsTab({
     setProfileSheetOpen(true);
   }
 
-  function handleToggleSelect(application: CampaignApplicationDto) {
-    setSelectedIds((prev) => {
+  function setToggling(id: string, toggling: boolean) {
+    setTogglingIds((prev) => {
       const next = new Set(prev);
-      if (next.has(application.id)) next.delete(application.id);
-      else next.add(application.id);
+      if (toggling) next.add(id);
+      else next.delete(id);
       return next;
     });
   }
 
+  // The endpoint toggles: it selects a pending application and unselects a selected one
+  function handleToggleSelect(application: CampaignApplicationDto) {
+    if (togglingIds.has(application.id) || isActivating) return;
+    setToggling(application.id, true);
+    toggleSelection(application.id, {
+      onSettled: () => setToggling(application.id, false),
+    });
+  }
+
   function clearSelection() {
-    setSelectedIds(new Set());
+    selectedApplications.forEach(handleToggleSelect);
   }
 
-  function handleBulkRequest(type: 'accept' | 'reject') {
-    const chosen = applications.filter((app) => selectedIds.has(app.id));
-    if (!chosen.length) return;
-    setPendingAction({ type, applications: chosen });
-
-    if (type === 'accept') {
-      setBudgetCheck({ status: 'loading' });
-      validateSelection(
-        chosen.map((a) => a.id),
-        {
-          onSuccess: (data) => setBudgetCheck({ status: 'done', data }),
-          onError: () => setPendingAction(null),
-        },
-      );
-    }
-  }
-
-  function handleCancelAction() {
-    setPendingAction(null);
-    setBudgetCheck(null);
-  }
-
-  function handleConfirmAction() {
-    if (!pendingAction) return;
-    const action = pendingAction;
-    const status = action.type === 'accept' ? 'accepted' : 'rejected';
-    reviewApplicationsBatch(
-      { applicationIds: action.applications.map((a) => a.id), status },
-      {
-        onSuccess: () => {
-          setResultDialog(action);
-          clearSelection();
-          setPendingAction(null);
-          setBudgetCheck(null);
-        },
-        onError: () => {
-          setPendingAction(null);
-          setBudgetCheck(null);
-        },
-      },
-    );
+  function handleActivate() {
+    // Once active the page switches to the active-campaign view, so this tab unmounts
+    activateCampaign(undefined, { onSettled: () => setConfirmActivate(false) });
   }
 
   return (
@@ -153,41 +106,55 @@ export default function ApplicationsTab({
         <div className="mb-3 flex items-center gap-2 bg-[#fef2f2] border border-[#fee2e2] rounded-xl px-4 py-3">
           <AlertCircle size={15} className="text-[#dc2626] shrink-0" />
           <p className="text-xs font-medium text-[#b91c1c] capitalize">
-            This campaign has been {campaignStatus} — applications can no longer be accepted or
-            rejected.
+            This campaign has been {campaignStatus} — creators can no longer be selected.
           </p>
         </div>
       )}
 
-      {/* Bulk action bar */}
-      {!actionsDisabled && selectedIds.size > 0 && (
-        <div className="mb-3 bg-white border border-[#e8e6f0] rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={clearSelection}
-              className="cursor-pointer text-[#9a99b0] hover:text-[#1a1a2e] transition-colors"
-              aria-label="Clear selection"
-            >
-              <X size={16} />
-            </button>
-            <span className="text-sm font-medium text-[#1a1a2e]">{selectedIds.size} selected</span>
+      {/* Selection summary + activate */}
+      {!actionsDisabled && applications.length > 0 && (
+        <div className="mb-3 bg-white border border-[#e8e6f0] rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            {selectedApplications.length > 0 && (
+              <button
+                onClick={clearSelection}
+                disabled={isToggling || isActivating}
+                className="cursor-pointer text-[#9a99b0] hover:text-[#1a1a2e] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Clear selection"
+              >
+                <X size={16} />
+              </button>
+            )}
+            {selectedApplications.length > 0 ? (
+              <span className="text-sm font-medium text-[#1a1a2e]">
+                {selectedApplications.length} selected
+                {selectedTotal > 0 && (
+                  <span className="font-normal text-[#9a99b0]">
+                    {' '}
+                    · {formatMoney(selectedTotal, currency)}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="text-sm text-[#9a99b0]">
+                Select at least one creator to activate this campaign
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleBulkRequest('reject')}
-              className="flex items-center cursor-pointer gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 transition-colors"
-            >
-              <CircleX className="size-4" />
-              Reject
-            </button>
-            <button
-              onClick={() => handleBulkRequest('accept')}
-              className="flex items-center cursor-pointer gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-colors"
-            >
-              <CircleCheck className="size-4" />
-              Accept
-            </button>
-          </div>
+
+          <button
+            onClick={() => setConfirmActivate(true)}
+            disabled={!canActivate}
+            className={cn(
+              'flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shrink-0',
+              canActivate
+                ? 'bg-brand-pink text-white hover:bg-brand-pink/90 cursor-pointer shadow-sm'
+                : 'bg-zinc-100 text-zinc-400 cursor-not-allowed',
+            )}
+          >
+            <Rocket className="size-4" />
+            Activate campaign
+          </button>
         </div>
       )}
 
@@ -197,7 +164,8 @@ export default function ApplicationsTab({
             key={app.id}
             application={app}
             onView={handleView}
-            selected={selectedIds.has(app.id)}
+            selected={app.status === 'selected'}
+            toggling={togglingIds.has(app.id)}
             onToggleSelect={actionsDisabled ? undefined : handleToggleSelect}
             currency={campaignCurrency}
           />
@@ -222,107 +190,41 @@ export default function ApplicationsTab({
         }}
       />
 
-      {/* Confirm accept/reject */}
-      {pendingAction && (
+      {/* Activation locks the selection, so confirm first */}
+      {confirmActivate && (
         <FeedbackModal
-          icon={AlertCircle}
-          iconColor="text-amber-500"
+          icon={Lock}
+          iconColor="text-brand-pink"
           message={
             <div className="flex flex-col gap-3">
               <p>
-                Are you sure you want to {pendingAction.type === 'accept' ? 'accept' : 'reject'}{' '}
-                {pendingAction.applications.length === 1 ? (
-                  <>
-                    <strong>{creatorName(pendingAction.applications[0])}</strong>&apos;s
-                    application?
-                  </>
+                Activate <strong>{campaignTitle}</strong> with{' '}
+                {selectedApplications.length === 1 ? (
+                  <strong>{creatorName(selectedApplications[0])}</strong>
                 ) : (
-                  <>
-                    <strong>{pendingAction.applications.length} applications</strong>?
-                  </>
+                  <strong>{selectedApplications.length} creators</strong>
                 )}
+                ?
               </p>
-
-              {pendingAction.type === 'accept' && budgetCheck?.status === 'loading' && (
-                <div className="flex items-center justify-center gap-2 text-xs text-[#9a99b0] py-2 px-3 rounded-lg bg-[#faf9fc]">
-                  <Loader2 size={14} className="animate-spin" />
-                  Checking campaign budget…
-                </div>
-              )}
-
-              {pendingAction.type === 'accept' && budgetCheck?.status === 'done' && (
-                <div
-                  className={`flex flex-col gap-1 text-xs text-left py-2.5 px-3 rounded-lg border ${
-                    budgetCheck.data?.isValid
-                      ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                      : 'bg-red-50 border-red-100 text-red-600'
-                  }`}
-                >
-                  <span>{budgetCheck.data?.message}</span>
-                  {budgetCheck.data?.isValid ? (
-                    <span>
-                      Balance after this selection:{' '}
-                      <strong>
-                        {formatMoney(
-                          budgetCheck.data.amountAvailable - budgetCheck.data.selectedTotal,
-                          budgetCheck.data.currency,
-                        )}
-                      </strong>
-                    </span>
-                  ) : (
-                    <span>
-                      Short by{' '}
-                      <strong>
-                        {formatMoney(budgetCheck.data!.shortfall, budgetCheck.data!.currency)}
-                      </strong>
-                    </span>
-                  )}
-                </div>
-              )}
+              <div className="flex flex-col gap-1 text-xs text-left py-2.5 px-3 rounded-lg border bg-amber-50 border-amber-100 text-amber-700">
+                <span>
+                  Total creator fees: <strong>{formatMoney(selectedTotal, currency)}</strong>
+                </span>
+                <span>Your selection will be locked — you won&apos;t be able to change it.</span>
+              </div>
             </div>
           }
           actions={[
             {
               label: 'No, go back',
-              onClick: handleCancelAction,
+              onClick: () => setConfirmActivate(false),
             },
             {
-              label: pendingAction.type === 'accept' ? 'Yes, approve' : 'Yes, reject',
+              label: 'Yes, activate',
               variant: 'primary',
-              onClick: handleConfirmAction,
-              loading:
-                isReviewing ||
-                (pendingAction.type === 'accept' && budgetCheck?.status === 'loading'),
-              disabled:
-                pendingAction.type === 'accept' &&
-                (budgetCheck?.status === 'loading' || budgetCheck?.data?.isValid === false),
-            },
-          ]}
-        />
-      )}
-
-      {/* Result */}
-      {resultDialog && (
-        <FeedbackModal
-          icon={CheckCircle2}
-          iconColor={resultDialog.type === 'accept' ? 'text-emerald-500' : 'text-red-500'}
-          message={
-            <>
-              You have successfully {resultDialog.type === 'accept' ? 'accepted' : 'rejected'}{' '}
-              {resultDialog.applications.length === 1 ? (
-                <strong>{creatorName(resultDialog.applications[0])}&apos;s</strong>
-              ) : (
-                <strong>{resultDialog.applications.length}</strong>
-              )}{' '}
-              application{resultDialog.applications.length === 1 ? '' : 's'} for{' '}
-              <strong>{campaignTitle}</strong>
-            </>
-          }
-          actions={[
-            {
-              label: 'Ok, got it',
-              variant: 'primary',
-              onClick: () => setResultDialog(null),
+              onClick: handleActivate,
+              loading: isActivating,
+              disabled: isActivating,
             },
           ]}
         />

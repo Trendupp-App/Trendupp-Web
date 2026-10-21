@@ -215,6 +215,15 @@ export default function ApplicationDetailSheet({
                 </div>
               )}
 
+              {application.status === 'selected' && (
+                <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-[#fdf5fa] border border-brand-pink/20">
+                  <CheckCircle2 size={16} className="text-brand-pink shrink-0" />
+                  <span className="text-sm font-medium text-brand-pink">
+                    Selected — not final until you confirm your selection
+                  </span>
+                </div>
+              )}
+
               {application.status === 'rejected' && (
                 <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-red-50 border border-red-100">
                   <XCircle size={16} className="text-red-500 shrink-0" />

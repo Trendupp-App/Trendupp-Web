@@ -195,7 +195,8 @@ export interface CampaignApplicationDto {
   secondaryPlatformId: string;
   feeRequest: number;
   comments: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  /** 'selected' = brand's provisional pick, before the selection is finalized */
+  status: 'pending' | 'selected' | 'accepted' | 'rejected';
   primary_platform_id: string;
   secondary_platform_id: string;
   creator: Creator;
@@ -385,13 +386,4 @@ export interface SubmitSocialImpactLiveLinkResponse {
   message: string;
   submission: SocialImpactSubmission;
   tokensAwarded: number;
-}
-
-export interface ValidateSelectionResult {
-  isValid: boolean;
-  amountAvailable: number;
-  selectedTotal: number;
-  shortfall: number;
-  currency: string;
-  message: string;
 }
