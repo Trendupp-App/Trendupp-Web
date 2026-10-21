@@ -20,7 +20,7 @@ export type CreatorOnboardingData = {
 
   // Step 4 - Payout
   bankName?: string;
-  bankId?: string;
+  bankCode?: string;
   accountNumber?: string;
   bankAccountName?: string;
 };
@@ -53,7 +53,7 @@ export interface AdvertiserOnboardingData {
 
   // StepPayout (shared with creator)
   bankName?: string;
-  bankId?: string;
+  bankCode?: string;
   accountNumber?: string;
   bankAccountName?: string;
 }
@@ -208,7 +208,8 @@ export interface UpdateSocialsResponse {
 }
 
 export interface UpdatePayoutPayload {
-  bankId: string;
+  bankCode: string;
+  bankName: string;
   bankAccountNumber: string;
   bankAccountName: string;
 }

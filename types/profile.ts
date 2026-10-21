@@ -94,7 +94,8 @@ export interface SupportTicketResponse {
 }
 
 export interface UpdateProfilePayoutPayload {
-  bankId: string;
+  bankCode: string;
+  bankName: string;
   bankAccountNumber: string;
   bankAccountName: string;
 }

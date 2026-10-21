@@ -302,7 +302,7 @@ export default function OnboardingPage() {
             onSkip={skip}
             defaultValues={{
               bankName: data.bankName,
-              bankId: data.bankId,
+              bankCode: data.bankCode,
               accountNumber: data.accountNumber,
               bankAccountName: data.bankAccountName,
             }}

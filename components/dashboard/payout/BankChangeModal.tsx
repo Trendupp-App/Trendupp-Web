@@ -14,7 +14,7 @@ interface BankChangeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (values: {
-    bankId: string;
+    bankCode: string;
     bankName: string;
     accountNumber: string;
     accountName: string;
@@ -34,22 +34,22 @@ export default function BankChangeModal({
 }: BankChangeModalProps) {
   const [step, setStep] = useState<'input' | 'confirm'>('input');
 
-  const [bankId, setBankId] = useState('');
+  const [bankCode, setBankCode] = useState('');
   const [bankName, setBankName] = useState(initialBankName);
   const [accountNumber, setAccountNumber] = useState(initialAccountNumber);
   const [accountName, setAccountName] = useState(initialAccountName);
 
-  // The backend never sends back the bank's id, only its display name, so when a
-  // creator already has a bank on file we have to re-resolve its id by name — otherwise
-  // bankId stays empty and Continue silently no-ops unless they re-pick the bank.
+  // The backend never sends back the bank's code, only its display name, so when a
+  // creator already has a bank on file we have to re-resolve its code by name — otherwise
+  // bankCode stays empty and Continue silently no-ops unless they re-pick the bank.
   const { data: matchedBanks } = useBanks(
     { search: initialBankName },
-    !!initialBankName && !bankId,
+    !!initialBankName && !bankCode,
   );
 
-  const resolvedBankId =
-    bankId ||
-    matchedBanks?.find((bank) => bank.name.toLowerCase() === initialBankName.toLowerCase())?.id ||
+  const resolvedBankCode =
+    bankCode ||
+    matchedBanks?.find((bank) => bank.name.toLowerCase() === initialBankName.toLowerCase())?.code ||
     '';
 
   // There's no bank-account name-enquiry endpoint on the backend, so the account
@@ -58,11 +58,11 @@ export default function BankChangeModal({
   // name, which for a brand account is blank and silently submitted a
   // whitespace-only name to the backend).
   const isComplete =
-    !!resolvedBankId && accountNumber.length === 10 && accountName.trim().length > 0;
+    !!resolvedBankCode && accountNumber.length === 10 && accountName.trim().length > 0;
 
-  const handleBankChange = (bank: { id: string; name: string }) => {
+  const handleBankChange = (bank: { code: string; name: string }) => {
     setBankName(bank.name);
-    setBankId(bank.id);
+    setBankCode(bank.code);
   };
 
   const handleContinue = () => {
@@ -73,7 +73,7 @@ export default function BankChangeModal({
 
   const handleSave = () => {
     onSave({
-      bankId: resolvedBankId,
+      bankCode: resolvedBankCode,
       bankName,
       accountNumber,
       accountName: accountName.trim(),
@@ -115,7 +115,7 @@ export default function BankChangeModal({
                   Bank Name
                 </Label>
                 <BankCombobox
-                  value={bankName ? { id: bankId, name: bankName } : null}
+                  value={bankName ? { code: bankCode, name: bankName } : null}
                   onChange={handleBankChange}
                 />
               </div>

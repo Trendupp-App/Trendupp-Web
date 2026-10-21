@@ -1875,7 +1875,8 @@ export default function CreatorProfilePage() {
         onClose={() => setIsBankModalOpen(false)}
         onSave={(values) =>
           updatePayout({
-            bankId: values.bankId,
+            bankCode: values.bankCode,
+            bankName: values.bankName,
             bankAccountNumber: values.accountNumber,
             bankAccountName: values.accountName,
           })
