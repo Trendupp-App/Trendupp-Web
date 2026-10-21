@@ -273,6 +273,7 @@ export default function NewCampaignPage() {
           onBack={() => goTo(2)}
           onEdit={handleEditStep}
           isLoading={submitCampaign.isPending}
+          currency={liveCampaign?.currency}
         />
       )}
 

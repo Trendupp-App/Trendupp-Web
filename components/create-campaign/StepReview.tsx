@@ -6,7 +6,7 @@ import StepFooter from './StepFooter';
 import { type Step1Values } from '@/lib/validations/createCampaignSchemas';
 import type { Step2Values } from '@/lib/validations/createCampaignSchemas';
 import { useCreatorCategories, useCampaignPlatforms } from '@/hooks/useCampaign';
-import { useCountries } from '@/hooks/useOnboardingQueries';
+import { useUserDetail } from '@/hooks/useProfile';
 import { useAuthStore } from '@/store/authStore';
 import { getCurrencySymbol } from '@/utils/Utilities';
 
@@ -17,6 +17,8 @@ interface StepReviewProps {
   onBack: () => void;
   onEdit: (step: 1 | 2) => void;
   isLoading?: boolean;
+  /** The campaign's currency as resolved by the backend when it was created */
+  currency?: string;
 }
 
 function ReviewSection({
@@ -82,13 +84,17 @@ export default function StepReview({
   onBack,
   onEdit,
   isLoading,
+  currency,
 }: StepReviewProps) {
   const { data: creatorCategories = [] } = useCreatorCategories();
   const { data: platforms = [] } = useCampaignPlatforms();
-  const { data: countries = [] } = useCountries();
-  const user = useAuthStore((s) => s.user);
-  const isNigerianBrand = countries.find((c) => c.id === user?.countryId)?.name === 'Nigeria';
-  const budgetCurrencySymbol = getCurrencySymbol(isNigerianBrand ? 'NGN' : 'USD');
+  const authUser = useAuthStore((s) => s.user);
+  // The campaign record already carries the backend-resolved currency. Until it loads, derive
+  // it from a fresh profile fetch — the cached auth user can lack countryId on older sessions,
+  // which used to make Nigerian brands see dollars here.
+  const { data: freshUser } = useUserDetail(currency ? null : (authUser?.id ?? null));
+  const fallbackCurrency = freshUser?.country?.name === 'Nigeria' ? 'NGN' : 'USD';
+  const budgetCurrencySymbol = getCurrencySymbol(currency ?? fallbackCurrency);
 
   const selectedTierId = step1.creatorTierIds[0];
   const tierName = creatorCategories.find((c) => c.id === selectedTierId)?.name ?? selectedTierId;
