@@ -14,13 +14,15 @@ export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const gatewayStatus = searchParams.get('status');
-  const paystackReference = searchParams.get('reference') ?? searchParams.get('trxref');
-  const hasGatewayRef = Boolean(
-    searchParams.get('ref') ??
+  // Gateways name the reference differently; Startbutton may also return with none at all,
+  // in which case we fall back to the reference saved when the brand clicked Pay.
+  const gatewayReference =
+    searchParams.get('reference') ??
+    searchParams.get('trxref') ??
+    searchParams.get('transaction_ref') ??
     searchParams.get('escrowId') ??
     searchParams.get('escrow_id') ??
-    paystackReference,
-  );
+    searchParams.get('ref');
 
   const verifyPayment = useVerifyPayment();
   const hasAttempted = useRef(false);
@@ -32,14 +34,16 @@ export default function PaymentSuccessPage() {
   const { data: campaign } = useCampaign(state === 'success' ? campaignId : null);
 
   function attemptVerification() {
-    if (gatewayStatus && gatewayStatus !== 'success') {
+    // Only bail on statuses that clearly mean failure — gateways spell success differently
+    // ("success", "successful", ...) and verify-payment is the source of truth anyway.
+    if (gatewayStatus && /fail|cancel|abandon|declin|revers/i.test(gatewayStatus)) {
       setState('failed');
       return;
     }
 
     const pending = readPendingCampaignPayment();
 
-    if (!hasGatewayRef || !pending) {
+    if (!pending) {
       setState('invalid');
       return;
     }
@@ -47,7 +51,7 @@ export default function PaymentSuccessPage() {
     setCampaignId(pending.campaignId);
     setState('verifying');
     verifyPayment.mutate(
-      { campaignId: pending.campaignId, escrowId: paystackReference ?? pending.escrowId },
+      { campaignId: pending.campaignId, escrowId: gatewayReference ?? pending.escrowId },
       {
         onSuccess: () => {
           clearPendingCampaignPayment();

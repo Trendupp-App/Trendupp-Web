@@ -62,13 +62,14 @@ export default function BrandPayoutPage() {
   const accountNumber = user?.bankAccountNumber || '';
 
   const handleSaveBankDetails = (values: {
-    bankId: string;
+    bankCode: string;
     bankName: string;
     accountNumber: string;
     accountName: string;
   }) => {
     updatePayout({
-      bankId: values.bankId,
+      bankCode: values.bankCode,
+      bankName: values.bankName,
       bankAccountNumber: values.accountNumber,
       bankAccountName: values.accountName,
     });

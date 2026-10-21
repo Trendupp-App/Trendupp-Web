@@ -1,9 +1,9 @@
 export interface Bank {
-  id: string;
+  id: number;
   name: string;
+  /** What the payout endpoints identify a bank by */
   code: string;
-  country: string;
-  region: string;
+  currency?: string;
 }
 
 export interface GetBanksParams {

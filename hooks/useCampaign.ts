@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
 import { campaignApi } from '@/services/campaignApi';
 import type {
   ApplyCampaignPayload,
+  Campaign,
   CampaignApplicationDto,
   CampaignStatus,
   CampaignStatusFilter,
@@ -253,34 +254,43 @@ export function useRespondToComment(applicationId: string | null) {
   });
 }
 
-export function useValidateSelection(campaignId: string) {
+export function useToggleApplicationSelection(campaignId: string) {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (applicationIds: string[]) =>
-      campaignApi.validateSelection(campaignId, applicationIds).then((r) => r.data),
+    mutationFn: (applicationId: string) =>
+      campaignApi.toggleApplicationSelection(campaignId, applicationId).then((r) => r.data),
+    onSuccess: ({ application }) => {
+      // Reflect the server's answer straight away instead of waiting for a refetch
+      queryClient.setQueryData<Campaign>(['campaign', campaignId], (campaign) =>
+        campaign
+          ? {
+              ...campaign,
+              applications: campaign.applications?.map((app) =>
+                app.id === application.id ? { ...app, status: application.status } : app,
+              ),
+            }
+          : campaign,
+      );
+      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['application', application.id] });
+    },
     onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not check budget for this selection');
+      toast.error(err?.response?.data?.message ?? 'Could not update selection');
     },
   });
 }
 
-export function useReviewApplicationsBatch(
-  campaignId: string,
-  onSuccess: (applicationIds: string[], status: 'accepted' | 'rejected') => void,
-) {
+export function useActivateCampaign(campaignId: string) {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      applicationIds,
-      status,
-    }: {
-      applicationIds: string[];
-      status: 'accepted' | 'rejected';
-    }) => campaignApi.reviewApplicationsBatch(campaignId, applicationIds, status),
-    onSuccess: ({ data }, variables) => {
-      toast.success(data.message, { duration: 900 });
-      onSuccess(variables.applicationIds, variables.status);
+    mutationFn: () => campaignApi.activateCampaign(campaignId).then((r) => r.data),
+    onSuccess: (data) => {
+      toast.success(data?.message ?? 'Campaign activated');
+      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not update application(s)');
+      toast.error(err?.response?.data?.message ?? 'Could not activate campaign');
     },
   });
 }

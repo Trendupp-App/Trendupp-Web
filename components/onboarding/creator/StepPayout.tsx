@@ -29,7 +29,7 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
   });
 
   const bankName = useWatch({ control, name: 'bankName' });
-  const bankId = useWatch({ control, name: 'bankId' });
+  const bankCode = useWatch({ control, name: 'bankCode' });
 
   const { mutate: updatePayout, isPending } = useUpdatePayout();
   const saving = isSubmitting || isPending;
@@ -37,7 +37,8 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
   function onSubmit(values: Values) {
     updatePayout(
       {
-        bankId: values.bankId,
+        bankCode: values.bankCode,
+        bankName: values.bankName,
         bankAccountNumber: values.accountNumber,
         bankAccountName: values.bankAccountName,
       },
@@ -63,12 +64,12 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Bank Name</Label>
         <BankCombobox
-          value={bankName ? { id: bankId, name: bankName } : null}
+          value={bankName ? { code: bankCode, name: bankName } : null}
           onChange={(bank) => {
             setValue('bankName', bank.name, { shouldValidate: true });
-            setValue('bankId', bank.id, { shouldValidate: true });
+            setValue('bankCode', bank.code, { shouldValidate: true });
           }}
-          error={errors.bankName?.message ?? errors.bankId?.message}
+          error={errors.bankName?.message ?? errors.bankCode?.message}
         />
       </div>
 

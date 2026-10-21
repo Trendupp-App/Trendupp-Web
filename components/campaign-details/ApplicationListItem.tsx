@@ -2,18 +2,20 @@
 
 import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/Utilities';
 
 const STATUS_LABEL: Record<CampaignApplicationDto['status'], string> = {
   pending: 'Pending',
+  selected: 'Selected',
   accepted: 'Accepted',
   rejected: 'Rejected',
 };
 
 const STATUS_CLASS: Record<CampaignApplicationDto['status'], string> = {
   pending: 'text-amber-600 bg-amber-50',
+  selected: 'text-brand-pink bg-[#fdf5fa]',
   accepted: 'text-emerald-600 bg-emerald-50',
   rejected: 'text-red-500 bg-red-50',
 };
@@ -23,6 +25,8 @@ interface ApplicationListItemProps {
   onView: (application: CampaignApplicationDto) => void;
   selected?: boolean;
   onToggleSelect?: (application: CampaignApplicationDto) => void;
+  /** A select/unselect request for this application is in flight */
+  toggling?: boolean;
   currency?: string;
 }
 
@@ -31,13 +35,14 @@ export default function ApplicationListItem({
   onView,
   selected = false,
   onToggleSelect,
+  toggling = false,
   currency,
 }: ApplicationListItemProps) {
   const user = application?.creator;
   const initials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase()
     : 'U';
-  const isPending = application.status === 'pending';
+  const isSelectable = application.status === 'pending' || application.status === 'selected';
 
   return (
     <div
@@ -47,14 +52,21 @@ export default function ApplicationListItem({
       )}
     >
       <div className="flex items-start gap-3 min-w-0 flex-1">
-        {isPending && onToggleSelect ? (
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => onToggleSelect(application)}
-            className="mt-1.5 size-4 shrink-0 accent-brand-pink cursor-pointer"
-            aria-label="Select application"
-          />
+        {isSelectable && onToggleSelect ? (
+          toggling ? (
+            <Loader2
+              className="mt-1.5 size-4 shrink-0 animate-spin text-brand-pink"
+              aria-label="Updating selection"
+            />
+          ) : (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={() => onToggleSelect(application)}
+              className="mt-1.5 size-4 shrink-0 accent-brand-pink cursor-pointer"
+              aria-label={selected ? 'Unselect application' : 'Select application'}
+            />
+          )
         ) : (
           <span
             className={cn(

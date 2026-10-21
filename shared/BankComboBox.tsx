@@ -19,7 +19,7 @@ import type { Bank } from '@/types/bank';
 import React from 'react';
 
 interface BankComboboxProps {
-  value?: { id: string; name: string } | null;
+  value?: { code: string; name: string } | null;
   onChange: (bank: Bank) => void;
   error?: string;
 }
@@ -88,7 +88,7 @@ export function BankCombobox({ value, onChange, error }: BankComboboxProps) {
                   <CommandItem
                     className="cursor-pointer"
                     key={bank.id}
-                    value={bank.id}
+                    value={bank.code}
                     onSelect={() => {
                       onChange(bank);
                       setOpen(false);
@@ -97,15 +97,10 @@ export function BankCombobox({ value, onChange, error }: BankComboboxProps) {
                     <Check
                       className={cn(
                         'mr-2 h-4 w-4',
-                        value?.id === bank.id ? 'opacity-100' : 'opacity-0',
+                        value?.code === bank.code ? 'opacity-100' : 'opacity-0',
                       )}
                     />
-                    <div className="flex flex-col">
-                      <span>{bank.name}</span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {bank.country} · {bank.region}
-                      </span>
-                    </div>
+                    <span>{bank.name}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
