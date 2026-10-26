@@ -20,13 +20,16 @@ import { ComboBox } from '@/shared/ComboBox';
 import { useCountries, useStates, useMarketingBudgets } from '@/hooks/useOnboardingQueries';
 import { useUpdateProfile } from '@/hooks/useOnboardingMutations';
 import { useAuthStore } from '@/store/authStore';
+import { useUserDetail } from '@/hooks/useProfile';
 import type { BrandProfilePayload } from '@/types/Onboarding';
 import { toast } from 'sonner';
+import { GENDER_OPTIONS } from '@/constants/gender';
 
 const schema = z.object({
   avatar: z.string().optional(),
   brandName: z.string().optional(),
   email: z.string().email('Enter a valid email').optional().or(z.literal('')),
+  gender: z.string().optional(),
   country: z.string().optional(),
   state: z.string().optional(),
   bio: z.string().optional(),
@@ -45,12 +48,16 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
   const updateUser = useAuthStore((s) => s.updateUser);
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>(
-    user?.countryId ?? undefined,
-  );
+  // The cached auth user often lacks country/state on older sessions, so read what's saved
+  // from a fresh profile fetch — the save endpoint requires both on every call.
+  const { data: freshUser } = useUserDetail(user?.id ?? null);
+  const saved = freshUser ?? user;
+  const savedCountryId = saved?.countryId ?? saved?.country?.id ?? undefined;
+  const savedStateId = saved?.stateId ?? saved?.state?.id ?? undefined;
+  const [userSelectedCountryId, setUserSelectedCountryId] = useState<string | undefined>();
   const [avatarError, setAvatarError] = useState<string>('');
   const { data: countries = [], isLoading: loadingCountries } = useCountries();
-  const selectedCountryId = userSelectedCountryId;
+  const selectedCountryId = userSelectedCountryId ?? savedCountryId;
   const { data: states = [] } = useStates(selectedCountryId);
 
   const { mutate: updateProfile, isPending } = useUpdateProfile();
@@ -66,13 +73,20 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
     defaultValues: {
       brandName: user?.username ?? '',
       email: user?.email ?? '',
+      gender: user?.gender ?? '',
       bio: user?.bio ?? '',
       country: user?.country?.name ?? '',
     },
   });
 
   const avatar = useWatch({ control, name: 'avatar' });
-  const country = useWatch({ control, name: 'country' });
+  const watchedCountry = useWatch({ control, name: 'country' });
+  const country = watchedCountry || saved?.country?.name || '';
+  const watchedState = useWatch({ control, name: 'state' });
+  // Until the country changes, show the saved state rather than an empty picker
+  const stateValue =
+    watchedState || (userSelectedCountryId ? undefined : saved?.state?.name) || undefined;
+  const gender = useWatch({ control, name: 'gender' });
   const budgetCurrency = country && country !== 'Nigeria' ? 'USD' : 'NGN';
   const { data: marketingBudgets = [], isLoading: loadingBudgets } =
     useMarketingBudgets(budgetCurrency);
@@ -114,17 +128,21 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
     // The onboarding profile endpoint requires countryId/stateId on every
     // call, even when this edit is only touching an unrelated field — fall
     // back to what's already on file if the picker wasn't touched this time.
-    const countryId = countryObj?.id ?? user?.countryId ?? undefined;
-    const stateId = stateObj?.id ?? user?.stateId ?? undefined;
+    const countryId = countryObj?.id ?? savedCountryId;
+    const stateId = stateObj?.id ?? savedStateId;
 
     if (!countryId || !stateId) {
-      toast.error('Please select a valid country and state');
+      // Only reachable when nothing is on file yet (or the country was changed)
+      toast.error(
+        countryObj ? 'Select a state for the new country' : 'Please select your country and state',
+      );
       return;
     }
 
     const payload: BrandProfilePayload = {
       countryId,
       stateId,
+      ...(values.gender && { gender: values.gender }),
       ...(values.brandName && { brandName: values.brandName }),
       ...(values.bio && { bio: values.bio }),
       ...(values.websiteUrl && { websiteUrl: values.websiteUrl }),
@@ -134,6 +152,7 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
 
     updateProfile(payload, {
       onSuccess: () => {
+        if (values.gender) updateUser({ gender: values.gender });
         // The API response doesn't echo country/state back, so the global
         // auth store (which pages like campaign creation read `countryId`
         // from for currency selection) would otherwise stay stale until a
@@ -210,6 +229,25 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
       </div>
 
       <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">Gender</Label>
+        <Select
+          value={gender || saved?.gender || undefined}
+          onValueChange={(v) => setValue('gender', v, { shouldValidate: true })}
+        >
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30">
+            <SelectValue placeholder="Select Gender" />
+          </SelectTrigger>
+          <SelectContent>
+            {GENDER_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">Country of Residence</Label>
         <ComboBox
           options={countries.map((c) => ({ value: c.name, label: c.name }))}
@@ -224,7 +262,10 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
 
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-light text-[#1a1a2e]">State</Label>
-        <Select onValueChange={(v) => setValue('state', v, { shouldValidate: true })}>
+        <Select
+          value={stateValue}
+          onValueChange={(v) => setValue('state', v, { shouldValidate: true })}
+        >
           <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30">
             <SelectValue placeholder="Select State" />
           </SelectTrigger>

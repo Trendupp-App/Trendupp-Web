@@ -37,6 +37,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ComboBox } from '@/shared/ComboBox';
+import { GENDER_OPTIONS } from '@/constants/gender';
 import { ALL_NICHES_INDUSTRIES } from '@/constants/common';
 import {
   IMPACT_BADGE_META,
@@ -561,6 +562,7 @@ export default function CreatorProfilePage() {
   const [editCountryId, setEditCountryId] = useState<string | undefined>();
   const [editState, setEditState] = useState('Lagos');
   const [editNationality, setEditNationality] = useState('Nigeria');
+  const [editGender, setEditGender] = useState('');
   const { data: editStates = [] } = useStates(editCountryId);
   const [editBio, setEditBio] = useState('');
   const [editNiches, setEditNiches] = useState<string[]>([]);
@@ -585,6 +587,7 @@ export default function CreatorProfilePage() {
       countries?.find((c) => c.name.toLowerCase() === initialCountry.trim().toLowerCase())?.id,
     );
     setEditNationality(profile.nationality || 'Nigeria');
+    setEditGender((userDetail ?? user)?.gender ?? '');
 
     setEditBio(profile.bio);
     setEditNiches(profile.niches);
@@ -650,6 +653,7 @@ export default function CreatorProfilePage() {
     formData.append('username', editHandle.trim());
     formData.append('bio', editBio);
     if (nationalityId) formData.append('nationalityId', nationalityId);
+    if (editGender) formData.append('gender', editGender);
     if (countryId) formData.append('countryId', countryId);
     if (stateId) formData.append('stateId', stateId);
 
@@ -668,6 +672,7 @@ export default function CreatorProfilePage() {
           ...(countryId && { countryId }),
           ...(stateId && { stateId }),
           ...(nationalityId && { nationalityId }),
+          ...(editGender && { gender: editGender }),
         });
         setProfile((prev) => ({
           ...prev,
@@ -1721,6 +1726,20 @@ export default function CreatorProfilePage() {
                       placeholder="Select State"
                       searchPlaceholder="Search state..."
                       disabled={!editCountryId}
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div className="flex flex-col gap-1.5 sm:col-span-2">
+                    <label className="text-[10px] font-bold text-[#7a7a9a] uppercase tracking-wider">
+                      Gender
+                    </label>
+                    <ComboBox
+                      options={GENDER_OPTIONS}
+                      value={editGender}
+                      onValueChange={setEditGender}
+                      placeholder="Select Gender"
+                      searchPlaceholder="Search..."
                     />
                   </div>
 

@@ -30,6 +30,7 @@ export interface AuthUser {
   bankAccountNumber: string | null;
   bankAccountName: string | null;
   nationalityId?: string | null;
+  gender?: string | null;
   countryId?: string | null;
   country?: { id: string; name: string } | null;
   stateId?: string | null;
