@@ -18,7 +18,12 @@ import StepPayment from '@/components/create-campaign/StepPayment';
 import type { PaymentBreakdown } from '@/types/campaign';
 import { mapCampaignToStep1, mapCampaignToStep2 } from '@/lib/mapCampaignToSteps';
 import CampaignDetailSkeleton from '@/components/skeletons/CampaignDetailsSkeleton';
-import { writePendingCampaignPayment } from '@/lib/paymentFlow';
+import {
+  showPaymentSandboxTools,
+  clearPendingCampaignPayment,
+  writePendingCampaignPayment,
+} from '@/lib/paymentFlow';
+import SandboxTransferPanel from '@/components/create-campaign/SandboxTransferPanel';
 
 export default function NewCampaignPage() {
   const router = useRouter();
@@ -31,6 +36,8 @@ export default function NewCampaignPage() {
   const [breakdown, setBreakdown] = useState<PaymentBreakdown | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [escrowId, setEscrowId] = useState<string | null>(null);
+  // Sandbox only: Pay keeps the brand here and shows the transfer simulator
+  const [showSandboxTransfer, setShowSandboxTransfer] = useState(false);
   const [editingFromReview, setEditingFromReview] = useState(false);
   const [isHydratingDraft, setIsHydratingDraft] = useState(!!draftId);
   const [resumingPayment, setResumingPayment] = useState(false);
@@ -219,6 +226,10 @@ export default function NewCampaignPage() {
     if (!paymentUrl || !campaignId || !escrowId) return;
     writePendingCampaignPayment(campaignId, escrowId);
     window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+    if (showPaymentSandboxTools(paymentUrl)) {
+      setShowSandboxTransfer(true);
+      return;
+    }
     router.push('/brand/campaign');
   }
 
@@ -283,6 +294,23 @@ export default function NewCampaignPage() {
           currency={liveCampaign?.currency}
           onBack={() => (paymentOnlyResume ? router.push('/brand/campaign') : goTo(3))}
           onPay={handlePay}
+        />
+      )}
+
+      {currentStep === 4 && breakdown && paymentUrl && campaignId && escrowId && (
+        <SandboxTransferPanel
+          open={showSandboxTransfer}
+          onOpenChange={setShowSandboxTransfer}
+          campaignId={campaignId}
+          // Startbutton's escrowId is the paymentReference (TRX-…) the checkout is keyed by
+          reference={escrowId}
+          amount={breakdown.totalToPay}
+          currency={liveCampaign?.currency}
+          checkoutUrl={paymentUrl}
+          onPaid={() => {
+            clearPendingCampaignPayment();
+            router.push(`/brand/campaign/${campaignId}`);
+          }}
         />
       )}
     </CampaignPageShell>

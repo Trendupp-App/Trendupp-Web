@@ -158,6 +158,19 @@ export const campaignApi = {
       { status: 'selected' },
     ),
 
+  // 🧪 Startbutton sandbox only: simulates the brand's bank transfer into the checkout's
+  // virtual account. Startbutton then marks the checkout paid and fires the webhook.
+  mockVaCollection: (payload: {
+    amount: number;
+    isKobo: boolean;
+    accountNumber: string;
+    reference: string;
+  }) =>
+    apiClient.post<{ success: boolean; message: string; data: string }>(
+      '/campaigns/mock-va-collection',
+      payload,
+    ),
+
   // Locks in the selected creators and moves the campaign to 'active'
   activateCampaign: (campaignId: string) =>
     apiClient.post<{ message?: string }>(`/campaigns/${campaignId}/activate`),
