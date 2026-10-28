@@ -116,6 +116,8 @@ export default function StepBrandProfile({ onNext, defaultValues }: Props) {
         // `countryId` from for currency selection) would otherwise stay
         // stale until a fresh login/reload re-hydrates the full profile.
         updateUser({
+          // brandName maps to username — payout name checks compare against it
+          ...(values.brandName && { username: values.brandName }),
           countryId: countryObj.id,
           country: { id: countryObj.id, name: countryObj.name },
           stateId: stateObj.id,

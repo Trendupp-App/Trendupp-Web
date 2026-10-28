@@ -9,6 +9,12 @@ import { BankCombobox } from '@/shared/BankComboBox';
 import { X, Landmark, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBanks } from '@/hooks/useOnboardingQueries';
+import { useAuthStore } from '@/store/authStore';
+import {
+  accountNameMatches,
+  getPayoutNameTarget,
+  payoutNameMismatchMessage,
+} from '@/lib/payoutNameMatch';
 
 interface BankChangeModalProps {
   isOpen: boolean;
@@ -38,6 +44,8 @@ export default function BankChangeModal({
   const [bankName, setBankName] = useState(initialBankName);
   const [accountNumber, setAccountNumber] = useState(initialAccountNumber);
   const [accountName, setAccountName] = useState(initialAccountName);
+  const [nameError, setNameError] = useState('');
+  const nameTarget = getPayoutNameTarget(useAuthStore((s) => s.user));
 
   // The backend never sends back the bank's code, only its display name, so when a
   // creator already has a bank on file we have to re-resolve its code by name — otherwise
@@ -52,11 +60,9 @@ export default function BankChangeModal({
     matchedBanks?.find((bank) => bank.name.toLowerCase() === initialBankName.toLowerCase())?.code ||
     '';
 
-  // There's no bank-account name-enquiry endpoint on the backend, so the account
-  // holder name can't be verified — it has to be entered by the user rather than
-  // guessed (previously this defaulted to the logged-in user's own first/last
-  // name, which for a brand account is blank and silently submitted a
-  // whitespace-only name to the backend).
+  // There's no bank-account name-enquiry endpoint on the backend, so the account holder
+  // name is typed by the user and checked against the profile/brand name on Continue. That
+  // stops honest mistakes; only a backend name-enquiry could prove who owns the account.
   const isComplete =
     !!resolvedBankCode && accountNumber.length === 10 && accountName.trim().length > 0;
 
@@ -66,9 +72,12 @@ export default function BankChangeModal({
   };
 
   const handleContinue = () => {
-    if (isComplete) {
-      setStep('confirm');
+    if (!isComplete) return;
+    if (nameTarget && !accountNameMatches(accountName, nameTarget)) {
+      setNameError(payoutNameMismatchMessage(accountName, nameTarget));
+      return;
     }
+    setStep('confirm');
   };
 
   const handleSave = () => {
@@ -143,9 +152,27 @@ export default function BankChangeModal({
                   type="text"
                   placeholder="Name on the bank account"
                   value={accountName}
-                  onChange={(e) => setAccountName(e.target.value)}
-                  className="border-[#e8e6f0] h-11 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink"
+                  onChange={(e) => {
+                    setAccountName(e.target.value);
+                    setNameError('');
+                  }}
+                  aria-invalid={!!nameError}
+                  className={cn(
+                    'border-[#e8e6f0] h-11 text-xs font-light focus-visible:ring-brand-pink/30 focus-visible:border-brand-pink',
+                    nameError && 'border-red-300',
+                  )}
                 />
+                {nameError ? (
+                  <p className="text-[11px] text-red-500 leading-snug">{nameError}</p>
+                ) : (
+                  nameTarget && (
+                    <p className="text-[11px] text-[#9a99b0] leading-snug">
+                      Must match{' '}
+                      {nameTarget.kind === 'brand' ? 'your brand name' : 'your profile name'}:{' '}
+                      <span className="font-medium text-[#4a4a6a]">{nameTarget.label}</span>
+                    </p>
+                  )
+                )}
               </div>
             </div>
 

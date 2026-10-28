@@ -153,6 +153,8 @@ export default function ProfilePersonalInfoEdit({ onSaved }: ProfilePersonalInfo
     updateProfile(payload, {
       onSuccess: () => {
         if (values.gender) updateUser({ gender: values.gender });
+        // brandName maps to username — payout name checks compare against it
+        if (values.brandName) updateUser({ username: values.brandName });
         // The API response doesn't echo country/state back, so the global
         // auth store (which pages like campaign creation read `countryId`
         // from for currency selection) would otherwise stay stale until a

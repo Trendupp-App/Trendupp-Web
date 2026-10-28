@@ -9,6 +9,12 @@ import { Label } from '@/components/ui/label';
 import { schema, Values } from '@/lib/validations/payoutFormSchema';
 import { BankCombobox } from '@/shared/BankComboBox';
 import { useUpdatePayout } from '@/hooks/useOnboardingMutations';
+import { useAuthStore } from '@/store/authStore';
+import {
+  accountNameMatches,
+  getPayoutNameTarget,
+  payoutNameMismatchMessage,
+} from '@/lib/payoutNameMatch';
 
 interface Props {
   onNext: (data: Values) => void;
@@ -21,6 +27,7 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
     register,
     handleSubmit,
     setValue,
+    setError,
     control,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
@@ -33,8 +40,15 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
 
   const { mutate: updatePayout, isPending } = useUpdatePayout();
   const saving = isSubmitting || isPending;
+  const nameTarget = getPayoutNameTarget(useAuthStore((s) => s.user));
 
   function onSubmit(values: Values) {
+    if (nameTarget && !accountNameMatches(values.bankAccountName, nameTarget)) {
+      setError('bankAccountName', {
+        message: payoutNameMismatchMessage(values.bankAccountName, nameTarget),
+      });
+      return;
+    }
     updatePayout(
       {
         bankCode: values.bankCode,
@@ -54,10 +68,19 @@ export default function StepPayout({ onNext, onSkip, defaultValues }: Props) {
       <div className="flex gap-2 bg-red-50 border border-red-100 rounded-xl p-3.5">
         <AlertCircle size={16} className="text-red-400 mt-0.5 shrink-0" />
         <p className="text-xs text-red-500 leading-relaxed">
-          Your account name must match your Trendupp profile. If your Trendupp profile says
-          &ldquo;Mensah Akinboye Mandela&rdquo;, your bank account should be registered under
-          &ldquo;Ciroma Chukwuma&rdquo; or a close variation. Mismatched names will delay your
-          payouts.
+          {nameTarget ? (
+            <>
+              The account must be registered {nameTarget.kind === 'brand' ? 'to' : 'in'}{' '}
+              <strong>&ldquo;{nameTarget.label}&rdquo;</strong>
+              {nameTarget.kind === 'brand' ? ', your brand name' : ', your Trendupp profile name'}.
+              Accounts in any other name can&apos;t be used for payouts.
+            </>
+          ) : (
+            <>
+              Your bank account name must match your Trendupp profile. Accounts in any other name
+              can&apos;t be used for payouts.
+            </>
+          )}
         </p>
       </div>
 
