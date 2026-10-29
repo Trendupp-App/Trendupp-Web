@@ -51,6 +51,7 @@ export interface AuthUser {
     lastName: string | null;
     email: string | null;
     phone: string | null;
+    gender?: string | null;
   } | null;
   avgRating?: number | null;
   totalReviews?: number | null;

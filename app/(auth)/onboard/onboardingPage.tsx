@@ -283,6 +283,7 @@ export default function OnboardingPage() {
               lastName: data.lastName,
               email: data.email,
               phone: data.phone,
+              gender: data.repGender,
             }}
           />
         )}

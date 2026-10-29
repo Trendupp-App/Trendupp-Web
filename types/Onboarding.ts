@@ -43,6 +43,8 @@ export interface AdvertiserOnboardingData {
   lastName?: string;
   email?: string;
   phone?: string;
+  // Kept apart from the profile step's `gender` so the two don't overwrite each other
+  repGender?: string;
 
   // StepSocialsConnect (shared with creator)
   connected?: {
@@ -250,6 +252,7 @@ export interface UpdateRepresentativePayload {
   repLastName: string;
   repEmail: string;
   repPhone: string;
+  gender?: string;
 }
 
 export interface BrandRepresentative {
@@ -257,6 +260,7 @@ export interface BrandRepresentative {
   lastName: string | null;
   email: string | null;
   phone: string | null;
+  gender?: string | null;
 }
 
 export interface UpdateRepresentativeResponse {

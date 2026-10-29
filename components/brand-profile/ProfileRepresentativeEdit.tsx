@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { GENDER_OPTIONS } from '@/constants/gender';
 import { schema, Values } from '@/lib/validations/advertiserRepresentativeFormSchema';
 import { useUpdateProfileRepresentative } from '@/hooks/useBrandProfileMutations';
 import { useAuthStore } from '@/store/authStore';
@@ -21,6 +29,8 @@ export default function ProfileRepresentativeEdit({ onSaved }: ProfileRepresenta
   const {
     register,
     handleSubmit,
+    setValue,
+    control,
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
@@ -29,8 +39,11 @@ export default function ProfileRepresentativeEdit({ onSaved }: ProfileRepresenta
       lastName: user?.brandRepresentative?.lastName ?? '',
       email: user?.brandRepresentative?.email ?? '',
       phone: user?.brandRepresentative?.phone ?? '',
+      gender: user?.brandRepresentative?.gender ?? '',
     },
   });
+
+  const gender = useWatch({ control, name: 'gender' });
 
   function onSubmit(values: Values) {
     updateRepresentative(
@@ -39,6 +52,8 @@ export default function ProfileRepresentativeEdit({ onSaved }: ProfileRepresenta
         repLastName: values.lastName,
         repEmail: values.email,
         repPhone: values.phone,
+        // Optional here: only sent when chosen, so an untouched picker keeps what's saved
+        ...(values.gender && { gender: values.gender }),
       },
       { onSuccess: () => onSaved?.() },
     );
@@ -81,6 +96,27 @@ export default function ProfileRepresentativeEdit({ onSaved }: ProfileRepresenta
           {errors[name] && <p className="text-[11px] text-red-400">{errors[name]?.message}</p>}
         </div>
       ))}
+
+      {/* Gender */}
+      <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">Gender</Label>
+        <Select
+          value={gender || undefined}
+          onValueChange={(v) => setValue('gender', v, { shouldValidate: true })}
+        >
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
+            <SelectValue placeholder="Select Gender" />
+          </SelectTrigger>
+          <SelectContent>
+            {GENDER_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.gender && <p className="text-[11px] text-red-400">{errors.gender.message}</p>}
+      </div>
 
       <Button
         type="submit"
