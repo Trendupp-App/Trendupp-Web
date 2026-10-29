@@ -8,6 +8,12 @@ export const schema = z.object({
     .string()
     .min(7, 'Enter a valid phone number')
     .regex(/^[\d+\s-]+$/, 'Phone number must contain only digits'),
+  gender: z.string().optional(),
 });
 
 export type Values = z.infer<typeof schema>;
+
+/** Onboarding requires the representative's gender; profile edits keep it optional */
+export const onboardingSchema = schema.extend({
+  gender: z.string().min(1, 'Select gender'),
+});

@@ -1,13 +1,24 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Phone } from 'lucide-react';
 import type { AdvertiserOnboardingData, UpdateRepresentativePayload } from '@/types/Onboarding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { schema, Values } from '@/lib/validations/advertiserRepresentativeFormSchema';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { GENDER_OPTIONS } from '@/constants/gender';
+import { z } from 'zod';
+import { onboardingSchema, Values } from '@/lib/validations/advertiserRepresentativeFormSchema';
+
+type OnboardingValues = z.infer<typeof onboardingSchema>;
 import { useUpdateRepresentative } from '@/hooks/useOnboardingMutations';
 
 interface Props {
@@ -21,21 +32,27 @@ export default function StepRepresentative({ onNext, defaultValues }: Props) {
   const {
     register,
     handleSubmit,
+    setValue,
+    control,
     formState: { errors },
-  } = useForm<Values>({
-    resolver: zodResolver(schema),
+  } = useForm<OnboardingValues>({
+    resolver: zodResolver(onboardingSchema),
     defaultValues: defaultValues ?? {},
   });
 
-  function onSubmit(values: Values) {
+  const gender = useWatch({ control, name: 'gender' });
+
+  function onSubmit(values: OnboardingValues) {
     const payload: UpdateRepresentativePayload = {
       repFirstName: values.firstName,
       repLastName: values.lastName,
       repEmail: values.email,
       repPhone: values.phone,
+      gender: values.gender,
     };
 
-    updateRepresentative(payload, { onSuccess: () => onNext(values) });
+    const { gender: repGender, ...rest } = values;
+    updateRepresentative(payload, { onSuccess: () => onNext({ ...rest, repGender }) });
   }
 
   return (
@@ -96,6 +113,27 @@ export default function StepRepresentative({ onNext, defaultValues }: Props) {
           />
         </div>
         {errors.phone && <p className="text-[11px] text-red-400">{errors.phone.message}</p>}
+      </div>
+
+      {/* Gender */}
+      <div className="flex flex-col gap-1">
+        <Label className="text-sm font-light text-[#1a1a2e]">Gender</Label>
+        <Select
+          value={gender || undefined}
+          onValueChange={(v) => setValue('gender', v, { shouldValidate: true })}
+        >
+          <SelectTrigger className="border-[#e8e6f0] w-full h-10 text-xs font-light focus:ring-brand-pink/30 focus:border-brand-pink">
+            <SelectValue placeholder="Select Gender" />
+          </SelectTrigger>
+          <SelectContent>
+            {GENDER_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.gender && <p className="text-[11px] text-red-400">{errors.gender.message}</p>}
       </div>
 
       <Button
