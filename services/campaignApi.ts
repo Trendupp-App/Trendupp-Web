@@ -150,12 +150,17 @@ export const campaignApi = {
 
   getMyApplications: () => apiClient.get<CampaignApplicationDto[]>('/campaigns/applications/my'),
 
-  // Toggles the brand's pick: a pending application becomes 'selected', a selected one goes
-  // back to 'pending'. The backend rejects a pick that would exceed the campaign budget.
-  toggleApplicationSelection: (campaignId: string, applicationId: string) =>
+  // Brand's per-applicant decision before activation: 'selected' = accept, 'rejected' =
+  // reject, 'pending' = undo either. The backend refuses an accept that would push the
+  // accepted creators' fees over the campaign budget.
+  reviewApplication: (
+    campaignId: string,
+    applicationId: string,
+    status: 'selected' | 'rejected' | 'pending',
+  ) =>
     apiClient.patch<{ message: string; application: CampaignApplicationDto }>(
       `/campaigns/${campaignId}/applications/${applicationId}`,
-      { status: 'selected' },
+      { status },
     ),
 
   // 🧪 Startbutton sandbox only: simulates the brand's bank transfer into the checkout's

@@ -254,11 +254,16 @@ export function useRespondToComment(applicationId: string | null) {
   });
 }
 
-export function useToggleApplicationSelection(campaignId: string) {
+export function useReviewApplication(campaignId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (applicationId: string) =>
-      campaignApi.toggleApplicationSelection(campaignId, applicationId).then((r) => r.data),
+    mutationFn: ({
+      applicationId,
+      status,
+    }: {
+      applicationId: string;
+      status: 'selected' | 'rejected' | 'pending';
+    }) => campaignApi.reviewApplication(campaignId, applicationId, status).then((r) => r.data),
     onSuccess: ({ application }) => {
       // Reflect the server's answer straight away instead of waiting for a refetch
       queryClient.setQueryData<Campaign>(['campaign', campaignId], (campaign) =>
@@ -275,7 +280,7 @@ export function useToggleApplicationSelection(campaignId: string) {
       queryClient.invalidateQueries({ queryKey: ['application', application.id] });
     },
     onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err?.response?.data?.message ?? 'Could not update selection');
+      toast.error(err?.response?.data?.message ?? 'Could not update application');
     },
   });
 }

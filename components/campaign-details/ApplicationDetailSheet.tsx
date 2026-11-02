@@ -219,7 +219,7 @@ export default function ApplicationDetailSheet({
                 <div className="flex items-center gap-2 py-3 px-4 rounded-xl bg-[#fdf5fa] border border-brand-pink/20">
                   <CheckCircle2 size={16} className="text-brand-pink shrink-0" />
                   <span className="text-sm font-medium text-brand-pink">
-                    Selected — not final until you confirm your selection
+                    Accepted — final once you activate the campaign
                   </span>
                 </div>
               )}
