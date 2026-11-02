@@ -2,20 +2,24 @@
 
 import type { CampaignApplicationDto } from '@/types/campaign';
 import UserAvatar from '@/shared/UserAvatar';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { Check, ChevronRight, Loader2, Undo2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/Utilities';
 
+/** Statuses a brand can set from the list; 'pending' undoes an accept/reject */
+export type ReviewDecision = 'selected' | 'rejected' | 'pending';
+
+// 'selected' is the brand's accept before the campaign is activated; 'accepted' is after
 const STATUS_LABEL: Record<CampaignApplicationDto['status'], string> = {
   pending: 'Pending',
-  selected: 'Selected',
+  selected: 'Accepted',
   accepted: 'Accepted',
   rejected: 'Rejected',
 };
 
 const STATUS_CLASS: Record<CampaignApplicationDto['status'], string> = {
   pending: 'text-amber-600 bg-amber-50',
-  selected: 'text-brand-pink bg-[#fdf5fa]',
+  selected: 'text-emerald-600 bg-emerald-50',
   accepted: 'text-emerald-600 bg-emerald-50',
   rejected: 'text-red-500 bg-red-50',
 };
@@ -23,60 +27,39 @@ const STATUS_CLASS: Record<CampaignApplicationDto['status'], string> = {
 interface ApplicationListItemProps {
   application: CampaignApplicationDto;
   onView: (application: CampaignApplicationDto) => void;
-  selected?: boolean;
-  onToggleSelect?: (application: CampaignApplicationDto) => void;
-  /** A select/unselect request for this application is in flight */
-  toggling?: boolean;
+  /** Omit to hide the accept/reject actions (e.g. paused or cancelled campaigns) */
+  onReview?: (application: CampaignApplicationDto, decision: ReviewDecision) => void;
+  /** A review request for this application is in flight */
+  reviewing?: boolean;
   currency?: string;
 }
 
 export default function ApplicationListItem({
   application,
   onView,
-  selected = false,
-  onToggleSelect,
-  toggling = false,
+  onReview,
+  reviewing = false,
   currency,
 }: ApplicationListItemProps) {
   const user = application?.creator;
   const initials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase()
     : 'U';
-  const isSelectable = application.status === 'pending' || application.status === 'selected';
+  const { status } = application;
+  const canReview = !!onReview && status !== 'accepted';
 
   return (
     <div
       className={cn(
-        'border rounded-xl p-5 flex items-start justify-between gap-4 transition-colors',
-        selected ? 'border-brand-pink bg-[#fdf5fa]' : 'border-[#e8e6f0]',
+        'border rounded-xl p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-colors',
+        status === 'selected'
+          ? 'border-emerald-200 bg-emerald-50/30'
+          : status === 'rejected'
+            ? 'border-[#e8e6f0] bg-[#faf9fc]'
+            : 'border-[#e8e6f0]',
       )}
     >
       <div className="flex items-start gap-3 min-w-0 flex-1">
-        {isSelectable && onToggleSelect ? (
-          toggling ? (
-            <Loader2
-              className="mt-1.5 size-4 shrink-0 animate-spin text-brand-pink"
-              aria-label="Updating selection"
-            />
-          ) : (
-            <input
-              type="checkbox"
-              checked={selected}
-              onChange={() => onToggleSelect(application)}
-              className="mt-1.5 size-4 shrink-0 accent-brand-pink cursor-pointer"
-              aria-label={selected ? 'Unselect application' : 'Select application'}
-            />
-          )
-        ) : (
-          <span
-            className={cn(
-              'shrink-0 mt-0.5 text-[10px] font-semibold px-2 py-1 rounded-full',
-              STATUS_CLASS[application.status],
-            )}
-          >
-            {STATUS_LABEL[application.status]}
-          </span>
-        )}
         <UserAvatar size={36} avatarUrl={user?.avatarUrl} initials={initials} />
 
         <div className="min-w-0 flex-1">
@@ -93,6 +76,14 @@ export default function ApplicationListItem({
             ) : user?.twitterUsername ? (
               <span className="text-sm text-[#9a99b0]">{user.twitterUsername}</span>
             ) : null}
+            <span
+              className={cn(
+                'text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                STATUS_CLASS[status],
+              )}
+            >
+              {STATUS_LABEL[status]}
+            </span>
           </div>
           <p className="text-sm text-[#4a4a6a] mt-1 leading-relaxed">{application?.contentIdea}</p>
 
@@ -122,13 +113,49 @@ export default function ApplicationListItem({
         </div>
       </div>
 
-      <button
-        onClick={() => onView(application)}
-        className="flex items-center cursor-pointer gap-1.5 px-4 py-2 border border-[#e8e6f0] rounded-lg text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors shrink-0"
-      >
-        View application
-        <ChevronRight size={14} />
-      </button>
+      <div className="flex flex-col items-stretch sm:items-end gap-2 shrink-0">
+        <button
+          onClick={() => onView(application)}
+          className="flex items-center justify-center cursor-pointer gap-1.5 px-4 py-2 border border-[#e8e6f0] rounded-lg text-xs text-[#1a1a2e] hover:bg-[#faf9fc] transition-colors"
+        >
+          View application
+          <ChevronRight size={14} />
+        </button>
+
+        {canReview &&
+          (reviewing ? (
+            <div className="flex items-center justify-center gap-1.5 h-8 text-xs text-[#9a99b0]">
+              <Loader2 size={14} className="animate-spin text-brand-pink" />
+              Updating…
+            </div>
+          ) : status === 'pending' ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => onReview(application, 'rejected')}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 h-8 rounded-lg text-xs font-medium border border-red-100 bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+              >
+                <X size={13} />
+                Reject
+              </button>
+              <button
+                onClick={() => onReview(application, 'selected')}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 h-8 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer"
+              >
+                <Check size={13} />
+                Accept
+              </button>
+            </div>
+          ) : (
+            // Accepted (before activation) or rejected — let the brand change their mind
+            <button
+              onClick={() => onReview(application, 'pending')}
+              className="flex items-center justify-center gap-1 h-8 px-2 text-xs text-[#7a7a9a] hover:text-[#1a1a2e] transition-colors cursor-pointer"
+            >
+              <Undo2 size={13} />
+              Undo
+            </button>
+          ))}
+      </div>
     </div>
   );
 }

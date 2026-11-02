@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertCircle, Lock, Rocket, X } from 'lucide-react';
-import ApplicationListItem from './ApplicationListItem';
+import { AlertCircle, Lock, Rocket } from 'lucide-react';
+import ApplicationListItem, { type ReviewDecision } from './ApplicationListItem';
 import ApplicationDetailSheet from './ApplicationDetailSheet';
 import FeedbackModal from '@/shared/FeedBackModal';
 import CreatorProfileSheet from '@/components/campaign-details/CreatorProfileSheet';
 import type { CampaignApplicationDto, CampaignStatus } from '@/types/campaign';
-import { useActivateCampaign, useToggleApplicationSelection } from '@/hooks/useCampaign';
+import { useActivateCampaign, useReviewApplication } from '@/hooks/useCampaign';
 import { cn } from '@/lib/utils';
 
 interface ApplicationsTabProps {
@@ -44,22 +44,22 @@ export default function ApplicationsTab({
   const actionsDisabled = campaignStatus === 'paused' || campaignStatus === 'cancelled';
   const [selected, setSelected] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  // Applications with a select/unselect request in flight
-  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+  // Applications with an accept/reject/undo request in flight
+  const [reviewingIds, setReviewingIds] = useState<Set<string>>(new Set());
   const [profileCreatorId, setProfileCreatorId] = useState<string | null>(null);
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const [confirmActivate, setConfirmActivate] = useState(false);
 
-  const { mutate: toggleSelection } = useToggleApplicationSelection(campaignId);
+  const { mutate: reviewApplication } = useReviewApplication(campaignId);
   const { mutate: activateCampaign, isPending: isActivating } = useActivateCampaign(campaignId);
 
   const applications = applicationsForLive || [];
-  // Selection is persisted server-side, so it survives reloads and other devices
+  // Accepted (status 'selected') is persisted server-side until Activate locks it in
   const selectedApplications = applications.filter((app) => app.status === 'selected');
   const selectedTotal = selectedApplications.reduce((sum, app) => sum + (app.feeRequest || 0), 0);
   const currency = campaignCurrency ?? 'NGN';
-  const isToggling = togglingIds.size > 0;
-  const canActivate = selectedApplications.length > 0 && !isToggling && !isActivating;
+  const isReviewing = reviewingIds.size > 0;
+  const canActivate = selectedApplications.length > 0 && !isReviewing && !isActivating;
 
   function handleView(application: CampaignApplicationDto) {
     setSelected(application?.id);
@@ -73,26 +73,22 @@ export default function ApplicationsTab({
     setProfileSheetOpen(true);
   }
 
-  function setToggling(id: string, toggling: boolean) {
-    setTogglingIds((prev) => {
+  function setReviewing(id: string, reviewing: boolean) {
+    setReviewingIds((prev) => {
       const next = new Set(prev);
-      if (toggling) next.add(id);
+      if (reviewing) next.add(id);
       else next.delete(id);
       return next;
     });
   }
 
-  // The endpoint toggles: it selects a pending application and unselects a selected one
-  function handleToggleSelect(application: CampaignApplicationDto) {
-    if (togglingIds.has(application.id) || isActivating) return;
-    setToggling(application.id, true);
-    toggleSelection(application.id, {
-      onSettled: () => setToggling(application.id, false),
-    });
-  }
-
-  function clearSelection() {
-    selectedApplications.forEach(handleToggleSelect);
+  function handleReview(application: CampaignApplicationDto, decision: ReviewDecision) {
+    if (reviewingIds.has(application.id) || isActivating) return;
+    setReviewing(application.id, true);
+    reviewApplication(
+      { applicationId: application.id, status: decision },
+      { onSettled: () => setReviewing(application.id, false) },
+    );
   }
 
   function handleActivate() {
@@ -106,7 +102,8 @@ export default function ApplicationsTab({
         <div className="mb-3 flex items-center gap-2 bg-[#fef2f2] border border-[#fee2e2] rounded-xl px-4 py-3">
           <AlertCircle size={15} className="text-[#dc2626] shrink-0" />
           <p className="text-xs font-medium text-[#b91c1c] capitalize">
-            This campaign has been {campaignStatus} — creators can no longer be selected.
+            This campaign has been {campaignStatus} — applications can no longer be accepted or
+            rejected.
           </p>
         </div>
       )}
@@ -115,19 +112,9 @@ export default function ApplicationsTab({
       {!actionsDisabled && applications.length > 0 && (
         <div className="mb-3 bg-white border border-[#e8e6f0] rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            {selectedApplications.length > 0 && (
-              <button
-                onClick={clearSelection}
-                disabled={isToggling || isActivating}
-                className="cursor-pointer text-[#9a99b0] hover:text-[#1a1a2e] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label="Clear selection"
-              >
-                <X size={16} />
-              </button>
-            )}
             {selectedApplications.length > 0 ? (
               <span className="text-sm font-medium text-[#1a1a2e]">
-                {selectedApplications.length} selected
+                {selectedApplications.length} accepted
                 {selectedTotal > 0 && (
                   <span className="font-normal text-[#9a99b0]">
                     {' '}
@@ -137,7 +124,7 @@ export default function ApplicationsTab({
               </span>
             ) : (
               <span className="text-sm text-[#9a99b0]">
-                Select at least one creator to activate this campaign
+                Accept at least one creator to activate this campaign
               </span>
             )}
           </div>
@@ -164,9 +151,8 @@ export default function ApplicationsTab({
             key={app.id}
             application={app}
             onView={handleView}
-            selected={app.status === 'selected'}
-            toggling={togglingIds.has(app.id)}
-            onToggleSelect={actionsDisabled ? undefined : handleToggleSelect}
+            reviewing={reviewingIds.has(app.id)}
+            onReview={actionsDisabled ? undefined : handleReview}
             currency={campaignCurrency}
           />
         ))}
